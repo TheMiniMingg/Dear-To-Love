@@ -133,7 +133,7 @@ pub async fn draft_recap(env: &SummaryEnv<'_>, route_id: &str) -> AppResult<Chap
     let (ordinal, title, events) = current_chapter(&chain)?;
     check_endable(&chain, events)?;
 
-    let (recap, written_by) = match providers::storyteller(env.db).await? {
+    let (recap, written_by) = match providers::route_storyteller(env.db, route_id).await? {
         None => (
             extractive(None, events, &player_name)?,
             OFFLINE_RECAP_BY.to_string(),

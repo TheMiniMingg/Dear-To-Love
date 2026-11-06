@@ -19,6 +19,7 @@ import type {
   DiagnosticCheck,
   ErrorCode,
   ImageImport,
+  ImageScope,
   StorypackExport,
   StorypackImport,
   TextExport,
@@ -41,6 +42,7 @@ import type {
   StorySummary,
   StoryVisual,
   StreamMessage,
+  StorytellerChoice,
   StorytellerInfo,
   Submitted,
   TemplateCatalog,
@@ -170,7 +172,12 @@ export const commands = {
     r: RouteRef & { expectedHeadId: string; changes: StateEdit[]; note: string | null },
   ) => call<RouteView>('edit_story_details', r),
   listImages: () => call<AssetDto[]>('list_images'),
-  importImages: (paths: string[]) => call<ImageImport[]>('import_images', { paths }),
+  /** With no `scope` the images are shared with every story. */
+  importImages: (paths: string[], scope?: ImageScope) =>
+    call<ImageImport[]>('import_images', { paths, scope: scope ?? null }),
+  /** Share with every story (`storyId` null), or keep for that story only. */
+  setImageScope: (assetId: string, storyId: string | null) =>
+    call<AssetDto>('set_image_scope', { assetId, storyId }),
   updateImage: (assetId: string, label: string, tags: string[]) =>
     call<AssetDto>('update_image', { assetId, label, tags }),
   imageUsages: (assetId: string) => call<AssetUsage[]>('image_usages', { assetId }),
@@ -236,6 +243,9 @@ export const commands = {
   getStoryteller: () => call<StorytellerInfo>('get_storyteller'),
   setStoryteller: (profileId: string | null) =>
     call<StorytellerInfo>('set_storyteller', { profileId }),
+  /** One story's own storyteller; `null` follows the app's again. */
+  setStoryStoryteller: (storyId: string, choice: StorytellerChoice | null) =>
+    call<StorytellerInfo>('set_story_storyteller', { storyId, choice }),
   testConnection: (id: string) => call<ConnectionCheck>('test_connection', { id }),
   sendTestMessage: (id: string) => call<string>('send_test_message', { id }),
 

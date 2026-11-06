@@ -8,7 +8,7 @@ use tauri::http::{header, Response, StatusCode};
 use tauri::State;
 use ts_rs::TS;
 
-use crate::db::assets::{self, AssetDto, AssetUsage, StoryVisual};
+use crate::db::assets::{self, AssetDto, AssetUsage, ImportScope, StoryVisual};
 use crate::domain::visuals::VisualSlot;
 use crate::errors::{AppError, AppResult};
 use crate::services::assets::{self as library, Size};
@@ -33,12 +33,40 @@ pub async fn list_images(state: State<'_, AppState>) -> AppResult<Vec<AssetDto>>
     assets::list(state.db()?).await
 }
 
-/// Adds image files chosen in the file picker.
+/// Who may use the images being added.
+#[derive(Debug, Clone, Default, PartialEq, Eq, serde::Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct ImageScope {
+    /// Only this story may use them.
+    #[serde(default)]
+    #[ts(optional)]
+    pub story_id: Option<String>,
+    /// Only the story being created (with no `story_id`).
+    #[serde(default)]
+    #[ts(as = "Option<bool>", optional)]
+    pub new_story: bool,
+}
+
+impl ImageScope {
+    fn to_import(&self) -> ImportScope {
+        match (&self.story_id, self.new_story) {
+            (Some(id), _) => ImportScope::Story(id.clone()),
+            (None, true) => ImportScope::NewStory,
+            (None, false) => ImportScope::Shared,
+        }
+    }
+}
+
+/// Adds image files chosen in the file picker. With no `scope` they are
+/// shared with every story.
 #[tauri::command]
 pub async fn import_images(
     state: State<'_, AppState>,
     paths: Vec<String>,
+    scope: Option<ImageScope>,
 ) -> AppResult<Vec<ImageImport>> {
+    let scope = scope.unwrap_or_default().to_import();
     if paths.len() > MAX_IMPORT_FILES {
         return Err(AppError::invalid_input(format!(
             "add at most {MAX_IMPORT_FILES} images at a time"
@@ -53,22 +81,35 @@ pub async fn import_images(
             .file_name()
             .map(|n| n.to_string_lossy().into_owned())
             .unwrap_or_default();
-        out.push(match library::import_file(db, &store, &path).await {
-            Ok(i) => ImageImport {
-                file_name,
-                asset: Some(i.asset),
-                already_in_library: i.already_in_library,
-                error: None,
+        out.push(
+            match library::import_file(db, &store, &path, &scope).await {
+                Ok(i) => ImageImport {
+                    file_name,
+                    asset: Some(i.asset),
+                    already_in_library: i.already_in_library,
+                    error: None,
+                },
+                Err(e) => ImageImport {
+                    file_name,
+                    asset: None,
+                    already_in_library: false,
+                    error: Some(e.message),
+                },
             },
-            Err(e) => ImageImport {
-                file_name,
-                asset: None,
-                already_in_library: false,
-                error: Some(e.message),
-            },
-        });
+        );
     }
     Ok(out)
+}
+
+/// Share the image with every story (`story_id` empty), or keep it for one
+/// story only. Stories that already show it keep it.
+#[tauri::command]
+pub async fn set_image_scope(
+    state: State<'_, AppState>,
+    asset_id: String,
+    story_id: Option<String>,
+) -> AppResult<AssetDto> {
+    assets::set_scope(state.db()?, &asset_id, story_id.as_deref()).await
 }
 
 #[tauri::command]

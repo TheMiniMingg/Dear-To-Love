@@ -1779,3 +1779,35 @@ details summary {
 .multi-add input {
   flex: 1 1 10rem;
 }
+
+/* Pictures grouped by who may use them (all stories, one story, none). */
+.image-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-width: 0;
+}
+.image-group > .small-heading {
+  margin: 0 0 0.4rem;
+}
+.image-group > .muted {
+  margin: 0 0 0.5rem;
+}
+.picture-chooser .image-group .image-grid {
+  max-height: 28vh;
+}
+
+/* Who writes one story's replies. */
+.storyteller-picker {
+  border: none;
+  padding: 0;
+  margin: 0.5rem 0 0;
+}
+.storyteller-picker legend {
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+  padding: 0;
+}
+.pictures-step .picture-list {
+  margin-bottom: 1.25rem;
+}

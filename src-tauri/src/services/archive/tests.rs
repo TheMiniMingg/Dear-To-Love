@@ -1,5 +1,6 @@
 use super::*;
 use crate::db::assets as rows;
+use crate::db::assets::ImportScope;
 use crate::db::bookmarks::{add_bookmark, list_bookmarks};
 use crate::db::contract;
 use crate::db::memory::{insert_summary, latest_eligible_summary, NewSummary};
@@ -91,11 +92,17 @@ struct Rich {
 
 async fn rich_story(t: &TestDb) -> Rich {
     let store = AssetStore::new(t.dir.path());
-    let image = import_bytes(&t.db, &store, png(300, 200, 3), "Harbor")
-        .await
-        .unwrap()
-        .asset
-        .id;
+    let image = import_bytes(
+        &t.db,
+        &store,
+        png(300, 200, 3),
+        "Harbor",
+        &ImportScope::Shared,
+    )
+    .await
+    .unwrap()
+    .asset
+    .id;
     let story = create_story(
         &t.db,
         CreateStoryInput {
@@ -292,6 +299,12 @@ async fn storypack_round_trips_into_a_fresh_install() {
     assert_eq!(got.title, "The Lamp Room");
     assert_eq!((got.routes, got.images_added, got.images_reused), (2, 1, 0));
     assert_ne!(got.story_id, r.story.story_id);
+    // A picture that came with the story is kept for that story only.
+    let imgs = rows::list(&fresh.db).await.unwrap();
+    assert_eq!(imgs.len(), 1);
+    assert!(!imgs[0].shared);
+    assert_eq!(imgs[0].stories.len(), 1);
+    assert_eq!(imgs[0].stories[0].id, got.story_id);
 
     let before = list_routes(&t.db, &r.story.story_id).await.unwrap();
     let after = list_routes(&fresh.db, &got.story_id).await.unwrap();
@@ -439,7 +452,12 @@ async fn importing_twice_gives_independent_stories_sharing_images() {
     assert_eq!((a.images_added, a.images_reused), (0, 1));
     assert_eq!((b.images_added, b.images_reused), (0, 1));
     assert_ne!(a.story_id, b.story_id);
-    assert_eq!(rows::list(&t.db).await.unwrap().len(), 1);
+    let imgs = rows::list(&t.db).await.unwrap();
+    assert_eq!(imgs.len(), 1);
+    assert!(
+        imgs[0].shared,
+        "a picture already shared with all stories stays shared"
+    );
     let originals = fs::read_dir(t.dir.path().join("assets/originals"))
         .unwrap()
         .count();

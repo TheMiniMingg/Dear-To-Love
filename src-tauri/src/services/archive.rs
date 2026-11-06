@@ -883,14 +883,21 @@ async fn commit(db: &Database, op_id: &str, p: &Prepared) -> AppResult<Storypack
     let mut tx = db.write_txn().await?;
     let mut images = HashMap::new();
     let (mut added, mut reused) = (0u32, 0u32);
+    // Images this story keeps as its own: the new ones, and ones already
+    // kept by other stories. Images shared with every story stay shared.
+    let mut own = Vec::new();
     for img in &p.images {
-        let existing: Option<String> = sqlx::query_scalar("SELECT id FROM assets WHERE sha256 = ?")
-            .bind(&img.pack.sha256)
-            .fetch_optional(&mut *tx)
-            .await?;
+        let existing: Option<(String, i64)> =
+            sqlx::query_as("SELECT id, shared FROM assets WHERE sha256 = ?")
+                .bind(&img.pack.sha256)
+                .fetch_optional(&mut *tx)
+                .await?;
         let id = match existing {
-            Some(id) => {
+            Some((id, shared)) => {
                 reused += 1;
+                if shared == 0 {
+                    own.push(id.clone());
+                }
                 id
             }
             None => {
@@ -903,8 +910,8 @@ async fn commit(db: &Database, op_id: &str, p: &Prepared) -> AppResult<Storypack
                     .cloned()
                     .collect();
                 sqlx::query(
-                    "INSERT INTO assets (id, sha256, original_rel, thumb_rel, mime, width, height, byte_size, label, tags_json, created_at) \
-                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                    "INSERT INTO assets (id, sha256, original_rel, thumb_rel, mime, width, height, byte_size, label, tags_json, created_at, shared) \
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)",
                 )
                 .bind(&id)
                 .bind(&img.pack.sha256)
@@ -920,6 +927,7 @@ async fn commit(db: &Database, op_id: &str, p: &Prepared) -> AppResult<Storypack
                 .execute(&mut *tx)
                 .await?;
                 added += 1;
+                own.push(id.clone());
                 id
             }
         };
@@ -941,6 +949,9 @@ async fn commit(db: &Database, op_id: &str, p: &Prepared) -> AppResult<Storypack
     .bind(&ts)
     .execute(&mut *tx)
     .await?;
+    for id in &own {
+        asset_rows::add_to_story(&mut tx, id, &r.story_id).await?;
+    }
     for o in &r.outlines {
         sqlx::query(
             "INSERT INTO chapter_outlines (id, story_id, ordinal, title, outline) VALUES (?, ?, ?, ?, ?)",

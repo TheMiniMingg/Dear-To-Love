@@ -15,7 +15,7 @@ use crate::db::timeline::{
 };
 use crate::db::Database;
 use crate::domain::events::{EditPayload, EventBody, StateEdit};
-use crate::domain::provider::Billing;
+use crate::domain::provider::{Billing, StorytellerChoice};
 use crate::domain::visuals::VisualSlot;
 use crate::errors::{AppError, AppResult};
 use crate::services::mock_storyteller::MOCK_PROVIDER_LABEL;
@@ -39,6 +39,11 @@ pub struct StorytellerInfo {
     pub label: String,
     pub model_id: Option<String>,
     pub billing: Billing,
+    /// The story's own choice; absent when it follows the app's storyteller
+    /// (and always absent for the app's storyteller itself).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub story_choice: Option<StorytellerChoice>,
 }
 
 /// Present when the route head is a player action without a reply.
@@ -70,14 +75,34 @@ pub struct RouteView {
     pub visuals: Vec<StoryVisual>,
 }
 
+/// The app's storyteller (Settings).
 pub async fn storyteller_info(db: &Database) -> AppResult<StorytellerInfo> {
-    if let Some(id) = providers::storyteller(db).await? {
+    info_for(db, providers::storyteller(db).await?, None).await
+}
+
+/// Who writes this story's replies, and whether the story chose it itself.
+pub async fn story_storyteller_info(db: &Database, story_id: &str) -> AppResult<StorytellerInfo> {
+    let choice = {
+        let mut conn = db.reader().acquire().await?;
+        providers::story_choice(&mut conn, story_id).await?
+    };
+    let profile = providers::story_storyteller(db, story_id).await?;
+    info_for(db, profile, choice).await
+}
+
+async fn info_for(
+    db: &Database,
+    profile_id: Option<String>,
+    story_choice: Option<StorytellerChoice>,
+) -> AppResult<StorytellerInfo> {
+    if let Some(id) = profile_id {
         if let Ok(row) = providers::get_profile_row(db, &id).await {
             return Ok(StorytellerInfo {
                 profile_id: Some(row.id.clone()),
                 label: row.label.clone(),
                 model_id: Some(row.model_id.clone()),
                 billing: row.billing(),
+                story_choice,
             });
         }
     }
@@ -86,6 +111,7 @@ pub async fn storyteller_info(db: &Database) -> AppResult<StorytellerInfo> {
         label: MOCK_PROVIDER_LABEL.into(),
         model_id: None,
         billing: Billing::Local,
+        story_choice,
     })
 }
 
@@ -125,7 +151,7 @@ pub async fn route_view(db: &Database, route_id: &str) -> AppResult<RouteView> {
         routes: list_routes(db, &route.story_id).await?,
         chapters: route_chapters(db, route_id).await?,
         state: crate::db::state::state_at(db, &route.story_id, &head).await?,
-        storyteller: storyteller_info(db).await?,
+        storyteller: story_storyteller_info(db, &story.id).await?,
         visuals: assets::story_visuals(db, &route.story_id).await?,
         history,
         awaiting_reply,
@@ -193,7 +219,8 @@ async fn check_pictures(
             ));
         }
         if let Some(id) = asset_id {
-            assets::get(db, id).await?;
+            let mut conn = db.reader().acquire().await?;
+            assets::check_available(&mut conn, id, story_id).await?;
         }
         if let VisualSlot::Portrait(cid) = &parsed {
             if characters.is_none() {

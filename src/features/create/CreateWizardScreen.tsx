@@ -6,6 +6,8 @@ import type {
   CreateStoryDraft,
   DraftProblem,
   DraftStep,
+  ProviderProfile,
+  StorytellerInfo,
   TemplateCatalog,
   WizardDraft,
   WizardMode,
@@ -20,8 +22,9 @@ import {
   StoryStep,
   WorldStep,
 } from './WizardSteps';
+import { PicturesStep } from './PicturesStep';
 
-const STEPS: DraftStep[] = ['world', 'character', 'story', 'narration', 'review'];
+const STEPS: DraftStep[] = ['world', 'character', 'story', 'narration', 'pictures', 'review'];
 const SAVE_DELAY_MS = 400;
 
 const STEP_TITLES: Record<DraftStep, string> = {
@@ -29,8 +32,19 @@ const STEP_TITLES: Record<DraftStep, string> = {
   character: 'Who do you play?',
   story: 'How does it begin?',
   narration: 'How is it told?',
+  pictures: 'Pictures and storyteller',
   review: 'Ready to begin?',
 };
+
+type Tellers = { connections: ProviderProfile[]; app: StorytellerInfo } | null;
+
+/** Who will write the new story's replies, in words. */
+function storytellerLabel(draft: CreateStoryDraft, tellers: Tellers): string | undefined {
+  const c = draft.storyteller;
+  if (!c) return tellers ? `Same as the app (${tellers.app.label})` : undefined;
+  if (c.kind === 'offline') return 'Offline storyteller';
+  return tellers?.connections.find((x) => x.id === c.id)?.label ?? 'A removed connection';
+}
 
 function savedLabel(iso: string): string {
   const d = new Date(iso);
@@ -68,6 +82,20 @@ export function CreateWizardScreen() {
   const [busy, setBusy] = useState(false);
   const [confirmReset, setConfirmReset] = useState(false);
   const [confirmClear, setConfirmClear] = useState(false);
+  const [tellers, setTellers] = useState<Tellers>(null);
+  // Review names the storyteller; fetched once it is shown.
+  useEffect(() => {
+    if (step !== 'review') return;
+    let live = true;
+    Promise.all([commands.listConnections(), commands.getStoryteller()])
+      .then(([connections, app]) => {
+        if (live) setTellers({ connections, app });
+      })
+      .catch(() => undefined);
+    return () => {
+      live = false;
+    };
+  }, [step]);
   // The preset-filled draft a fresh wizard starts from, while nothing in
   // it has been changed yet. Switching modes then swaps between it and an
   // empty draft instead of carrying presets into Custom.
@@ -304,8 +332,14 @@ export function CreateWizardScreen() {
             {step === 'character' && <CharacterStep {...props} />}
             {step === 'story' && <StoryStep {...props} />}
             {step === 'narration' && <NarrationStep {...props} />}
+            {step === 'pictures' && <PicturesStep {...props} />}
             {step === 'review' && (
-              <ReviewStep draft={props.draft} problems={problems} onGoTo={goTo} />
+              <ReviewStep
+                draft={props.draft}
+                problems={problems}
+                onGoTo={goTo}
+                storytellerLabel={storytellerLabel(props.draft, tellers)}
+              />
             )}
           </div>
 

@@ -52,7 +52,7 @@ test('guided creation survives a restart', async () => {
   await waitForText(b, 'main', 'How does it begin?');
   assert.equal(await selected(b, 'Start from a scenario'), 'The Memory Harvest');
 
-  await tabTo(b, '5. Review');
+  await tabTo(b, '6. Review');
   await b.keys(['Enter']);
   await waitForText(b, 'main', 'Ready to begin?');
   assert.match(await textOf(b, '[aria-label="Story summary"]'), /The Memory Harvest/);

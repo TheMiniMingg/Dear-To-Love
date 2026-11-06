@@ -34,6 +34,11 @@ test('story details, another reply and route safety', async () => {
   // Story details: Mara gets a new role from now on, on Main only.
   await click('button=Menu');
   await waitForText(b, '[role="dialog"]', 'Paused');
+  // The button waits for the reply to be saved; on a slow run that can lag.
+  await b.waitUntil(async () => (await b.$('button=Story details')).isEnabled(), {
+    timeout: 10000,
+    timeoutMsg: 'Story details stayed disabled',
+  });
   await click('button=Story details');
   await waitForText(b, '[role="dialog"]', 'Character');
   const picker = await b.$('//label[normalize-space()="Character"]/following-sibling::div/select');

@@ -31,6 +31,7 @@ import {
 } from './fields';
 import { ERAS, PERSONALITIES, RACES, ROLES, RULES, SETTINGS } from './presets';
 import { DICE_STORY_TYPES, STYLES, StyleFields, tellingOf } from './StyleFields';
+import { BACKGROUND_SLOT, COVER_SLOT, livePictures } from './PicturesStep';
 
 export type StepProps = {
   draft: CreateStoryDraft;
@@ -135,6 +136,7 @@ export function blankDraft(d: CreateStoryDraft): CreateStoryDraft {
     openThreads: [],
     firstChapterTitle: 'Chapter 1',
     chapterOutlines: [],
+    pictures: [],
   };
 }
 
@@ -700,17 +702,36 @@ const STEP_NAMES: Record<DraftStep, string> = {
   character: 'You',
   story: 'Story',
   narration: 'Narration',
+  pictures: 'Pictures',
   review: 'Review',
 };
+
+/** "Cover, background and 2 portraits", or '' when none are picked. */
+export function picturesText(draft: CreateStoryDraft): string {
+  const slots = livePictures(draft).map((p) => p.slot);
+  const portraits = slots.filter((s) => s.startsWith('portrait:')).length;
+  const parts = [
+    slots.includes(COVER_SLOT) && 'cover',
+    slots.includes(BACKGROUND_SLOT) && 'background',
+    portraits > 0 && (portraits === 1 ? '1 portrait' : `${portraits} portraits`),
+  ].filter((x): x is string => !!x);
+  if (!parts.length) return '';
+  const last = parts[parts.length - 1] ?? '';
+  const text = parts.length === 1 ? last : `${parts.slice(0, -1).join(', ')} and ${last}`;
+  return text.charAt(0).toUpperCase() + text.slice(1);
+}
 
 export function ReviewStep({
   draft,
   problems,
   onGoTo,
+  storytellerLabel,
 }: {
   draft: CreateStoryDraft;
   problems: DraftProblem[] | null;
   onGoTo: (step: DraftStep) => void;
+  /** Who will write the replies, in words. */
+  storytellerLabel?: string;
 }) {
   const others = draft.npcs.map((c) => c.name || 'Unnamed').join(', ');
   return (
@@ -788,6 +809,14 @@ export function ReviewStep({
           <>
             <dt>Hard limits</dt>
             <dd>{uniq(draft.narration.limits ?? []).join(', ')}</dd>
+          </>
+        )}
+        <dt>Pictures</dt>
+        <dd>{picturesText(draft) || 'None yet'}</dd>
+        {storytellerLabel && (
+          <>
+            <dt>Storyteller</dt>
+            <dd>{storytellerLabel}</dd>
           </>
         )}
       </dl>

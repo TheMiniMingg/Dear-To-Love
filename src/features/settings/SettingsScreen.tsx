@@ -113,8 +113,9 @@ export function SettingsScreen() {
       <section className="settings-section" aria-labelledby="storyteller-title">
         <h2 id="storyteller-title">Storyteller</h2>
         <p className="muted">
-          Who writes the replies in your stories. Changing it only affects new replies; what is
-          already written stays as it is.
+          Who writes the replies in your stories. A story can pick its own storyteller instead
+          (click the storyteller&apos;s name above the story). Changing it only affects new replies;
+          what is already written stays as it is.
         </p>
         <div role="radiogroup" aria-labelledby="storyteller-title" className="choice-list">
           <label className="choice">

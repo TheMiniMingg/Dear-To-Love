@@ -3,7 +3,7 @@ import { commands, errorMessage } from '../../api/commands';
 import { describeImports, formatBytes, pickImageFiles } from '../../api/images';
 import { useUiStore } from '../../app/store';
 import { Dialog } from '../../components/Dialog';
-import type { AssetDto, AssetUsage } from '../../types';
+import type { AssetDto, AssetUsage, ImageImport, ImageScope, StorySummary } from '../../types';
 import { ImageGrid, Thumb } from './ImageGrid';
 
 /** Kinds offered as tags. Other tags an image already has are kept. */
@@ -15,18 +15,24 @@ const FORMAT: Record<string, string> = {
   'image/webp': 'WebP',
 };
 
-/** Adds images through the file picker and reports what happened. */
-export function useAddImages(onAdded: (added: AssetDto[]) => void) {
+/**
+ * Adds images through the file picker and reports what happened. `add`
+ * takes who may use them (all stories when left out).
+ */
+export function useAddImages(onAdded: (added: AssetDto[], results: ImageImport[]) => void) {
   const [adding, setAdding] = useState(false);
   const [result, setResult] = useState<{ text: string; problems: string[] } | null>(null);
-  const add = async () => {
+  const add = async (scope?: ImageScope) => {
     setAdding(true);
     try {
       const paths = await pickImageFiles();
       if (!paths.length) return;
-      const results = await commands.importImages(paths);
+      const results = await commands.importImages(paths, scope);
       setResult(describeImports(results));
-      onAdded(results.flatMap((r) => (r.asset ? [r.asset] : [])));
+      onAdded(
+        results.flatMap((r) => (r.asset ? [r.asset] : [])),
+        results,
+      );
     } catch (e) {
       setResult({ text: errorMessage(e), problems: [] });
     } finally {
@@ -52,6 +58,55 @@ export function ImportResult({ result }: { result: { text: string; problems: str
   );
 }
 
+type Group = { key: string; title: string; hint?: string; images: AssetDto[] };
+
+function quoteList(titles: string[]): string {
+  const q = titles.map((t) => `“${t}”`);
+  if (q.length <= 1) return q.join('');
+  if (q.length <= 3) return `${q.slice(0, -1).join(', ')} and ${q[q.length - 1]}`;
+  return `${q.slice(0, 2).join(', ')} and ${q.length - 2} more`;
+}
+
+/** Who may use an image, in words. */
+export function scopeText(a: AssetDto): string {
+  if (a.shared) return 'All stories';
+  if (!a.stories.length) return 'Not in any story';
+  return `Only ${quoteList(a.stories.map((s) => s.title))}`;
+}
+
+/** Shared images first, then each story's own, then images in no story. */
+export function groupImages(images: AssetDto[]): Group[] {
+  const shared = images.filter((a) => a.shared);
+  const own = new Map<string, Group>();
+  const none: AssetDto[] = [];
+  for (const a of images) {
+    if (a.shared) continue;
+    if (!a.stories.length) {
+      none.push(a);
+      continue;
+    }
+    const key = a.stories.map((s) => s.id).join('|');
+    const g = own.get(key) ?? {
+      key,
+      title: `Only in ${quoteList(a.stories.map((s) => s.title))}`,
+      images: [],
+    };
+    g.images.push(a);
+    own.set(key, g);
+  }
+  const groups: Group[] = [];
+  if (shared.length) groups.push({ key: 'shared', title: 'For all stories', images: shared });
+  groups.push(...[...own.values()].sort((a, b) => a.title.localeCompare(b.title)));
+  if (none.length)
+    groups.push({
+      key: 'none',
+      title: 'Not in any story',
+      hint: 'From deleted stories, or added for a story that was never created. Share them or delete them.',
+      images: none,
+    });
+  return groups;
+}
+
 /** Library -> Images: every picture on this computer, reusable in any story. */
 export function ImagesScreen() {
   const goBack = useUiStore((s) => s.goBack);
@@ -59,14 +114,16 @@ export function ImagesScreen() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  const [stories, setStories] = useState<StorySummary[]>([]);
   const [reload, setReload] = useState(0);
   useEffect(() => {
     let live = true;
-    commands
-      .listImages()
-      .then((list) => {
+    // The story list only feeds "Keep for one story"; images show without it.
+    Promise.all([commands.listImages(), commands.listStories().catch(() => [])])
+      .then(([list, all]) => {
         if (live) {
           setImages(list);
+          setStories(all);
           setError(null);
         }
       })
@@ -100,8 +157,10 @@ export function ImagesScreen() {
         </div>
       </div>
       <p className="muted">
-        PNG, JPEG or WebP, up to 20 MB each. Images stay on this computer and can be used as covers,
-        backgrounds and portraits in any story. Adding the same picture twice keeps one copy.
+        PNG, JPEG or WebP, up to 20 MB each. Images stay on this computer. Pictures added here can
+        be used in any story; pictures added from a story&apos;s Pictures (or while creating a
+        story) stay in that story unless you share them. Adding the same picture twice keeps one
+        copy.
       </p>
       <ImportResult result={result} />
       {error && (
@@ -120,16 +179,25 @@ export function ImagesScreen() {
       )}
       {images && images.length > 0 && (
         <div className="images-layout">
-          <ImageGrid
-            images={images}
-            selectedId={selectedId}
-            onSelect={(a) => setSelectedId(a.id)}
-            label="Your images"
-          />
+          <div className="image-groups">
+            {groupImages(images).map((g) => (
+              <section key={g.key} className="image-group" aria-label={g.title}>
+                <h2 className="small-heading">{g.title}</h2>
+                {g.hint && <p className="muted small">{g.hint}</p>}
+                <ImageGrid
+                  images={g.images}
+                  selectedId={selectedId}
+                  onSelect={(a) => setSelectedId(a.id)}
+                  label={g.title}
+                />
+              </section>
+            ))}
+          </div>
           {selected ? (
             <ImageDetails
               key={selected.id}
               image={selected}
+              stories={stories}
               onSaved={(a) => setImages((list) => list?.map((x) => (x.id === a.id ? a : x)) ?? [])}
               onDeleted={() => {
                 setSelectedId(null);
@@ -147,10 +215,12 @@ export function ImagesScreen() {
 
 function ImageDetails({
   image,
+  stories,
   onSaved,
   onDeleted,
 }: {
   image: AssetDto;
+  stories: StorySummary[];
   onSaved: (a: AssetDto) => void;
   onDeleted: () => void;
 }) {
@@ -198,6 +268,23 @@ function ImageDetails({
       onDeleted();
     } catch (e) {
       setConfirm(false);
+      setError(errorMessage(e));
+    }
+  };
+
+  const [onlyStory, setOnlyStory] = useState('');
+  const setScope = async (storyId: string | null) => {
+    try {
+      const a = await commands.setImageScope(image.id, storyId);
+      onSaved(a);
+      setStatus(
+        a.shared
+          ? 'Shared with all stories.'
+          : `Kept for ${quoteList(a.stories.map((st) => st.title))} only.`,
+      );
+      setError(null);
+      setOnlyStory('');
+    } catch (e) {
       setError(errorMessage(e));
     }
   };
@@ -260,6 +347,44 @@ function ImageDetails({
           )}
         </div>
       </form>
+
+      <h2 className="small-heading">Available to</h2>
+      <p className="small" data-testid="image-scope">
+        {scopeText(image)}
+      </p>
+      {image.shared ? (
+        stories.length > 0 && (
+          <div className="button-row">
+            <label htmlFor={`${id}-only`} className="small">
+              Keep for one story only
+            </label>
+            <select
+              id={`${id}-only`}
+              value={onlyStory}
+              onChange={(e) => setOnlyStory(e.target.value)}
+            >
+              <option value="">Choose a story…</option>
+              {stories.map((st) => (
+                <option key={st.id} value={st.id}>
+                  {st.title}
+                </option>
+              ))}
+            </select>
+            <button type="button" disabled={!onlyStory} onClick={() => void setScope(onlyStory)}>
+              Keep for that story
+            </button>
+          </div>
+        )
+      ) : (
+        <div className="button-row">
+          <button type="button" onClick={() => void setScope(null)}>
+            Share with all stories
+          </button>
+        </div>
+      )}
+      {image.shared && usages && new Set(usages.map((u) => u.storyId)).size > 0 && (
+        <p className="muted small">Stories that already show it keep it.</p>
+      )}
 
       <h2 className="small-heading">Used in</h2>
       {usages === null && !error && <p className="muted small">Checking…</p>}

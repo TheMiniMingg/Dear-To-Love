@@ -35,7 +35,8 @@ offline storyteller lets you try everything without either.
   and facts the storyteller must keep to. Changes apply from that point, on that route only.
 - **Long stories just work.** Older turns are summarized automatically, so a story can run for
   thousands of turns. **Preview context** shows exactly what the AI will read.
-- **Pictures**: portraits, backgrounds and covers from your own images.
+- **Pictures**: portraits, backgrounds and covers from your own images. Keep a picture for one
+  story, or share it with all of them.
 - **Search and bookmarks** within a route.
 - **Share and keep**: export a route as text, or a whole story as a `.storypack` file to import
   on another computer. Automatic daily backups, and a full backup file you can restore anywhere.
@@ -93,7 +94,8 @@ decides what your character does.
 
 ### Making your own kind of story
 
-**Create your own** walks through five steps. In **Narration** you tell the storyteller what
+**Create your own** walks through six steps. In **Pictures** you can add pictures for this
+story only, give each character a portrait, and choose which AI writes it. In **Narration** you tell the storyteller what
 kind of story this is:
 
 ![Genre, content rating, themes and limits](docs/screenshots/wizard-narration.png)
@@ -165,7 +167,9 @@ thinking is never shown or saved, and the lab presets leave room for it in the r
 
 Keys are kept in your system's credential store (Windows Credential Manager, macOS Keychain,
 Linux Secret Service), never in story files, exports or backups. **Test connection** checks a
-connection for free. Then pick it as the **Storyteller** in Settings or from the reader.
+connection for free. Then pick it as the **Storyteller** in Settings. A story can also use
+its own storyteller: pick it while creating the story, or click the storyteller's name above
+the story. Switching keeps everything the story remembers.
 
 Set the **context limit** to what your model can read: a bigger limit lets the storyteller see
 more of the story at once. Costs are estimates from prices you enter under **Usage & budget**;

@@ -126,7 +126,7 @@ pub async fn submit_action(
             Some(dice::roll(req, player, &mut dice::os_uniform)?)
         }
     };
-    let profile = providers::storyteller(db).await?;
+    let profile = providers::story_storyteller(db, story_id).await?;
     let mut tx = db.write_txn().await?;
     let player = append_event_tx(
         &mut tx,
@@ -159,7 +159,7 @@ pub async fn retry_reply(
     route_id: &str,
     expected_head_id: &str,
 ) -> AppResult<Submitted> {
-    let profile = providers::storyteller(db).await?;
+    let profile = providers::story_storyteller(db, story_id).await?;
     let mut tx = db.write_txn().await?;
     let route = get_story_route(&mut tx, story_id, route_id).await?;
     let head = route.head_event_id.clone().unwrap_or_default();
@@ -191,7 +191,7 @@ pub async fn edit_action(
     player_event_id: &str,
     text: &str,
 ) -> AppResult<Submitted> {
-    let profile = providers::storyteller(db).await?;
+    let profile = providers::story_storyteller(db, story_id).await?;
     let mut tx = db.write_txn().await?;
     let (fork, appended) = edit_prior_player_turn_tx(
         &mut tx,
@@ -218,7 +218,7 @@ pub async fn regenerate_reply(
     route_id: &str,
     assistant_event_id: &str,
 ) -> AppResult<Submitted> {
-    let profile = providers::storyteller(db).await?;
+    let profile = providers::story_storyteller(db, story_id).await?;
     let mut tx = db.write_txn().await?;
     let fork = regenerate_fork_tx(&mut tx, story_id, route_id, assistant_event_id).await?;
     let head = fork

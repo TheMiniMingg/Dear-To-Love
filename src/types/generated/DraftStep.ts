@@ -3,4 +3,4 @@
 /**
  * Where in the creation wizard a field lives.
  */
-export type DraftStep = "world" | "character" | "story" | "narration" | "review";
+export type DraftStep = "world" | "character" | "story" | "narration" | "pictures" | "review";

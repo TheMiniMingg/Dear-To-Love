@@ -335,6 +335,7 @@ impl TemplateCatalog {
             first_chapter_title: scenario.first_chapter_title.clone(),
             chapter_outlines: scenario.chapter_outlines.clone(),
             story_type: input.story_type.clone(),
+            ..CreateStoryDraft::default()
         })
     }
 
