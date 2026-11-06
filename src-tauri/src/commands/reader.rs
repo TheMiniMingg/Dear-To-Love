@@ -5,6 +5,7 @@ use tauri::{AppHandle, Manager, State};
 
 use crate::db::runs;
 use crate::db::timeline::{self, RouteDto};
+use crate::domain::events::StateEdit;
 use crate::domain::provider::StreamMessage;
 use crate::errors::AppResult;
 use crate::services::context::{self, ContextPreview};
@@ -112,6 +113,34 @@ pub async fn edit_action(
     text: String,
 ) -> AppResult<Submitted> {
     generation::edit_action(state.db()?, &story_id, &route_id, &player_event_id, &text).await
+}
+
+/// Another reply to an earlier action, on a new branch.
+#[tauri::command]
+pub async fn regenerate_reply(
+    state: State<'_, AppState>,
+    story_id: String,
+    route_id: String,
+    assistant_event_id: String,
+) -> AppResult<Submitted> {
+    generation::regenerate_reply(state.db()?, &story_id, &route_id, &assistant_event_id).await
+}
+
+/// Change story details (characters, world, narration, scene, facts) from
+/// the current point of this route on. Earlier turns and other routes keep
+/// what they had.
+#[tauri::command]
+pub async fn edit_story_details(
+    state: State<'_, AppState>,
+    story_id: String,
+    route_id: String,
+    expected_head_id: String,
+    changes: Vec<StateEdit>,
+    note: Option<String>,
+) -> AppResult<RouteView> {
+    let db = state.db()?;
+    reader::edit_details(db, &story_id, &route_id, &expected_head_id, changes, note).await?;
+    reader::route_view(db, &route_id).await
 }
 
 #[tauri::command]

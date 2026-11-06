@@ -555,7 +555,18 @@ pub async fn regenerate_fork(
     assistant_event_id: &str,
 ) -> AppResult<RouteDto> {
     let mut tx = db.write_txn().await?;
-    let ev = get_event(&mut tx, assistant_event_id).await?;
+    let fork = regenerate_fork_tx(&mut tx, story_id, route_id, assistant_event_id).await?;
+    tx.commit().await?;
+    Ok(fork)
+}
+
+pub async fn regenerate_fork_tx(
+    tx: &mut SqliteConnection,
+    story_id: &str,
+    route_id: &str,
+    assistant_event_id: &str,
+) -> AppResult<RouteDto> {
+    let ev = get_event(&mut *tx, assistant_event_id).await?;
     if ev.kind() != Some(EventKind::Assistant) {
         return Err(AppError::invalid_input(
             "only story replies can be regenerated",
@@ -564,14 +575,12 @@ pub async fn regenerate_fork(
     let parent = ev
         .parent_event_id
         .ok_or_else(|| AppError::internal("reply without a parent action"))?;
-    let route = get_story_route(&mut tx, story_id, route_id).await?;
+    let route = get_story_route(&mut *tx, story_id, route_id).await?;
     let head = route.head_event_id.unwrap_or_default();
-    if !is_ancestor(&mut tx, story_id, assistant_event_id, &head).await? {
+    if !is_ancestor(&mut *tx, story_id, assistant_event_id, &head).await? {
         return Err(invalid_ancestor(assistant_event_id));
     }
-    let fork = fork_route_tx(&mut tx, story_id, route_id, &parent, None).await?;
-    tx.commit().await?;
-    Ok(fork)
+    fork_route_tx(tx, story_id, route_id, &parent, None).await
 }
 
 /// Edit an earlier player action: fork at the event before it and append

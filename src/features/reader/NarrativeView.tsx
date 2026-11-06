@@ -7,6 +7,10 @@ type Props = {
   draft?: { text: string } | null;
   /** Offer "Branch from here" on replies and chapter starts. */
   onBranch?: (eventId: string) => void;
+  /** Offer "Another reply" on replies (a new route). */
+  onRegenerate?: (eventId: string) => void;
+  /** Offer "Change this action" on the player's actions (a new route). */
+  onEditAction?: (eventId: string) => void;
   playerName: string;
 };
 
@@ -20,7 +24,13 @@ function Paragraphs({ text }: { text: string }) {
   );
 }
 
-function EventBlock({ e, onBranch, playerName }: { e: EventDto } & Omit<Props, 'events'>) {
+function EventBlock({
+  e,
+  onBranch,
+  onRegenerate,
+  onEditAction,
+  playerName,
+}: { e: EventDto } & Omit<Props, 'events'>) {
   const branch = onBranch && (
     <button
       type="button"
@@ -30,6 +40,26 @@ function EventBlock({ e, onBranch, playerName }: { e: EventDto } & Omit<Props, '
       title="Start a new branch from this point"
     >
       Branch from here
+    </button>
+  );
+  const regenerate = onRegenerate && (
+    <button
+      type="button"
+      className="branch-button"
+      onClick={() => onRegenerate(e.id)}
+      title="Write a different reply on a new route; this one stays"
+    >
+      Another reply
+    </button>
+  );
+  const change = onEditAction && (
+    <button
+      type="button"
+      className="branch-button"
+      onClick={() => onEditAction(e.id)}
+      title="Change what you did, on a new route; this one stays"
+    >
+      Change this action
     </button>
   );
   switch (e.kind) {
@@ -47,13 +77,19 @@ function EventBlock({ e, onBranch, playerName }: { e: EventDto } & Omit<Props, '
         <div className="turn-player" data-event-id={e.id}>
           <span className="speaker">{playerName}</span>
           <Paragraphs text={e.payload.text} />
+          {change && <div className="turn-actions">{change}</div>}
         </div>
       );
     case 'assistant':
       return (
         <div className="turn-assistant" data-event-id={e.id}>
           <Paragraphs text={e.payload.text} />
-          {branch}
+          {(branch || regenerate) && (
+            <div className="turn-actions">
+              {regenerate}
+              {branch}
+            </div>
+          )}
         </div>
       );
     case 'edit':
@@ -81,7 +117,14 @@ function EventBlock({ e, onBranch, playerName }: { e: EventDto } & Omit<Props, '
  * Reading column. New content keeps the reader's position unless they are
  * already at the bottom; otherwise a "Jump to latest" button appears.
  */
-export function NarrativeView({ events, draft, onBranch, playerName }: Props) {
+export function NarrativeView({
+  events,
+  draft,
+  onBranch,
+  onRegenerate,
+  onEditAction,
+  playerName,
+}: Props) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const atBottomRef = useRef(true);
   const [showJump, setShowJump] = useState(false);
@@ -128,7 +171,14 @@ export function NarrativeView({ events, draft, onBranch, playerName }: Props) {
       >
         <div className="narrative-column">
           {events.map((e) => (
-            <EventBlock key={e.id} e={e} onBranch={onBranch} playerName={playerName} />
+            <EventBlock
+              key={e.id}
+              e={e}
+              onBranch={onBranch}
+              onRegenerate={onRegenerate}
+              onEditAction={onEditAction}
+              playerName={playerName}
+            />
           ))}
           {draft && (
             <div className="turn-assistant turn-draft" aria-busy="true" data-testid="reply-draft">

@@ -24,7 +24,7 @@ use crate::db::runs::{self, RunDto, RunStatus};
 use crate::db::state::{state_with_snapshots, store_snapshots};
 use crate::db::timeline::{
     ancestors, append_event_tx, edit_prior_player_turn_tx, get_event, get_route, get_story_route,
-    AppendEvent,
+    regenerate_fork_tx, AppendEvent,
 };
 use crate::db::usage::{self, NewRequest, RequestOutcome, RequestPurpose, RequestStatus};
 use crate::db::Database;
@@ -183,6 +183,29 @@ pub async fn edit_action(
     .await?;
     let run_id =
         create_run_for_head(&mut tx, &fork.id, &appended.event_id, profile.as_deref()).await?;
+    tx.commit().await?;
+    Ok(Submitted {
+        run_id,
+        view: route_view(db, &fork.id).await?,
+    })
+}
+
+/// Another reply to an answered action: a new branch at that action with a
+/// pending run. The original reply and its route stay as they were.
+pub async fn regenerate_reply(
+    db: &Database,
+    story_id: &str,
+    route_id: &str,
+    assistant_event_id: &str,
+) -> AppResult<Submitted> {
+    let profile = providers::storyteller(db).await?;
+    let mut tx = db.write_txn().await?;
+    let fork = regenerate_fork_tx(&mut tx, story_id, route_id, assistant_event_id).await?;
+    let head = fork
+        .head_event_id
+        .clone()
+        .ok_or_else(|| AppError::internal("new branch without a head"))?;
+    let run_id = create_run_for_head(&mut tx, &fork.id, &head, profile.as_deref()).await?;
     tx.commit().await?;
     Ok(Submitted {
         run_id,

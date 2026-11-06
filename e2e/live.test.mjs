@@ -78,7 +78,9 @@ test('live storyteller: stream a reply, retry a failure', async () => {
 
   // Usage & budget counts every call, the failed one too, at $0 for a local model.
   await b.keys(['Escape']);
+  await waitForText(b, '[role="dialog"]', 'Paused');
   await (await b.$('button=Settings')).click();
+  await waitForText(b, 'main', 'Storyteller');
   await (await b.$('button=Usage & budget')).click();
   await waitForText(b, 'main', 'Recent requests');
   await waitForText(b, '[aria-label="Totals"]', '3 to local models');
