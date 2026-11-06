@@ -81,7 +81,12 @@ test('live storyteller: stream a reply, retry a failure', async () => {
 
   // End chapter: the storyteller writes a recap, the player edits it, the
   // chapter is saved, and the next chapter's replies read the recap.
-  await (await b.$('button=End chapter')).click();
+  // The streamed draft shows the reply's text before it is committed, and
+  // End chapter stays disabled until then.
+  await waitForReply(b);
+  const endButton = await b.$('button=End chapter');
+  await endButton.waitForEnabled({ timeout: 10000 });
+  await endButton.click();
   await waitForText(b, '[role="dialog"]', 'Written by Fake cloud');
   const recapBox = await b.$('#end-chapter-recap');
   assert.equal(await recapBox.getValue(), 'Sam lit the lamp and looked outside.');
