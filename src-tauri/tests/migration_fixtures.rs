@@ -48,6 +48,33 @@ async fn v1_fixture_upgrades_to_current() {
     assert_eq!(head, "e4");
 }
 
+#[tokio::test]
+async fn v2_fixture_upgrades_to_current() {
+    let (db, _dir) = upgrade_fixture(2, include_str!("fixtures/data_v2.sql")).await;
+    let summary: String =
+        sqlx::query_scalar("SELECT summary_text FROM memory_caches WHERE id = 'm1'")
+            .fetch_one(db.reader())
+            .await
+            .unwrap();
+    assert_eq!(summary, "Rook bought a ferry ticket.");
+}
+
+#[tokio::test]
+async fn deleting_a_story_removes_its_memory() {
+    let (db, _dir) = upgrade_fixture(2, include_str!("fixtures/data_v2.sql")).await;
+    let mut tx = db.write_txn().await.unwrap();
+    sqlx::query("DELETE FROM stories WHERE id = 's2'")
+        .execute(&mut *tx)
+        .await
+        .unwrap();
+    tx.commit().await.unwrap();
+    let n: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM memory_caches")
+        .fetch_one(db.reader())
+        .await
+        .unwrap();
+    assert_eq!(n, 0);
+}
+
 #[test]
 fn every_migration_has_a_fixture() {
     for m in MIGRATOR.iter() {

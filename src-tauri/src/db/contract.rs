@@ -101,6 +101,17 @@ pub async fn verify(db: &Database) -> AppResult<Vec<String>> {
         problems.push(format!("event {id} originates on a route of another story"));
     }
 
+    // Memory caches are only valid inside their own story's event graph.
+    let cross_story_memory: Vec<(String,)> = sqlx::query_as(
+        "SELECT m.id FROM memory_caches m JOIN events e ON e.id = m.source_end_event_id \
+         WHERE e.story_id <> m.story_id",
+    )
+    .fetch_all(pool)
+    .await?;
+    for (id,) in cross_story_memory {
+        problems.push(format!("story summary {id} points into another story"));
+    }
+
     let main_counts: Vec<(String, i64)> = sqlx::query_as(
         "SELECT s.id, (SELECT COUNT(*) FROM routes r WHERE r.story_id = s.id AND r.is_main = 1) \
          FROM stories s",

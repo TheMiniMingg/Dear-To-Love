@@ -6,6 +6,8 @@ type Props = {
   children: ReactNode;
   /** Optional element id to focus first; defaults to the first focusable element. */
   initialFocusId?: string;
+  /** Wider dialog for long read-only content. */
+  wide?: boolean;
 };
 
 const FOCUSABLE =
@@ -15,7 +17,7 @@ const FOCUSABLE =
  * Modal dialog: traps Tab focus, closes on Escape (only the top dialog),
  * and restores focus to whatever was focused before it opened.
  */
-export function Dialog({ title, onClose, children, initialFocusId }: Props) {
+export function Dialog({ title, onClose, children, initialFocusId, wide = false }: Props) {
   const ref = useRef<HTMLDivElement>(null);
   const titleId = useId();
 
@@ -59,7 +61,7 @@ export function Dialog({ title, onClose, children, initialFocusId }: Props) {
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className="dialog"
+        className={wide ? 'dialog wide' : 'dialog'}
         tabIndex={-1}
         onKeyDown={onKeyDown}
       >

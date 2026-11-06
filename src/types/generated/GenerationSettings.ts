@@ -7,4 +7,8 @@ export type GenerationSettings = { temperature?: number, maxOutputTokens: number
 /**
  * Longest wait for the next piece of a streamed reply.
  */
-timeoutMs: number, };
+timeoutMs: number, 
+/**
+ * Most tokens one request may use, prompt and reply together.
+ */
+maxContextTokens: number, };

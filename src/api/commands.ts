@@ -4,6 +4,7 @@ import type {
   AppError,
   AppInfo,
   ConnectionCheck,
+  ContextPreview,
   DiagnosticCheck,
   ErrorCode,
   ProviderProfile,
@@ -74,7 +75,7 @@ export function runErrorMessage(code: ErrorCode | null): string {
     case 'PROVIDER_UNREACHABLE':
       return 'The AI service could not be reached.';
     case 'CONTEXT_TOO_LONG':
-      return 'The story is too long for this model.';
+      return "The story setup and your action don't fit this connection's context limit. Shorten the action, or raise the context limit in Settings.";
     case 'PROVIDER_ERROR':
       return 'The AI service returned an error.';
     case null:
@@ -115,6 +116,8 @@ export const commands = {
   cancelReply: (runId: string) => call<void>('cancel_reply', { runId }),
   editAction: (r: RouteRef & { playerEventId: string; text: string }) =>
     call<Submitted>('edit_action', r),
+  /** The exact prompt the next reply would send. Assembled locally; nothing is sent. */
+  previewContext: (routeId: string) => call<ContextPreview>('preview_context', { routeId }),
   nextChapter: (r: RouteRef & { expectedHeadId: string; title?: string | null }) =>
     call<RouteView>('next_chapter', { ...r, title: r.title ?? null }),
   forkRoute: (r: RouteRef & { eventId: string; label?: string | null }) =>
