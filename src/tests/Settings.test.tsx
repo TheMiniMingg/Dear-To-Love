@@ -28,7 +28,7 @@ const saved: ProviderProfile = {
   modelId: 'story-model',
   billing: 'paid',
   hasKey: true,
-  settings: { temperature: 0.9, maxOutputTokens: 700, timeoutMs: 120000 },
+  settings: { temperature: 0.9, maxOutputTokens: 700, timeoutMs: 120000, maxContextTokens: 16000 },
   createdAt: '',
   updatedAt: '',
 };
@@ -107,6 +107,7 @@ describe('Settings: AI connections', () => {
     const input = invoke.mock.calls.find((c) => c[0] === 'save_connection')?.[1].input;
     expect(input.id).toBe('p1');
     expect('apiKey' in input).toBe(false);
+    expect(input.settings.maxContextTokens).toBe(16000);
   });
 
   it('shows a typed result for a failed connection test', async () => {

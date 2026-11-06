@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Long stories: the storyteller keeps a rolling summary of earlier turns (written in the
+  background every 8 turns; the offline storyteller summarizes without any API call), and each
+  prompt is fitted to the connection's context limit, keeping recent turns word for word. A
+  prompt that can never fit is refused before sending with a clear fix. Preview context in the
+  pause menu shows the exact prompt, its approximate size and which turns the summary covers.
+  Connections gain a context limit setting (presets for OpenAI, OpenRouter and local servers).
 - Live AI storyteller: connect any OpenAI-compatible service (cloud or a local server such as
   LM Studio or Ollama) in Settings; keys stay in the system credential store. Replies stream in
   as they are written, can be stopped, and a failed or interrupted reply keeps your action with

@@ -19,7 +19,7 @@ interrupted`, every transition a compare-and-swap on the current status.
   back as the command's `RouteView` result. Every message carries `runId`.
 - **Ledger:** one `api_requests` row per real outbound call, inserted with
   status `sent` before dispatch, closed exactly once. Purpose is
-  `story_reply` or `manual_test` today (`memory_summary` arrives with PR 07).
+  `story_reply`, `memory_summary` (PR 07, see ADR 0003) or `manual_test`.
   The row id is the `apiRequestId`; a run links to it through
   `api_requests.generation_run_id`.
 - **Costs:** a rate snapshot is copied into the row at dispatch.

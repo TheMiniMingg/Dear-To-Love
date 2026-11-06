@@ -59,6 +59,9 @@ impl Billing {
 
 pub const DEFAULT_MAX_OUTPUT_TOKENS: u32 = 700;
 pub const DEFAULT_TIMEOUT_MS: u32 = 120_000;
+/// Prompt plus reply. Conservative for small local models; raise it for
+/// large cloud models in the connection's advanced settings.
+pub const DEFAULT_MAX_CONTEXT_TOKENS: u32 = 16_000;
 
 /// Generation defaults stored in `provider_profiles.settings_json`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, TS)]
@@ -70,6 +73,8 @@ pub struct GenerationSettings {
     pub max_output_tokens: u32,
     /// Longest wait for the next piece of a streamed reply.
     pub timeout_ms: u32,
+    /// Most tokens one request may use, prompt and reply together.
+    pub max_context_tokens: u32,
 }
 
 impl Default for GenerationSettings {
@@ -78,6 +83,7 @@ impl Default for GenerationSettings {
             temperature: Some(0.9),
             max_output_tokens: DEFAULT_MAX_OUTPUT_TOKENS,
             timeout_ms: DEFAULT_TIMEOUT_MS,
+            max_context_tokens: DEFAULT_MAX_CONTEXT_TOKENS,
         }
     }
 }
@@ -99,6 +105,16 @@ impl GenerationSettings {
         if !(5_000..=600_000).contains(&self.timeout_ms) {
             return Err(AppError::invalid_input(
                 "timeout must be between 5 and 600 seconds",
+            ));
+        }
+        if !(2_048..=2_000_000).contains(&self.max_context_tokens) {
+            return Err(AppError::invalid_input(
+                "context limit must be between 2048 and 2000000 tokens",
+            ));
+        }
+        if self.max_output_tokens.saturating_mul(2) > self.max_context_tokens {
+            return Err(AppError::invalid_input(
+                "reply length can be at most half of the context limit",
             ));
         }
         Ok(())

@@ -4,6 +4,7 @@ use std::sync::Arc;
 use crate::db::Database;
 use crate::errors::{AppError, AppResult, ErrorCode};
 use crate::services::generation::RunRegistry;
+use crate::services::memory::MemoryJobs;
 use crate::services::secrets::SecretStore;
 
 /// Process-wide state managed by Tauri.
@@ -20,6 +21,8 @@ pub struct AppState {
     pub session_id: String,
     /// Cancel handles for replies being written right now.
     pub runs: RunRegistry,
+    /// Background story summaries running or failed this session.
+    pub memory: MemoryJobs,
 }
 
 impl AppState {

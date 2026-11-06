@@ -4,6 +4,7 @@
 
 pub mod backup;
 pub mod contract;
+pub mod memory;
 pub mod providers;
 pub mod runs;
 pub mod saves;

@@ -18,6 +18,7 @@ use serde::Serialize;
 use tokio_util::sync::CancellationToken;
 use ts_rs::TS;
 
+use crate::db::memory::latest_eligible_summary;
 use crate::db::providers::{self, ProfileRow};
 use crate::db::runs::{self, RunDto, RunStatus};
 use crate::db::state::{state_with_snapshots, store_snapshots};
@@ -32,9 +33,11 @@ use crate::domain::provider::{
     AdapterKind, Billing, GenerateRequest, GenerationSettings, ModelMessage, Role, StreamMessage,
 };
 use crate::errors::{AppError, AppResult, ErrorCode};
-use crate::services::adapters::{offline::Offline, openai::OpenAiCompatible, Adapter, Charge};
+use crate::services::adapters::{
+    offline::Offline, openai::OpenAiCompatible, Adapter, Charge, Completion,
+};
 use crate::services::mock_storyteller::{self, MOCK_PROVIDER_LABEL};
-use crate::services::prompt;
+use crate::services::prompt::{self, Budget};
 use crate::services::reader::{route_view, RouteView};
 use crate::services::secrets::SecretStore;
 
@@ -232,7 +235,7 @@ struct Resolved {
     live: bool,
 }
 
-fn live_adapter(row: &ProfileRow, secrets: &dyn SecretStore) -> AppResult<Adapter> {
+pub(crate) fn live_adapter(row: &ProfileRow, secrets: &dyn SecretStore) -> AppResult<Adapter> {
     let key = match &row.secret_ref {
         Some(r) => secrets.get(r)?,
         None => None,
@@ -274,13 +277,14 @@ pub async fn generate(
     }
 
     // The run only ever answers its own input event on its own route.
-    let (route, history, state, snaps) = {
+    let (route, history, state, snaps, summary) = {
         let mut conn = db.reader().acquire().await?;
         let route = get_route(&mut conn, &run.route_id).await?;
         let history = ancestors(&mut conn, &route.story_id, &run.input_event_id).await?;
         let (state, snaps) =
             state_with_snapshots(&mut conn, &route.story_id, &run.input_event_id).await?;
-        (route, history, state, snaps)
+        let summary = latest_eligible_summary(&mut conn, &route.story_id, &history).await?;
+        (route, history, state, snaps, summary)
     };
     let _ = store_snapshots(db, &snaps).await;
     if route.head_event_id.as_deref() != Some(run.input_event_id.as_str()) {
@@ -298,8 +302,28 @@ pub async fn generate(
         ));
     }
 
-    let resolved = match resolve(ctx, &run, &state, &history).await {
-        Ok(r) => r,
+    // The offline storyteller never reads a prompt; live runs must fit
+    // their connection's context before anything is sent.
+    let prepared = resolve(ctx, &run, &state, &history).await.and_then(|r| {
+        let messages = if r.live {
+            prompt::assemble(
+                &state,
+                &history,
+                summary.as_ref(),
+                None,
+                Budget {
+                    max_context_tokens: r.settings.max_context_tokens,
+                    max_output_tokens: r.settings.max_output_tokens,
+                },
+            )?
+            .messages
+        } else {
+            Vec::new()
+        };
+        Ok((r, messages))
+    });
+    let (resolved, messages) = match prepared {
+        Ok(p) => p,
         Err(e) => {
             runs::transition(
                 db,
@@ -317,7 +341,6 @@ pub async fn generate(
             return Err(e);
         }
     };
-    let messages = prompt::build_messages(&state, &history)?;
     let request = GenerateRequest {
         model_id: resolved.model_id.clone(),
         messages,
@@ -546,7 +569,7 @@ async fn commit_reply(
     run: &RunDto,
     story_id: &str,
     resolved: &Resolved,
-    c: &crate::services::adapters::Completion,
+    c: &Completion,
 ) -> AppResult<()> {
     let mut tx = db.write_txn().await?;
     if !runs::transition_tx(
@@ -584,27 +607,18 @@ async fn commit_reply(
     Ok(())
 }
 
-/// One short paid request outside any story ("Send a test message").
-/// Recorded in the ledger as `manual_test`.
-pub async fn send_test_message(
+/// One request outside the reply flow (a test message, a memory summary),
+/// with its ledger row opened before dispatch and closed after.
+pub(crate) async fn call_once(
     db: &Database,
     secrets: &dyn SecretStore,
     session_id: &str,
-    profile_id: &str,
-) -> AppResult<String> {
-    let row = providers::get_profile_row(db, profile_id).await?;
-    let adapter = live_adapter(&row, secrets)?;
-    let settings = row.settings();
-    let req = GenerateRequest {
-        model_id: row.model_id.clone(),
-        messages: vec![ModelMessage {
-            role: Role::User,
-            content: "Reply with one short friendly sentence to confirm you are working.".into(),
-        }],
-        max_output_tokens: 40,
-        temperature: settings.temperature,
-        timeout_ms: settings.timeout_ms,
-    };
+    row: &ProfileRow,
+    req: &GenerateRequest,
+    purpose: RequestPurpose,
+    route_id: Option<&str>,
+) -> AppResult<(Completion, String)> {
+    let adapter = live_adapter(row, secrets)?;
     let ledger = usage::open_request(
         db,
         NewRequest {
@@ -614,23 +628,23 @@ pub async fn send_test_message(
             model_id: &row.model_id,
             billing: row.billing(),
             session_id,
-            route_id: None,
-            purpose: RequestPurpose::ManualTest,
+            route_id,
+            purpose,
         },
     )
     .await?;
     let out = adapter
-        .generate(&req, &CancellationToken::new(), &mut |_: &str| {})
+        .generate(req, &CancellationToken::new(), &mut |_: &str| {})
         .await;
     let (outcome, result) = match out {
         Ok(c) => (
             RequestOutcome {
                 status: RequestStatus::Completed,
-                usage: c.usage,
+                usage: c.usage.clone(),
                 may_be_charged: true,
                 error_code: None,
             },
-            Ok(c.text),
+            Ok(c),
         ),
         Err(e) => (
             RequestOutcome {
@@ -643,7 +657,40 @@ pub async fn send_test_message(
         ),
     };
     usage::close_request(db, &ledger, outcome).await?;
-    result
+    result.map(|c| (c, ledger))
+}
+
+/// One short paid request outside any story ("Send a test message").
+/// Recorded in the ledger as `manual_test`.
+pub async fn send_test_message(
+    db: &Database,
+    secrets: &dyn SecretStore,
+    session_id: &str,
+    profile_id: &str,
+) -> AppResult<String> {
+    let row = providers::get_profile_row(db, profile_id).await?;
+    let settings = row.settings();
+    let req = GenerateRequest {
+        model_id: row.model_id.clone(),
+        messages: vec![ModelMessage {
+            role: Role::User,
+            content: "Reply with one short friendly sentence to confirm you are working.".into(),
+        }],
+        max_output_tokens: 40,
+        temperature: settings.temperature,
+        timeout_ms: settings.timeout_ms,
+    };
+    let (c, _) = call_once(
+        db,
+        secrets,
+        session_id,
+        &row,
+        &req,
+        RequestPurpose::ManualTest,
+        None,
+    )
+    .await?;
+    Ok(c.text)
 }
 
 #[cfg(test)]

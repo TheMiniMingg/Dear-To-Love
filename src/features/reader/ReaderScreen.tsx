@@ -8,9 +8,10 @@ import { RoutesPanel } from '../routes/RoutesPanel';
 import { SavesPanel } from '../saves/SavesPanel';
 import type { RouteView, SaveView } from '../../types';
 import { Composer } from './Composer';
+import { ContextPreviewPanel } from './ContextPreviewPanel';
 import { NarrativeView } from './NarrativeView';
 
-type Panel = null | 'menu' | 'saves' | 'routes' | 'chapters' | 'edit';
+type Panel = null | 'menu' | 'saves' | 'routes' | 'chapters' | 'edit' | 'context';
 
 const PANEL_TITLES: Record<Exclude<Panel, null>, string> = {
   menu: 'Paused',
@@ -18,6 +19,7 @@ const PANEL_TITLES: Record<Exclude<Panel, null>, string> = {
   routes: 'Routes',
   chapters: 'Chapters',
   edit: 'Change your action',
+  context: 'Preview context',
 };
 
 type Stream = { runId: string; text: string };
@@ -429,6 +431,7 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
         <Dialog
           key={panel}
           title={PANEL_TITLES[panel]}
+          wide={panel === 'context'}
           onClose={() => setPanel(panel === 'menu' || panel === 'edit' ? null : 'menu')}
           initialFocusId={
             panel === 'menu' ? 'pause-resume' : panel === 'edit' ? 'edit-action-input' : undefined
@@ -457,6 +460,9 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
                   A+
                 </button>
               </div>
+              <button type="button" onClick={() => setPanel('context')}>
+                Preview context
+              </button>
               <button type="button" onClick={() => navigate({ name: 'settings' })}>
                 Settings
               </button>
@@ -513,6 +519,7 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
               }
             />
           )}
+          {panel === 'context' && <ContextPreviewPanel routeId={view.route.id} />}
           {panel === 'edit' && (
             <form
               className="form"

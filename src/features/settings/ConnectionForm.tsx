@@ -2,7 +2,17 @@ import { useId, useState } from 'react';
 import { commands, errorMessage } from '../../api/commands';
 import type { Billing, ProviderProfile, ProviderProfileInput } from '../../types';
 
-type Preset = { id: string; label: string; baseUrl: string; billing: Billing; needsKey: boolean };
+type Preset = {
+  id: string;
+  label: string;
+  baseUrl: string;
+  billing: Billing;
+  needsKey: boolean;
+  /** Prompt plus reply, in tokens. Local servers often load models with 4096. */
+  contextTokens: number;
+};
+
+const DEFAULT_CONTEXT_TOKENS = 16000;
 
 // Addresses only; nothing is contacted until the user tests or plays.
 const PRESETS: Preset[] = [
@@ -12,6 +22,7 @@ const PRESETS: Preset[] = [
     baseUrl: '',
     billing: 'paid',
     needsKey: true,
+    contextTokens: 16_000,
   },
   {
     id: 'openai',
@@ -19,6 +30,7 @@ const PRESETS: Preset[] = [
     baseUrl: 'https://api.openai.com/v1',
     billing: 'paid',
     needsKey: true,
+    contextTokens: 128_000,
   },
   {
     id: 'openrouter',
@@ -26,6 +38,7 @@ const PRESETS: Preset[] = [
     baseUrl: 'https://openrouter.ai/api/v1',
     billing: 'paid',
     needsKey: true,
+    contextTokens: 32_000,
   },
   {
     id: 'lmstudio',
@@ -33,6 +46,7 @@ const PRESETS: Preset[] = [
     baseUrl: 'http://localhost:1234/v1',
     billing: 'local',
     needsKey: false,
+    contextTokens: 4096,
   },
   {
     id: 'ollama',
@@ -40,6 +54,7 @@ const PRESETS: Preset[] = [
     baseUrl: 'http://localhost:11434/v1',
     billing: 'local',
     needsKey: false,
+    contextTokens: 4096,
   },
 ];
 
@@ -60,6 +75,9 @@ export function ConnectionForm({ existing, onSaved, onCancel }: Props) {
   const [removeKey, setRemoveKey] = useState(false);
   const [temperature, setTemperature] = useState(String(existing?.settings.temperature ?? 0.9));
   const [maxTokens, setMaxTokens] = useState(String(existing?.settings.maxOutputTokens ?? 700));
+  const [contextTokens, setContextTokens] = useState(
+    String(existing?.settings.maxContextTokens ?? DEFAULT_CONTEXT_TOKENS),
+  );
   const [timeoutS, setTimeoutS] = useState(
     String(Math.round((existing?.settings.timeoutMs ?? 120000) / 1000)),
   );
@@ -71,6 +89,7 @@ export function ConnectionForm({ existing, onSaved, onCancel }: Props) {
     if (!p || p.id === 'custom') return;
     setBaseUrl(p.baseUrl);
     setBilling(p.billing);
+    setContextTokens(String(p.contextTokens));
     if (!label.trim()) setLabel(p.label.replace(' on this computer', ''));
   };
 
@@ -78,8 +97,9 @@ export function ConnectionForm({ existing, onSaved, onCancel }: Props) {
     const t = Number(temperature);
     const m = Number(maxTokens);
     const s = Number(timeoutS);
-    if (!Number.isFinite(t) || !Number.isFinite(m) || !Number.isFinite(s)) {
-      setError('Temperature, reply length and timeout must be numbers.');
+    const c = Number(contextTokens);
+    if (![t, m, s, c].every(Number.isFinite)) {
+      setError('Temperature, reply length, context limit and timeout must be numbers.');
       return;
     }
     const input: ProviderProfileInput = {
@@ -90,7 +110,12 @@ export function ConnectionForm({ existing, onSaved, onCancel }: Props) {
       modelId,
       billing,
       ...(removeKey ? { apiKey: '' } : apiKey.trim() ? { apiKey: apiKey.trim() } : {}),
-      settings: { temperature: t, maxOutputTokens: Math.round(m), timeoutMs: Math.round(s * 1000) },
+      settings: {
+        temperature: t,
+        maxOutputTokens: Math.round(m),
+        timeoutMs: Math.round(s * 1000),
+        maxContextTokens: Math.round(c),
+      },
     };
     setBusy(true);
     setError(null);
@@ -239,6 +264,18 @@ export function ConnectionForm({ existing, onSaved, onCancel }: Props) {
             />
           </div>
           <div className="field">
+            <label htmlFor={`${id}-context`}>Context limit (tokens)</label>
+            <input
+              id={`${id}-context`}
+              type="number"
+              min={2048}
+              max={2000000}
+              value={contextTokens}
+              onChange={(e) => setContextTokens(e.target.value)}
+              aria-describedby={`${id}-context-hint`}
+            />
+          </div>
+          <div className="field">
             <label htmlFor={`${id}-timeout`}>Give up after (seconds of silence)</label>
             <input
               id={`${id}-timeout`}
@@ -250,6 +287,11 @@ export function ConnectionForm({ existing, onSaved, onCancel }: Props) {
             />
           </div>
         </div>
+        <p id={`${id}-context-hint`} className="muted small">
+          The context limit covers the prompt and the reply. Use the model&apos;s context length, or
+          the length your local server loads it with. Older story turns are summarized to fit; a
+          lower limit also keeps paid requests cheaper.
+        </p>
       </details>
       {error && (
         <p role="alert" className="error">

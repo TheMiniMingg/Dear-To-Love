@@ -6,15 +6,20 @@ use std::path::Path;
 use serde::Serialize;
 use ts_rs::TS;
 
+use crate::db::memory::latest_eligible_summary;
 use crate::db::saves::{create_save, resume_save};
 use crate::db::state::{full_replay, state_with_snapshots};
 use crate::db::stories::create_story;
-use crate::db::timeline::{append_event, fork_route, get_route, route_history, AppendEvent};
+use crate::db::timeline::{
+    ancestors, append_event, fork_route, get_route, route_history, AppendEvent,
+};
 use crate::db::{contract, new_id, Database};
 use crate::domain::events::{AssistantPayload, EditPayload, EventBody, PlayerPayload, StateEdit};
 use crate::domain::story::CreateStoryInput;
 use crate::domain::story_state::sample_lighthouse;
 use crate::errors::{AppError, AppResult};
+use crate::services::memory::{maybe_summarize, MemoryJobs, SummaryEnv};
+use crate::services::secrets::MemoryStore;
 
 #[derive(Debug, Clone, Serialize, TS)]
 #[serde(rename_all = "camelCase")]
@@ -138,6 +143,29 @@ async fn run_in(dir: &Path) -> AppResult<SelfTestReport> {
     }
     passed.push("fork leaves the original route unchanged".to_string());
 
+    // Offline memory: main gets a summary; the fork (made before its end)
+    // must not see it.
+    let jobs = MemoryJobs::default();
+    let env = SummaryEnv {
+        db: &db,
+        secrets: &MemoryStore::default(),
+        jobs: &jobs,
+        session_id: "self-test",
+    };
+    if maybe_summarize(&env, main, None).await?.is_none() {
+        return Err(fail("no story summary after 24 turns"));
+    }
+    for (route, expect) in [(main, true), (alt.id.as_str(), false)] {
+        let h = head(&db, route).await?;
+        let mut conn = db.reader().acquire().await?;
+        let chain = ancestors(&mut conn, story, &h).await?;
+        let found = latest_eligible_summary(&mut conn, story, &chain).await?;
+        if found.is_some() != expect {
+            return Err(fail("a story summary leaked across branches"));
+        }
+    }
+    passed.push("story memory stays on its own branch".to_string());
+
     let save = create_save(&db, story, &alt.id, "Self-test save").await?;
     mock_turn(&db, story, &alt.id, 200).await?;
     turns += 1;
@@ -182,7 +210,7 @@ mod tests {
     async fn self_test_passes_and_cleans_up() {
         let tmp = tempfile::tempdir().unwrap();
         let report = super::run(tmp.path()).await.unwrap();
-        assert_eq!(report.checks_passed.len(), 5);
+        assert_eq!(report.checks_passed.len(), 6);
         assert_eq!(std::fs::read_dir(tmp.path()).unwrap().count(), 0);
     }
 }

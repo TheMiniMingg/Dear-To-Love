@@ -19,6 +19,11 @@ and the roadmap differ, this file wins.
   Chapter & Route Picker comes later.
 - **Regenerate:** each regenerate creates a route; the route list groups routes
   by fork point and can hide abandoned ones.
+- **Preview context** lives in the reader's pause menu, because it needs a
+  route; it previews the next reply on the current route.
+- **Summaries** roll forward at fixed turn numbers (every 8th reply, keeping 8+
+  recent turns verbatim), so branches that share history share summaries.
+  The offline storyteller uses an extractive summary with no API call.
 
 ## Schema and contracts
 

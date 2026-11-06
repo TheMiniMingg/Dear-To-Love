@@ -1,4 +1,4 @@
-// T01 + T25 + T27 (+ save/load/fork/reopen): keyboard-only, offline, real app.
+// T01 + T25 + T27 (+ preview, save/load/fork/reopen): keyboard-only, offline, real app.
 import { after, test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
@@ -52,6 +52,18 @@ test('keyboard-only: quick start, play, save, load as branch, reopen', async () 
   await b.keys(['Enter']);
   await waitForText(b, '[data-testid="narrative"]', 'Climb down to the harbor');
   await waitForReply(b);
+
+  // Prompt Preview from the pause menu: local, read-only, has this route's turns.
+  await tabTo(b, 'composer-input');
+  await b.keys(['Escape']);
+  await waitForText(b, '[role="dialog"]', 'Paused');
+  await tabTo(b, 'Preview context');
+  await b.keys(['Enter']);
+  await waitForText(b, '[role="dialog"]', 'Nothing is sent until you play');
+  await waitForText(b, '[aria-label="Prompt messages"]', 'Climb down to the harbor');
+  await b.keys(['Escape']);
+  await waitForText(b, '[role="dialog"]', 'Paused');
+  await b.keys(['Escape']);
 
   // Load the older quick save as a new branch.
   await tabTo(b, 'Save / Load');

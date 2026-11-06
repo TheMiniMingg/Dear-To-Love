@@ -90,6 +90,7 @@ pub fn run() {
                 secrets: Arc::new(KeyringStore::new(KEYRING_SERVICE)),
                 session_id: db::new_id(),
                 runs: Default::default(),
+                memory: Default::default(),
             });
             Ok(())
         })
@@ -106,6 +107,7 @@ pub fn run() {
             commands::reader::retry_reply,
             commands::reader::cancel_reply,
             commands::reader::edit_action,
+            commands::reader::preview_context,
             commands::reader::next_chapter,
             commands::reader::fork_route,
             commands::reader::restart_chapter,

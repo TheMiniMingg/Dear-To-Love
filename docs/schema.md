@@ -31,12 +31,19 @@ foreign keys enabled on every connection. Migrations live in
 | `api_requests`      | One row per outbound model call; the only source for usage totals                                          |
 | `app_preferences`   | Schema-validated JSON preferences (budget policy, dismissals, drafts)                                      |
 
+## Tables (0002_memory_caches)
+
+| Table           | Purpose                                                                                                                                                       |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `memory_caches` | Rolling story summaries. Replaceable cache, never canonical. No `route_id`: usable where `source_end_event_id` is an ancestor and `source_hash` still matches |
+
 ## Startup checks
 
 `db::contract::verify` runs at startup and in Diagnostics: foreign keys on,
 `foreign_key_check` clean, usage-ledger columns present, route heads and event
 parents in the same story, exactly one main route per story, no parent cycles,
-and every save points into its route's history.
+every save points into its route's history, and every story summary points
+into its own story.
 
 ## Upgrades
 

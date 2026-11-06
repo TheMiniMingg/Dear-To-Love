@@ -52,3 +52,32 @@ app start       pending/streaming runs -> interrupted; open ledger rows -> unkno
 - Adapters never retry. Requests to loopback addresses bypass proxies.
 - The offline storyteller is an adapter too (no ledger row: it is not an API).
 - See ADR 0002 for the stream and ledger contracts.
+
+## Prompts and story memory
+
+```text
+prompt     system: narration rules, world, characters, relationships,
+                   confirmed facts, current scene  (+ STORY SO FAR summary)
+           verbatim player/story turns after the summary, oldest first
+           the latest player action, exactly once, last
+budget     max context - reply reservation; system + latest action must fit
+           (else CONTEXT_TOO_LONG before anything is sent), then the newest
+           4 messages, then the summary, then older turns while they fit
+summaries  after each reply (background, never blocks play): when 16+ turns
+           are unsummarized, roll the previous summary forward to the reply
+           at turn 8, 16, 24, ... leaving 8+ recent turns verbatim
+```
+
+- Everything comes from the run's input event and its ancestors. A summary
+  is eligible only when its ending event is one of those ancestors and its
+  `source_hash` (SHA-256 over the chain's ids, kinds and payloads) matches,
+  so branches never see each other's futures. Branches that share history
+  share summaries, because boundaries are fixed turn numbers.
+- The offline storyteller gets an extractive summary (no API call). A live
+  storyteller writes it with a `memory_summary` ledger row; a failed
+  boundary is not retried in the same session.
+- Token counts are a conservative local estimate (`services/tokens.rs`);
+  ledger usage still comes from the provider.
+- **Preview context** (reader pause menu) shows the exact assembled prompt
+  for the next reply, its token estimate and which turns the summary covers.
+  It is built locally and never sent. See ADR 0003.

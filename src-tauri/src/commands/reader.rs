@@ -1,12 +1,15 @@
 use std::time::Duration;
 
 use tauri::ipc::Channel;
-use tauri::State;
+use tauri::{AppHandle, Manager, State};
 
+use crate::db::runs;
 use crate::db::timeline::{self, RouteDto};
 use crate::domain::provider::StreamMessage;
 use crate::errors::AppResult;
+use crate::services::context::{self, ContextPreview};
 use crate::services::generation::{self, Ctx, Submitted};
+use crate::services::memory::{self, SummaryEnv};
 use crate::services::reader::{self, RouteView};
 use crate::state::AppState;
 
@@ -29,24 +32,57 @@ pub async fn submit_action(
 
 /// Write the reply for a pending run, streaming drafts over `on_event`.
 /// Resolves with the route view once the reply is committed.
+/// Once the reply is in, a story summary is written in the background if
+/// one is due; it never delays or blocks play.
 #[tauri::command]
 pub async fn generate_reply(
+    app: AppHandle,
     state: State<'_, AppState>,
     run_id: String,
     on_event: Channel<StreamMessage>,
 ) -> AppResult<RouteView> {
+    let db = state.db()?;
     let ctx = Ctx {
-        db: state.db()?,
+        db,
         secrets: state.secrets.as_ref(),
         registry: &state.runs,
         session_id: &state.session_id,
         offline_delay: Duration::from_millis(18),
     };
     // A closed window just stops the drafts; the reply still commits.
-    generation::generate(&ctx, &run_id, &mut |m| {
+    let view = generation::generate(&ctx, &run_id, &mut |m| {
         let _ = on_event.send(m);
     })
-    .await
+    .await?;
+    let run = {
+        let mut conn = db.reader().acquire().await?;
+        runs::get_run(&mut conn, &run_id).await?
+    };
+    tauri::async_runtime::spawn(async move {
+        let state = app.state::<AppState>();
+        let Ok(db) = state.db() else { return };
+        let env = SummaryEnv {
+            db,
+            secrets: state.secrets.as_ref(),
+            jobs: &state.memory,
+            session_id: &state.session_id,
+        };
+        if let Err(e) =
+            memory::maybe_summarize(&env, &run.route_id, run.provider_profile_id.as_deref()).await
+        {
+            eprintln!("story summary skipped: {}", e.message);
+        }
+    });
+    Ok(view)
+}
+
+/// The exact prompt the next reply on this route would send. Local only.
+#[tauri::command]
+pub async fn preview_context(
+    state: State<'_, AppState>,
+    route_id: String,
+) -> AppResult<ContextPreview> {
+    context::preview_context(state.db()?, &route_id).await
 }
 
 #[tauri::command]
