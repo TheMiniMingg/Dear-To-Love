@@ -32,9 +32,9 @@ use crate::domain::visuals::VisualSlot;
 use crate::errors::{AppError, AppResult, ErrorCode};
 use crate::services::assets::{decode, sha256_hex, AssetStore};
 use crate::services::storypack::{
-    self as pack, invalid, Checked, Manifest, PackEvent, PackFile, PackImage, PackMemory,
-    PackOutline, PackPicture, PackRoute, PackSave, PackStory, FORMAT_VERSION, IMAGES_DIR, MANIFEST,
-    STORY,
+    self as pack, invalid, Checked, Manifest, PackBookmark, PackEvent, PackFile, PackImage,
+    PackMemory, PackOutline, PackPicture, PackRoute, PackSave, PackStory, FORMAT_VERSION,
+    IMAGES_DIR, MANIFEST, STORY,
 };
 
 /// Where imports are unpacked, inside app data.
@@ -101,8 +101,9 @@ fn write_err(e: zip::result::ZipError) -> AppError {
 
 // ---------------------------------------------------------------- export
 
-/// Writes the whole story (every route, saves, story memory, pictures and
-/// the images it shows) to `dest`, through a temporary file and a rename.
+/// Writes the whole story (every route, saves, bookmarks, story memory,
+/// pictures and the images it shows) to `dest`, through a temporary file
+/// and a rename.
 pub async fn export_storypack(
     db: &Database,
     store: &AssetStore,
@@ -236,6 +237,28 @@ async fn collect(db: &Database, story_id: &str) -> AppResult<(PackStory, Vec<Ass
     )
     .collect();
 
+    let bookmarks: Vec<PackBookmark> =
+        sqlx::query_as::<_, (String, String, String, String, String, String)>(
+            "SELECT b.id, b.route_id, b.event_id, b.label, b.created_at, b.updated_at \
+             FROM bookmarks b JOIN routes r ON r.id = b.route_id WHERE r.story_id = ? \
+             ORDER BY b.created_at, b.id",
+        )
+        .bind(story_id)
+        .fetch_all(&mut *tx)
+        .await?
+        .into_iter()
+        .map(
+            |(id, route_id, event_id, label, created_at, updated_at)| PackBookmark {
+                id,
+                route_id,
+                event_id,
+                label,
+                created_at,
+                updated_at,
+            },
+        )
+        .collect();
+
     // Story memory that still matches its events (stale rows would be
     // ignored anyway).
     let by_id: HashMap<&str, &EventRow> = rows.iter().map(|(e, _)| (e.id.as_str(), e)).collect();
@@ -329,6 +352,7 @@ async fn collect(db: &Database, story_id: &str) -> AppResult<(PackStory, Vec<Ass
         routes,
         events,
         saves,
+        bookmarks,
         memory,
         pictures,
         images: vec![],
@@ -978,6 +1002,20 @@ async fn commit(db: &Database, op_id: &str, p: &Prepared) -> AppResult<Storypack
         .bind(s.slot)
         .bind(&s.created_at)
         .bind(&s.updated_at)
+        .execute(&mut *tx)
+        .await?;
+    }
+    for b in &r.bookmarks {
+        sqlx::query(
+            "INSERT INTO bookmarks (id, route_id, event_id, label, created_at, updated_at) \
+             VALUES (?, ?, ?, ?, ?, ?)",
+        )
+        .bind(&b.id)
+        .bind(&b.route_id)
+        .bind(&b.event_id)
+        .bind(b.label.trim())
+        .bind(&b.created_at)
+        .bind(&b.updated_at)
         .execute(&mut *tx)
         .await?;
     }

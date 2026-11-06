@@ -172,6 +172,7 @@ pub async fn last_change(db: &Database) -> AppResult<Option<String>> {
            SELECT MAX(updated_at) FROM routes UNION ALL \
            SELECT MAX(created_at) FROM events UNION ALL \
            SELECT MAX(updated_at) FROM saves UNION ALL \
+           SELECT MAX(updated_at) FROM bookmarks UNION ALL \
            SELECT MAX(created_at) FROM assets)",
     )
     .fetch_one(db.reader())

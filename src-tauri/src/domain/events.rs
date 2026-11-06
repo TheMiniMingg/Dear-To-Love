@@ -1,5 +1,7 @@
 //! Event kinds and payloads. Committed events never mutate.
 
+use std::borrow::Cow;
+
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 
@@ -210,6 +212,19 @@ impl EventBody {
                 Self::FactConfirm(serde_json::from_str(payload_json).map_err(bad)?)
             }
         })
+    }
+
+    /// The words a reader sees for this event, for search and bookmark
+    /// excerpts. An edit shows only its note.
+    pub fn reader_text(&self) -> Cow<'_, str> {
+        match self {
+            Self::ChapterStart(p) => Cow::Owned(format!("Chapter {}: {}", p.ordinal, p.title)),
+            Self::Player(p) => Cow::Borrowed(&p.text),
+            Self::Assistant(p) => Cow::Borrowed(&p.text),
+            Self::Edit(p) => Cow::Borrowed(p.note.as_deref().unwrap_or_default()),
+            Self::Checkpoint(p) => Cow::Borrowed(&p.label),
+            Self::FactConfirm(p) => Cow::Borrowed(&p.fact.text),
+        }
     }
 
     /// Structural validation before an event is committed.

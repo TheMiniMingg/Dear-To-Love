@@ -37,6 +37,10 @@ and the roadmap differ, this file wins.
   includes images. A restore always replaces everything and keeps the
   previous data as a "Before a restore" copy; the swap happens at the next
   start, never under an open database.
+- **Search** covers the current route only (no whole-story search), matches
+  every word in any order ignoring case, and scans the history without an
+  index. **Bookmarks** belong to a route; a new branch copies the ones on the
+  history it shares, and they travel in storypacks.
 - **In-story edits** use one `edit` event per Apply, with a short note listing
   what changed (shown in the story). Facts added in Story details are
   confirmed facts; the `fact_confirm` event is kept for the later suggestion

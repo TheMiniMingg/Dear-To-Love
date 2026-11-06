@@ -1,5 +1,6 @@
 use super::*;
 use crate::db::assets as rows;
+use crate::db::bookmarks::{add_bookmark, list_bookmarks};
 use crate::db::contract;
 use crate::db::memory::{insert_summary, latest_eligible_summary, NewSummary};
 use crate::db::saves::{create_save, list_saves};
@@ -8,10 +9,13 @@ use crate::db::test_support::{test_db, TestDb};
 use crate::db::timeline::{
     ancestors, append_event, fork_route, list_routes, route_history, AppendEvent,
 };
-use crate::domain::events::{AssistantPayload, CheckpointPayload, EditPayload, PlayerPayload};
+use crate::domain::events::{
+    AssistantPayload, CheckpointPayload, EditPayload, EventKind, PlayerPayload,
+};
 use crate::domain::story::{ChapterOutlineInput, CreateStoryInput, StoryCreated};
 use crate::domain::story_state::fixtures::lighthouse;
 use crate::services::assets::import_bytes;
+use crate::services::search::search_route;
 use image::{ImageFormat, Rgb, RgbImage};
 use std::io::Cursor;
 
@@ -83,8 +87,8 @@ fn picture(slot: &str, asset_id: &str) -> EventBody {
     })
 }
 
-/// Two routes, a save on each, a story summary (and a stale one), a cover
-/// default and a background chosen on the second route only.
+/// Two routes, a save and a bookmark on each, a story summary (and a stale
+/// one), a cover default and a background chosen on the second route only.
 struct Rich {
     story: StoryCreated,
     alt: String,
@@ -144,6 +148,13 @@ async fn rich_story(t: &TestDb) -> Rich {
         .await
         .unwrap();
     create_save(&t.db, &sid, &alt, "At the docks")
+        .await
+        .unwrap();
+    let waves = head(&t.db, &sid, &alt).await;
+    add_bookmark(&t.db, &sid, &alt, &waves, Some("Mara at the docks"))
+        .await
+        .unwrap();
+    add_bookmark(&t.db, &sid, &main, &first, None)
         .await
         .unwrap();
 
@@ -348,6 +359,48 @@ async fn storypack_round_trips_into_a_fresh_install() {
         saves(t.db.clone(), r.story.story_id.clone()).await
     );
     assert!(imported.contains(&("Docks".into(), "At the docks".into(), "manual".into())));
+
+    // Bookmarks keep their places, and the imported story can be searched (M8).
+    let marks = |db: Database, route: String| async move {
+        list_bookmarks(&db, &route)
+            .await
+            .unwrap()
+            .into_iter()
+            .map(|b| (b.label, b.excerpt))
+            .collect::<Vec<_>>()
+    };
+    for old in &before {
+        let new = after.iter().find(|n| n.label == old.label).unwrap();
+        assert_eq!(
+            marks(fresh.db.clone(), new.id.clone()).await,
+            marks(t.db.clone(), old.id.clone()).await
+        );
+    }
+    assert_eq!(
+        marks(fresh.db.clone(), docks.id.clone()).await,
+        [("Mara at the docks".to_string(), "Mara waves.".to_string())]
+    );
+    assert_eq!(
+        marks(fresh.db.clone(), main.id.clone()).await,
+        [("The lamp hums.".to_string(), "The lamp hums.".to_string())]
+    );
+    let found = search_route(&fresh.db, &docks.id, "MARA").await.unwrap();
+    assert_eq!(found.total, 1);
+    assert_eq!(found.hits[0].kind, EventKind::Assistant);
+    assert_eq!(
+        search_route(&fresh.db, &main.id, "mara")
+            .await
+            .unwrap()
+            .total,
+        0
+    );
+    assert_eq!(
+        search_route(&fresh.db, &main.id, "stairs")
+            .await
+            .unwrap()
+            .total,
+        3
+    );
 
     // The summary still matches its (renamed) events; the stale one stayed behind.
     let n: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM memory_caches WHERE story_id = ?")

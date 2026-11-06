@@ -411,7 +411,7 @@ pub async fn append_event(db: &Database, input: AppendEvent) -> AppResult<Append
 }
 
 /// Create a route whose head is `at_event_id`, which must be in the source
-/// route's history. No events are copied.
+/// route's history. No events are copied; bookmarks on the shared history are.
 pub async fn fork_route_tx(
     conn: &mut SqliteConnection,
     story_id: &str,
@@ -461,6 +461,7 @@ pub async fn fork_route_tx(
     .bind(&ts)
     .execute(&mut *conn)
     .await?;
+    super::bookmarks::copy_to_branch_tx(conn, story_id, &source.id, &id, at_event_id).await?;
     touch_story(conn, story_id, &ts).await?;
     get_route(conn, &id).await
 }

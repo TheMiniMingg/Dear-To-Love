@@ -146,6 +146,20 @@ pub async fn verify(db: &Database) -> AppResult<Vec<String>> {
         }
     }
 
+    let bookmarks: Vec<(String, String, Option<String>)> = sqlx::query_as(
+        "SELECT b.id, b.event_id, r.head_event_id FROM bookmarks b JOIN routes r ON r.id = b.route_id",
+    )
+    .fetch_all(pool)
+    .await?;
+    for (bookmark_id, event_id, head) in bookmarks {
+        let ok = head.is_some_and(|h| is_ancestor_in(&parents, &event_id, &h));
+        if !ok {
+            problems.push(format!(
+                "bookmark {bookmark_id} does not point into its route history"
+            ));
+        }
+    }
+
     Ok(problems)
 }
 

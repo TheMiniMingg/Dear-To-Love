@@ -50,12 +50,18 @@ foreign keys enabled on every connection. Migrations live in
 | -------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
 | `archive_operations` | Storypack import journal: `staged`, `committed`, `complete`, `rolled_back` or `failed`, with the staging folder and story. See ADR 0007 |
 
+## Tables (0005_bookmarks)
+
+| Table       | Purpose                                                                                                                    |
+| ----------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `bookmarks` | A named place in one route's history (`route_id`, `event_id`, unique together); copied to branches that share it. ADR 0009 |
+
 ## Startup checks
 
 `db::contract::verify` runs at startup and in Diagnostics: foreign keys on,
 `foreign_key_check` clean, usage-ledger columns present, route heads and event
 parents in the same story, exactly one main route per story, no parent cycles,
-every save points into its route's history, and every story summary points
+every save and bookmark points into its route's history, and every story summary points
 into its own story. After the checks, unfinished storypack imports are
 finished or rolled back and their staging folders removed. A confirmed
 restore is swapped in before the database opens (ADR 0008).

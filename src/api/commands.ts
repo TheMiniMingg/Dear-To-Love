@@ -7,6 +7,7 @@ import type {
   AssetUsage,
   BackupExport,
   BackupInfo,
+  BookmarkDto,
   AppInfo,
   BudgetPolicy,
   BudgetStatus,
@@ -33,6 +34,7 @@ import type {
   StateEdit,
   SaveDto,
   SaveView,
+  SearchResults,
   StoryCreated,
   StorySummary,
   StoryVisual,
@@ -201,6 +203,18 @@ export const commands = {
   viewSave: (saveId: string) => call<SaveView>('view_save', { saveId }),
   resumeSave: (saveId: string) => call<RouteView>('resume_save', { saveId }),
   deleteSave: (storyId: string, saveId: string) => call<void>('delete_save', { storyId, saveId }),
+
+  /** Words in this route's history only, in story order. */
+  searchRoute: (routeId: string, query: string) =>
+    call<SearchResults>('search_route', { routeId, query }),
+  listBookmarks: (routeId: string) => call<BookmarkDto[]>('list_bookmarks', { routeId }),
+  /** Bookmarking a marked place again renames it when `label` is given. */
+  addBookmark: (r: RouteRef & { eventId: string; label?: string | null }) =>
+    call<BookmarkDto>('add_bookmark', { ...r, label: r.label ?? null }),
+  renameBookmark: (storyId: string, bookmarkId: string, label: string) =>
+    call<BookmarkDto>('rename_bookmark', { storyId, bookmarkId, label }),
+  deleteBookmark: (storyId: string, bookmarkId: string) =>
+    call<void>('delete_bookmark', { storyId, bookmarkId }),
 
   listConnections: () => call<ProviderProfile[]>('list_connections'),
   saveConnection: (input: ProviderProfileInput) =>

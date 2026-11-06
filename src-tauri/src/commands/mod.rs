@@ -5,5 +5,6 @@ pub mod assets;
 pub mod backups;
 pub mod reader;
 pub mod saves;
+pub mod search;
 pub mod stories;
 pub mod usage;

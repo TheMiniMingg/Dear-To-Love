@@ -131,6 +131,14 @@ fn sample() -> PackStory {
             created_at: "2026-11-06T00:00:00Z".into(),
             updated_at: "2026-11-06T00:00:00Z".into(),
         }],
+        bookmarks: vec![PackBookmark {
+            id: "b1".into(),
+            route_id: "main".into(),
+            event_id: "e2".into(),
+            label: "The hum".into(),
+            created_at: "2026-11-06T00:00:00Z".into(),
+            updated_at: "2026-11-06T00:00:00Z".into(),
+        }],
         memory: vec![PackMemory {
             kind: "summary".into(),
             source_start_event_id: None,
@@ -187,12 +195,13 @@ fn check_orders_parents_first_and_remap_rewrites_every_reference() {
 
     // Nothing keeps an id from the pack.
     let everything = format!(
-        "{} {:?} {:?} {:?} {:?} {:?} {:?}",
+        "{} {:?} {:?} {:?} {:?} {:?} {:?} {:?}",
         r.base_state.to_canonical_json(),
         r.outlines,
         r.routes,
         r.events,
         r.saves,
+        r.bookmarks,
         r.memory,
         r.pictures
     );
@@ -205,6 +214,7 @@ fn check_orders_parents_first_and_remap_rewrites_every_reference() {
         "\"e4\"",
         "o1",
         "s1",
+        "b1",
         "img-old",
     ] {
         assert!(!everything.contains(old), "{old} survived: {everything}");
@@ -256,6 +266,9 @@ fn check_orders_parents_first_and_remap_rewrites_every_reference() {
     );
     assert_eq!(r.saves[0].event_id, *ev2);
     assert_eq!(r.saves[0].route_id, r.routes[1].id);
+    assert_eq!(r.bookmarks[0].event_id, *ev2);
+    assert_eq!(r.bookmarks[0].route_id, r.routes[0].id);
+    assert_eq!(r.bookmarks[0].label, "The hum");
     assert_eq!(r.memory[0].memory.source_end_event_id, *ev2);
     assert_ne!(r.memory[0].source_hash, "", "summary hash recomputed");
 
@@ -335,6 +348,25 @@ fn check_refuses_broken_graphs() {
                 p.saves[0].event_id = "e4".into();
             }),
             "outside its route",
+        ),
+        (
+            "bookmark on another branch",
+            Box::new(|p| p.bookmarks[0].event_id = "e4".into()),
+            "outside its route",
+        ),
+        (
+            "bookmark twice",
+            Box::new(|p| {
+                let mut again = p.bookmarks[0].clone();
+                again.id = "b2".into();
+                p.bookmarks.push(again);
+            }),
+            "same place",
+        ),
+        (
+            "unnamed bookmark",
+            Box::new(|p| p.bookmarks[0].label = " ".into()),
+            "no usable name",
         ),
         (
             "picture without image",

@@ -204,6 +204,11 @@ pub fn run() {
             commands::backups::confirm_restore,
             commands::backups::restart_app,
             commands::backups::take_restore_result,
+            commands::search::search_route,
+            commands::search::list_bookmarks,
+            commands::search::add_bookmark,
+            commands::search::rename_bookmark,
+            commands::search::delete_bookmark,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Dear to Love");
