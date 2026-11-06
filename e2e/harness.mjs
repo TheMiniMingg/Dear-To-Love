@@ -39,7 +39,16 @@ export async function launch(dataDir, extraEnv = {}) {
     APPDATA: dataDir,
     LOCALAPPDATA: dataDir,
   };
-  const driver = spawn('tauri-driver', [], { env, stdio: ['ignore', 'ignore', 'inherit'] });
+  // Own process group (POSIX) so stop() can end the app's WebKit helpers too,
+  // and a piped stderr so a helper that outlives the app can't hold this test
+  // file's stderr open (the test runner waits for it and never exits).
+  const posix = process.platform !== 'win32';
+  const driver = spawn('tauri-driver', [], {
+    env,
+    detached: posix,
+    stdio: ['ignore', 'ignore', 'pipe'],
+  });
+  driver.stderr.pipe(process.stderr, { end: false });
   await waitForPort(4444);
   const browser = await remote({
     hostname: '127.0.0.1',
@@ -55,6 +64,15 @@ export async function launch(dataDir, extraEnv = {}) {
     }
     driver.kill();
     await new Promise((r) => setTimeout(r, 300));
+    if (posix) {
+      try {
+        process.kill(-driver.pid, 'SIGTERM');
+      } catch {
+        // the whole group has exited
+      }
+    }
+    driver.stderr.unpipe(process.stderr);
+    driver.stderr.destroy();
   };
   return { browser, stop };
 }
