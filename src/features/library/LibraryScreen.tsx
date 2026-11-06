@@ -62,6 +62,9 @@ export function LibraryScreen() {
           <button type="button" onClick={() => navigate({ name: 'settings' })}>
             Settings
           </button>
+          <button type="button" onClick={() => navigate({ name: 'create' })}>
+            Create your own
+          </button>
           <button
             type="button"
             className="primary"
@@ -80,8 +83,10 @@ export function LibraryScreen() {
         <div className="empty-state">
           <p>No stories yet.</p>
           <p className="muted">
-            Start one with <strong>New story</strong>. You can play offline with the built-in
-            storyteller before connecting an AI model.
+            Start one with <strong>New story</strong> to pick from presets, or{' '}
+            <strong>Create your own</strong> to set up the world, your character and the opening
+            step by step. You can play offline with the built-in storyteller before connecting an AI
+            model.
           </p>
         </div>
       )}

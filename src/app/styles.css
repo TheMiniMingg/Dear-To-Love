@@ -851,3 +851,95 @@ details summary {
 .budget-banner p {
   margin: 0;
 }
+
+/* ---------- creation wizard ---------- */
+.wizard .screen-header .segmented {
+  margin-left: auto;
+}
+.wizard-steps {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  padding: 0;
+  margin: 0.75rem 0;
+}
+.wizard-steps button {
+  border-radius: 999px;
+}
+.wizard-steps button[aria-current='step'] {
+  border-color: var(--accent);
+  color: var(--accent);
+  font-weight: 600;
+}
+.wizard-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-width: 44rem;
+}
+.wizard-body h2 {
+  margin: 0.25rem 0 0;
+  font-size: 1.2rem;
+}
+.wizard-body h2:focus {
+  outline: none;
+}
+.wizard-body input:not([type='checkbox'], [type='radio']),
+.wizard-body textarea {
+  width: 100%;
+  box-sizing: border-box;
+}
+.wizard-nav {
+  margin-top: 1.5rem;
+}
+.toggle-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+.field > legend {
+  margin-bottom: 0.35rem;
+}
+.npc-list,
+.outline-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.npc-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  align-items: flex-start;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.npc-card .field-row {
+  width: 100%;
+  margin-top: 0;
+}
+.outline-list li {
+  grid-template-columns: 1fr 2fr auto;
+  align-items: end;
+  margin-top: 0;
+}
+.npc-card > .field {
+  width: 100%;
+}
+.add-button {
+  align-self: flex-start;
+}
+.problems {
+  border: 1px solid var(--fail);
+  border-radius: 8px;
+  padding: 0.5rem 0.9rem;
+}
+.problems p,
+.problems ul {
+  margin: 0.25rem 0;
+}

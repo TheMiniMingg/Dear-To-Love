@@ -1,0 +1,18 @@
+{
+  "templateSchemaVersion": 1,
+  "type": "character",
+  "id": "starter:curious-detective",
+  "label": "The Detective",
+  "summary": "Notices what everyone else walks past, and can wait a very long time for an answer.",
+  "character": {
+    "id": "starter:curious-detective",
+    "name": "Rin Calloway",
+    "control": "player",
+    "pronouns": "she/her",
+    "role": "Investigator",
+    "description": "Between cases and pretending that is restful.",
+    "personality": ["observant", "patient", "quietly stubborn"],
+    "goals": ["Solve one mystery that matters", "Learn to take a day off"],
+    "abilities": ["Reads people's hands and shoes before their faces"]
+  }
+}

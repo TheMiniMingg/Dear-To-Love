@@ -12,9 +12,13 @@ and the roadmap differ, this file wins.
   deleted, because other routes may share their events.
 - **Chapters:** a new chapter starts when the player chooses **Next chapter**,
   which appends a `chapter_start` event (using the next outline if one exists).
-- **Templates:** Quick Start ships with one starter world, scenario and
-  character (PR 05). The full template set arrives with the creation wizard
-  (PR 08) and grows as we build.
+- **Templates:** four worlds, four scenarios and six characters ship with the
+  creation wizard (PR 08). A scenario can name the worlds it was written for;
+  pickers only offer fitting scenarios. The set grows as we build.
+- **Creation modes:** Guided uses pickers, menus and checkboxes over preset
+  values (no typing); Custom shows a text field for every value. Both edit the
+  same draft, and a typed value shows in Guided as "Your own: ...". One
+  unfinished wizard draft is kept at a time.
 - **Route switching:** a minimal route switcher ships with the reader; the full
   Chapter & Route Picker comes later.
 - **Regenerate:** each regenerate creates a route; the route list groups routes

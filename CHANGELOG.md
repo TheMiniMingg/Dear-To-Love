@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Create your own story (Library): a five-step wizard (world, your character, the opening and
+  other characters, narration, review). Guided mode needs no typing: arrows, menus and
+  checkboxes over preset values. Custom mode lets you type any field, add or remove characters
+  and plan chapters. Switching modes keeps every value. The unfinished story is saved as you go
+  and picked up again after closing the wizard or the app. Review lists anything left to fix
+  and links to the step. The bundled set grows to four worlds (Harbor Town, The Glass Orchard,
+  Meridian Station, Ashcombe 1923), four scenarios and six characters; Quick Start only offers
+  scenarios written for the chosen world.
 - Usage & budget (Settings): estimated cost, requests and tokens for this session, this UTC
   month or all time, by connection and model, plus the recent requests with where each count
   came from. Unknown costs are counted separately, never shown as $0. Enter each paid model's

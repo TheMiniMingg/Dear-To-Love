@@ -1,0 +1,51 @@
+{
+  "templateSchemaVersion": 1,
+  "type": "scenario",
+  "id": "starter:memory-harvest",
+  "label": "The Memory Harvest",
+  "summary": "You come to Tamsel Vale to help bring in the harvest, and the first fruit you pick holds a memory of you that you do not have.",
+  "worlds": ["starter:glass-orchard"],
+  "title": "The Memory Harvest",
+  "description": "A glass fruit from the old lord's orchard shows you laughing with someone you have never met, in a place you have never been.",
+  "firstChapterTitle": "First Picking",
+  "chapterOutlines": [
+    {
+      "title": "First Picking",
+      "outline": "Arrive for the harvest, pick the strange fruit, meet the orchard keeper."
+    },
+    {
+      "title": "The Empty House",
+      "outline": "Find out who used to live in the lord's house."
+    },
+    {
+      "title": "Lantern Night",
+      "outline": "The valley's harvest festival, where memories are traded."
+    }
+  ],
+  "scene": {
+    "location": "The upper terraces of the old lord's orchard",
+    "summary": "Late afternoon light through glass branches. A single fruit, warmer than the rest, has just come away in your hand."
+  },
+  "openThreads": ["Whose memory is in the fruit, and why are you in it?"],
+  "npcs": [
+    {
+      "id": "starter:npc-aurelio",
+      "name": "Aurelio Venn",
+      "control": "npc",
+      "pronouns": "he/him",
+      "role": "Orchard keeper",
+      "description": "Has tended the old lord's trees alone for ten years and talks to them more than to people.",
+      "personality": ["gruff", "gentle with growing things", "secretly sentimental"],
+      "goals": ["Keep the orchard alive until the house has an heir"],
+      "abilities": ["Can tell a fruit's memory by its color"]
+    }
+  ],
+  "relationships": [
+    {
+      "fromId": "starter:npc-aurelio",
+      "toId": "@player",
+      "label": "Employer",
+      "status": "Wary of the newcomer"
+    }
+  ]
+}

@@ -5,6 +5,7 @@ import { create } from 'zustand';
 export type Screen =
   | { name: 'library' }
   | { name: 'quickstart' }
+  | { name: 'create' }
   | { name: 'reader'; routeId: string }
   | { name: 'diagnostics' }
   | { name: 'settings' }

@@ -1,0 +1,18 @@
+{
+  "templateSchemaVersion": 1,
+  "type": "character",
+  "id": "starter:runaway-heir",
+  "label": "The Runaway Heir",
+  "summary": "Walked away from a fortune and a family name, and is still deciding whether that was brave.",
+  "character": {
+    "id": "starter:runaway-heir",
+    "name": "Jules Fairfax",
+    "control": "player",
+    "pronouns": "they/them",
+    "role": "Former heir",
+    "description": "Good manners, a good coat and very little money.",
+    "personality": ["witty", "guarded", "generous to a fault"],
+    "goals": ["Make a life that is their own", "Avoid anyone who knew them before"],
+    "abilities": ["Can talk their way into any party"]
+  }
+}

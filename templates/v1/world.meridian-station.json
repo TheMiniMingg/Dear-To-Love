@@ -1,0 +1,23 @@
+{
+  "templateSchemaVersion": 1,
+  "type": "world",
+  "id": "starter:meridian-station",
+  "label": "Meridian Station",
+  "summary": "A research station in orbit around a storm-banded gas giant, three months from the nearest port.",
+  "world": {
+    "era": "Far future",
+    "setting": "Meridian, a ring-shaped research station orbiting the gas giant Halcyon",
+    "description": "Forty crew, one hydroponics deck that smells like basil, a canteen that runs out of coffee on Thursdays, and an observation lounge where the planet fills every window. The supply ship comes once a season.",
+    "rules": [
+      "Grounded science fiction: no aliens, no faster-than-light messages",
+      "The station's systems are reliable but old, and everyone takes a maintenance shift",
+      "Romance develops slowly and only with mutual interest"
+    ]
+  },
+  "narration": {
+    "perspective": "second",
+    "detail": "balanced",
+    "tone": "Wistful, curious, quietly funny",
+    "pacing": "normal"
+  }
+}

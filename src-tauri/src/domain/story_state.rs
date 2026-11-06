@@ -35,7 +35,7 @@ pub struct StoryStateV1 {
     pub visual_refs: BTreeMap<String, String>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize, TS)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[ts(export)]
 pub struct World {
@@ -83,15 +83,27 @@ pub struct Narration {
     pub pacing: Pacing,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, TS)]
+impl Default for Narration {
+    fn default() -> Self {
+        Self {
+            perspective: Perspective::Second,
+            detail: Detail::Balanced,
+            tone: String::new(),
+            pacing: Pacing::Normal,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize, TS)]
 #[serde(rename_all = "lowercase")]
 #[ts(export)]
 pub enum Control {
     Player,
+    #[default]
     Npc,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize, TS)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[ts(export)]
 pub struct Character {

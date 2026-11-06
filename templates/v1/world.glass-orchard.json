@@ -1,0 +1,23 @@
+{
+  "templateSchemaVersion": 1,
+  "type": "world",
+  "id": "starter:glass-orchard",
+  "label": "The Glass Orchard",
+  "summary": "A quiet valley kingdom where orchard trees grow fruit of glass, and every fruit holds a memory.",
+  "world": {
+    "era": "An age of small kingdoms",
+    "setting": "Tamsel Vale, an orchard valley ringed by mountains",
+    "description": "Terraced orchards of glass-fruit trees, a market town on the river, a lord's house that has stood empty for a decade, and pickers who know which branches hum before a storm. Holding a ripe glass fruit lets you see the memory inside it.",
+    "rules": [
+      "Gentle fantasy: magic is rare and lives in the glass fruit",
+      "A memory taken from a fruit cannot be put back",
+      "Romance develops slowly and only with mutual interest"
+    ]
+  },
+  "narration": {
+    "perspective": "second",
+    "detail": "detailed",
+    "tone": "Lyrical, bittersweet, hopeful",
+    "pacing": "slow"
+  }
+}
