@@ -1,0 +1,23 @@
+{
+  "templateSchemaVersion": 1,
+  "type": "world",
+  "id": "starter:harbor-town",
+  "label": "Harbor Town",
+  "summary": "A small modern seaside town where everyone knows the ferry schedule and nobody admits to writing letters.",
+  "world": {
+    "era": "Present day",
+    "setting": "Wrenmouth, a small harbor town on a windy coast",
+    "description": "A fishing harbor, a bakery that opens at five, a ferry that runs twice a day, and an old lighthouse on the point that was supposed to be automated years ago.",
+    "rules": [
+      "Grounded and realistic: no magic or supernatural events",
+      "Characters have their own lives and do not wait on the player",
+      "Romance develops slowly and only with mutual interest"
+    ]
+  },
+  "narration": {
+    "perspective": "second",
+    "detail": "balanced",
+    "tone": "Warm, gently mysterious, quietly funny",
+    "pacing": "normal"
+  }
+}

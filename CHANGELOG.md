@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Library, Quick Start and reader: pick a starter world, scenario and character with arrow
+  pickers, play turns with the built-in offline storyteller, quick save (Ctrl/Cmd+S), save and
+  load (older saves continue as a new branch), branch from any reply, restart a chapter, start
+  the next chapter, rename or hide routes, delete whole stories. Unsent text survives Escape and
+  closing the reader. Keyboard-only end-to-end test on Linux CI.
 - Saves and replay: deterministic state reducer, snapshot caches (every 20 events, hash-checked),
   manual/quick/rotating auto saves, read-only save view, resume-as-branch, edits validated
   against the effective state, offline story engine self-test (TIMELINE_REPLAY diagnostic).

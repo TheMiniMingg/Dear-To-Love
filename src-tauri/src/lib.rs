@@ -88,6 +88,23 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             commands::app::get_app_info,
             commands::app::run_diagnostics,
+            commands::stories::get_template_catalog,
+            commands::stories::quick_start,
+            commands::stories::list_stories,
+            commands::stories::delete_story,
+            commands::reader::get_route_view,
+            commands::reader::play_mock_turn,
+            commands::reader::next_chapter,
+            commands::reader::fork_route,
+            commands::reader::restart_chapter,
+            commands::reader::rename_route,
+            commands::reader::set_route_hidden,
+            commands::saves::list_saves,
+            commands::saves::create_save,
+            commands::saves::quick_save,
+            commands::saves::view_save,
+            commands::saves::resume_save,
+            commands::saves::delete_save,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Dear to Love");

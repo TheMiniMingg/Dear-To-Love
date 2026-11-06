@@ -46,4 +46,7 @@ pub struct StorySummary {
     pub created_at: String,
     pub updated_at: String,
     pub route_count: i32,
+    pub main_route_id: String,
+    /// Most recently played visible route; the Library opens this one.
+    pub last_route_id: String,
 }

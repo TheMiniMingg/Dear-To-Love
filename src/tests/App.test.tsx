@@ -11,7 +11,7 @@ import { useUiStore } from '../app/store';
 describe('App shell', () => {
   beforeEach(() => {
     invoke.mockReset();
-    useUiStore.setState({ screen: 'library' });
+    useUiStore.setState({ screen: { name: 'library' } });
     invoke.mockImplementation(async (cmd: string) => {
       if (cmd === 'get_app_info') {
         return {
@@ -52,7 +52,7 @@ describe('App shell', () => {
   });
 
   it('passes deep=true only when the deep check is requested', async () => {
-    useUiStore.setState({ screen: 'diagnostics' });
+    useUiStore.setState({ screen: { name: 'diagnostics' } });
     render(<App />);
     await screen.findByText('FAIL');
     expect(invoke).toHaveBeenCalledWith('run_diagnostics', { deep: false });
@@ -66,7 +66,7 @@ describe('App shell', () => {
       if (cmd === 'run_diagnostics') throw { code: 'INTERNAL', message: 'boom' };
       return { name: 'x', version: '0.1.0', os: 'linux', arch: 'x86_64', buildProfile: 'debug' };
     });
-    useUiStore.setState({ screen: 'diagnostics' });
+    useUiStore.setState({ screen: { name: 'diagnostics' } });
     render(<App />);
     expect(await screen.findByRole('alert')).toHaveTextContent('boom');
   });
