@@ -94,9 +94,14 @@ export function SettingsScreen() {
           Back
         </button>
         <h1 id="settings-title">Settings</h1>
-        <button type="button" onClick={() => navigate({ name: 'usage' })}>
-          Usage &amp; budget
-        </button>
+        <div className="button-row">
+          <button type="button" onClick={() => navigate({ name: 'usage' })}>
+            Usage &amp; budget
+          </button>
+          <button type="button" onClick={() => navigate({ name: 'backups' })}>
+            Backups
+          </button>
+        </div>
       </div>
       {error && (
         <p role="alert" className="error">

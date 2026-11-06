@@ -57,7 +57,8 @@ foreign keys enabled on every connection. Migrations live in
 parents in the same story, exactly one main route per story, no parent cycles,
 every save points into its route's history, and every story summary points
 into its own story. After the checks, unfinished storypack imports are
-finished or rolled back and their staging folders removed.
+finished or rolled back and their staging folders removed. A confirmed
+restore is swapped in before the database opens (ADR 0008).
 
 ## Upgrades
 

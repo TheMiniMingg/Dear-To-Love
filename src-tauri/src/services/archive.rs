@@ -450,7 +450,7 @@ fn write_pack(
     })
 }
 
-fn file_name(p: &Path) -> String {
+pub(crate) fn file_name(p: &Path) -> String {
     p.file_name()
         .map(|n| n.to_string_lossy().into_owned())
         .unwrap_or_default()
@@ -458,7 +458,10 @@ fn file_name(p: &Path) -> String {
 
 /// Writes through `<dest>.<id>.part` in the same folder, then renames, so
 /// `dest` is either the old file or the complete new one.
-fn write_atomic_with(dest: &Path, write: impl FnOnce(File) -> AppResult<()>) -> AppResult<()> {
+pub(crate) fn write_atomic_with(
+    dest: &Path,
+    write: impl FnOnce(File) -> AppResult<()>,
+) -> AppResult<()> {
     let dir = dest
         .parent()
         .filter(|d| !d.as_os_str().is_empty())
@@ -654,7 +657,11 @@ fn allowed_name(name: &str) -> bool {
 }
 
 /// Copies at most `limit` bytes, hashing them on the way.
-fn copy_limited(r: &mut impl Read, w: &mut impl Write, limit: u64) -> AppResult<(u64, String)> {
+pub(crate) fn copy_limited(
+    r: &mut impl Read,
+    w: &mut impl Write,
+    limit: u64,
+) -> AppResult<(u64, String)> {
     let mut h = Sha256::new();
     let mut buf = vec![0u8; 64 * 1024];
     let mut total = 0u64;

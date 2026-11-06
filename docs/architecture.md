@@ -19,10 +19,13 @@ React screens -> src/api/commands.ts (typed invoke wrappers)
                          assets (image validation, thumbnails, files),
                          storypack (format, checks, id remapping),
                          archive (storypack export/import, recovery,
-                         readable text export)
+                         readable text export), backups (automatic
+                         copies, .dtlbackup, staged restore)
   -> SQLite (story.db)   OS credential store for API keys
      assets/originals, assets/thumbs (content-addressed image files)
      imports/<operation>  storypack staging (removed when done)
+     backups/             pre-migration-*, before-restore-*, auto/auto-*
+     restore/<token>      a checked backup waiting to be confirmed
   dtlimg: protocol      serves library images to the webview by id
 ```
 
@@ -156,6 +159,22 @@ text      route view -> chapters, labelled turns, notes -> .md or .txt
 
 - `.storypack` holds one whole story; no keys, connections, usage,
   preferences, logs or paths. See ADR 0007.
+
+## Backups and restore
+
+```text
+auto      1 min after start, then hourly: newest auto copy >= 24 h old and
+          something changed? -> VACUUM INTO .part -> rename -> keep 5
+everything VACUUM INTO snapshot -> assets listed from the snapshot ->
+          .dtlbackup (manifest, story.db, assets/) -> .part -> rename
+prepare   unpack allowed names (limits) -> manifest match -> open + upgrade
+          -> quick_check + contract -> ready.db + plan.json
+confirm   VACUUM INTO before-restore-<time>.db -> restore.json -> restart
+startup   restore.json? images in -> drop old -wal/-shm -> rename ready.db
+          -> result once -> then the normal database open
+```
+
+- See ADR 0008.
 
 ## Usage and budget
 

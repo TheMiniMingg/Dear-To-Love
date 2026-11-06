@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Backups. Once a day when you play, a copy of your stories is kept automatically (the newest
+  five). **Settings → Backups → Back up everything** saves one file with all stories, pictures,
+  settings, connections and usage records; API keys are never included. **Restore** takes a
+  kept copy or a backup file, checks it first and says what it holds, then saves your current
+  data as "Before a restore" and restarts to swap it in safely. Backups from an earlier version
+  are upgraded; damaged ones and ones from a newer version are refused without changing
+  anything. Diagnostics checks that automatic backups exist and, in the deep check, that the
+  newest one opens.
 - Share and keep stories. **Export…** in the pause menu saves the current route as readable
   text (Markdown or plain text, with chapter headings, who said what, and optional times) or
   the whole story as a `.storypack`: every route, saves, story summaries and the pictures it
