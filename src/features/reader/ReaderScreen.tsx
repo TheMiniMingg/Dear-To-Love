@@ -12,12 +12,14 @@ import { Dialog } from '../../components/Dialog';
 import { ChaptersPanel } from '../routes/ChaptersPanel';
 import { RoutesPanel } from '../routes/RoutesPanel';
 import { SavesPanel } from '../saves/SavesPanel';
-import type { BudgetStatus, ErrorCode, RouteView, SaveView } from '../../types';
+import type { BudgetStatus, ErrorCode, EventDto, RouteView, SaveView } from '../../types';
 import { Composer } from './Composer';
 import { ContextPreviewPanel } from './ContextPreviewPanel';
 import { NarrativeView } from './NarrativeView';
+import { StoryDetailsPanel } from './StoryDetailsPanel';
 
-type Panel = null | 'menu' | 'saves' | 'routes' | 'chapters' | 'edit' | 'context';
+type Panel =
+  null | 'menu' | 'saves' | 'routes' | 'chapters' | 'edit' | 'regenerate' | 'details' | 'context';
 
 const PANEL_TITLES: Record<Exclude<Panel, null>, string> = {
   menu: 'Paused',
@@ -25,6 +27,8 @@ const PANEL_TITLES: Record<Exclude<Panel, null>, string> = {
   routes: 'Routes',
   chapters: 'Chapters',
   edit: 'Change your action',
+  regenerate: 'Another reply',
+  details: 'Story details',
   context: 'Preview context',
 };
 
@@ -57,6 +61,8 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
   );
   const [budget, setBudget] = useState<BudgetStatus | null>(null);
   const [editText, setEditText] = useState('');
+  /** The action being changed, or the reply being replaced. */
+  const [target, setTarget] = useState<EventDto | null>(null);
   const narrativeHost = useRef<HTMLDivElement>(null);
   const mounted = useRef(true);
 
@@ -232,22 +238,47 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
     if (stream) void commands.cancelReply(stream.runId).catch(() => undefined);
   };
 
-  const openEdit = () => {
-    if (lastAction?.kind === 'player') setEditText(lastAction.payload.text);
+  const openEdit = (e: EventDto | undefined = lastAction) => {
+    if (e?.kind !== 'player') return;
+    setTarget(e);
+    setEditText(e.payload.text);
     setPanel('edit');
   };
 
+  const openRegenerate = (eventId: string) => {
+    const e = view?.history.find((x) => x.id === eventId);
+    if (e?.kind !== 'assistant') return;
+    setTarget(e);
+    setPanel('regenerate');
+  };
+
+  /** The player action a reply answered. */
+  const answered = (reply: EventDto | null) =>
+    reply && view?.history.find((x) => x.id === reply.parentEventId);
+
   const submitEdit = () =>
     view &&
-    lastAction?.kind === 'player' &&
+    target?.kind === 'player' &&
     run(async () => {
       const sub = await commands.editAction({
         storyId: view.story.id,
         routeId: view.route.id,
-        playerEventId: lastAction.id,
+        playerEventId: target.id,
         text: editText,
       });
       // The new branch's reader picks up its pending reply when it opens.
+      goToRoute(sub.view);
+    });
+
+  const submitRegenerate = () =>
+    view &&
+    target?.kind === 'assistant' &&
+    run(async () => {
+      const sub = await commands.regenerateReply({
+        storyId: view.story.id,
+        routeId: view.route.id,
+        assistantEventId: target.id,
+      });
       goToRoute(sub.view);
     });
 
@@ -427,6 +458,12 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
           draft={viewing ? null : stream}
           playerName={player?.name ?? 'You'}
           onBranch={viewing ? undefined : (id) => void branchFrom(id)}
+          onRegenerate={viewing || writing || busy ? undefined : openRegenerate}
+          onEditAction={
+            viewing || writing || busy
+              ? undefined
+              : (id) => openEdit(view.history.find((x) => x.id === id))
+          }
         />
       </div>
 
@@ -469,7 +506,7 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
                     Usage &amp; budget
                   </button>
                 )}
-                <button type="button" onClick={openEdit}>
+                <button type="button" onClick={() => openEdit()}>
                   Change action
                 </button>
               </div>
@@ -507,10 +544,16 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
         <Dialog
           key={panel}
           title={PANEL_TITLES[panel]}
-          wide={panel === 'context'}
+          wide={panel === 'context' || panel === 'details'}
           onClose={() => setPanel(panel === 'menu' || panel === 'edit' ? null : 'menu')}
           initialFocusId={
-            panel === 'menu' ? 'pause-resume' : panel === 'edit' ? 'edit-action-input' : undefined
+            panel === 'menu'
+              ? 'pause-resume'
+              : panel === 'edit'
+                ? 'edit-action-input'
+                : panel === 'regenerate'
+                  ? 'regenerate-confirm'
+                  : undefined
           }
         >
           {panel === 'menu' && (
@@ -536,6 +579,19 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
                   A+
                 </button>
               </div>
+              <button
+                type="button"
+                onClick={() => setPanel('details')}
+                disabled={awaitingReply || writing}
+                aria-describedby={awaitingReply || writing ? 'details-hint' : undefined}
+              >
+                Story details
+              </button>
+              {(awaitingReply || writing) && (
+                <p id="details-hint" className="muted small">
+                  Story details can change once the waiting action has its reply.
+                </p>
+              )}
               <button type="button" onClick={() => setPanel('context')}>
                 Preview context
               </button>
@@ -596,6 +652,45 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
             />
           )}
           {panel === 'context' && <ContextPreviewPanel routeId={view.route.id} />}
+          {panel === 'details' && (
+            <StoryDetailsPanel
+              view={view}
+              playerName={player?.name ?? 'You'}
+              onCancel={() => setPanel(null)}
+              onApplied={(v) => {
+                setView(v);
+                setPanel(null);
+                setSaveStatus(`Story details changed ${timeNow()}`);
+              }}
+            />
+          )}
+          {panel === 'regenerate' && target?.kind === 'assistant' && (
+            <div className="panel">
+              <p>
+                The storyteller writes a different reply to{' '}
+                {(() => {
+                  const a = answered(target);
+                  return a?.kind === 'player' ? <q>{a.payload.text}</q> : 'your action';
+                })()}{' '}
+                on a <strong>new route</strong>. <strong>{view.route.label}</strong> keeps this
+                reply and everything after it.
+              </p>
+              <div className="button-row">
+                <button type="button" onClick={() => setPanel(null)}>
+                  Cancel
+                </button>
+                <button
+                  id="regenerate-confirm"
+                  type="button"
+                  className="primary"
+                  disabled={busy}
+                  onClick={() => void submitRegenerate()}
+                >
+                  Write another reply
+                </button>
+              </div>
+            </div>
+          )}
           {panel === 'edit' && (
             <form
               className="form"
@@ -605,7 +700,9 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
               }}
             >
               <label htmlFor="edit-action-input">
-                Your action. The story continues on a new branch; the original stays as it was.
+                Your action. The story continues from here on a new route; {view.route.label} keeps
+                the original
+                {target && target.id !== lastAction?.id ? ' and everything after it' : ''}.
               </label>
               <textarea
                 id="edit-action-input"

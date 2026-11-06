@@ -47,6 +47,21 @@ Guided / Custom      -> CreateStoryDraft edited in the wizard, saved as
 
 See `db/timeline/tests.rs` for the randomized isolation test (T06).
 
+## Changing a story in play
+
+```text
+Story details   effective state at the head -> edited copy -> diff into StateEdit
+                ops -> preview (fields, route, effective point) -> one `edit`
+                event at the head (validated by replaying it first)
+Another reply   regenerate_reply: fork at the action the reply answered +
+                pending run on the new route, in one transaction
+Change action   edit_action: fork before the action + new player event +
+                pending run, in one transaction (any action, not just the last)
+```
+
+- All three only add events or routes; nothing earlier is rewritten. An edit
+  can't be added while the head is an action waiting for its reply.
+
 ## Replies (generation runs)
 
 ```text

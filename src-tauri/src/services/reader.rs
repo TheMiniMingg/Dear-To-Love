@@ -9,10 +9,11 @@ use crate::db::providers;
 use crate::db::runs::{self, RunDto};
 use crate::db::state::StateView;
 use crate::db::timeline::{
-    get_route, list_routes, route_chapters, route_history, ChapterDto, EventDto, RouteDto,
+    append_event, get_route, list_routes, route_chapters, route_history, AppendEvent, Appended,
+    ChapterDto, EventDto, RouteDto,
 };
 use crate::db::Database;
-use crate::domain::events::EventBody;
+use crate::domain::events::{EditPayload, EventBody, StateEdit};
 use crate::domain::provider::Billing;
 use crate::errors::{AppError, AppResult};
 use crate::services::mock_storyteller::MOCK_PROVIDER_LABEL;
@@ -126,3 +127,44 @@ pub async fn route_view(db: &Database, route_id: &str) -> AppResult<RouteView> {
         route,
     })
 }
+
+/// Longest note kept on a story-details edit (shown in the story).
+const MAX_EDIT_NOTE: usize = 500;
+
+/// Change structured story details from the head of this route on. The
+/// edit is one event: earlier turns and other routes are untouched, and an
+/// edit that would leave an invalid state is refused before anything is
+/// written.
+pub async fn edit_details(
+    db: &Database,
+    story_id: &str,
+    route_id: &str,
+    expected_head_id: &str,
+    changes: Vec<StateEdit>,
+    note: Option<String>,
+) -> AppResult<Appended> {
+    let note = note
+        .map(|n| n.trim().to_string())
+        .filter(|n| !n.is_empty())
+        .map(|n| {
+            if n.chars().count() > MAX_EDIT_NOTE {
+                n.chars().take(MAX_EDIT_NOTE - 1).chain(['…']).collect()
+            } else {
+                n
+            }
+        });
+    append_event(
+        db,
+        AppendEvent {
+            story_id: story_id.into(),
+            route_id: route_id.into(),
+            expected_head_id: expected_head_id.into(),
+            body: EventBody::Edit(EditPayload { changes, note }),
+            generation_run_id: None,
+        },
+    )
+    .await
+}
+
+#[cfg(test)]
+mod tests;

@@ -550,6 +550,64 @@ async fn edit_unanswered_action_branches() {
     assert_eq!(main.route.head_event_id.as_deref(), Some(player.as_str()));
 }
 
+/// M7: another reply is a new branch from the same action; the original
+/// reply and route are unchanged, and earlier answered actions can change.
+#[tokio::test]
+async fn regenerate_and_edit_earlier_action_branch() {
+    let env = Env::new().await;
+    let first = env.submit(env.route(), "Read the letter").await.unwrap();
+    env.gen(&first.run_id).await.0.unwrap();
+    let second = env.submit(env.route(), "Light the lamp").await.unwrap();
+    let main = env.gen(&second.run_id).await.0.unwrap();
+    let main_head = main.route.head_event_id.clone().unwrap();
+    let reply = main.history[main.history.len() - 3].id.clone();
+    let action = main.history[main.history.len() - 4].id.clone();
+
+    let regen = regenerate_reply(env.db(), &env.story.story_id, env.route(), &reply)
+        .await
+        .unwrap();
+    assert_ne!(regen.view.route.id, env.story.main_route_id);
+    assert_eq!(
+        regen.view.route.head_event_id.as_deref(),
+        Some(action.as_str()),
+        "forks at the action the reply answered"
+    );
+    assert!(regen.view.awaiting_reply.is_some());
+    let alt = env.gen(&regen.run_id).await.0.unwrap();
+    assert!(assistant_text(&alt).contains("Read the letter"));
+    assert_eq!(env.assistant_count(&alt.route.id).await, 1);
+
+    // Only replies can be regenerated.
+    let err = regenerate_reply(env.db(), &env.story.story_id, env.route(), &action)
+        .await
+        .unwrap_err();
+    assert_eq!(err.code, ErrorCode::InvalidInput);
+
+    // An earlier, answered action can change too: a new branch before it.
+    let edited = edit_action(
+        env.db(),
+        &env.story.story_id,
+        env.route(),
+        &action,
+        "Burn the letter",
+    )
+    .await
+    .unwrap();
+    let v = env.gen(&edited.run_id).await.0.unwrap();
+    assert!(assistant_text(&v).contains("Burn the letter"));
+
+    let after = route_view(env.db(), env.route()).await.unwrap();
+    assert_eq!(
+        after.route.head_event_id.as_deref(),
+        Some(main_head.as_str())
+    );
+    assert_eq!(
+        env.assistant_count(env.route()).await,
+        2,
+        "original untouched"
+    );
+}
+
 /// T59: a manual paid test is a ledger row with no story event.
 #[tokio::test]
 async fn test_message_is_recorded_as_manual_test() {

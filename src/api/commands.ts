@@ -18,6 +18,7 @@ import type {
   RateCardView,
   RouteDto,
   RouteView,
+  StateEdit,
   SaveDto,
   SaveView,
   StoryCreated,
@@ -140,6 +141,11 @@ export const commands = {
   cancelReply: (runId: string) => call<void>('cancel_reply', { runId }),
   editAction: (r: RouteRef & { playerEventId: string; text: string }) =>
     call<Submitted>('edit_action', r),
+  regenerateReply: (r: RouteRef & { assistantEventId: string }) =>
+    call<Submitted>('regenerate_reply', r),
+  editStoryDetails: (
+    r: RouteRef & { expectedHeadId: string; changes: StateEdit[]; note: string | null },
+  ) => call<RouteView>('edit_story_details', r),
   /** The exact prompt the next reply would send. Assembled locally; nothing is sent. */
   previewContext: (routeId: string) => call<ContextPreview>('preview_context', { routeId }),
   nextChapter: (r: RouteRef & { expectedHeadId: string; title?: string | null }) =>

@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Change the story as you play. **Story details** in the pause menu edits characters (add,
+  change or remove), the world, narration, the current scene and open questions, and the facts
+  the storyteller must keep to. Before anything is written it shows each changed field with its
+  old and new value, the route it applies to and the point it takes effect from, then **Apply
+  from now** records one change on that route only: earlier turns and other routes keep what
+  they had. **Another reply** on any reply and **Change this action** on any of your actions
+  each start a new route and leave the original as it was. Story details are unavailable while
+  an action is still waiting for its reply.
 - Create your own story (Library): a five-step wizard (world, your character, the opening and
   other characters, narration, review). Guided mode needs no typing: arrows, menus and
   checkboxes over preset values. Custom mode lets you type any field, add or remove characters

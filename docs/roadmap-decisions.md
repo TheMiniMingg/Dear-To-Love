@@ -23,6 +23,11 @@ and the roadmap differ, this file wins.
   Chapter & Route Picker comes later.
 - **Regenerate:** each regenerate creates a route; the route list groups routes
   by fork point and can hide abandoned ones.
+- **In-story edits** use one `edit` event per Apply, with a short note listing
+  what changed (shown in the story). Facts added in Story details are
+  confirmed facts; the `fact_confirm` event is kept for the later suggestion
+  queue. Relationships are not edited directly yet; removing a character
+  removes theirs.
 - **Preview context** lives in the reader's pause menu, because it needs a
   route; it previews the next reply on the current route.
 - **Budget:** the pause gate reserves each paid call's ceiling inside the
