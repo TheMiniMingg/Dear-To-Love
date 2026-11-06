@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Saves and replay: deterministic state reducer, snapshot caches (every 20 events, hash-checked),
+  manual/quick/rotating auto saves, read-only save view, resume-as-branch, edits validated
+  against the effective state, offline story engine self-test (TIMELINE_REPLAY diagnostic).
 - Timeline core: typed event payloads, ancestor traversal, compare-and-swap route heads,
   forks, restart chapter, next chapter, regenerate fork, edit earlier action, hide/rename routes.
 - Story database: first migration (stories, event graph, routes, saves, snapshots,

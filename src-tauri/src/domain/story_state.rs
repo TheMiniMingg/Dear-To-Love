@@ -275,80 +275,81 @@ fn check_list(what: &str, items: &[String]) -> AppResult<()> {
     items.iter().try_for_each(|t| check_text(what, t))
 }
 
+/// A small, fictional, original story state used by tests, the engine
+/// self-test and Diagnostics. Never ship real user stories as fixtures.
+pub fn sample_lighthouse() -> StoryStateV1 {
+    let mut characters = BTreeMap::new();
+    characters.insert(
+        "pc".to_string(),
+        Character {
+            id: "pc".into(),
+            name: "Wren".into(),
+            control: Control::Player,
+            gender: None,
+            pronouns: Some("they/them".into()),
+            age: None,
+            role: Some("Lighthouse keeper".into()),
+            description: None,
+            appearance: None,
+            personality: vec!["curious".into()],
+            goals: vec!["Find out who keeps lighting the lamp".into()],
+            abilities: vec![],
+        },
+    );
+    characters.insert(
+        "npc-mara".to_string(),
+        Character {
+            id: "npc-mara".into(),
+            name: "Mara".into(),
+            control: Control::Npc,
+            gender: None,
+            pronouns: Some("she/her".into()),
+            age: None,
+            role: Some("Ferry captain".into()),
+            description: None,
+            appearance: None,
+            personality: vec!["wry".into()],
+            goals: vec![],
+            abilities: vec![],
+        },
+    );
+    StoryStateV1 {
+        schema_version: 1,
+        player_character_id: "pc".into(),
+        world: World {
+            era: "Modern".into(),
+            setting: "A foggy island".into(),
+            description: "A small island with one lighthouse.".into(),
+            rules: vec!["No magic".into()],
+        },
+        narration: Narration {
+            perspective: Perspective::Second,
+            detail: Detail::Balanced,
+            tone: "Warm, mysterious".into(),
+            pacing: Pacing::Normal,
+        },
+        characters,
+        relationships: vec![Relationship {
+            from_id: "pc".into(),
+            to_id: "npc-mara".into(),
+            label: "old friends".into(),
+            status: "friendly".into(),
+            source_event_id: None,
+        }],
+        known_facts: vec![],
+        scene: Scene {
+            location: "The lighthouse stairs".into(),
+            summary: "Night. The lamp is lit, but nobody climbed the stairs.".into(),
+            participant_ids: vec!["pc".into()],
+        },
+        open_threads: vec!["Who lit the lamp?".into()],
+        visual_refs: BTreeMap::new(),
+    }
+}
+
 #[cfg(test)]
 pub mod fixtures {
-    use super::*;
-
-    /// A small, fictional, original story state used across tests.
-    pub fn lighthouse() -> StoryStateV1 {
-        let mut characters = BTreeMap::new();
-        characters.insert(
-            "pc".to_string(),
-            Character {
-                id: "pc".into(),
-                name: "Wren".into(),
-                control: Control::Player,
-                gender: None,
-                pronouns: Some("they/them".into()),
-                age: None,
-                role: Some("Lighthouse keeper".into()),
-                description: None,
-                appearance: None,
-                personality: vec!["curious".into()],
-                goals: vec!["Find out who keeps lighting the lamp".into()],
-                abilities: vec![],
-            },
-        );
-        characters.insert(
-            "npc-mara".to_string(),
-            Character {
-                id: "npc-mara".into(),
-                name: "Mara".into(),
-                control: Control::Npc,
-                gender: None,
-                pronouns: Some("she/her".into()),
-                age: None,
-                role: Some("Ferry captain".into()),
-                description: None,
-                appearance: None,
-                personality: vec!["wry".into()],
-                goals: vec![],
-                abilities: vec![],
-            },
-        );
-        StoryStateV1 {
-            schema_version: 1,
-            player_character_id: "pc".into(),
-            world: World {
-                era: "Modern".into(),
-                setting: "A foggy island".into(),
-                description: "A small island with one lighthouse.".into(),
-                rules: vec!["No magic".into()],
-            },
-            narration: Narration {
-                perspective: Perspective::Second,
-                detail: Detail::Balanced,
-                tone: "Warm, mysterious".into(),
-                pacing: Pacing::Normal,
-            },
-            characters,
-            relationships: vec![Relationship {
-                from_id: "pc".into(),
-                to_id: "npc-mara".into(),
-                label: "old friends".into(),
-                status: "friendly".into(),
-                source_event_id: None,
-            }],
-            known_facts: vec![],
-            scene: Scene {
-                location: "The lighthouse stairs".into(),
-                summary: "Night. The lamp is lit, but nobody climbed the stairs.".into(),
-                participant_ids: vec!["pc".into()],
-            },
-            open_threads: vec!["Who lit the lamp?".into()],
-            visual_refs: BTreeMap::new(),
-        }
-    }
+    pub use super::sample_lighthouse as lighthouse;
 }
 
 #[cfg(test)]

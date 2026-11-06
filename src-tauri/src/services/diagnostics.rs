@@ -48,6 +48,7 @@ pub async fn run_all(ctx: DiagnosticsContext) -> Vec<DiagnosticCheck> {
     checks.push(check_database(&ctx.db).await);
     checks.push(check_db_integrity(&ctx.db, ctx.deep).await);
     checks.push(check_usage_ledger(&ctx.db).await);
+    checks.push(check_timeline_replay(&ctx.data_dir).await);
     checks.extend(sync_iter);
     checks
 }
@@ -281,6 +282,36 @@ pub async fn check_usage_ledger(db: &Result<Database, AppError>) -> DiagnosticCh
     finish("USAGE_LEDGER", "API usage ledger", start, outcome)
 }
 
+/// Runs the offline engine self-test on a throwaway database.
+pub async fn check_timeline_replay(data_dir: &Result<PathBuf, String>) -> DiagnosticCheck {
+    let start = Instant::now();
+    let outcome = match data_dir {
+        Err(_) => (
+            CheckStatus::Skipped,
+            "Skipped because the data folder is unavailable.".into(),
+            None,
+        ),
+        Ok(dir) => match crate::services::selftest::run(&dir.join("tmp")).await {
+            Ok(r) => (
+                CheckStatus::Pass,
+                format!(
+                    "Story engine self-test passed ({} turns, {} routes, {} checks).",
+                    r.turns,
+                    r.routes,
+                    r.checks_passed.len()
+                ),
+                None,
+            ),
+            Err(e) => (
+                CheckStatus::Fail,
+                format!("Story engine self-test failed: {}", e.message),
+                Some("Please report this with a copied Diagnostics report.".into()),
+            ),
+        },
+    };
+    finish("TIMELINE_REPLAY", "Story engine self-test", start, outcome)
+}
+
 pub fn check_secrets(store: &dyn SecretStore) -> DiagnosticCheck {
     timed("SECRETS", "Secure key storage", || {
         match secrets::probe(store) {
@@ -355,6 +386,7 @@ mod tests {
                 "DATABASE",
                 "DB_INTEGRITY",
                 "USAGE_LEDGER",
+                "TIMELINE_REPLAY",
                 "SECRETS"
             ]
         );

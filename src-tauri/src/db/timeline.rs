@@ -341,6 +341,12 @@ pub async fn append_event_tx(
                 )));
             }
         }
+        EventBody::Edit(_) | EventBody::FactConfirm(_) => {
+            // The edit must leave a valid state at this point of the branch.
+            let (mut state, _) =
+                super::state::state_with_snapshots(conn, &input.story_id, &head_id).await?;
+            state.apply("pending", &input.body)?;
+        }
         _ => {}
     }
 
@@ -378,6 +384,19 @@ pub async fn append_event_tx(
         return Err(head_changed(&route.id));
     }
     touch_story(conn, &input.story_id, &ts).await?;
+    if matches!(
+        input.body,
+        EventBody::Assistant(_) | EventBody::ChapterStart(_)
+    ) {
+        super::saves::autosave_tx(
+            conn,
+            &input.story_id,
+            &route.id,
+            &event_id,
+            &format!("Autosave ({})", route.label),
+        )
+        .await?;
+    }
     Ok(Appended {
         event_id,
         route_version: route.version + 1,
