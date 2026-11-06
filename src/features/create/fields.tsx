@@ -304,7 +304,7 @@ export function MultiPicker({
       {chosen.length > 0 ? (
         <ul className="chip-list" aria-label={`Chosen ${label.toLowerCase()}`}>
           {chosen.map((c) => (
-            <li key={c} className="chip">
+            <li key={c} className="pick-chip">
               <span>{c}</span>
               <button
                 type="button"
