@@ -5,6 +5,7 @@
 pub mod backup;
 pub mod contract;
 pub mod stories;
+pub mod timeline;
 
 use std::path::{Path, PathBuf};
 use std::str::FromStr;

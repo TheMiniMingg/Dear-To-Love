@@ -3,6 +3,9 @@
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 
+use super::story_state::{Character, KnownFact, Narration, Relationship, Scene, World};
+use crate::errors::{AppError, AppResult};
+
 /// Current payload version written to `events.payload_version`.
 pub const EVENT_PAYLOAD_VERSION: u32 = 1;
 
@@ -55,4 +58,248 @@ pub struct ChapterStartPayload {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
     pub source_outline_id: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[ts(export)]
+pub struct PlayerPayload {
+    pub text: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[ts(export)]
+pub struct AssistantPayload {
+    pub text: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub finish_reason: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub provider_label: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub model_id: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[ts(export)]
+pub struct CheckpointPayload {
+    pub label: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[ts(export)]
+pub struct FactConfirmPayload {
+    pub fact: KnownFact,
+}
+
+/// One explicit change to structured story state, effective from the
+/// `edit` event forward on that branch only.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(tag = "op", rename_all = "camelCase", rename_all_fields = "camelCase")]
+#[ts(export)]
+pub enum StateEdit {
+    SetWorld {
+        world: World,
+    },
+    SetNarration {
+        narration: Narration,
+    },
+    UpsertCharacter {
+        character: Character,
+    },
+    /// Removes an NPC and every relationship, fact and scene reference to it.
+    RemoveCharacter {
+        character_id: String,
+    },
+    SetRelationships {
+        relationships: Vec<Relationship>,
+    },
+    UpsertFact {
+        fact: KnownFact,
+    },
+    RemoveFact {
+        fact_id: String,
+    },
+    SetScene {
+        scene: Scene,
+    },
+    SetOpenThreads {
+        open_threads: Vec<String>,
+    },
+    SetVisualRef {
+        slot: String,
+        asset_id: Option<String>,
+    },
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[ts(export)]
+pub struct EditPayload {
+    pub changes: Vec<StateEdit>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub note: Option<String>,
+}
+
+/// An event's kind together with its typed payload.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(tag = "kind", content = "payload", rename_all = "snake_case")]
+#[ts(export)]
+pub enum EventBody {
+    ChapterStart(ChapterStartPayload),
+    Player(PlayerPayload),
+    Assistant(AssistantPayload),
+    Edit(EditPayload),
+    Checkpoint(CheckpointPayload),
+    FactConfirm(FactConfirmPayload),
+}
+
+const MAX_PLAYER_TEXT: usize = 20_000;
+const MAX_ASSISTANT_TEXT: usize = 200_000;
+const MAX_LABEL: usize = 200;
+
+impl EventBody {
+    pub fn kind(&self) -> EventKind {
+        match self {
+            Self::ChapterStart(_) => EventKind::ChapterStart,
+            Self::Player(_) => EventKind::Player,
+            Self::Assistant(_) => EventKind::Assistant,
+            Self::Edit(_) => EventKind::Edit,
+            Self::Checkpoint(_) => EventKind::Checkpoint,
+            Self::FactConfirm(_) => EventKind::FactConfirm,
+        }
+    }
+
+    /// JSON stored in `events.payload_json` (payload only, no kind tag).
+    pub fn payload_json(&self) -> String {
+        let r = match self {
+            Self::ChapterStart(p) => serde_json::to_string(p),
+            Self::Player(p) => serde_json::to_string(p),
+            Self::Assistant(p) => serde_json::to_string(p),
+            Self::Edit(p) => serde_json::to_string(p),
+            Self::Checkpoint(p) => serde_json::to_string(p),
+            Self::FactConfirm(p) => serde_json::to_string(p),
+        };
+        r.expect("event payloads always serialize")
+    }
+
+    pub fn from_parts(kind: &str, payload_json: &str) -> AppResult<Self> {
+        let kind = EventKind::parse(kind)
+            .ok_or_else(|| AppError::internal(format!("unknown event kind {kind}")))?;
+        let bad =
+            |e: serde_json::Error| AppError::internal(format!("corrupt {kind:?} payload: {e}"));
+        Ok(match kind {
+            EventKind::ChapterStart => {
+                Self::ChapterStart(serde_json::from_str(payload_json).map_err(bad)?)
+            }
+            EventKind::Player => Self::Player(serde_json::from_str(payload_json).map_err(bad)?),
+            EventKind::Assistant => {
+                Self::Assistant(serde_json::from_str(payload_json).map_err(bad)?)
+            }
+            EventKind::Edit => Self::Edit(serde_json::from_str(payload_json).map_err(bad)?),
+            EventKind::Checkpoint => {
+                Self::Checkpoint(serde_json::from_str(payload_json).map_err(bad)?)
+            }
+            EventKind::FactConfirm => {
+                Self::FactConfirm(serde_json::from_str(payload_json).map_err(bad)?)
+            }
+        })
+    }
+
+    /// Structural validation before an event is committed.
+    pub fn validate(&self) -> AppResult<()> {
+        let bad = |m: &str| Err(AppError::invalid_input(m.to_string()));
+        let len = |s: &str| s.chars().count();
+        match self {
+            Self::ChapterStart(p) => {
+                if p.title.trim().is_empty() || len(&p.title) > MAX_LABEL {
+                    return bad("chapter title must be 1 to 200 characters");
+                }
+                if p.ordinal == 0 {
+                    return bad("chapter ordinal starts at 1");
+                }
+            }
+            Self::Player(p) => {
+                if p.text.trim().is_empty() {
+                    return bad("action text must not be empty");
+                }
+                if len(&p.text) > MAX_PLAYER_TEXT {
+                    return bad("action text is too long");
+                }
+            }
+            Self::Assistant(p) => {
+                if p.text.trim().is_empty() {
+                    return bad("story reply must not be empty");
+                }
+                if len(&p.text) > MAX_ASSISTANT_TEXT {
+                    return bad("story reply is too long");
+                }
+            }
+            Self::Edit(p) => {
+                if p.changes.is_empty() {
+                    return bad("an edit needs at least one change");
+                }
+            }
+            Self::Checkpoint(p) => {
+                if p.label.trim().is_empty() || len(&p.label) > MAX_LABEL {
+                    return bad("checkpoint label must be 1 to 200 characters");
+                }
+            }
+            Self::FactConfirm(p) => {
+                if p.fact.id.trim().is_empty() || p.fact.text.trim().is_empty() {
+                    return bad("a confirmed fact needs an id and text");
+                }
+            }
+        }
+        Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn body_round_trips_through_storage_parts() {
+        let bodies = [
+            EventBody::Player(PlayerPayload { text: "Hi".into() }),
+            EventBody::Edit(EditPayload {
+                changes: vec![StateEdit::SetOpenThreads {
+                    open_threads: vec!["x".into()],
+                }],
+                note: None,
+            }),
+        ];
+        for b in bodies {
+            let back = EventBody::from_parts(b.kind().as_str(), &b.payload_json()).unwrap();
+            assert_eq!(back, b);
+        }
+    }
+
+    #[test]
+    fn tagged_json_shape_for_frontend() {
+        let b = EventBody::Edit(EditPayload {
+            changes: vec![StateEdit::RemoveCharacter {
+                character_id: "npc".into(),
+            }],
+            note: None,
+        });
+        let v = serde_json::to_value(&b).unwrap();
+        assert_eq!(v["kind"], "edit");
+        assert_eq!(v["payload"]["changes"][0]["op"], "removeCharacter");
+        assert_eq!(v["payload"]["changes"][0]["characterId"], "npc");
+    }
+
+    #[test]
+    fn rejects_empty_text() {
+        assert!(EventBody::Player(PlayerPayload { text: "  ".into() })
+            .validate()
+            .is_err());
+    }
 }
