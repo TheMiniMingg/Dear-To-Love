@@ -183,9 +183,11 @@ build a story from every world, scenario and character combination.
 ### Your own stories
 
 **New story → Create your own** walks through World, You, Story, Narration and Review.
-**Guided** builds a whole story from presets without typing; **Custom** lets you write
-everything, and you can switch at any time without losing anything. The half-made story is
-saved as you go. Everything a template sets can also be changed later, per route, in
+**Guided** builds a whole story from presets without typing. **Custom** has no presets: it
+starts from empty fields and you write your own world, character, starting location, opening
+scene and everyone else in the story. To build on a preset, pick it in Guided and then switch
+to Custom; what you picked carries over, and **Clear all fields** empties it again. The
+half-made story is saved as you go. Everything a template sets can also be changed later, per route, in
 **Story details**.
 
 ## How the AI knows what kind of story it is

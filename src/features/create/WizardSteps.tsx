@@ -76,6 +76,31 @@ export function applyCharacter(catalog: TemplateCatalog, id: string): Partial<Cr
     : { characterTemplateId: null };
 }
 
+/**
+ * The same draft with every field emptied, for Custom mode: no world,
+ * character or scenario preset, default narration, and a first chapter
+ * simply called "Chapter 1".
+ */
+export function blankDraft(d: CreateStoryDraft): CreateStoryDraft {
+  return {
+    ...d,
+    worldTemplateId: null,
+    scenarioTemplateId: null,
+    characterTemplateId: null,
+    title: '',
+    description: '',
+    world: { era: '', setting: '', description: '', rules: [] },
+    narration: { perspective: 'second', detail: 'balanced', tone: '', pacing: 'normal' },
+    player: { id: '', name: '', control: 'player', personality: [], goals: [], abilities: [] },
+    npcs: [],
+    relationships: [],
+    scene: { location: '', summary: '' },
+    openThreads: [],
+    firstChapterTitle: 'Chapter 1',
+    chapterOutlines: [],
+  };
+}
+
 export function fittingScenarios(catalog: TemplateCatalog, worldId: string | null) {
   return catalog.scenarios.filter(
     (s) => !worldId || s.worlds.length === 0 || s.worlds.includes(worldId),
@@ -99,14 +124,14 @@ export function WorldStep({ draft, update, catalog, guided }: StepProps) {
   const set = (patch: Partial<World>) => update({ world: { ...w, ...patch } });
   return (
     <>
-      <ArrowPicker
-        label="Start from a world"
-        options={templateOptions(catalog.worlds, draft.worldTemplateId, 'Your own world')}
-        value={draft.worldTemplateId ?? ''}
-        onChange={(id) => update(applyWorld(catalog, id))}
-      />
       {guided ? (
         <>
+          <ArrowPicker
+            label="Start from a world"
+            options={templateOptions(catalog.worlds, draft.worldTemplateId, 'Your own world')}
+            value={draft.worldTemplateId ?? ''}
+            onChange={(id) => update(applyWorld(catalog, id))}
+          />
           <PresetPicker
             label="Era"
             presets={uniq(catalog.worlds.map((x) => x.world.era))}
@@ -160,18 +185,18 @@ export function CharacterStep({ draft, update, catalog, guided }: StepProps) {
   const chars = catalog.characters.map((c) => c.character);
   return (
     <>
-      <ArrowPicker
-        label="Start from a character"
-        options={templateOptions(
-          catalog.characters,
-          draft.characterTemplateId,
-          'Your own character',
-        )}
-        value={draft.characterTemplateId ?? ''}
-        onChange={(id) => update(applyCharacter(catalog, id))}
-      />
       {guided ? (
         <>
+          <ArrowPicker
+            label="Start from a character"
+            options={templateOptions(
+              catalog.characters,
+              draft.characterTemplateId,
+              'Your own character',
+            )}
+            value={draft.characterTemplateId ?? ''}
+            onChange={(id) => update(applyCharacter(catalog, id))}
+          />
           <PresetPicker
             label="Name"
             presets={uniq(chars.map((c) => c.name))}
@@ -283,6 +308,11 @@ function OthersEditor({ draft, update, catalog, guided }: StepProps) {
                     onChange={(pronouns) => setNpc(i, { pronouns })}
                   />
                   <TextField
+                    label="Age"
+                    value={c.age ?? ''}
+                    onChange={(age) => setNpc(i, { age })}
+                  />
+                  <TextField
                     label="Role"
                     value={c.role ?? ''}
                     onChange={(role) => setNpc(i, { role })}
@@ -332,7 +362,7 @@ function OthersEditor({ draft, update, catalog, guided }: StepProps) {
           </button>
         )}
       </fieldset>
-      {extras.length > 0 && (
+      {guided && extras.length > 0 && (
         <fieldset className="field toggle-list">
           <legend>Bring in a preset character</legend>
           {extras.map((t) => {
@@ -429,27 +459,29 @@ export function StoryStep(props: StepProps) {
   }
   return (
     <>
-      <ArrowPicker
-        label="Start from a scenario"
-        options={pickerOptions}
-        value={current ?? ''}
-        onChange={(id) => update(applyScenario(catalog, id))}
-      />
       {guided ? (
-        <dl className="facts">
-          <dt>Title</dt>
-          <dd>{draft.title || '(not set)'}</dd>
-          <dt>Opens at</dt>
-          <dd>{draft.scene.location || '(not set)'}</dd>
-          {draft.scene.summary && (
-            <>
-              <dt>Scene</dt>
-              <dd>{draft.scene.summary}</dd>
-            </>
-          )}
-          <dt>First chapter</dt>
-          <dd>{draft.firstChapterTitle || '(not set)'}</dd>
-        </dl>
+        <>
+          <ArrowPicker
+            label="Start from a scenario"
+            options={pickerOptions}
+            value={current ?? ''}
+            onChange={(id) => update(applyScenario(catalog, id))}
+          />
+          <dl className="facts">
+            <dt>Title</dt>
+            <dd>{draft.title || '(not set)'}</dd>
+            <dt>Opens at</dt>
+            <dd>{draft.scene.location || '(not set)'}</dd>
+            {draft.scene.summary && (
+              <>
+                <dt>Scene</dt>
+                <dd>{draft.scene.summary}</dd>
+              </>
+            )}
+            <dt>First chapter</dt>
+            <dd>{draft.firstChapterTitle || '(not set)'}</dd>
+          </dl>
+        </>
       ) : (
         <>
           <TextField
@@ -465,15 +497,17 @@ export function StoryStep(props: StepProps) {
             onChange={(description) => update({ description })}
           />
           <TextField
-            label="Where it opens"
+            label="Starting location"
             required
             value={draft.scene.location}
             onChange={(location) => update({ scene: { ...draft.scene, location } })}
+            hint="Where you are when the story begins."
           />
           <TextArea
             label="Opening scene"
             value={draft.scene.summary}
             onChange={(summary) => update({ scene: { ...draft.scene, summary } })}
+            hint="What is happening as the story begins. The storyteller picks up from here."
           />
           <TextField
             label="First chapter title"

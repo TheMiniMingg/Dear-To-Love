@@ -13,6 +13,10 @@
 - Four more worlds, each with its own scenario: Hollow Pines (horror), The Ember Road
   (fantasy adventure), Larkport (romantic comedy) and Vesper City (science-fiction noir), and
   two more characters. Every world now lists its genres, shown in Quick Start.
+- **Create your own → Custom** starts from empty fields with no presets: no world, character
+  or scenario to pick, just your own setting, character, starting location and opening scene.
+  Other characters in Custom have an age field too. **Clear all fields** empties a draft at any
+  time. To build on a preset, pick it in Guided first and switch; it carries over.
 - A new story opens with its premise, the opening scene and a hint, instead of a blank page.
 - The offline storyteller reacts to what you do (looking, talking, moving, handling things),
   speaks through a character who is present, and sets the scene only at the start of a

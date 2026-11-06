@@ -16,7 +16,7 @@ offline storyteller lets you try everything without either.
 - **Start in three clicks** with Quick Start: pick a world, a scenario and who you play.
 - **Build your own story** step by step: world, character, opening scene, other characters,
   chapter plan, narration style, genre, content rating, themes and hard limits. _Guided_ needs
-  no typing; _Custom_ lets you write everything.
+  no typing; _Custom_ starts from empty fields with no presets, so you write everything.
 - **Play** by typing what you do. Save anywhere, quick-save with Ctrl/Cmd+S, and five
   autosaves keep your place.
 - **Branch** from any point, ask for **another reply**, or **change an earlier action**. Each
