@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Timeline core: typed event payloads, ancestor traversal, compare-and-swap route heads,
+  forks, restart chapter, next chapter, regenerate fork, edit earlier action, hide/rename routes.
 - Story database: first migration (stories, event graph, routes, saves, snapshots,
   generation runs, provider profiles, usage ledger, rate cards, preferences), single-writer
   transactions, pre-upgrade backups, startup consistency checks, migration fixtures.
