@@ -30,7 +30,8 @@ offline storyteller lets you try everything without either.
   you edit it, and the chapter is saved. Every later chapter reads the recaps, so the story
   remembers.
 - **Branch** from any point, ask for **another reply**, or **change an earlier action**. Each
-  makes a new route and leaves the original as it was.
+  makes a new route and leaves the original as it was. **Routes** shows them as a list, a map
+  of how they branch, or a timeline of how far each one got.
 - **Change the story as you go** in **Story details**: characters, world, narration, the scene
   and facts the storyteller must keep to. Changes apply from that point, on that route only.
 - **Long stories just work.** Older turns are summarized automatically, so a story can run for

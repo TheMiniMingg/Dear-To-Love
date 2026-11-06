@@ -1834,3 +1834,179 @@ details summary {
 .portrait-prompt p {
   margin: 0 0 0.25rem;
 }
+.routes-panel .segmented {
+  align-self: flex-start;
+}
+.route-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+  flex: 1 1 16rem;
+}
+.route-latest {
+  overflow-wrap: anywhere;
+}
+.route-chosen {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  border-top: 1px solid var(--border);
+  padding-top: 0.6rem;
+}
+.route-map-scroll {
+  overflow: auto;
+  max-height: 50vh;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.route-map {
+  position: relative;
+}
+.route-map-lines {
+  position: absolute;
+  inset: 0;
+}
+.route-map-lines path {
+  fill: none;
+  stroke: var(--muted);
+  stroke-width: 1.5;
+}
+.route-map-lines text {
+  fill: var(--muted);
+  font-size: 0.7rem;
+}
+.route-map-nodes {
+  position: absolute;
+  inset: 0;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.route-map-nodes li {
+  position: absolute;
+}
+.route-node {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 0.1rem;
+  padding: 0.25rem 0.6rem;
+  text-align: left;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  overflow: hidden;
+}
+.route-node.current {
+  border-color: var(--accent);
+  border-width: 2px;
+}
+.route-node[aria-pressed='true'] {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.route-node.hidden-route,
+.timeline-bar.hidden-route {
+  opacity: 0.6;
+  border-style: dashed;
+}
+.route-node-label {
+  font-weight: 600;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.route-node-meta {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+.route-timeline {
+  --timeline-label: 9rem;
+  --timeline-row: 2.25rem;
+  position: relative;
+}
+.timeline-rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.timeline-row {
+  display: grid;
+  grid-template-columns: var(--timeline-label) 1fr;
+  align-items: center;
+  height: var(--timeline-row);
+  gap: 0.5rem;
+}
+.timeline-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: left;
+  padding: 0.15rem 0.4rem;
+}
+.timeline-label.current {
+  font-weight: 600;
+  border-color: var(--accent);
+}
+.timeline-label[aria-pressed='true'] {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+.timeline-track {
+  position: relative;
+  height: 0.9rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--border) 45%, transparent);
+}
+.timeline-bar {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-radius: 999px;
+  border: 1px solid var(--muted);
+  background: color-mix(in srgb, var(--muted) 35%, var(--bg));
+  cursor: pointer;
+}
+.timeline-bar.current {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.timeline-bar.selected {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.timeline-overlay {
+  position: absolute;
+  top: 0;
+  left: calc(var(--timeline-label) + 0.5rem);
+  right: 0;
+  pointer-events: none;
+}
+.timeline-overlay svg {
+  width: 100%;
+  height: 100%;
+}
+.timeline-overlay line {
+  stroke: var(--muted);
+  stroke-width: 1.5;
+  stroke-dasharray: 3 3;
+}
+.timeline-axis {
+  display: flex;
+  justify-content: space-between;
+  margin-left: calc(var(--timeline-label) + 0.5rem);
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+@media (max-width: 480px) {
+  .route-timeline {
+    --timeline-label: 6.5rem;
+  }
+}

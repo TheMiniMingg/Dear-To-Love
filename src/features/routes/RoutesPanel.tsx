@@ -1,6 +1,9 @@
-import { useState } from 'react';
+import { useEffect, useId, useState } from 'react';
 import { commands, errorMessage } from '../../api/commands';
-import type { RouteDto } from '../../types';
+import type { RouteDto, RouteNode } from '../../types';
+import { RouteMap } from './RouteMap';
+import { RouteTimeline } from './RouteTimeline';
+import { branchText, layoutRoutes, originText, statsText } from './routeLayout';
 
 type Props = {
   storyId: string;
@@ -10,13 +13,75 @@ type Props = {
   onChanged: () => void;
 };
 
+type View = 'list' | 'map' | 'timeline';
+
+const VIEWS: { id: View; label: string }[] = [
+  { id: 'list', label: 'List' },
+  { id: 'map', label: 'Map' },
+  { id: 'timeline', label: 'Timeline' },
+];
+
+const VIEW_KEY = 'dtl.routesView';
+
+function loadView(): View {
+  try {
+    const v = localStorage.getItem(VIEW_KEY);
+    return v === 'map' || v === 'timeline' ? v : 'list';
+  } catch {
+    return 'list';
+  }
+}
+
+/** Until the map loads (or if it can't), the routes alone. */
+const bare = (r: RouteDto): RouteNode => ({ route: r, turns: 0 });
+
+/**
+ * Reader -> Routes, as a list, a map of how the routes branch, or a
+ * timeline of how far each one got. Any view can switch, rename, hide and
+ * show routes.
+ */
 export function RoutesPanel({ storyId, currentRouteId, routes, onSwitch, onChanged }: Props) {
+  const id = useId();
+  const [view, setViewState] = useState<View>(loadView);
+  const [nodes, setNodes] = useState<RouteNode[] | null>(null);
   const [showHidden, setShowHidden] = useState(false);
-  const [renaming, setRenaming] = useState<string | null>(null);
-  const [label, setLabel] = useState('');
+  const [selected, setSelected] = useState(currentRouteId);
   const [error, setError] = useState<string | null>(null);
-  const visible = routes.filter((r) => showHidden || !r.hidden || r.id === currentRouteId);
+
+  useEffect(() => {
+    let live = true;
+    commands
+      .getRouteMap(storyId)
+      .then((m) => {
+        if (live) setNodes(m);
+      })
+      .catch(() => {
+        if (live) setNodes(null);
+      });
+    return () => {
+      live = false;
+    };
+  }, [storyId, routes]);
+
+  const setView = (v: View) => {
+    setViewState(v);
+    try {
+      localStorage.setItem(VIEW_KEY, v);
+    } catch {
+      // Remembering the view is only a convenience.
+    }
+  };
+
+  // Route changes (rename, hide) arrive through `routes`; the map adds the rest.
+  const all: RouteNode[] = routes.map((r) => {
+    const n = nodes?.find((x) => x.route.id === r.id);
+    return n ? { ...n, route: r } : bare(r);
+  });
+  const shown = (n: RouteNode) => showHidden || !n.route.hidden || n.route.id === currentRouteId;
+  const placed = layoutRoutes(all, shown);
   const hiddenCount = routes.filter((r) => r.hidden).length;
+  const labelOf = (rid: string) => routes.find((r) => r.id === rid)?.label;
+  const detailed = nodes !== null;
 
   const act = async (f: () => Promise<unknown>) => {
     try {
@@ -28,84 +93,82 @@ export function RoutesPanel({ storyId, currentRouteId, routes, onSwitch, onChang
     }
   };
 
+  const details = (n: RouteNode) => (
+    <RouteDetails
+      key={n.route.id}
+      node={n}
+      current={n.route.id === currentRouteId}
+      detailed={detailed}
+      origin={originText(n, labelOf)}
+      onSwitch={() => onSwitch(n.route.id)}
+      onRename={(label) => act(() => commands.renameRoute({ storyId, routeId: n.route.id, label }))}
+      onHide={() =>
+        void act(() =>
+          commands.setRouteHidden({ storyId, routeId: n.route.id, hidden: !n.route.hidden }),
+        )
+      }
+    />
+  );
+
+  const chosen = placed.find((p) => p.node.route.id === selected) ?? placed[0];
+
   return (
-    <div className="panel">
+    <div className="panel routes-panel">
+      <div role="radiogroup" aria-label="Show routes as" className="segmented">
+        {VIEWS.map((v) => (
+          <label key={v.id}>
+            <input
+              type="radio"
+              name={`${id}-view`}
+              checked={view === v.id}
+              onChange={() => setView(v.id)}
+            />
+            <span>{v.label}</span>
+          </label>
+        ))}
+      </div>
       {error && (
         <p role="alert" className="error">
           {error}
         </p>
       )}
-      <ul className="item-list" aria-label="Routes">
-        {visible.map((r) => (
-          <li key={r.id} className="item-row">
-            {renaming === r.id ? (
-              <form
-                className="inline-form"
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  void act(() => commands.renameRoute({ storyId, routeId: r.id, label })).then(() =>
-                    setRenaming(null),
-                  );
-                }}
-              >
-                <label htmlFor={`rename-${r.id}`} className="visually-hidden">
-                  Route name
-                </label>
-                <input
-                  id={`rename-${r.id}`}
-                  value={label}
-                  maxLength={80}
-                  onChange={(e) => setLabel(e.target.value)}
-                  autoFocus
-                />
-                <button type="submit">Rename</button>
-                <button type="button" onClick={() => setRenaming(null)}>
-                  Cancel
-                </button>
-              </form>
-            ) : (
-              <div>
-                <strong>{r.label}</strong>
-                {r.id === currentRouteId && <span className="badge">Current</span>}
-                {r.isMain && (
-                  <span className="badge" title="The route the story started on">
-                    Original
-                  </span>
-                )}
-                {r.hidden && <span className="badge">Hidden</span>}
-              </div>
-            )}
-            <div className="button-row">
-              {r.id !== currentRouteId && (
-                <button type="button" onClick={() => onSwitch(r.id)}>
-                  Switch
-                </button>
-              )}
-              <button
-                type="button"
-                onClick={() => {
-                  setRenaming(r.id);
-                  setLabel(r.label);
-                }}
-              >
-                Rename
-              </button>
-              {!r.isMain && (
-                <button
-                  type="button"
-                  onClick={() =>
-                    void act(() =>
-                      commands.setRouteHidden({ storyId, routeId: r.id, hidden: !r.hidden }),
-                    )
-                  }
-                >
-                  {r.hidden ? 'Show' : 'Hide'}
-                </button>
-              )}
-            </div>
-          </li>
-        ))}
-      </ul>
+      {view === 'list' && (
+        <ul className="item-list route-list" aria-label="Routes">
+          {placed.map((p) => (
+            <li
+              key={p.node.route.id}
+              className="item-row"
+              style={{ paddingLeft: `${Math.min(p.depth, 6) * 1.25}rem` }}
+            >
+              {details(p.node)}
+            </li>
+          ))}
+        </ul>
+      )}
+      {view !== 'list' && (
+        <>
+          {view === 'map' ? (
+            <RouteMap
+              placed={placed}
+              currentRouteId={currentRouteId}
+              selectedId={chosen?.node.route.id ?? null}
+              onSelect={setSelected}
+            />
+          ) : (
+            <RouteTimeline
+              placed={placed}
+              currentRouteId={currentRouteId}
+              selectedId={chosen?.node.route.id ?? null}
+              onSelect={setSelected}
+            />
+          )}
+          {chosen && (
+            <section className="route-chosen" aria-label="Chosen route">
+              {details(chosen.node)}
+            </section>
+          )}
+        </>
+      )}
       {hiddenCount > 0 && (
         <label className="checkbox">
           <input
@@ -117,5 +180,98 @@ export function RoutesPanel({ storyId, currentRouteId, routes, onSwitch, onChang
         </label>
       )}
     </div>
+  );
+}
+
+function RouteDetails({
+  node,
+  current,
+  detailed,
+  origin,
+  onSwitch,
+  onRename,
+  onHide,
+}: {
+  node: RouteNode;
+  current: boolean;
+  detailed: boolean;
+  origin: string;
+  onSwitch: () => void;
+  onRename: (label: string) => Promise<void>;
+  onHide: () => void;
+}) {
+  const r = node.route;
+  const [renaming, setRenaming] = useState(false);
+  const [label, setLabel] = useState(r.label);
+  const branch = branchText(node);
+  return (
+    <>
+      {renaming ? (
+        <form
+          className="inline-form"
+          onSubmit={(e) => {
+            e.preventDefault();
+            void onRename(label).then(() => setRenaming(false));
+          }}
+        >
+          <label htmlFor={`rename-${r.id}`} className="visually-hidden">
+            Route name
+          </label>
+          <input
+            id={`rename-${r.id}`}
+            value={label}
+            maxLength={80}
+            onChange={(e) => setLabel(e.target.value)}
+            autoFocus
+          />
+          <button type="submit">Rename</button>
+          <button type="button" onClick={() => setRenaming(false)}>
+            Cancel
+          </button>
+        </form>
+      ) : (
+        <div className="route-details">
+          <div>
+            <strong>{r.label}</strong>
+            {current && <span className="badge">Current</span>}
+            {r.isMain && (
+              <span className="badge" title="The route the story started on">
+                Original
+              </span>
+            )}
+            {r.hidden && <span className="badge">Hidden</span>}
+          </div>
+          {detailed && (
+            <>
+              <span className="muted small">{origin}</span>
+              {branch && <span className="small">{branch}</span>}
+              <span className="muted small">{statsText(node)}</span>
+              {node.latest && <span className="muted small route-latest">Now: {node.latest}</span>}
+            </>
+          )}
+        </div>
+      )}
+      <div className="button-row">
+        {!current && (
+          <button type="button" onClick={onSwitch}>
+            Switch
+          </button>
+        )}
+        <button
+          type="button"
+          onClick={() => {
+            setRenaming(true);
+            setLabel(r.label);
+          }}
+        >
+          Rename
+        </button>
+        {!r.isMain && (
+          <button type="button" onClick={onHide}>
+            {r.hidden ? 'Show' : 'Hide'}
+          </button>
+        )}
+      </div>
+    </>
   );
 }

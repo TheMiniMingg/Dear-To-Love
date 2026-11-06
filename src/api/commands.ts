@@ -34,6 +34,7 @@ import type {
   QuickStartInput,
   RateCardView,
   RouteDto,
+  RouteNode,
   RollRequest,
   RouteView,
   StateEdit,
@@ -220,6 +221,8 @@ export const commands = {
     call<RouteView>('fork_route', { ...r, label: r.label ?? null }),
   restartChapter: (r: RouteRef & { chapterEventId: string }) =>
     call<RouteView>('restart_chapter', r),
+  /** Every route with where it branched and how far it got. */
+  getRouteMap: (storyId: string) => call<RouteNode[]>('get_route_map', { storyId }),
   renameRoute: (r: RouteRef & { label: string }) => call<RouteDto>('rename_route', r),
   setRouteHidden: (r: RouteRef & { hidden: boolean }) => call<RouteDto>('set_route_hidden', r),
 

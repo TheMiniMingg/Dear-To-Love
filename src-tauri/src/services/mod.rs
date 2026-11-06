@@ -12,6 +12,7 @@ pub mod mock_storyteller;
 pub mod pictures;
 pub mod prompt;
 pub mod reader;
+pub mod route_map;
 pub mod search;
 pub mod secrets;
 pub mod selftest;
