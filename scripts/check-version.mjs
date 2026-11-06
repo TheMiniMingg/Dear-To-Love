@@ -1,23 +1,22 @@
-// Verifies package.json, tauri.conf.json and Cargo.toml agree on the app version,
-// and (when GITHUB_REF_NAME is a vX.Y.Z tag) that the tag matches too.
-import { readFileSync } from 'node:fs';
+// Verifies package.json, tauri.conf.json, Cargo.toml and Cargo.lock agree on
+// the app version and, when a release tag is built, that the tag is exactly
+// `v` + that version (T48). `--tag vX.Y.Z` checks a tag locally.
+import { fileURLToPath } from 'node:url';
+import { readVersions, versionProblems } from './lib/versions.mjs';
 
-const pkg = JSON.parse(readFileSync('package.json', 'utf8')).version;
-const tauri = JSON.parse(readFileSync('src-tauri/tauri.conf.json', 'utf8')).version;
-const cargoMatch = readFileSync('src-tauri/Cargo.toml', 'utf8').match(/^version\s*=\s*"([^"]+)"/m);
-const cargo = cargoMatch ? cargoMatch[1] : undefined;
+const root = fileURLToPath(new URL('..', import.meta.url));
+const i = process.argv.indexOf('--tag');
+const tag =
+  i > 0
+    ? (process.argv[i + 1] ?? '')
+    : process.env.GITHUB_REF_TYPE === 'tag'
+      ? (process.env.GITHUB_REF_NAME ?? '')
+      : null;
 
-const problems = [];
-if (pkg !== tauri) problems.push(`package.json ${pkg} != tauri.conf.json ${tauri}`);
-if (cargo !== tauri) problems.push(`Cargo.toml ${cargo} != tauri.conf.json ${tauri}`);
-
-const ref = process.env.GITHUB_REF_NAME ?? '';
-if (/^v\d+\.\d+\.\d+/.test(ref) && ref.slice(1) !== tauri) {
-  problems.push(`tag ${ref} != tauri.conf.json v${tauri}`);
-}
-
+const versions = readVersions(root);
+const problems = versionProblems(versions, tag);
 if (problems.length > 0) {
   console.error('Version mismatch:\n  ' + problems.join('\n  '));
   process.exit(1);
 }
-console.log(`Version OK: v${tauri}`);
+console.log(`Version OK: v${versions.tauri}${tag ? ` (tag ${tag})` : ''}`);

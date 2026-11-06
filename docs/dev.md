@@ -17,6 +17,8 @@
 | Rust checks         | `cd src-tauri && cargo fmt --check && cargo clippy --all-targets -- -D warnings && cargo test` |
 | Regenerate TS types | `cd src-tauri && cargo test` (writes `src/types/generated/`)                                   |
 | Development package | `pnpm tauri build --debug --bundles deb`                                                       |
+| Script tests        | `pnpm test:scripts` (version checks, smoke-test rules)                                         |
+| Release             | see [`docs/release.md`](release.md)                                                            |
 
 ## Layout
 

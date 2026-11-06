@@ -19,6 +19,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "check:version": "node scripts/check-version.mjs",
+    "set-version": "node scripts/set-version.mjs",
+    "test:scripts": "node --test scripts/versions.test.mjs scripts/smoke/report.test.mjs",
     "gen:types": "cd src-tauri && cargo test --lib export_bindings && cd .. && node scripts/gen-types-index.mjs",
     "gen:types-index": "node scripts/gen-types-index.mjs",
     "e2e": "node --test --test-concurrency=1 e2e/smoke.test.mjs e2e/live.test.mjs e2e/ollama.test.mjs e2e/wizard.test.mjs e2e/editor.test.mjs e2e/images.test.mjs e2e/storypack.test.mjs e2e/backups.test.mjs e2e/search.test.mjs e2e/updates.test.mjs"

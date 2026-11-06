@@ -78,7 +78,11 @@ fn open_database(data_dir: &Result<PathBuf, String>) -> Result<Database, AppErro
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    // Only the release workflow's installer smoke test passes these (T49).
+    let smoke = services::smoke::parse_args(std::env::args());
+    let smoking = smoke.is_some();
     tauri::Builder::default()
+        .manage(commands::app::Smoke(std::sync::Mutex::new(smoke)))
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
         .register_asynchronous_uri_scheme_protocol("dtlimg", |ctx, request, responder| {
@@ -89,7 +93,7 @@ pub fn run() {
                 responder.respond(commands::assets::serve(&state, &path).await);
             });
         })
-        .setup(|app| {
+        .setup(move |app| {
             let config = app.config();
             let version = config.version.clone().unwrap_or_else(|| "0.0.0".into());
             let product_name = config
@@ -121,6 +125,18 @@ pub fn run() {
                 runs: Default::default(),
                 memory: Default::default(),
             });
+            if smoking {
+                // Report without the interface if it never loads.
+                let handle = app.handle().clone();
+                tauri::async_runtime::spawn(async move {
+                    tokio::time::sleep(std::time::Duration::from_secs(
+                        services::smoke::FRONTEND_TIMEOUT_SECS,
+                    ))
+                    .await;
+                    commands::app::finish_smoke(handle, false).await;
+                });
+                return Ok(());
+            }
             // Automatic backups: shortly after start, then hourly checks
             // (one backup a day at most, only after changes).
             let handle = app.handle().clone();
@@ -214,6 +230,7 @@ pub fn run() {
             commands::app::save_diagnostics_report,
             commands::app::open_support_page,
             commands::app::open_repository_page,
+            commands::app::frontend_ready,
             commands::updates::get_update_status,
             commands::updates::check_for_updates,
             commands::updates::set_update_checks,

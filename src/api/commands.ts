@@ -248,6 +248,8 @@ export const commands = {
     call<string>('save_diagnostics_report', { path, report }),
   openSupportPage: () => call<void>('open_support_page'),
   openRepositoryPage: () => call<void>('open_repository_page'),
+  /** The interface has loaded. Only the installer smoke test acts on it. */
+  frontendReady: () => call<void>('frontend_ready'),
   /** What is known about updates; never goes online. */
   getUpdateStatus: () => call<UpdateStatus>('get_update_status'),
   /** `manual`: Check now. Otherwise the daily check, which does nothing while off. */

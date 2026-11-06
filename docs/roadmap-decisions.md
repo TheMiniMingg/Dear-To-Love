@@ -41,6 +41,10 @@ and the roadmap differ, this file wins.
   every word in any order ignoring case, and scans the history without an
   index. **Bookmarks** belong to a route; a new branch copies the ones on the
   history it shares, and they travel in storypacks.
+- **Releases** are drafts until a maintainer publishes them. The installer
+  smoke test is the packaged app's own `--smoke-test` mode (no WebDriver), run
+  around a reinstall; upgrading from a previous release is added once one
+  exists. Signing is used when its secrets are configured.
 - **Updates** are off until turned on; Check now always works. The newest of
   the first 100 releases wins by SemVer; drafts, prereleases and pages off the
   repository are ignored. The notice lives in the footer, and Got it stores the

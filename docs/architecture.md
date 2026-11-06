@@ -24,7 +24,8 @@ React screens -> src/api/commands.ts (typed invoke wrappers)
                          copies, .dtlbackup, staged restore), search
                          (route-scoped word search with snippets),
                          updates (opt-in GitHub release check),
-                         support_report (sanitized diagnostics report)
+                         support_report (sanitized diagnostics report),
+                         smoke (--smoke-test: installer self-check)
   -> SQLite (story.db)   OS credential store for API keys
      assets/originals, assets/thumbs (content-addressed image files)
      imports/<operation>  storypack staging (removed when done)

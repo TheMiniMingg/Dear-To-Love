@@ -1,12 +1,14 @@
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
+use std::sync::Mutex;
 
-use tauri::{AppHandle, State};
+use tauri::{AppHandle, Manager, State};
 use tauri_plugin_opener::OpenerExt;
 
 use crate::domain::app_info::{AppInfo, BuildProfile};
 use crate::domain::diagnostics::DiagnosticCheck;
 use crate::errors::{AppError, AppResult};
 use crate::services::diagnostics::{self, DiagnosticsContext};
+use crate::services::smoke::{self, SmokeArgs};
 use crate::services::support_report::{self, ReportInput, HEADER, MAX_REPORT};
 use crate::services::updates::{self, public_links};
 use crate::state::AppState;
@@ -114,4 +116,43 @@ pub fn open_support_page(app: AppHandle) -> AppResult<()> {
     app.opener()
         .open_url(url, None::<&str>)
         .map_err(|e| AppError::internal(format!("could not open the browser: {e}")))
+}
+
+/// The installer smoke test's arguments, until its report is written.
+#[derive(Default)]
+pub struct Smoke(pub Mutex<Option<SmokeArgs>>);
+
+/// Called by the interface once it has loaded. A normal start does nothing
+/// here; under `--smoke-test` it writes the report and quits (T49).
+#[tauri::command]
+pub async fn frontend_ready(app: AppHandle) {
+    finish_smoke(app, true).await;
+}
+
+/// Writes the smoke-test report once (from the interface, or after the
+/// timeout without it) and exits: 0 when the report was written.
+pub async fn finish_smoke(app: AppHandle, frontend: bool) {
+    let args = match app.state::<Smoke>().0.lock() {
+        Ok(mut guard) => guard.take(),
+        Err(_) => None,
+    };
+    let Some(args) = args else {
+        return;
+    };
+    let scratch = args
+        .report
+        .parent()
+        .filter(|p| !p.as_os_str().is_empty())
+        .map(Path::to_path_buf)
+        .unwrap_or_else(std::env::temp_dir);
+    let ctx = context(&app.state::<AppState>(), false);
+    let report = smoke::run(ctx, args.seed, frontend, &scratch).await;
+    let code = match smoke::write_report(&args.report, &report) {
+        Ok(()) => 0,
+        Err(e) => {
+            eprintln!("could not write the smoke-test report: {e}");
+            1
+        }
+    };
+    app.exit(code);
 }
