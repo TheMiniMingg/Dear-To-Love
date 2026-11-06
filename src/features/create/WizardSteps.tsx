@@ -2,6 +2,7 @@ import { ArrowPicker, type PickerOption } from '../../components/ArrowPicker';
 import type {
   Character,
   ChapterOutlineInput,
+  ContentRating,
   CreateStoryDraft,
   Detail,
   DraftProblem,
@@ -11,6 +12,7 @@ import type {
   TemplateCatalog,
   World,
 } from '../../types';
+import { ContentFields, RATING_LABELS } from './ContentFields';
 import { LinesField, PresetPicker, TextArea, TextField, ToggleList, uniq } from './fields';
 
 export type StepProps = {
@@ -348,8 +350,10 @@ function OthersEditor({ draft, update, catalog, guided }: StepProps) {
                       : remove(t.character.id)
                   }
                 />
-                {t.character.name}
-                {t.character.role && <span className="muted">, {t.character.role}</span>}
+                <span>
+                  {t.character.name}
+                  {t.character.role && <span className="muted">, {t.character.role}</span>}
+                </span>
               </label>
             );
           })}
@@ -532,8 +536,22 @@ export function NarrationStep({ draft, update, catalog, guided }: StepProps) {
           placeholder="Warm, gently mysterious"
         />
       )}
+      <h2>What kind of story</h2>
+      <ContentFields
+        narration={n}
+        onChange={set}
+        pickGenres={guided}
+        genrePresets={catalog.worlds.flatMap((w) => w.narration.genres ?? [])}
+      />
     </>
   );
+}
+
+/** "Romance, Comedy · Mature", or '' when nothing is set. */
+export function storyKind(genres: string[] | undefined, rating: ContentRating | undefined): string {
+  const g = uniq(genres ?? []).join(', ');
+  const r = rating ? RATING_LABELS[rating] : '';
+  return [g, r].filter(Boolean).join(' · ');
 }
 
 const STEP_NAMES: Record<DraftStep, string> = {
@@ -599,6 +617,20 @@ export function ReviewStep({
           {DETAILS.find((d) => d.value === draft.narration.detail)?.label}
           {draft.narration.tone && ` · ${draft.narration.tone}`}
         </dd>
+        <dt>Kind of story</dt>
+        <dd>{storyKind(draft.narration.genres, draft.narration.rating) || 'Not set'}</dd>
+        {(draft.narration.themes ?? []).some((t) => t.trim()) && (
+          <>
+            <dt>Themes</dt>
+            <dd>{uniq(draft.narration.themes ?? []).join(', ')}</dd>
+          </>
+        )}
+        {(draft.narration.limits ?? []).some((t) => t.trim()) && (
+          <>
+            <dt>Hard limits</dt>
+            <dd>{uniq(draft.narration.limits ?? []).join(', ')}</dd>
+          </>
+        )}
       </dl>
       <p className="muted small">
         Once you create it, this becomes the story&apos;s starting point. Your choices here are kept

@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { Fragment, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { EventDto } from '../../types';
 import { picturesOnly } from './pictures';
 
@@ -18,7 +18,11 @@ type Props = {
   /** Scroll to this event and highlight it; a new `n` repeats it. */
   focus?: { eventId: string; n: number } | null;
   playerName: string;
+  /** The premise under Chapter 1, and where things stand before the first action. */
+  intro?: StoryIntro;
 };
+
+export type StoryIntro = { premise: string; location: string; scene: string };
 
 function Paragraphs({ text }: { text: string }) {
   return (
@@ -158,7 +162,33 @@ export function NarrativeView({
   bookmarked,
   focus,
   playerName,
+  intro,
 }: Props) {
+  const opening = events[0]?.kind === 'chapter_start' && events[0].payload.ordinal === 1;
+  const notStarted = !draft && !events.some((e) => e.kind === 'player');
+  const introBlock = intro && (intro.premise.trim() || notStarted) && (
+    <div className="story-intro" data-testid="story-intro">
+      {intro.premise.trim() && <p className="intro-premise">{intro.premise.trim()}</p>}
+      {notStarted && (
+        <>
+          {(intro.location.trim() || intro.scene.trim()) && (
+            <div className="intro-scene">
+              {intro.location.trim() && (
+                <p>
+                  <strong>{intro.location.trim()}</strong>
+                </p>
+              )}
+              {intro.scene.trim() && <Paragraphs text={intro.scene.trim()} />}
+            </div>
+          )}
+          <p className="intro-hint">
+            Write what you do in the box below to begin, for example &ldquo;Look around&rdquo; or
+            &ldquo;Ask who is there&rdquo;.
+          </p>
+        </>
+      )}
+    </div>
+  );
   const scrollRef = useRef<HTMLDivElement>(null);
   const atBottomRef = useRef(true);
   const [showJump, setShowJump] = useState(false);
@@ -216,9 +246,10 @@ export function NarrativeView({
         data-testid="narrative"
       >
         <div className="narrative-column">
-          {events.map((e) => {
+          {!opening && notStarted && introBlock}
+          {events.map((e, i) => {
             const focused = focus?.eventId === e.id;
-            return (
+            const block = (
               <EventBlock
                 // A new key replays the highlight when the same place is shown again.
                 key={focused ? `${e.id}:${focus.n}` : e.id}
@@ -231,6 +262,14 @@ export function NarrativeView({
                 focused={focused}
                 playerName={playerName}
               />
+            );
+            return i === 0 && opening ? (
+              <Fragment key={e.id}>
+                {block}
+                {introBlock}
+              </Fragment>
+            ) : (
+              block
             );
           })}
           {draft && (

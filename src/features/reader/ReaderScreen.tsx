@@ -546,6 +546,15 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
           onBookmark={viewing ? undefined : (id) => void toggleBookmark(id)}
           bookmarked={viewing ? undefined : bookmarked}
           focus={viewing ? null : focus}
+          intro={
+            viewing
+              ? undefined
+              : {
+                  premise: view.story.description,
+                  location: view.state.state.scene.location,
+                  scene: view.state.state.scene.summary,
+                }
+          }
         />
       </div>
 

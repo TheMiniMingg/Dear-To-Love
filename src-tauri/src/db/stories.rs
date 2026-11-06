@@ -1,12 +1,13 @@
 //! Story rows: create (with main route and first chapter), list, delete.
 
-use sqlx::Row;
+use sqlx::{Row, SqliteConnection};
 
 use super::{new_id, now, Database};
 use crate::domain::events::{ChapterStartPayload, EventKind, EVENT_PAYLOAD_VERSION};
 use crate::domain::story::{CreateStoryInput, StoryCreated, StorySummary};
 use crate::domain::story_state::{StoryStateV1, STORY_STATE_SCHEMA_VERSION};
 use crate::errors::{AppError, AppResult};
+use crate::services::prompt::StoryFrame;
 
 const MAX_TITLE: usize = 200;
 
@@ -141,6 +142,37 @@ pub async fn get_base_state(db: &Database, story_id: &str) -> AppResult<StorySta
         .await?
         .ok_or_else(|| AppError::not_found(format!("story {story_id} not found")))?;
     StoryStateV1::from_json(row.get::<&str, _>(0))
+}
+
+/// The title, premise and the outline of chapter `chapter_ordinal` (when
+/// the story has one) for the storyteller's prompt.
+pub async fn story_frame(
+    conn: &mut SqliteConnection,
+    story_id: &str,
+    chapter_ordinal: Option<u32>,
+) -> AppResult<StoryFrame> {
+    let (title, premise): (String, String) =
+        sqlx::query_as("SELECT title, description FROM stories WHERE id = ?")
+            .bind(story_id)
+            .fetch_optional(&mut *conn)
+            .await?
+            .ok_or_else(|| AppError::not_found(format!("story {story_id} not found")))?;
+    let chapter_outline = match chapter_ordinal {
+        Some(n) => sqlx::query_scalar(
+            "SELECT outline FROM chapter_outlines WHERE story_id = ? AND ordinal = ?",
+        )
+        .bind(story_id)
+        .bind(i64::from(n))
+        .fetch_optional(&mut *conn)
+        .await?
+        .filter(|o: &String| !o.trim().is_empty()),
+        None => None,
+    };
+    Ok(StoryFrame {
+        title,
+        premise,
+        chapter_outline,
+    })
 }
 
 /// Deletes a whole story and everything it owns. The app-level usage ledger

@@ -1,21 +1,9 @@
 import { useEffect, useState } from 'react';
 import { commands, errorMessage } from '../../api/commands';
 import { useUiStore } from '../../app/store';
-import { ArrowPicker, type PickerOption } from '../../components/ArrowPicker';
+import { ArrowPicker } from '../../components/ArrowPicker';
 import type { Detail, Perspective, TemplateCatalog } from '../../types';
-import { fittingScenarios } from './WizardSteps';
-
-const PERSPECTIVES: PickerOption<Perspective>[] = [
-  { value: 'second', label: 'Second person (you)' },
-  { value: 'first', label: 'First person (I)' },
-  { value: 'third', label: 'Third person (they)' },
-];
-const DETAILS: PickerOption<Detail>[] = [
-  { value: 'brief', label: 'Brief' },
-  { value: 'balanced', label: 'Balanced' },
-  { value: 'detailed', label: 'Detailed' },
-  { value: 'cinematic', label: 'Cinematic' },
-];
+import { DETAILS, PERSPECTIVES, fittingScenarios } from './WizardSteps';
 
 /** Quick Start: pick presets with arrows or menus. No typing required. */
 export function QuickStartScreen() {
@@ -154,6 +142,12 @@ export function QuickStartScreen() {
               <dd>{scenario?.firstChapterTitle}</dd>
               <dt>Tone</dt>
               <dd>{world?.narration.tone}</dd>
+              {world?.narration.genres && world.narration.genres.length > 0 && (
+                <>
+                  <dt>Genre</dt>
+                  <dd>{world.narration.genres.join(', ')}</dd>
+                </>
+              )}
             </dl>
             <button
               type="button"

@@ -67,7 +67,11 @@ export function RoutesPanel({ storyId, currentRouteId, routes, onSwitch, onChang
               <div>
                 <strong>{r.label}</strong>
                 {r.id === currentRouteId && <span className="badge">Current</span>}
-                {r.isMain && <span className="badge">Main</span>}
+                {r.isMain && (
+                  <span className="badge" title="The route the story started on">
+                    Original
+                  </span>
+                )}
                 {r.hidden && <span className="badge">Hidden</span>}
               </div>
             )}

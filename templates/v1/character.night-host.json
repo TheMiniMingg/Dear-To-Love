@@ -1,0 +1,18 @@
+{
+  "templateSchemaVersion": 1,
+  "type": "character",
+  "id": "starter:night-host",
+  "label": "The Night Host",
+  "summary": "Talks to strangers for a living, between midnight and dawn.",
+  "character": {
+    "id": "starter:night-host",
+    "name": "Robin Vale",
+    "control": "player",
+    "pronouns": "they/them",
+    "role": "Radio host",
+    "description": "Has a voice people trust and a habit of staying up too late to listen.",
+    "personality": ["calm", "curious", "quietly brave"],
+    "goals": ["Find out what is really happening", "Keep the people who listen safe"],
+    "abilities": ["Can keep anyone talking"]
+  }
+}

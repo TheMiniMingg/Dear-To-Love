@@ -280,6 +280,45 @@ describe('Create a story', () => {
     expect(saved).toBeNull();
   });
 
+  it('genre, content rating, themes and limits reach the new story', async () => {
+    localStorage.clear();
+    render(<CreateWizardScreen />);
+    await userEvent.click(await screen.findByRole('button', { name: '4. Narration' }));
+    await userEvent.click(await screen.findByRole('checkbox', { name: 'Romance' }));
+    await userEvent.click(screen.getByRole('checkbox', { name: 'Horror' }));
+
+    // Adults only asks once whether the player is 18 or older.
+    const rating = screen.getByRole('combobox', { name: 'Content rating' });
+    await userEvent.selectOptions(rating, 'explicit');
+    const ask = await screen.findByRole('dialog', { name: 'Adults only' });
+    await userEvent.click(within(ask).getByRole('button', { name: 'Cancel' }));
+    expect(rating).toHaveDisplayValue('Not set');
+    await userEvent.selectOptions(rating, 'explicit');
+    await userEvent.click(
+      within(await screen.findByRole('dialog')).getByRole('button', { name: 'I am 18 or older' }),
+    );
+    expect(rating).toHaveDisplayValue('Adults only (explicit)');
+    await userEvent.selectOptions(rating, 'mature');
+    await userEvent.selectOptions(rating, 'explicit');
+    expect(screen.queryByRole('dialog')).toBeNull();
+
+    await userEvent.type(
+      screen.getByRole('textbox', { name: 'Themes and elements you want' }),
+      'slow burn{Enter}{Enter}rivals',
+    );
+    await userEvent.type(screen.getByRole('textbox', { name: 'Hard limits' }), 'gore');
+    await userEvent.click(screen.getByRole('button', { name: '5. Review' }));
+    expect(await screen.findByLabelText('Story summary')).toHaveTextContent(
+      'Romance, Horror · Adults only',
+    );
+    await userEvent.click(await screen.findByRole('button', { name: 'Create story' }));
+    const draft = lastCall('create_story')?.draft as CreateStoryDraft;
+    expect(draft.narration.genres).toEqual(['Romance', 'Horror']);
+    expect(draft.narration.rating).toBe('explicit');
+    expect(draft.narration.themes?.filter(Boolean)).toEqual(['slow burn', 'rivals']);
+    expect(draft.narration.limits).toEqual(['gore']);
+  });
+
   it('Review lists problems and links to the step that fixes them', async () => {
     problems = [{ step: 'character', message: 'Give your character a name.' }];
     render(<CreateWizardScreen />);

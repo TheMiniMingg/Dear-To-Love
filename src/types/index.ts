@@ -28,6 +28,7 @@ export type { CharacterTemplate } from './generated/CharacterTemplate';
 export type { CheckStatus } from './generated/CheckStatus';
 export type { CheckpointPayload } from './generated/CheckpointPayload';
 export type { ConnectionCheck } from './generated/ConnectionCheck';
+export type { ContentRating } from './generated/ContentRating';
 export type { ContextPreview } from './generated/ContextPreview';
 export type { Control } from './generated/Control';
 export type { CreateStoryDraft } from './generated/CreateStoryDraft';

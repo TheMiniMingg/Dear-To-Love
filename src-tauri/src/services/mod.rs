@@ -4,6 +4,7 @@ pub mod assets;
 pub mod backups;
 pub mod context;
 pub mod diagnostics;
+pub mod disk;
 pub mod generation;
 pub mod memory;
 pub mod mock_storyteller;

@@ -1,0 +1,51 @@
+{
+  "templateSchemaVersion": 1,
+  "type": "scenario",
+  "id": "starter:dead-air",
+  "label": "Dead Air",
+  "summary": "You host the overnight show on the town's tiny radio station. At 3 a.m., a caller who died last winter asks for a song.",
+  "worlds": ["starter:hollow-pines"],
+  "title": "Dead Air",
+  "description": "The snow has closed the road. The phone lines are down. And at 3 a.m. the studio phone rings anyway, with a voice everyone in town buried last winter.",
+  "firstChapterTitle": "The Graveyard Shift",
+  "chapterOutlines": [
+    {
+      "title": "The Graveyard Shift",
+      "outline": "The impossible call, the request, and the first sign that someone else is listening."
+    },
+    {
+      "title": "Frequencies",
+      "outline": "Find out who else heard the broadcast, and what they are not saying."
+    },
+    {
+      "title": "First Light",
+      "outline": "Something wants to come in from the snow before morning."
+    }
+  ],
+  "scene": {
+    "location": "The KHPR studio in the old fire lookout above town",
+    "summary": "Three in the morning, snow against the windows. The request line is blinking, though the phones have been dead since dusk."
+  },
+  "openThreads": ["Who is really on the line?", "Why did the phones go dead at dusk?"],
+  "npcs": [
+    {
+      "id": "starter:npc-dell",
+      "name": "Dell Harker",
+      "control": "npc",
+      "pronouns": "he/him",
+      "role": "Night deputy",
+      "description": "Brings coffee up to the lookout every night at two. Tonight he is late.",
+      "personality": ["steady", "superstitious", "kind"],
+      "goals": ["Get everyone in town through the winter"],
+      "abilities": ["Knows every trail in the forest"]
+    }
+  ],
+  "relationships": [
+    {
+      "fromId": "starter:npc-dell",
+      "toId": "@player",
+      "label": "Friend",
+      "status": "Worried about you up there alone"
+    }
+  ]
+}

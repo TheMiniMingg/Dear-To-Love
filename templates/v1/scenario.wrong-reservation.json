@@ -1,0 +1,51 @@
+{
+  "templateSchemaVersion": 1,
+  "type": "scenario",
+  "id": "starter:wrong-reservation",
+  "label": "The Wrong Reservation",
+  "summary": "Two people, one rooftop table, the same name on the booking. Neither of you is leaving.",
+  "worlds": ["starter:larkport"],
+  "title": "The Wrong Reservation",
+  "description": "The best table on the city's best rooftop is booked under your name. It is also booked under someone else's, and they are already sitting at it.",
+  "firstChapterTitle": "Table for Two",
+  "chapterOutlines": [
+    {
+      "title": "Table for Two",
+      "outline": "Share the table, trade barbs, and find out why they needed this night as much as you did."
+    },
+    {
+      "title": "Second Chances",
+      "outline": "Run into each other again, on purpose or not."
+    },
+    {
+      "title": "The Last Train",
+      "outline": "The 1:10 leaves in ten minutes. Say it or don't."
+    }
+  ],
+  "scene": {
+    "location": "The rooftop terrace of the Larkspur, above the river",
+    "summary": "Friday night, string lights and a warm wind off the water. A stranger is sitting at your table, reading your name on the reservation card."
+  },
+  "openThreads": ["Why did they need this table tonight?"],
+  "npcs": [
+    {
+      "id": "starter:npc-rowan",
+      "name": "Rowan Hale",
+      "control": "npc",
+      "pronouns": "he/him",
+      "role": "Pastry chef",
+      "description": "Owns a bakery by the third bridge, has flour on one cuff, and was supposed to be celebrating something tonight.",
+      "personality": ["quick-witted", "stubborn", "secretly soft-hearted"],
+      "goals": ["Prove tonight can still go right"],
+      "abilities": ["Remembers everyone's favorite pastry"]
+    }
+  ],
+  "relationships": [
+    {
+      "fromId": "starter:npc-rowan",
+      "toId": "@player",
+      "label": "Stranger",
+      "status": "Annoyed, and a little intrigued"
+    }
+  ]
+}

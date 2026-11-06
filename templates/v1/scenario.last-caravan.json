@@ -1,0 +1,51 @@
+{
+  "templateSchemaVersion": 1,
+  "type": "scenario",
+  "id": "starter:last-caravan",
+  "label": "The Last Caravan",
+  "summary": "You signed on to guard the last caravan of the season. Nobody will say what is in the sealed chest, or why it is humming.",
+  "worlds": ["starter:ember-road"],
+  "title": "The Last Caravan",
+  "description": "Twelve wagons, nine guards, one sealed chest that hums at night. The caravan master pays double, and she will not say why.",
+  "firstChapterTitle": "The Gate at Dawn",
+  "chapterOutlines": [
+    {
+      "title": "The Gate at Dawn",
+      "outline": "Meet the caravan and its master, and notice who else is watching it leave."
+    },
+    {
+      "title": "The Ashen Marches",
+      "outline": "Ambush, weather and a choice about who to trust."
+    },
+    {
+      "title": "What the Chest Holds",
+      "outline": "The chest opens, by choice or by force."
+    }
+  ],
+  "scene": {
+    "location": "The eastern gate of Calder's Rest, at dawn",
+    "summary": "Wagons creak into line. The sealed chest rides in the third wagon under a tarp, and the air around it smells faintly of lightning."
+  },
+  "openThreads": ["What is in the sealed chest?", "Who paid the caravan master double?"],
+  "npcs": [
+    {
+      "id": "starter:npc-oriel",
+      "name": "Oriel Vance",
+      "control": "npc",
+      "pronouns": "she/her",
+      "role": "Caravan master",
+      "description": "Twenty years on the Ember Road and every one of them shows. Pays well, trusts no one, laughs at the worst moments.",
+      "personality": ["shrewd", "tired", "fiercely loyal to her people"],
+      "goals": ["Deliver the chest without opening it"],
+      "abilities": ["Reads people and weather equally well"]
+    }
+  ],
+  "relationships": [
+    {
+      "fromId": "starter:npc-oriel",
+      "toId": "@player",
+      "label": "Employer",
+      "status": "Sizing you up"
+    }
+  ]
+}

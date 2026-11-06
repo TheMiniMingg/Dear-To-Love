@@ -18,7 +18,7 @@ use super::http::{
 use super::sse::SseReader;
 use super::{Completion, GenerateError};
 use crate::domain::provider::{GenerateRequest, NormalizedUsage, Role};
-use crate::errors::AppError;
+use crate::errors::{AppError, ErrorCode};
 
 pub struct OpenAiCompatible {
     base_url: String,
@@ -180,9 +180,20 @@ impl OpenAiCompatible {
         }
 
         if state.text.trim().is_empty() {
-            return Err(GenerateError::maybe_charged(provider_err(
-                "the AI service returned an empty reply",
-            )));
+            let filtered = state
+                .finish_reason
+                .as_deref()
+                .is_some_and(|f| f.eq_ignore_ascii_case("content_filter"));
+            return Err(GenerateError::maybe_charged(if filtered {
+                AppError::new(
+                    ErrorCode::ContentFiltered,
+                    "the AI service's content filter stopped this reply. Try another reply, \
+                     change the action, or use a model whose rules allow this story, such as a \
+                     local model",
+                )
+            } else {
+                provider_err("the AI service returned an empty reply")
+            }));
         }
         Ok(Completion {
             text: state.text,

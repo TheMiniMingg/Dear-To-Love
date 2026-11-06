@@ -18,6 +18,7 @@
     "perspective": "second",
     "detail": "detailed",
     "tone": "Lyrical, bittersweet, hopeful",
-    "pacing": "slow"
+    "pacing": "slow",
+    "genres": ["Fantasy", "Drama"]
   }
 }

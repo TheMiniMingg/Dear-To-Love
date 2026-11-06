@@ -17,6 +17,14 @@ fn state() -> EffectiveState {
     EffectiveState::new(input.base_state)
 }
 
+fn frame() -> StoryFrame {
+    StoryFrame {
+        title: "The Unsigned Letter".into(),
+        premise: "A letter addressed to the keeper.".into(),
+        chapter_outline: Some("Arrive, find the letter.".into()),
+    }
+}
+
 fn event(i: usize, body: EventBody) -> EventRow {
     let (kind, payload_json) = (body.kind().as_str(), body.payload_json());
     EventRow {
@@ -99,7 +107,7 @@ fn all_text(a: &Assembled) -> String {
 /// T18: the latest action is sent exactly once, last, as the user's turn.
 #[test]
 fn latest_action_once_and_last() {
-    let a = assemble(&state(), &history(3, 0), None, None, roomy()).unwrap();
+    let a = assemble(&state(), &frame(), &history(3, 0), None, None, roomy()).unwrap();
     assert_eq!(a.messages[0].role, Role::System);
     assert_eq!(all_text(&a).matches("the latest action").count(), 1);
     let last = a.messages.last().unwrap();
@@ -116,22 +124,22 @@ fn latest_action_once_and_last() {
 fn reply_needs_a_player_action() {
     let mut h = history(1, 0);
     h.pop();
-    let err = assemble(&state(), &h, None, None, roomy()).unwrap_err();
+    let err = assemble(&state(), &frame(), &h, None, None, roomy()).unwrap_err();
     assert_eq!(err.code, ErrorCode::InvalidInput);
     // Prompt Preview supplies a stand-in action instead.
-    let a = assemble(&state(), &h, None, Some("(next)"), roomy()).unwrap();
+    let a = assemble(&state(), &frame(), &h, None, Some("(next)"), roomy()).unwrap();
     assert_eq!(a.messages.last().unwrap().content, "(next)");
 }
 
 #[test]
 fn tight_budget_drops_oldest_turns_first() {
     let h = history(20, 40);
-    let full = assemble(&state(), &h, None, None, roomy()).unwrap();
+    let full = assemble(&state(), &frame(), &h, None, None, roomy()).unwrap();
     let budget = Budget {
         max_context_tokens: full.estimated_input_tokens / 2 + 700,
         max_output_tokens: 700,
     };
-    let a = assemble(&state(), &h, None, None, budget).unwrap();
+    let a = assemble(&state(), &frame(), &h, None, None, budget).unwrap();
     assert!(a.estimated_input_tokens <= budget.max_context_tokens - budget.max_output_tokens);
     assert!(a.omitted_messages > 0);
     assert_eq!(a.verbatim_messages + a.omitted_messages, 41);
@@ -148,7 +156,7 @@ fn context_too_long_before_anything_is_sent() {
         max_context_tokens: 800,
         max_output_tokens: 700,
     };
-    let err = assemble(&state(), &history(1, 0), None, None, budget).unwrap_err();
+    let err = assemble(&state(), &frame(), &history(1, 0), None, None, budget).unwrap_err();
     assert_eq!(err.code, ErrorCode::ContextTooLong);
     assert!(err.message.contains("Settings"));
 }
@@ -158,7 +166,7 @@ fn summary_replaces_the_turns_it_covers() {
     let h = history(10, 0);
     // Summary ends at the reply of turn 4 (index 9).
     let s = summary_at(9, 5, "Mara found the ferry ticket.");
-    let a = assemble(&state(), &h, Some(&s), None, roomy()).unwrap();
+    let a = assemble(&state(), &frame(), &h, Some(&s), None, roomy()).unwrap();
     assert!(a.messages[0].content.contains("STORY SO FAR"));
     assert!(a.messages[0]
         .content
@@ -175,13 +183,63 @@ fn summary_replaces_the_turns_it_covers() {
 fn recent_turns_win_over_the_summary_when_room_is_short() {
     let h = history(6, 30);
     let s = summary_at(1, 1, &"memory ".repeat(400));
-    let without = assemble(&state(), &h, None, None, roomy()).unwrap();
+    let without = assemble(&state(), &frame(), &h, None, None, roomy()).unwrap();
     let budget = Budget {
         max_context_tokens: without.estimated_input_tokens + 700,
         max_output_tokens: 700,
     };
-    let a = assemble(&state(), &h, Some(&s), None, budget).unwrap();
+    let a = assemble(&state(), &frame(), &h, Some(&s), None, budget).unwrap();
     assert!(a.summary.is_none());
     assert!(a.summary_dropped);
     assert!(a.verbatim_messages > MIN_RECENT_MESSAGES);
+}
+
+/// The storyteller learns the premise, the chapter plan and what kind of
+/// story this is from the system message.
+#[test]
+fn premise_chapter_plan_and_content_settings_reach_the_storyteller() {
+    let plain = system_prompt(&state(), &frame());
+    assert!(
+        plain.contains(
+            "\nSTORY\nTitle: The Unsigned Letter\nPremise: A letter addressed to the keeper.\n"
+        ),
+        "{plain}"
+    );
+    assert!(plain.contains(
+        "Chapter plan (a direction to steer toward, not a script): Arrive, find the letter."
+    ));
+    assert!(
+        !plain.contains("Content:") && !plain.contains("under 18"),
+        "unset rating says nothing"
+    );
+
+    let mut s = state();
+    s.state.narration.genres = vec!["Romance".into(), "Comedy".into()];
+    s.state.narration.rating = Some(ContentRating::Explicit);
+    s.state.narration.themes = vec!["slow burn".into(), "banter".into()];
+    s.state.narration.limits = vec!["gore".into()];
+    let p = system_prompt(&s, &frame());
+    assert!(p.contains("Genre: Romance; Comedy\n"), "{p}");
+    assert!(p.contains("Content: adults only."));
+    assert!(p.contains("18 or older"));
+    assert!(p.contains(MINORS_RULE));
+    assert!(p.contains("woven in when they fit: slow burn; banter\n"));
+    assert!(p.contains("never write these even if the story drifts toward them: gore\n"));
+
+    s.state.narration.rating = Some(ContentRating::General);
+    let p = system_prompt(&s, &frame());
+    assert!(p.contains("Content: suitable for all ages."));
+    assert!(!p.contains(MINORS_RULE));
+
+    // The starter world's genres reach the storyteller too.
+    assert!(
+        plain.contains("Genre: Mystery; Romance; Slice of life\n"),
+        "{plain}"
+    );
+
+    // Nothing to say: no empty STORY heading.
+    let mut bare = state();
+    bare.state.narration.genres.clear();
+    let p = system_prompt(&bare, &StoryFrame::default());
+    assert!(!p.contains("STORY\n") && !p.contains("Chapter plan"), "{p}");
 }

@@ -1,0 +1,51 @@
+{
+  "templateSchemaVersion": 1,
+  "type": "scenario",
+  "id": "starter:ghost-ledger",
+  "label": "Ghost in the Ledger",
+  "summary": "A client in an expensive coat wants you to find a missing data courier. The courier wants to stay missing.",
+  "worlds": ["starter:vesper-city"],
+  "title": "Ghost in the Ledger",
+  "description": "A data courier vanished between two towers with a ledger that three corporations would kill for. Your client says they just want their friend back.",
+  "firstChapterTitle": "The Client",
+  "chapterOutlines": [
+    {
+      "title": "The Client",
+      "outline": "Take the job, and notice what the client leaves out."
+    },
+    {
+      "title": "Downtown",
+      "outline": "Follow the courier's trail through the street markets."
+    },
+    {
+      "title": "The Ledger",
+      "outline": "Find the courier, and decide who gets the ledger."
+    }
+  ],
+  "scene": {
+    "location": "A rented office above a noodle bar on Kessler Street",
+    "summary": "Rain on the window, a broken ceiling fan, and a client in an expensive coat who has not taken it off."
+  },
+  "openThreads": ["What is in the ledger?", "Who is the client really working for?"],
+  "npcs": [
+    {
+      "id": "starter:npc-mika",
+      "name": "Mika Sato",
+      "control": "npc",
+      "pronouns": "she/her",
+      "role": "Fixer",
+      "description": "Knows everyone worth knowing and charges for each introduction. Owes you one favor, and hates it.",
+      "personality": ["sharp", "cynical", "loyal in her own way"],
+      "goals": ["Stay neutral while three corporations go to war"],
+      "abilities": ["Can find anyone in the city, for a price"]
+    }
+  ],
+  "relationships": [
+    {
+      "fromId": "starter:npc-mika",
+      "toId": "@player",
+      "label": "Contact",
+      "status": "Owes you a favor"
+    }
+  ]
+}

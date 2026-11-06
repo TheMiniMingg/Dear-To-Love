@@ -18,6 +18,7 @@
     "perspective": "second",
     "detail": "balanced",
     "tone": "Warm, gently mysterious, quietly funny",
-    "pacing": "normal"
+    "pacing": "normal",
+    "genres": ["Mystery", "Romance", "Slice of life"]
   }
 }

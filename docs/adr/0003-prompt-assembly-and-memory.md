@@ -22,7 +22,8 @@ Prompt Preview. Migration 0002 and the preview DTO are interface contracts
   turns since, so the newest eligible one covers turns `1..=coveredTurns`.
   Boundaries are fixed: the reply at turn 8, 16, 24, ... once 8 newer turns
   exist; at most 16 turns are caught up per request.
-- **Prompt order** (`PROMPT_SCHEMA_VERSION` 2): system message (narration
+- **Prompt order** (`PROMPT_SCHEMA_VERSION` 2; 3 adds the `STORY` section
+  and the chapter plan, see ADR 0012): system message (narration
   rules, world, characters, relationships, confirmed facts, scene, then
   `STORY SO FAR` when the summary fits), verbatim turns after the summary,
   then the latest player action exactly once. A window that starts with a

@@ -8,6 +8,7 @@ use ts_rs::TS;
 use crate::db::memory::latest_eligible_summary;
 use crate::db::providers;
 use crate::db::state::state_with_snapshots;
+use crate::db::stories::story_frame;
 use crate::db::timeline::{ancestors, get_route};
 use crate::db::usage::{current_rate_card, estimate_cost, RateCard, RateSnapshot};
 use crate::db::Database;
@@ -105,6 +106,12 @@ pub async fn preview_context(db: &Database, route_id: &str) -> AppResult<Context
     let history = ancestors(&mut conn, &route.story_id, &head).await?;
     let (state, _) = state_with_snapshots(&mut conn, &route.story_id, &head).await?;
     let summary = latest_eligible_summary(&mut conn, &route.story_id, &history).await?;
+    let frame = story_frame(
+        &mut conn,
+        &route.story_id,
+        state.active_chapter.as_ref().map(|c| c.ordinal),
+    )
+    .await?;
     drop(conn);
 
     let waiting = history.last().and_then(|e| e.kind()) == Some(EventKind::Player);
@@ -114,6 +121,7 @@ pub async fn preview_context(db: &Database, route_id: &str) -> AppResult<Context
     };
     let a = prompt::assemble(
         &state,
+        &frame,
         &history,
         summary.as_ref(),
         (!waiting).then_some(NEXT_ACTION_PLACEHOLDER),

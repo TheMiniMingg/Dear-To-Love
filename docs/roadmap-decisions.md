@@ -67,6 +67,13 @@ and the roadmap differ, this file wins.
   recent turns verbatim), so branches that share history share summaries.
   The offline storyteller uses an extractive summary with no API call.
 
+- **Content settings** (2026-11-06, MiniMe: support every story type,
+  including adult and fetish fiction between adults): genre, content rating,
+  themes and hard limits in `Narration`, sent with every reply. Adults-only
+  stories refuse characters under 18 and the minors rule is never relaxed.
+  The app does not filter replies; provider policy applies. Builds ship
+  unsigned for now. See ADR 0012.
+
 ## Schema and contracts
 
 - Error enum adds `BUDGET_PAUSED`, `BUDGET_OVERRIDE_REQUIRED`, `NO_PROVIDER`

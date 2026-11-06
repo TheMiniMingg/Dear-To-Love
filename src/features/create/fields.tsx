@@ -117,18 +117,20 @@ export function LinesField({
   value,
   onChange,
   rows = 3,
+  hint = 'One per line.',
 }: {
   label: string;
   value: string[];
   onChange: (v: string[]) => void;
   rows?: number;
+  hint?: string;
 }) {
   return (
     <TextArea
       label={label}
       value={value.join('\n')}
       rows={rows}
-      hint="One per line."
+      hint={hint}
       onChange={(t) => onChange(t.split('\n'))}
     />
   );
@@ -140,17 +142,20 @@ export function ToggleList({
   presets,
   value,
   onChange,
+  columns = false,
 }: {
   legend: string;
   presets: string[];
   value: string[];
   onChange: (v: string[]) => void;
+  /** Lay short entries out in columns. */
+  columns?: boolean;
 }) {
   const chosen = uniq(value);
   const all = uniq([...presets, ...chosen]);
   const isOn = (p: string) => chosen.some((c) => c.toLowerCase() === p.toLowerCase());
   return (
-    <fieldset className="field toggle-list">
+    <fieldset className={columns ? 'field toggle-list toggle-columns' : 'field toggle-list'}>
       <legend>{legend}</legend>
       {all.map((p) => (
         <label key={p} className="check">

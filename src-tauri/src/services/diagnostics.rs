@@ -13,6 +13,7 @@ use crate::db::{contract, latest_migration_version, Database};
 use crate::domain::diagnostics::{CheckStatus, DiagnosticCheck};
 use crate::errors::{AppError, AppResult};
 use crate::services::assets::{AssetReport, AssetStore};
+use crate::services::disk;
 use crate::services::secrets::{self, SecretStore};
 
 type Outcome = (CheckStatus, String, Option<String>);
@@ -43,9 +44,10 @@ pub async fn run_all(ctx: DiagnosticsContext) -> Vec<DiagnosticCheck> {
     .await
     .unwrap_or_default();
 
-    let mut checks = Vec::with_capacity(6);
+    let mut checks = Vec::with_capacity(14);
     let mut sync_iter = sync_checks.into_iter();
     checks.extend(sync_iter.by_ref().take(2));
+    checks.push(check_disk_space(&ctx.data_dir));
     checks.push(check_database(&ctx.db).await);
     checks.push(check_db_integrity(&ctx.db, ctx.deep).await);
     checks.push(check_usage_ledger(&ctx.db).await);
@@ -130,6 +132,54 @@ pub fn check_data_dir(data_dir: &Result<PathBuf, String>) -> DiagnosticCheck {
         },
     }
     })
+}
+
+pub fn check_disk_space(data_dir: &Result<PathBuf, String>) -> DiagnosticCheck {
+    timed("DISK_SPACE", "Free disk space", || match data_dir {
+        Err(_) => (
+            CheckStatus::Skipped,
+            "The data folder could not be located.".into(),
+            None,
+        ),
+        Ok(dir) => disk_space_outcome(disk::free_space(dir)),
+    })
+}
+
+fn disk_space_outcome(free: Option<u64>) -> Outcome {
+    let Some(n) = free else {
+        return (
+            CheckStatus::Skipped,
+            "This system did not report how much space is free.".into(),
+            None,
+        );
+    };
+    let summary = format!(
+        "{} free on the disk that holds your stories.",
+        disk::format_bytes(n)
+    );
+    if n < disk::CRITICAL_SPACE_BYTES {
+        (
+            CheckStatus::Fail,
+            summary,
+            Some(
+                "New turns can't be saved once the disk is full, and automatic backups are \
+                 paused. Free up space: empty the trash, remove large files, or delete old \
+                 backups you have copied elsewhere."
+                    .into(),
+            ),
+        )
+    } else if n < disk::LOW_SPACE_BYTES {
+        (
+            CheckStatus::Warn,
+            summary,
+            Some(
+                "Free up some space soon. Automatic backups pause when less than 200 MB is left."
+                    .into(),
+            ),
+        )
+    } else {
+        (CheckStatus::Pass, summary, None)
+    }
 }
 
 const RESTORE_HINT: &str =
@@ -846,6 +896,7 @@ mod tests {
             [
                 "APP_VERSION",
                 "DATA_DIR",
+                "DISK_SPACE",
                 "DATABASE",
                 "DB_INTEGRITY",
                 "USAGE_LEDGER",
@@ -858,9 +909,10 @@ mod tests {
                 "UPDATES"
             ]
         );
-        for c in &checks {
+        for c in checks.iter().filter(|c| c.id != "DISK_SPACE") {
             // T38: no AI connection -> model checks skipped, local checks
-            // pass; update checks are off by default (T44).
+            // pass; update checks are off by default (T44). Free space
+            // depends on the machine and has its own test.
             let expected = if matches!(c.id.as_str(), "DB_INTEGRITY" | "AI_CONNECTION" | "UPDATES")
             {
                 CheckStatus::Skipped
@@ -875,6 +927,23 @@ mod tests {
             .await
             .unwrap();
         assert_eq!(n, 0);
+    }
+
+    #[test]
+    fn disk_space_warns_then_fails_as_the_disk_fills() {
+        let gb = 1024 * 1024 * 1024;
+        let (status, summary, fix) = disk_space_outcome(Some(20 * gb));
+        assert_eq!(status, CheckStatus::Pass);
+        assert_eq!(summary, "20.0 GB free on the disk that holds your stories.");
+        assert!(fix.is_none());
+        assert_eq!(disk_space_outcome(Some(gb / 2)).0, CheckStatus::Warn);
+        let (status, summary, fix) = disk_space_outcome(Some(50 * 1024 * 1024));
+        assert_eq!(status, CheckStatus::Fail);
+        assert!(summary.starts_with("50 MB free"));
+        assert!(fix.unwrap().contains("Free up space"));
+        assert_eq!(disk_space_outcome(None).0, CheckStatus::Skipped);
+        let real = check_disk_space(&Ok(std::env::temp_dir()));
+        assert_ne!(real.status, CheckStatus::Skipped, "{}", real.summary);
     }
 
     /// T40: a broken image reference warns with the image id; the story
