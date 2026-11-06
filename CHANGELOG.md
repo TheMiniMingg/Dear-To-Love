@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Search and bookmarks. **Story search** (pause menu, the Search button or Ctrl/Cmd+F) finds
+  words in what happened on the current route, never on other branches, and lists each place
+  with its chapter and the matching words marked. Choosing one shows it in the story. Every
+  chapter heading, action and reply has **Bookmark**; bookmarks are listed under the search
+  with **Go to**, **Rename** and **Remove**, stay after the app is closed, come along when you
+  branch from a later point, and travel in storypacks and backups.
 - Backups. Once a day when you play, a copy of your stories is kept automatically (the newest
   five). **Settings → Backups → Back up everything** saves one file with all stories, pictures,
   settings, connections and usage records; API keys are never included. **Restore** takes a

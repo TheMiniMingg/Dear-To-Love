@@ -1,5 +1,6 @@
 //! The `.storypack` format (roadmap section 10): one whole story with every
-//! route, its saves, story memory, picture choices and the images it shows.
+//! route, its saves and bookmarks, story memory, picture choices and the
+//! images it shows.
 //! Never API keys, connections, usage records, preferences, logs or absolute
 //! paths.
 //!
@@ -33,6 +34,7 @@ pub const IMAGES_DIR: &str = "images/";
 pub const MAX_ROUTES: usize = 10_000;
 pub const MAX_EVENTS: usize = 500_000;
 pub const MAX_SAVES: usize = 10_000;
+pub const MAX_BOOKMARKS: usize = 10_000;
 pub const MAX_IMAGES: usize = 2_000;
 const MAX_TITLE: usize = 200;
 
@@ -68,6 +70,8 @@ pub struct PackStory {
     pub routes: Vec<PackRoute>,
     pub events: Vec<PackEvent>,
     pub saves: Vec<PackSave>,
+    #[serde(default)]
+    pub bookmarks: Vec<PackBookmark>,
     #[serde(default)]
     pub memory: Vec<PackMemory>,
     #[serde(default)]
@@ -121,6 +125,17 @@ pub struct PackSave {
     pub label: String,
     pub save_type: String,
     pub slot: Option<i64>,
+    pub created_at: String,
+    pub updated_at: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct PackBookmark {
+    pub id: String,
+    pub route_id: String,
+    pub event_id: String,
+    pub label: String,
     pub created_at: String,
     pub updated_at: String,
 }
@@ -217,6 +232,7 @@ pub fn check(pack: &PackStory) -> AppResult<Checked> {
     if pack.routes.len() > MAX_ROUTES
         || pack.events.len() > MAX_EVENTS
         || pack.saves.len() > MAX_SAVES
+        || pack.bookmarks.len() > MAX_BOOKMARKS
         || pack.images.len() > MAX_IMAGES
     {
         return Err(invalid("it is larger than this app accepts"));
@@ -232,6 +248,7 @@ pub fn check(pack: &PackStory) -> AppResult<Checked> {
     let route_ids = unique("route", pack.routes.iter().map(|r| r.id.as_str()))?;
     let event_ids = unique("event", pack.events.iter().map(|e| e.id.as_str()))?;
     unique("save", pack.saves.iter().map(|s| s.id.as_str()))?;
+    unique("bookmark", pack.bookmarks.iter().map(|b| b.id.as_str()))?;
     unique(
         "chapter outline",
         pack.chapter_outlines.iter().map(|o| o.id.as_str()),
@@ -360,6 +377,34 @@ pub fn check(pack: &PackStory) -> AppResult<Checked> {
         }
     }
 
+    // Bookmarks too, at most one per event on a route, with a usable name.
+    let mut marked = HashSet::new();
+    for b in &pack.bookmarks {
+        let Some(&ri) = route_index.get(b.route_id.as_str()) else {
+            return Err(invalid(format!(
+                "bookmark {} belongs to an unknown route",
+                b.id
+            )));
+        };
+        let label = b.label.trim();
+        if label.is_empty() || label.chars().count() > crate::db::bookmarks::MAX_LABEL {
+            return Err(invalid(format!("bookmark {} has no usable name", b.id)));
+        }
+        let head = pack.routes[ri].head_event_id.as_str();
+        if !is_ancestor(pack, &event_index, &b.event_id, head) {
+            return Err(invalid(format!(
+                "bookmark {} points outside its route",
+                b.id
+            )));
+        }
+        if !marked.insert((b.route_id.as_str(), b.event_id.as_str())) {
+            return Err(invalid(format!(
+                "two bookmarks mark the same place ({})",
+                b.id
+            )));
+        }
+    }
+
     for m in &pack.memory {
         let ok = event_ids.contains(m.source_end_event_id.as_str())
             && m.source_start_event_id
@@ -478,6 +523,7 @@ pub struct Remapped {
     /// Parents before children; payloads rewritten to the new ids.
     pub events: Vec<RemappedEvent>,
     pub saves: Vec<PackSave>,
+    pub bookmarks: Vec<PackBookmark>,
     pub memory: Vec<RemappedMemory>,
     pub pictures: Vec<PackPicture>,
     pub main_route_id: String,
@@ -601,6 +647,16 @@ pub fn remap(
                 route_id: routes_map[s.route_id.as_str()].clone(),
                 event_id: ev(&s.event_id),
                 ..s.clone()
+            })
+            .collect(),
+        bookmarks: pack
+            .bookmarks
+            .iter()
+            .map(|b| PackBookmark {
+                id: new_id(),
+                route_id: routes_map[b.route_id.as_str()].clone(),
+                event_id: ev(&b.event_id),
+                ..b.clone()
             })
             .collect(),
         pictures: pack

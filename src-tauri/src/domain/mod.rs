@@ -7,4 +7,5 @@ pub mod replay;
 pub mod story;
 pub mod story_state;
 pub mod templates;
+pub mod text;
 pub mod visuals;

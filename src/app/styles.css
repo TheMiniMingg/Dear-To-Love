@@ -1301,3 +1301,93 @@ details summary {
   justify-content: space-between;
   flex-wrap: wrap;
 }
+
+/* Reader -> Story search and bookmarks */
+.search-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+.search-panel p {
+  margin: 0;
+}
+.search-results {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  max-height: 22rem;
+  overflow-y: auto;
+}
+.search-hit {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  width: 100%;
+  text-align: left;
+  line-height: 1.45;
+}
+.search-hit:hover {
+  border-color: var(--accent);
+}
+.search-snippet mark {
+  background: color-mix(in srgb, var(--accent) 22%, transparent);
+  color: inherit;
+  border-radius: 2px;
+  padding: 0 1px;
+}
+.bookmarks {
+  border-top: 1px solid var(--border);
+  padding-top: 0.75rem;
+  margin-top: 0.25rem;
+}
+.bookmarks h3 {
+  margin: 0 0 0.4rem;
+  font-size: 1rem;
+}
+.bookmark-text {
+  flex: 1;
+  min-width: 12rem;
+}
+.bookmark-rename {
+  flex: 1;
+}
+.bookmark-button[aria-pressed='true'] {
+  opacity: 1;
+  color: var(--accent);
+}
+.bookmark-button[aria-pressed='true']::before {
+  content: '★ ';
+}
+.event-focus {
+  border-radius: 4px;
+  animation: event-focus 2.4s ease-out;
+}
+.event-focus:focus,
+[data-event-id]:focus {
+  outline: none;
+}
+@keyframes event-focus {
+  0%,
+  35% {
+    background: color-mix(in srgb, var(--accent) 18%, transparent);
+  }
+  100% {
+    background: transparent;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .event-focus {
+    animation: none;
+    outline: 2px solid color-mix(in srgb, var(--accent) 50%, transparent);
+  }
+}
+.bookmark-excerpt {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+}

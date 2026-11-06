@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   CommandError,
   commands,
@@ -7,12 +7,21 @@ import {
   runErrorMessage,
 } from '../../api/commands';
 import { useUiStore } from '../../app/store';
-import { isComposing, isEditableTarget, isModS } from '../../app/keyboard';
+import { isComposing, isEditableTarget, isModF, isModS } from '../../app/keyboard';
 import { Dialog } from '../../components/Dialog';
 import { ChaptersPanel } from '../routes/ChaptersPanel';
 import { RoutesPanel } from '../routes/RoutesPanel';
 import { SavesPanel } from '../saves/SavesPanel';
-import type { BudgetStatus, ErrorCode, EventDto, RouteView, SaveView } from '../../types';
+import { SearchPanel } from '../search/SearchPanel';
+import type {
+  BookmarkDto,
+  BudgetStatus,
+  ErrorCode,
+  EventDto,
+  RouteView,
+  SaveView,
+  SearchResults,
+} from '../../types';
 import { Composer } from './Composer';
 import { ContextPreviewPanel } from './ContextPreviewPanel';
 import { ExportPanel } from './ExportPanel';
@@ -32,7 +41,8 @@ type Panel =
   | 'details'
   | 'pictures'
   | 'context'
-  | 'export';
+  | 'export'
+  | 'search';
 
 const PANEL_TITLES: Record<Exclude<Panel, null>, string> = {
   menu: 'Paused',
@@ -45,6 +55,7 @@ const PANEL_TITLES: Record<Exclude<Panel, null>, string> = {
   pictures: 'Pictures',
   context: 'Preview context',
   export: 'Export',
+  search: 'Story search',
 };
 
 type Stream = { runId: string; text: string };
@@ -78,6 +89,11 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
   const [editText, setEditText] = useState('');
   /** The action being changed, or the reply being replaced. */
   const [target, setTarget] = useState<EventDto | null>(null);
+  const [bookmarks, setBookmarks] = useState<BookmarkDto[]>([]);
+  const [bookmarksReload, setBookmarksReload] = useState(0);
+  const [lastSearch, setLastSearch] = useState<SearchResults | null>(null);
+  /** The place to show after a search or bookmark; `n` repeats it. */
+  const [focus, setFocus] = useState<{ eventId: string; n: number } | null>(null);
   const narrativeHost = useRef<HTMLDivElement>(null);
   const mounted = useRef(true);
 
@@ -187,6 +203,21 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
       cancelled = true;
     };
   }, [routeId, reload, generate, follow]);
+
+  useEffect(() => {
+    let cancelled = false;
+    commands
+      .listBookmarks(routeId)
+      .then((list) => {
+        if (!cancelled) setBookmarks(list);
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [routeId, bookmarksReload]);
+
+  const bookmarked = useMemo(() => new Set(bookmarks.map((b) => b.eventId)), [bookmarks]);
 
   const goToRoute = useCallback(
     (v: RouteView) => {
@@ -318,6 +349,31 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
       setSaveStatus(`Autosaved ${timeNow()}`);
     });
 
+  const toggleBookmark = async (eventId: string) => {
+    if (!view) return;
+    setError(null);
+    try {
+      const existing = bookmarks.find((b) => b.eventId === eventId);
+      if (existing) {
+        await commands.deleteBookmark(view.story.id, existing.id);
+        setSaveStatus(`Bookmark removed ${timeNow()}`);
+      } else {
+        await commands.addBookmark({ storyId: view.story.id, routeId: view.route.id, eventId });
+        setSaveStatus(`Bookmarked ${timeNow()}`);
+      }
+      setBookmarksReload((n) => n + 1);
+    } catch (e) {
+      setError(errorMessage(e));
+    }
+  };
+
+  /** Close any panel or save view and show this place in the story. */
+  const goTo = (eventId: string) => {
+    setViewing(null);
+    setPanel(null);
+    setFocus((f) => ({ eventId, n: (f?.n ?? 0) + 1 }));
+  };
+
   const branchFrom = (eventId: string) =>
     view &&
     run(async () => {
@@ -327,7 +383,8 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
     });
 
   // Global shortcuts: Escape opens the pause menu (dialogs handle their own
-  // Escape first), Ctrl/Cmd+S quick-saves, Up/Down scroll the story.
+  // Escape first), Ctrl/Cmd+S quick-saves, Ctrl/Cmd+F opens story search,
+  // Up/Down scroll the story.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (isComposing(e)) return;
@@ -337,6 +394,11 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
         return;
       }
       if (panel) return;
+      if (isModF(e)) {
+        e.preventDefault();
+        setPanel('search');
+        return;
+      }
       if (e.key === 'Escape') {
         e.preventDefault();
         if (viewing) setViewing(null);
@@ -481,6 +543,9 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
               ? undefined
               : (id) => openEdit(view.history.find((x) => x.id === id))
           }
+          onBookmark={viewing ? undefined : (id) => void toggleBookmark(id)}
+          bookmarked={viewing ? undefined : bookmarked}
+          focus={viewing ? null : focus}
         />
       </div>
 
@@ -553,6 +618,14 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
             <button type="button" onClick={() => setPanel('routes')}>
               Routes ({view.routes.filter((r) => !r.hidden).length})
             </button>
+            <button
+              type="button"
+              onClick={() => setPanel('search')}
+              aria-label="Search (Ctrl+F)"
+              title="Search this route and its bookmarks"
+            >
+              Search
+            </button>
           </div>
         </div>
       )}
@@ -570,7 +643,9 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
                 ? 'edit-action-input'
                 : panel === 'regenerate'
                   ? 'regenerate-confirm'
-                  : undefined
+                  : panel === 'search'
+                    ? 'search-input'
+                    : undefined
           }
         >
           {panel === 'menu' && (
@@ -611,6 +686,9 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
               )}
               <button type="button" onClick={() => setPanel('pictures')}>
                 Pictures
+              </button>
+              <button type="button" onClick={() => setPanel('search')}>
+                Story search
               </button>
               <button type="button" onClick={() => setPanel('context')}>
                 Preview context
@@ -676,6 +754,19 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
           )}
           {panel === 'context' && <ContextPreviewPanel routeId={view.route.id} />}
           {panel === 'export' && <ExportPanel view={view} />}
+          {panel === 'search' && (
+            <SearchPanel
+              storyId={view.story.id}
+              routeId={view.route.id}
+              routeLabel={view.route.label}
+              playerName={player?.name ?? 'You'}
+              last={lastSearch}
+              onSearched={setLastSearch}
+              bookmarks={bookmarks}
+              onBookmarksChanged={() => setBookmarksReload((n) => n + 1)}
+              onGo={goTo}
+            />
+          )}
           {panel === 'pictures' && (
             <PicturesPanel
               view={view}

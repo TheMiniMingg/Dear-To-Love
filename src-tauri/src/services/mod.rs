@@ -9,6 +9,7 @@ pub mod memory;
 pub mod mock_storyteller;
 pub mod prompt;
 pub mod reader;
+pub mod search;
 pub mod secrets;
 pub mod selftest;
 pub mod storypack;

@@ -20,8 +20,8 @@ in the OS credential store and never leave it.
   task checks a minute after start and then hourly. It writes a new copy
   only when the newest one is at least 24 hours old _and_ something changed
   since (the newest `updated_at`/`created_at` across stories, routes,
-  events, saves and images). Writes go through a `.part` file and a rename.
-  The newest five are kept. Images are not copied: library files are
+  events, saves, bookmarks and images). Writes go through a `.part` file
+  and a rename. The newest five are kept. Images are not copied: library files are
   content-addressed and never change, and one is deleted only when no story
   uses it.
 - **Back up everything** (`.dtlbackup`, format version 1). A ZIP holding

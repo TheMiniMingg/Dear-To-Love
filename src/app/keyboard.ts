@@ -25,6 +25,10 @@ export function isModS(e: AnyKeyEvent): boolean {
   return (e.ctrlKey || e.metaKey) && !e.altKey && e.key.toLowerCase() === 's';
 }
 
+export function isModF(e: AnyKeyEvent): boolean {
+  return (e.ctrlKey || e.metaKey) && !e.altKey && e.key.toLowerCase() === 'f';
+}
+
 /** Move focus among `[data-roving]` items inside `container` with Up/Down. */
 export function moveRovingFocus(container: HTMLElement, delta: 1 | -1): void {
   const items = Array.from(container.querySelectorAll<HTMLElement>('[data-roving]'));

@@ -4,6 +4,7 @@
 
 pub mod assets;
 pub mod backup;
+pub mod bookmarks;
 pub mod budget;
 pub mod contract;
 pub mod drafts;

@@ -86,6 +86,17 @@ async fn v4_fixture_upgrades_to_current() {
 }
 
 #[tokio::test]
+async fn v5_fixture_upgrades_to_current() {
+    let (db, _dir) = upgrade_fixture(5, include_str!("fixtures/data_v5.sql")).await;
+    let (label, event): (String, String) =
+        sqlx::query_as("SELECT label, event_id FROM bookmarks WHERE id = 'b1'")
+            .fetch_one(db.reader())
+            .await
+            .unwrap();
+    assert_eq!((label.as_str(), event.as_str()), ("The winter pear", "g3"));
+}
+
+#[tokio::test]
 async fn deleting_a_story_removes_its_memory() {
     let (db, _dir) = upgrade_fixture(2, include_str!("fixtures/data_v2.sql")).await;
     let mut tx = db.write_txn().await.unwrap();

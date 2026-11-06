@@ -14,13 +14,15 @@ React screens -> src/api/commands.ts (typed invoke wrappers)
   -> Rust db/providers   AI connections, chosen storyteller
   -> Rust db/assets      image library rows, story-default pictures,
                          reference scan for safe deletion
+  -> Rust db/bookmarks   named places in a route's history
   -> Rust services/      generation, prompt, adapters (OpenAI-compatible,
                          offline), reader view, diagnostics, secrets,
                          assets (image validation, thumbnails, files),
                          storypack (format, checks, id remapping),
                          archive (storypack export/import, recovery,
                          readable text export), backups (automatic
-                         copies, .dtlbackup, staged restore)
+                         copies, .dtlbackup, staged restore), search
+                         (route-scoped word search with snippets)
   -> SQLite (story.db)   OS credential store for API keys
      assets/originals, assets/thumbs (content-addressed image files)
      imports/<operation>  storypack staging (removed when done)
@@ -175,6 +177,18 @@ startup   restore.json? images in -> drop old -wal/-shm -> rename ready.db
 ```
 
 - See ADR 0008.
+
+## Search and bookmarks
+
+```text
+search    route head -> ancestors (root first) -> each event's reader text
+          -> every query word present (case folded)? -> chapter + snippet
+bookmark  event must be an ancestor of the route head -> one per place
+fork      new route copies the bookmarks on the shared history
+reader    result or bookmark -> close panel -> scroll, focus, highlight
+```
+
+- See ADR 0009.
 
 ## Usage and budget
 

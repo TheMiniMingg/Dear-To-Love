@@ -12,6 +12,11 @@ type Props = {
   onRegenerate?: (eventId: string) => void;
   /** Offer "Change this action" on the player's actions (a new route). */
   onEditAction?: (eventId: string) => void;
+  /** Offer "Bookmark" on chapters, actions and replies; pressed when marked. */
+  onBookmark?: (eventId: string) => void;
+  bookmarked?: ReadonlySet<string>;
+  /** Scroll to this event and highlight it; a new `n` repeats it. */
+  focus?: { eventId: string; n: number } | null;
   playerName: string;
 };
 
@@ -30,8 +35,25 @@ function EventBlock({
   onBranch,
   onRegenerate,
   onEditAction,
+  onBookmark,
+  bookmarked,
+  focused,
   playerName,
-}: { e: EventDto } & Omit<Props, 'events'>) {
+}: { e: EventDto; focused: boolean } & Omit<Props, 'events' | 'focus'>) {
+  const marked = !!bookmarked?.has(e.id);
+  const bookmark = onBookmark && (
+    <button
+      type="button"
+      className="branch-button bookmark-button"
+      aria-pressed={marked}
+      onClick={() => onBookmark(e.id)}
+      title={marked ? 'Remove this bookmark' : 'Bookmark this place to find it again'}
+    >
+      {marked ? 'Bookmarked' : 'Bookmark'}
+    </button>
+  );
+  const cls = (base: string) =>
+    [base, marked && 'is-bookmarked', focused && 'event-focus'].filter(Boolean).join(' ');
   const branch = onBranch && (
     <button
       type="button"
@@ -66,49 +88,56 @@ function EventBlock({
   switch (e.kind) {
     case 'chapter_start':
       return (
-        <header className="chapter-heading" data-event-id={e.id}>
+        <header className={cls('chapter-heading')} data-event-id={e.id} tabIndex={-1}>
           <h2>
             Chapter {e.payload.ordinal}: {e.payload.title}
           </h2>
           {branch}
+          {bookmark}
         </header>
       );
     case 'player':
       return (
-        <div className="turn-player" data-event-id={e.id}>
+        <div className={cls('turn-player')} data-event-id={e.id} tabIndex={-1}>
           <span className="speaker">{playerName}</span>
           <Paragraphs text={e.payload.text} />
-          {change && <div className="turn-actions">{change}</div>}
+          {(change || bookmark) && (
+            <div className="turn-actions">
+              {change}
+              {bookmark}
+            </div>
+          )}
         </div>
       );
     case 'assistant':
       return (
-        <div className="turn-assistant" data-event-id={e.id}>
+        <div className={cls('turn-assistant')} data-event-id={e.id} tabIndex={-1}>
           <Paragraphs text={e.payload.text} />
-          {(branch || regenerate) && (
+          {(branch || regenerate || bookmark) && (
             <div className="turn-actions">
               {regenerate}
               {branch}
+              {bookmark}
             </div>
           )}
         </div>
       );
     case 'edit':
       return (
-        <p className="turn-note" data-event-id={e.id}>
+        <p className={cls('turn-note')} data-event-id={e.id} tabIndex={-1}>
           {picturesOnly(e.payload.changes) ? 'Picture changed' : 'Story details changed'}
           {e.payload.note ? `: ${e.payload.note}` : ''}.
         </p>
       );
     case 'checkpoint':
       return (
-        <p className="turn-note" data-event-id={e.id}>
+        <p className={cls('turn-note')} data-event-id={e.id} tabIndex={-1}>
           Checkpoint: {e.payload.label}
         </p>
       );
     case 'fact_confirm':
       return (
-        <p className="turn-note" data-event-id={e.id}>
+        <p className={cls('turn-note')} data-event-id={e.id} tabIndex={-1}>
           Fact confirmed: {e.payload.fact.text}
         </p>
       );
@@ -125,6 +154,9 @@ export function NarrativeView({
   onBranch,
   onRegenerate,
   onEditAction,
+  onBookmark,
+  bookmarked,
+  focus,
   playerName,
 }: Props) {
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -153,6 +185,18 @@ export function NarrativeView({
     if (!atBottomRef.current) setShowJump(true);
   }, [lastId]);
 
+  // After dialogs close (they hand focus back first), show the event.
+  useEffect(() => {
+    if (!focus) return;
+    const el = Array.from(
+      scrollRef.current?.querySelectorAll<HTMLElement>('[data-event-id]') ?? [],
+    ).find((x) => x.dataset.eventId === focus.eventId);
+    if (!el) return;
+    atBottomRef.current = false;
+    el.scrollIntoView?.({ block: 'center' });
+    el.focus({ preventScroll: true });
+  }, [focus]);
+
   const jump = () => {
     const el = scrollRef.current;
     if (!el) return;
@@ -172,16 +216,23 @@ export function NarrativeView({
         data-testid="narrative"
       >
         <div className="narrative-column">
-          {events.map((e) => (
-            <EventBlock
-              key={e.id}
-              e={e}
-              onBranch={onBranch}
-              onRegenerate={onRegenerate}
-              onEditAction={onEditAction}
-              playerName={playerName}
-            />
-          ))}
+          {events.map((e) => {
+            const focused = focus?.eventId === e.id;
+            return (
+              <EventBlock
+                // A new key replays the highlight when the same place is shown again.
+                key={focused ? `${e.id}:${focus.n}` : e.id}
+                e={e}
+                onBranch={onBranch}
+                onRegenerate={onRegenerate}
+                onEditAction={onEditAction}
+                onBookmark={onBookmark}
+                bookmarked={bookmarked}
+                focused={focused}
+                playerName={playerName}
+              />
+            );
+          })}
           {draft && (
             <div className="turn-assistant turn-draft" aria-busy="true" data-testid="reply-draft">
               {draft.text ? <Paragraphs text={draft.text} /> : <p className="muted">Writing…</p>}
