@@ -10,7 +10,8 @@ export type Screen =
   | { name: 'diagnostics' }
   | { name: 'settings' }
   | { name: 'usage' }
-  | { name: 'images' };
+  | { name: 'images' }
+  | { name: 'backups' };
 
 const HISTORY_LIMIT = 10;
 const TEXT_SIZE_KEY = 'dtl.textSize';

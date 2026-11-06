@@ -32,6 +32,11 @@ and the roadmap differ, this file wins.
   story with new ids every time, sharing images already in the library.
   Image files placed by an import that was rolled back stay in the library
   folder (harmless, reused by hash) until a later cleanup.
+- **Backups:** automatic copies hold the database only (images are
+  content-addressed and stay in the library); **Back up everything**
+  includes images. A restore always replaces everything and keeps the
+  previous data as a "Before a restore" copy; the swap happens at the next
+  start, never under an open database.
 - **In-story edits** use one `edit` event per Apply, with a short note listing
   what changed (shown in the story). Facts added in Story details are
   confirmed facts; the `fact_confirm` event is kept for the later suggestion

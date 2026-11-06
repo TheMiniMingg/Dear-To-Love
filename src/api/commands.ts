@@ -5,6 +5,8 @@ import type {
   AppError,
   AssetDto,
   AssetUsage,
+  BackupExport,
+  BackupInfo,
   AppInfo,
   BudgetPolicy,
   BudgetStatus,
@@ -21,6 +23,9 @@ import type {
   TextFormat,
   ProviderProfile,
   ProviderProfileInput,
+  RestorePlan,
+  RestoreResult,
+  RestoreSource,
   QuickStartInput,
   RateCardView,
   RouteDto,
@@ -169,6 +174,16 @@ export const commands = {
   importStorypack: (path: string) => call<StorypackImport>('import_storypack', { path }),
   exportRouteText: (routeId: string, path: string, format: TextFormat, timestamps: boolean) =>
     call<TextExport>('export_route_text', { routeId, path, format, timestamps }),
+  listBackups: () => call<BackupInfo[]>('list_backups'),
+  /** Everything in one `.dtlbackup` file at `path` (from the save dialog). */
+  exportBackup: (path: string) => call<BackupExport>('export_backup', { path }),
+  /** Unpacks and checks a backup. Nothing changes until `confirmRestore`. */
+  prepareRestore: (source: RestoreSource) => call<RestorePlan>('prepare_restore', { source }),
+  cancelRestore: () => call<void>('cancel_restore'),
+  /** Saves the current data as a backup; the restore finishes at the next start. */
+  confirmRestore: (token: string) => call<BackupInfo>('confirm_restore', { token }),
+  restartApp: () => call<void>('restart_app'),
+  takeRestoreResult: () => call<RestoreResult | null>('take_restore_result'),
   /** The exact prompt the next reply would send. Assembled locally; nothing is sent. */
   previewContext: (routeId: string) => call<ContextPreview>('preview_context', { routeId }),
   nextChapter: (r: RouteRef & { expectedHeadId: string; title?: string | null }) =>

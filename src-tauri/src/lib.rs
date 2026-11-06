@@ -19,6 +19,9 @@ use errors::{AppError, ErrorCode};
 use services::secrets::{KeyringStore, KEYRING_SERVICE};
 use state::AppState;
 
+/// Seconds after start before the first automatic-backup check.
+const AUTO_BACKUP_DELAY_SECS: u64 = 60;
+
 /// Opens the story database inside the app-data directory.
 fn open_database(data_dir: &Result<PathBuf, String>) -> Result<Database, AppError> {
     let dir = data_dir.as_ref().map_err(|reason| {
@@ -27,8 +30,16 @@ fn open_database(data_dir: &Result<PathBuf, String>) -> Result<Database, AppErro
             format!("app data folder unavailable: {reason}"),
         )
     })?;
+    // A restore confirmed before the last restart finishes here, before
+    // the database opens.
+    if let Some(r) = services::backups::apply_pending_restore(dir) {
+        match &r.message {
+            None => eprintln!("restored the backup {}", r.source),
+            Some(m) => eprintln!("restore of {} failed: {m}", r.source),
+        }
+    }
     let path = dir.join(db::DB_FILE_NAME);
-    let backups = dir.join("backups");
+    let backups = dir.join(services::backups::BACKUPS_DIR);
     let (database, report) = tauri::async_runtime::block_on(Database::open(&path, &backups))?;
     if let Some(backup) = report.pre_migration_backup {
         eprintln!(
@@ -109,6 +120,25 @@ pub fn run() {
                 runs: Default::default(),
                 memory: Default::default(),
             });
+            // Automatic backups: shortly after start, then hourly checks
+            // (one backup a day at most, only after changes).
+            let handle = app.handle().clone();
+            tauri::async_runtime::spawn(async move {
+                tokio::time::sleep(std::time::Duration::from_secs(AUTO_BACKUP_DELAY_SECS)).await;
+                loop {
+                    let state = handle.state::<AppState>();
+                    if let (Ok(db), Ok(dir)) = (state.db(), state.data_dir.as_ref()) {
+                        match services::backups::auto_backup_if_due(db, dir, chrono::Utc::now())
+                            .await
+                        {
+                            Ok(Some(b)) => eprintln!("automatic backup {}", b.id),
+                            Ok(None) => {}
+                            Err(e) => eprintln!("automatic backup failed: {}", e.message),
+                        }
+                    }
+                    tokio::time::sleep(std::time::Duration::from_secs(3600)).await;
+                }
+            });
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
@@ -167,6 +197,13 @@ pub fn run() {
             commands::archive::export_storypack,
             commands::archive::import_storypack,
             commands::archive::export_route_text,
+            commands::backups::list_backups,
+            commands::backups::export_backup,
+            commands::backups::prepare_restore,
+            commands::backups::cancel_restore,
+            commands::backups::confirm_restore,
+            commands::backups::restart_app,
+            commands::backups::take_restore_result,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Dear to Love");

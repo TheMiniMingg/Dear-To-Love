@@ -1293,3 +1293,11 @@ details summary {
 .library-tools {
   margin-top: 0.75rem;
 }
+
+/* Settings -> Backups */
+.connection-card.backup-row {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}

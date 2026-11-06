@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
 import { describeImport, pickStorypackFile } from '../../api/archive';
+import { describeRestoreResult } from '../../api/backups';
 import { commands, errorMessage } from '../../api/commands';
 import { useUiStore } from '../../app/store';
 import { isEditableTarget, moveRovingFocus } from '../../app/keyboard';
@@ -39,6 +40,22 @@ export function LibraryScreen() {
       cancelled = true;
     };
   }, [reload]);
+
+  // After a restart that finished (or failed) a restore, say so once.
+  useEffect(() => {
+    let live = true;
+    commands
+      .takeRestoreResult()
+      .then((r) => {
+        if (!live || !r) return;
+        if (r.ok) setStatus(describeRestoreResult(r));
+        else setError(describeRestoreResult(r));
+      })
+      .catch(() => undefined);
+    return () => {
+      live = false;
+    };
+  }, []);
 
   const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
     if (isEditableTarget(e.target) || !listRef.current) return;

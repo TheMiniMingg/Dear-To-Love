@@ -52,6 +52,7 @@ pub async fn run_all(ctx: DiagnosticsContext) -> Vec<DiagnosticCheck> {
     checks.push(check_rate_config(&ctx.db).await);
     checks.push(check_timeline_replay(&ctx.data_dir).await);
     checks.push(check_assets(&ctx.db, &ctx.data_dir, ctx.deep).await);
+    checks.push(check_backups(&ctx.db, &ctx.data_dir, ctx.deep).await);
     checks.extend(sync_iter);
     checks.push(check_ai_connection(&ctx.db, ctx.secrets.as_ref(), ctx.deep).await);
     checks
@@ -396,6 +397,112 @@ pub async fn check_assets(
     finish("ASSETS", "Image library", start, outcome)
 }
 
+/// Automatic backups exist and are recent; the deep check also opens the
+/// newest one. Backups never block anything, so problems are warnings.
+pub async fn check_backups(
+    db: &Result<Database, AppError>,
+    data_dir: &Result<PathBuf, String>,
+    deep: bool,
+) -> DiagnosticCheck {
+    let start = Instant::now();
+    let outcome = match (db, data_dir) {
+        (Err(_), _) => (
+            CheckStatus::Skipped,
+            "Skipped because the database did not open.".into(),
+            None,
+        ),
+        (_, Err(_)) => (
+            CheckStatus::Skipped,
+            "Skipped because the app data folder is unavailable.".into(),
+            None,
+        ),
+        (Ok(db), Ok(dir)) => backup_outcome(db, dir, deep).await,
+    };
+    finish("BACKUPS", "Backups", start, outcome)
+}
+
+fn backup_date(iso: &str) -> String {
+    chrono::DateTime::parse_from_rfc3339(iso)
+        .map(|d| d.format("%Y-%m-%d %H:%M UTC").to_string())
+        .unwrap_or_else(|_| iso.to_string())
+}
+
+async fn backup_outcome(db: &Database, dir: &Path, deep: bool) -> Outcome {
+    use crate::services::backups::{self, BackupKind, AUTO_KEEP, BACKUPS_DIR};
+    let remedy = "One is made shortly after the app starts when your stories changed. To keep a \
+                  copy elsewhere, use Settings → Backups → Back up everything.";
+    let list = match backups::list_backups(dir) {
+        Ok(l) => l,
+        Err(e) => {
+            return (
+                CheckStatus::Warn,
+                format!("Backups could not be listed: {}", e.message),
+                Some("Check that the app data folder can be read.".into()),
+            )
+        }
+    };
+    let changed = match backups::last_change(db).await {
+        Ok(c) => c,
+        Err(e) => {
+            return (
+                CheckStatus::Warn,
+                format!("Backups could not be checked: {}", e.message),
+                None,
+            )
+        }
+    };
+    let autos: Vec<_> = list
+        .iter()
+        .filter(|b| b.kind == BackupKind::Automatic)
+        .collect();
+    let Some(latest) = autos.first() else {
+        return match changed {
+            None => (CheckStatus::Pass, "Nothing to back up yet.".into(), None),
+            Some(_) => (
+                CheckStatus::Warn,
+                "No automatic backup yet.".into(),
+                Some(remedy.into()),
+            ),
+        };
+    };
+    let when = backup_date(&latest.created_at);
+    if deep {
+        let path = dir.join(BACKUPS_DIR).join(&latest.id);
+        if let Err(e) = backups::check_backup_file(&path).await {
+            return (
+                CheckStatus::Warn,
+                format!(
+                    "The newest automatic backup ({when}) is damaged: {}",
+                    e.message
+                ),
+                Some(remedy.into()),
+            );
+        }
+    }
+    let age = chrono::DateTime::parse_from_rfc3339(&latest.created_at)
+        .map(|d| chrono::Utc::now() - d.with_timezone(&chrono::Utc))
+        .unwrap_or_default();
+    if age > chrono::Duration::days(7) && changed.is_some_and(|c| c > latest.created_at) {
+        return (
+            CheckStatus::Warn,
+            format!(
+                "The newest automatic backup is {} days old ({when}).",
+                age.num_days()
+            ),
+            Some(remedy.into()),
+        );
+    }
+    (
+        CheckStatus::Pass,
+        format!(
+            "Newest automatic backup {when}; {} of {AUTO_KEEP} kept{}.",
+            autos.len(),
+            if deep { ", and it opens cleanly" } else { "" }
+        ),
+        None,
+    )
+}
+
 fn short_ids(ids: &[String]) -> String {
     let shown: Vec<&str> = ids.iter().take(5).map(|i| &i[..i.len().min(8)]).collect();
     let more = ids.len().saturating_sub(5);
@@ -680,6 +787,7 @@ mod tests {
                 "RATE_CONFIG",
                 "TIMELINE_REPLAY",
                 "ASSETS",
+                "BACKUPS",
                 "SECRETS",
                 "AI_CONNECTION"
             ]
@@ -941,5 +1049,57 @@ mod tests {
             .await
             .unwrap();
         assert_eq!(check_rate_config(&db).await.status, CheckStatus::Pass);
+    }
+
+    #[tokio::test]
+    async fn backups_warn_until_an_automatic_backup_exists() {
+        use crate::services::backups::{auto_backup_if_due, BACKUPS_DIR};
+        let t = test_db().await;
+        let data: Result<PathBuf, String> = Ok(t.dir.path().to_path_buf());
+        let db = Ok(t.db.clone());
+        let c = check_backups(&db, &data, false).await;
+        assert_eq!(c.status, CheckStatus::Pass, "{}", c.summary);
+        assert_eq!(c.summary, "Nothing to back up yet.");
+
+        crate::db::stories::create_story(
+            &t.db,
+            crate::domain::story::CreateStoryInput {
+                title: "Lamp".into(),
+                description: String::new(),
+                base_state: crate::domain::story_state::fixtures::lighthouse(),
+                first_chapter_title: "One".into(),
+                chapter_outlines: vec![],
+            },
+        )
+        .await
+        .unwrap();
+        let c = check_backups(&db, &data, false).await;
+        assert_eq!(c.status, CheckStatus::Warn);
+        assert!(c.remediation.unwrap().contains("Back up everything"));
+
+        let b = auto_backup_if_due(&t.db, t.dir.path(), chrono::Utc::now())
+            .await
+            .unwrap()
+            .unwrap();
+        let c = check_backups(&db, &data, true).await;
+        assert_eq!(c.status, CheckStatus::Pass, "{}", c.summary);
+        assert!(
+            c.summary.contains("1 of 5 kept, and it opens cleanly"),
+            "{}",
+            c.summary
+        );
+
+        fs::write(
+            t.dir.path().join(BACKUPS_DIR).join(&b.id),
+            b"not a database",
+        )
+        .unwrap();
+        assert_eq!(
+            check_backups(&db, &data, false).await.status,
+            CheckStatus::Pass
+        );
+        let c = check_backups(&db, &data, true).await;
+        assert_eq!(c.status, CheckStatus::Warn);
+        assert!(c.summary.contains("is damaged"), "{}", c.summary);
     }
 }

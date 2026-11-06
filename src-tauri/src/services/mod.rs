@@ -1,6 +1,7 @@
 pub mod adapters;
 pub mod archive;
 pub mod assets;
+pub mod backups;
 pub mod context;
 pub mod diagnostics;
 pub mod generation;
