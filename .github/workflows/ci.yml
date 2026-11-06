@@ -47,7 +47,11 @@ jobs:
       - run: cargo clippy --all-targets -- -D warnings
       - run: cargo test
       - name: Generated TypeScript types are up to date
-        run: git diff --exit-code -- ../src/types/generated
+        working-directory: .
+        run: |
+          node scripts/gen-types-index.mjs
+          git add -N src/types
+          git diff --exit-code -- src/types
 
   dev-package:
     needs: [frontend, rust]

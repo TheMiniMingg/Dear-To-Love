@@ -2,7 +2,6 @@ use tauri::State;
 
 use crate::domain::app_info::{AppInfo, BuildProfile};
 use crate::domain::diagnostics::DiagnosticCheck;
-use crate::errors::{AppError, AppResult};
 use crate::services::diagnostics::{self, DiagnosticsContext};
 use crate::state::AppState;
 
@@ -17,13 +16,19 @@ pub fn get_app_info(state: State<'_, AppState>) -> AppInfo {
     }
 }
 
+/// Runs local health checks. `deep` adds slow checks (database page scan).
+/// Never makes network requests.
 #[tauri::command]
-pub async fn run_diagnostics(state: State<'_, AppState>) -> AppResult<Vec<DiagnosticCheck>> {
-    let ctx = DiagnosticsContext {
+pub async fn run_diagnostics(
+    state: State<'_, AppState>,
+    deep: Option<bool>,
+) -> Result<Vec<DiagnosticCheck>, crate::errors::AppError> {
+    Ok(diagnostics::run_all(DiagnosticsContext {
         version: state.version.clone(),
         data_dir: state.data_dir.clone(),
-    };
-    tauri::async_runtime::spawn_blocking(move || diagnostics::run_all(&ctx))
-        .await
-        .map_err(|e| AppError::internal(format!("diagnostics task failed: {e}")))
+        db: state.db.clone(),
+        secrets: state.secrets.clone(),
+        deep: deep.unwrap_or(false),
+    })
+    .await)
 }

@@ -32,5 +32,5 @@ async function call<T>(command: string, args?: Record<string, unknown>): Promise
 
 export const commands = {
   getAppInfo: () => call<AppInfo>('get_app_info'),
-  runDiagnostics: () => call<DiagnosticCheck[]>('run_diagnostics'),
+  runDiagnostics: (deep = false) => call<DiagnosticCheck[]>('run_diagnostics', { deep }),
 };
