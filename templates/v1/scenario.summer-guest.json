@@ -1,0 +1,51 @@
+{
+  "templateSchemaVersion": 1,
+  "type": "scenario",
+  "id": "starter:summer-guest",
+  "label": "The Summer Guest",
+  "summary": "You arrive at Ashcombe House for the summer and are mistaken, on the doorstep, for someone the family has been expecting for years.",
+  "worlds": ["starter:ashcombe-1923"],
+  "title": "The Summer Guest",
+  "description": "The housekeeper calls you by a name that is not yours, and before you can correct her, the whole household has heard it.",
+  "firstChapterTitle": "A Case of Mistaken Identity",
+  "chapterOutlines": [
+    {
+      "title": "A Case of Mistaken Identity",
+      "outline": "Arrive, be mistaken for the long-awaited guest, decide whether to say so."
+    },
+    {
+      "title": "Tennis and Lies",
+      "outline": "Keep the story straight through a day of games and questions."
+    },
+    {
+      "title": "The Midsummer Ball",
+      "outline": "The real guest may arrive tonight."
+    }
+  ],
+  "scene": {
+    "location": "The front steps of Ashcombe House",
+    "summary": "A hot June afternoon. Your luggage is already being carried in, and the housekeeper has just welcomed you by the wrong name."
+  },
+  "openThreads": ["Who is the guest everyone was expecting, and why have they never come?"],
+  "npcs": [
+    {
+      "id": "starter:npc-celia",
+      "name": "Celia Ashcombe",
+      "control": "npc",
+      "pronouns": "she/her",
+      "role": "Daughter of the house",
+      "description": "Bored by the season, sharper than anyone gives her credit for, and the only one who looks at you as if she knows.",
+      "personality": ["clever", "restless", "kind when no one is watching"],
+      "goals": ["Escape another summer of being matched with dull suitors"],
+      "abilities": ["Remembers everything anyone says at dinner"]
+    }
+  ],
+  "relationships": [
+    {
+      "fromId": "starter:npc-celia",
+      "toId": "@player",
+      "label": "Host",
+      "status": "Intrigued and unconvinced"
+    }
+  ]
+}

@@ -1,0 +1,51 @@
+{
+  "templateSchemaVersion": 1,
+  "type": "scenario",
+  "id": "starter:night-shift",
+  "label": "Night Shift on Meridian",
+  "summary": "The station's scheduling system keeps putting you on the night maintenance shift with the same engineer, and nobody can say why.",
+  "worlds": ["starter:meridian-station"],
+  "title": "Night Shift on Meridian",
+  "description": "Six nights in a row the roster has paired you with the same person. The scheduler insists it is random. It is not.",
+  "firstChapterTitle": "Shift Change",
+  "chapterOutlines": [
+    {
+      "title": "Shift Change",
+      "outline": "Start another night shift, meet the engineer, notice the pattern."
+    },
+    {
+      "title": "The Scheduler",
+      "outline": "Dig into the old scheduling code and who wrote it."
+    },
+    {
+      "title": "Planetrise",
+      "outline": "The rare night when Halcyon's rings light the whole station."
+    }
+  ],
+  "scene": {
+    "location": "Maintenance corridor C, outer ring of Meridian Station",
+    "summary": "02:00 station time. The corridor lights are dimmed for the night cycle and a coolant pump is making a noise it should not make."
+  },
+  "openThreads": ["Why does the scheduler keep pairing you two?"],
+  "npcs": [
+    {
+      "id": "starter:npc-dex",
+      "name": "Dex Arroyo",
+      "control": "npc",
+      "pronouns": "she/her",
+      "role": "Systems engineer",
+      "description": "Knows every pipe on the station by sound and hums off-key while she works.",
+      "personality": ["focused", "dry sense of humor", "hates being thanked"],
+      "goals": ["Get the coolant pumps through one more season"],
+      "abilities": ["Can fix almost anything with the wrong tools"]
+    }
+  ],
+  "relationships": [
+    {
+      "fromId": "starter:npc-dex",
+      "toId": "@player",
+      "label": "Shift partner",
+      "status": "Polite, a little suspicious"
+    }
+  ]
+}

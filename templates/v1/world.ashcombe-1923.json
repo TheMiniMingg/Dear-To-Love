@@ -1,0 +1,23 @@
+{
+  "templateSchemaVersion": 1,
+  "type": "world",
+  "id": "starter:ashcombe-1923",
+  "label": "Ashcombe, 1923",
+  "summary": "A seaside country house in the summer of 1923, full of guests, gossip and closed doors.",
+  "world": {
+    "era": "1920s",
+    "setting": "Ashcombe House, a country estate above a seaside village in England",
+    "description": "A rambling house with too many guest rooms, a walled garden, a tennis lawn nobody mows straight, and a village below where the post office knows everyone's business. The family has invited half the county for the summer.",
+    "rules": [
+      "Historical and realistic: no magic or supernatural events",
+      "Manners and reputation matter; secrets are currency",
+      "Romance develops slowly and only with mutual interest"
+    ]
+  },
+  "narration": {
+    "perspective": "third",
+    "detail": "detailed",
+    "tone": "Witty, warm, a little scandalous",
+    "pacing": "normal"
+  }
+}

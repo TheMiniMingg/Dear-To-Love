@@ -4,13 +4,23 @@
   "id": "starter:unsigned-letter",
   "label": "The Unsigned Letter",
   "summary": "On your first night as the new lighthouse keeper you find a love letter addressed to the keeper, but not to you.",
+  "worlds": ["starter:harbor-town"],
   "title": "The Unsigned Letter",
   "description": "A letter tucked behind the lamp-room logbook is addressed to 'the keeper'. It is recent, it is unsigned, and it was not meant for you.",
   "firstChapterTitle": "The Lamp Room",
   "chapterOutlines": [
-    { "title": "The Lamp Room", "outline": "Arrive, find the letter, meet the ferry captain." },
-    { "title": "Low Tide", "outline": "Ask around town without giving the secret away." },
-    { "title": "The Harvest Dance", "outline": "The letter's writer will be at the dance." }
+    {
+      "title": "The Lamp Room",
+      "outline": "Arrive, find the letter, meet the ferry captain."
+    },
+    {
+      "title": "Low Tide",
+      "outline": "Ask around town without giving the secret away."
+    },
+    {
+      "title": "The Harvest Dance",
+      "outline": "The letter's writer will be at the dance."
+    }
   ],
   "scene": {
     "location": "The lamp room at the top of the Wrenmouth lighthouse",

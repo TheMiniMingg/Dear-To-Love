@@ -17,7 +17,7 @@ pub struct CreateStoryInput {
     pub chapter_outlines: Vec<ChapterOutlineInput>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize, TS)]
 #[serde(rename_all = "camelCase")]
 #[ts(export)]
 pub struct ChapterOutlineInput {

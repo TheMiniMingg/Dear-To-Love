@@ -3,6 +3,7 @@ import { commands, errorMessage } from '../../api/commands';
 import { useUiStore } from '../../app/store';
 import { ArrowPicker, type PickerOption } from '../../components/ArrowPicker';
 import type { Detail, Perspective, TemplateCatalog } from '../../types';
+import { fittingScenarios } from './WizardSteps';
 
 const PERSPECTIVES: PickerOption<Perspective>[] = [
   { value: 'second', label: 'Second person (you)' },
@@ -35,8 +36,9 @@ export function QuickStartScreen() {
       .then((c) => {
         if (cancelled) return;
         setCatalog(c);
-        setWorldId(c.worlds[0]?.id ?? '');
-        setScenarioId(c.scenarios[0]?.id ?? '');
+        const firstWorld = c.worlds[0]?.id ?? '';
+        setWorldId(firstWorld);
+        setScenarioId(fittingScenarios(c, firstWorld)[0]?.id ?? '');
         setCharacterId(c.characters[0]?.id ?? '');
       })
       .catch((e: unknown) => {
@@ -47,6 +49,13 @@ export function QuickStartScreen() {
     };
   }, []);
 
+  const scenarios = catalog ? fittingScenarios(catalog, worldId) : [];
+  const chooseWorld = (id: string) => {
+    setWorldId(id);
+    if (catalog && !fittingScenarios(catalog, id).some((s) => s.id === scenarioId)) {
+      setScenarioId(fittingScenarios(catalog, id)[0]?.id ?? '');
+    }
+  };
   const world = catalog?.worlds.find((w) => w.id === worldId);
   const scenario = catalog?.scenarios.find((s) => s.id === scenarioId);
   const character = catalog?.characters.find((c) => c.id === characterId);
@@ -95,11 +104,11 @@ export function QuickStartScreen() {
                 hint: w.summary,
               }))}
               value={worldId}
-              onChange={setWorldId}
+              onChange={chooseWorld}
             />
             <ArrowPicker
               label="Scenario"
-              options={catalog.scenarios.map((s) => ({
+              options={scenarios.map((s) => ({
                 value: s.id,
                 label: s.label,
                 hint: s.summary,

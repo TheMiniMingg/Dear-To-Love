@@ -1,5 +1,6 @@
 import { DiagnosticsScreen } from '../features/diagnostics/DiagnosticsScreen';
 import { LibraryScreen } from '../features/library/LibraryScreen';
+import { CreateWizardScreen } from '../features/create/CreateWizardScreen';
 import { QuickStartScreen } from '../features/create/QuickStartScreen';
 import { ReaderScreen } from '../features/reader/ReaderScreen';
 import { SettingsScreen } from '../features/settings/SettingsScreen';
@@ -14,6 +15,7 @@ export function App() {
       <main className="app-main">
         {screen.name === 'library' && <LibraryScreen />}
         {screen.name === 'quickstart' && <QuickStartScreen />}
+        {screen.name === 'create' && <CreateWizardScreen />}
         {screen.name === 'reader' && <ReaderScreen key={screen.routeId} routeId={screen.routeId} />}
         {screen.name === 'diagnostics' && <DiagnosticsScreen />}
         {screen.name === 'settings' && <SettingsScreen />}

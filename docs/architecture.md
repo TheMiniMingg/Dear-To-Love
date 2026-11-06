@@ -3,7 +3,10 @@
 ```text
 React screens -> src/api/commands.ts (typed invoke wrappers)
   -> Rust commands/      input validation, typed AppError
+  -> Rust domain/draft   CreateStoryDraft: one validator for every way to
+                         create a story (Quick Start, Guided, Custom)
   -> Rust db/stories     story rows, main route, first chapter
+  -> Rust db/drafts      the creation wizard's saved draft
   -> Rust db/timeline    event graph, route heads, forks, chapters
   -> Rust db/contract    startup consistency checks
   -> Rust db/runs        generation runs (CAS state machine)
@@ -13,6 +16,19 @@ React screens -> src/api/commands.ts (typed invoke wrappers)
                          offline), reader view, diagnostics, secrets
   -> SQLite (story.db)   OS credential store for API keys
 ```
+
+## Creating a story
+
+```text
+templates/v1/*.json  -> TemplateCatalog (4 worlds, 4 scenarios, 6 characters)
+Quick Start          -> compose_draft -> CreateStoryDraft -> into_story_input
+Guided / Custom      -> CreateStoryDraft edited in the wizard, saved as
+                        app_preferences.wizard_draft -> create_story
+```
+
+- A draft may be incomplete; `check()` lists what to fix by wizard step, and
+  `into_story_input()` refuses with the same messages. Conflicting character
+  ids are reported, never merged. See ADR 0005.
 
 ## Timeline model
 

@@ -6,6 +6,8 @@ import type {
   AppInfo,
   BudgetPolicy,
   BudgetStatus,
+  CreateStoryDraft,
+  DraftProblem,
   ConnectionCheck,
   ContextPreview,
   DiagnosticCheck,
@@ -26,6 +28,7 @@ import type {
   TemplateCatalog,
   UsageScope,
   UsageSummary,
+  WizardDraft,
 } from '../types';
 
 /** Error thrown by every wrapper; mirrors the Rust `AppError`. */
@@ -110,6 +113,14 @@ export const commands = {
 
   getTemplateCatalog: () => call<TemplateCatalog>('get_template_catalog'),
   quickStart: (input: QuickStartInput) => call<StoryCreated>('quick_start', { input }),
+  composeStoryDraft: (input: QuickStartInput) =>
+    call<CreateStoryDraft>('compose_story_draft', { input }),
+  checkStoryDraft: (draft: CreateStoryDraft) =>
+    call<DraftProblem[]>('check_story_draft', { draft }),
+  createStory: (draft: CreateStoryDraft) => call<StoryCreated>('create_story', { draft }),
+  getWizardDraft: () => call<WizardDraft | null>('get_wizard_draft'),
+  saveWizardDraft: (wizard: WizardDraft) => call<WizardDraft>('save_wizard_draft', { wizard }),
+  clearWizardDraft: () => call<void>('clear_wizard_draft'),
   listStories: () => call<StorySummary[]>('list_stories'),
   deleteStory: (storyId: string) => call<void>('delete_story', { storyId }),
 

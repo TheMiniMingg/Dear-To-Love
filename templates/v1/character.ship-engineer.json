@@ -1,0 +1,18 @@
+{
+  "templateSchemaVersion": 1,
+  "type": "character",
+  "id": "starter:ship-engineer",
+  "label": "The Engineer",
+  "summary": "Happiest with grease on both hands and a problem nobody else wants.",
+  "character": {
+    "id": "starter:ship-engineer",
+    "name": "Kit Okafor",
+    "control": "player",
+    "pronouns": "she/her",
+    "role": "Mechanic",
+    "description": "Fixes engines, radios and, occasionally, other people's plans.",
+    "personality": ["practical", "blunt", "loyal"],
+    "goals": ["Build something that lasts", "Admit when she needs help"],
+    "abilities": ["Can hear what's wrong with a machine"]
+  }
+}

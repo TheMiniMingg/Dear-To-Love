@@ -1,0 +1,18 @@
+{
+  "templateSchemaVersion": 1,
+  "type": "character",
+  "id": "starter:botanist",
+  "label": "The Botanist",
+  "summary": "Trusts plants more than people, and is slowly being proven wrong.",
+  "character": {
+    "id": "starter:botanist",
+    "name": "Ines Varga",
+    "control": "player",
+    "pronouns": "she/her",
+    "role": "Botanist",
+    "description": "Came to study something that grows nowhere else, and keeps finding excuses to extend the trip.",
+    "personality": ["precise", "warm once you know her", "easily absorbed"],
+    "goals": ["Finish her research", "Say what she means the first time"],
+    "abilities": ["Can name anything that grows"]
+  }
+}

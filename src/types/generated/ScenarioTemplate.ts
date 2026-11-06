@@ -4,4 +4,8 @@ import type { Character } from "./Character";
 import type { Relationship } from "./Relationship";
 import type { SceneTemplate } from "./SceneTemplate";
 
-export type ScenarioTemplate = { templateSchemaVersion: number, id: string, label: string, summary: string, title: string, description: string, firstChapterTitle: string, chapterOutlines: Array<ChapterOutlineInput>, scene: SceneTemplate, openThreads: Array<string>, npcs: Array<Character>, relationships: Array<Relationship>, };
+export type ScenarioTemplate = { templateSchemaVersion: number, id: string, label: string, summary: string, 
+/**
+ * Worlds this scenario was written for; empty means any world.
+ */
+worlds: Array<string>, title: string, description: string, firstChapterTitle: string, chapterOutlines: Array<ChapterOutlineInput>, scene: SceneTemplate, openThreads: Array<string>, npcs: Array<Character>, relationships: Array<Relationship>, };

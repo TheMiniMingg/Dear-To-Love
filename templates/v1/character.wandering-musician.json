@@ -1,0 +1,18 @@
+{
+  "templateSchemaVersion": 1,
+  "type": "character",
+  "id": "starter:wandering-musician",
+  "label": "The Wandering Musician",
+  "summary": "Plays for supper in a new place every week, and has never once stayed for the encore.",
+  "character": {
+    "id": "starter:wandering-musician",
+    "name": "Theo Marsh",
+    "control": "player",
+    "pronouns": "he/him",
+    "role": "Traveling fiddler",
+    "description": "Carries a fiddle, a notebook of half-finished songs and no forwarding address.",
+    "personality": ["charming", "restless", "more sincere than he lets on"],
+    "goals": ["Finish the song he started years ago", "Find a reason to stay somewhere"],
+    "abilities": ["Can get a room of strangers dancing"]
+  }
+}
