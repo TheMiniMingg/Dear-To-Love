@@ -14,18 +14,22 @@ use crate::errors::{AppError, AppResult};
 pub enum AdapterKind {
     /// `POST {baseUrl}/chat/completions` with server-sent events.
     OpenaiCompatible,
+    /// Ollama's native `POST {baseUrl}/api/chat` (sets the context size).
+    Ollama,
 }
 
 impl AdapterKind {
     pub fn as_str(self) -> &'static str {
         match self {
             Self::OpenaiCompatible => "openai_compatible",
+            Self::Ollama => "ollama",
         }
     }
 
     pub fn parse(s: &str) -> Option<Self> {
         match s {
             "openai_compatible" => Some(Self::OpenaiCompatible),
+            "ollama" => Some(Self::Ollama),
             _ => None,
         }
     }
@@ -241,6 +245,9 @@ pub struct GenerateRequest {
     pub max_output_tokens: u32,
     pub temperature: Option<f32>,
     pub timeout_ms: u32,
+    /// Context window to ask for, prompt and reply together. Servers that
+    /// size it per request (Ollama) use it; others ignore it.
+    pub context_tokens: Option<u32>,
 }
 
 /// Normalized token counts; `None` means the provider did not say.

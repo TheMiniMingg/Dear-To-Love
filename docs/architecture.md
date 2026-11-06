@@ -50,6 +50,10 @@ app start       pending/streaming runs -> interrupted; open ledger rows -> unkno
 - `events.generation_run_id` and `api_requests.generation_run_id` are unique,
   so a run can commit at most one reply and has at most one ledger row.
 - Adapters never retry. Requests to loopback addresses bypass proxies.
+  `openai_compatible` speaks `POST /chat/completions` (SSE); `ollama` speaks
+  Ollama's `POST /api/chat` (NDJSON) and sends `options.num_ctx` from the
+  connection's context limit, because Ollama otherwise loads models with its
+  own default context and truncates longer prompts from the start.
 - The offline storyteller is an adapter too (no ledger row: it is not an API).
 - See ADR 0002 for the stream and ledger contracts.
 

@@ -3,9 +3,9 @@ use tauri::State;
 use ts_rs::TS;
 
 use crate::db::providers;
-use crate::domain::provider::{AdapterKind, ProviderProfile, ProviderProfileInput};
+use crate::domain::provider::{ProviderProfile, ProviderProfileInput};
 use crate::errors::{AppResult, ErrorCode};
-use crate::services::adapters::openai::OpenAiCompatible;
+use crate::services::adapters::Adapter;
 use crate::services::generation;
 use crate::services::reader::{storyteller_info, StorytellerInfo};
 use crate::state::AppState;
@@ -65,11 +65,11 @@ pub async fn test_connection(state: State<'_, AppState>, id: String) -> AppResul
         Some(r) => state.secrets.get(r)?,
         None => None,
     };
-    let adapter = match row.adapter()? {
-        AdapterKind::OpenaiCompatible => {
-            OpenAiCompatible::new(row.base_url.as_deref().unwrap_or_default(), key)?
-        }
-    };
+    let adapter = Adapter::live(
+        row.adapter()?,
+        row.base_url.as_deref().unwrap_or_default(),
+        key,
+    )?;
     Ok(match adapter.list_models().await {
         Ok(models) => {
             let listed = models.iter().any(|m| m == &row.model_id);

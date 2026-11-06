@@ -64,6 +64,15 @@ impl Reply {
         }
     }
 
+    /// Newline-delimited JSON (Ollama's stream), split into uneven chunks.
+    pub fn ndjson(lines: &[serde_json::Value]) -> Self {
+        let body: String = lines.iter().map(|l| format!("{l}\n")).collect();
+        Self {
+            content_type: "application/x-ndjson",
+            ..Self::sse_raw(&body)
+        }
+    }
+
     pub fn with_delay(mut self, d: Duration) -> Self {
         for c in &mut self.chunks {
             c.0 = d;

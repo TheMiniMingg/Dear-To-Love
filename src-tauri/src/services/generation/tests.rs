@@ -4,7 +4,7 @@ use super::*;
 use crate::db::stories::{create_story, list_stories};
 use crate::db::test_support::{test_db, TestDb};
 use crate::db::timeline::{fork_route, route_history};
-use crate::domain::provider::{ProviderProfileInput, StreamMessage};
+use crate::domain::provider::{AdapterKind, ProviderProfileInput, StreamMessage};
 use crate::domain::story::StoryCreated;
 use crate::domain::templates::{QuickStartInput, TemplateCatalog};
 use crate::services::adapters::test_server::{serve, short_pause, Reply, TestServer};
@@ -591,5 +591,87 @@ async fn deleting_a_connection_interrupts_waiting_runs() {
             .storyteller
             .profile_id,
         None
+    );
+}
+
+/// T20 + T60: switching from a cloud connection to local Ollama leaves the
+/// story untouched; the next reply comes from Ollama at $0 API charge.
+#[tokio::test]
+async fn switching_cloud_to_local_ollama() {
+    let env = Env::new().await;
+    let cloud = serve(vec![Reply::sse_text(
+        &["Cloud reply."],
+        Some(r#"{"prompt_tokens":100,"completion_tokens":10}"#),
+    )])
+    .await;
+    let pid = env.connect(&cloud, Billing::Paid).await;
+    usage::set_rate_card(env.db(), &pid, "story-model", "1", "1", None)
+        .await
+        .unwrap();
+    let sub = env.submit(env.route(), "Ask the cloud").await.unwrap();
+    env.gen(&sub.run_id).await.0.unwrap();
+    let before = route_history(env.db(), env.route()).await.unwrap();
+
+    let local = serve(vec![Reply::ndjson(&[
+        serde_json::json!({"message":{"role":"assistant","content":"Local reply."},"done":false}),
+        serde_json::json!({"done":true,"done_reason":"stop","prompt_eval_count":90,"eval_count":8}),
+    ])])
+    .await;
+    let ollama = providers::save_profile(
+        env.db(),
+        &env.secrets,
+        ProviderProfileInput {
+            id: None,
+            label: "Ollama".into(),
+            adapter: AdapterKind::Ollama,
+            base_url: local.base_url.trim_end_matches("/v1").into(),
+            model_id: "llama3.2".into(),
+            billing: Billing::Local,
+            api_key: None,
+            settings: GenerationSettings::default(),
+        },
+    )
+    .await
+    .unwrap();
+    providers::set_storyteller(env.db(), Some(&ollama.id))
+        .await
+        .unwrap();
+    let sub = env
+        .submit(env.route(), "Ask the local model")
+        .await
+        .unwrap();
+    let v = env.gen(&sub.run_id).await.0.unwrap();
+    assert_eq!(assistant_text(&v), "Local reply.");
+    match &v.history.last().unwrap().body {
+        EventBody::Assistant(p) => {
+            assert_eq!(p.provider_label.as_deref(), Some("Ollama"));
+            assert_eq!(p.model_id.as_deref(), Some("llama3.2"));
+        }
+        _ => unreachable!(),
+    }
+    let after = route_history(env.db(), env.route()).await.unwrap();
+    assert_eq!(&after[..before.len()], &before[..], "history unchanged");
+    assert_eq!(local.requests()[0].path, "/api/chat");
+    assert_eq!(cloud.requests().len(), 1);
+    assert_eq!(
+        env.ledger().await,
+        vec![
+            (
+                "story_reply".into(),
+                "completed".into(),
+                Some(100),
+                Some(10),
+                Some(110),
+                "provider".into()
+            ),
+            (
+                "story_reply".into(),
+                "completed".into(),
+                Some(90),
+                Some(8),
+                Some(0),
+                "provider".into()
+            ),
+        ]
     );
 }

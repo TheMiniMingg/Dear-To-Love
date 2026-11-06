@@ -161,7 +161,8 @@ export function SettingsScreen() {
                 <div>
                   <strong>{c.label}</strong>
                   <div className="muted small">
-                    {c.modelId} · {c.baseUrl} ·{' '}
+                    {c.modelId} · {c.adapter === 'ollama' ? 'Ollama' : 'OpenAI-compatible'} ·{' '}
+                    {c.baseUrl} ·{' '}
                     {c.hasKey ? 'key saved' : c.billing === 'local' ? 'no key needed' : 'no key'}
                   </div>
                 </div>

@@ -323,10 +323,13 @@ pub async fn check_ai_connection(
         },
         None => None,
     };
-    let adapter = match crate::services::adapters::openai::OpenAiCompatible::new(
-        row.base_url.as_deref().unwrap_or_default(),
-        key,
-    ) {
+    let adapter = match row.adapter().and_then(|kind| {
+        crate::services::adapters::Adapter::live(
+            kind,
+            row.base_url.as_deref().unwrap_or_default(),
+            key,
+        )
+    }) {
         Ok(a) => a,
         Err(e) => return finish(id, label, start, (CheckStatus::Fail, e.message, None)),
     };

@@ -1,4 +1,5 @@
-// Minimal OpenAI-compatible server for E2E: scripted streamed replies.
+// Minimal OpenAI-compatible (and Ollama-native) server for E2E: scripted
+// streamed replies.
 import http from 'node:http';
 
 /**
@@ -13,6 +14,11 @@ export async function startFakeOpenAI(script) {
     req.on('data', (c) => (body += c));
     req.on('end', async () => {
       requests.push({ method: req.method, url: req.url, body });
+      if (req.url === '/api/tags') {
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ models: [{ name: 'story-model' }] }));
+        return;
+      }
       if (req.url.endsWith('/models')) {
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ data: [{ id: 'story-model' }] }));
@@ -22,6 +28,19 @@ export async function startFakeOpenAI(script) {
       if (step.status && step.status !== 200) {
         res.writeHead(step.status, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ error: { message: 'scripted failure' } }));
+        return;
+      }
+      if (req.url === '/api/chat') {
+        res.writeHead(200, { 'Content-Type': 'application/x-ndjson' });
+        for (const p of step.pieces ?? []) {
+          res.write(
+            `${JSON.stringify({ message: { role: 'assistant', content: p }, done: false })}\n`,
+          );
+          await new Promise((r) => setTimeout(r, step.delayMs ?? 30));
+        }
+        res.end(
+          `${JSON.stringify({ done: true, done_reason: 'stop', prompt_eval_count: 50, eval_count: 12 })}\n`,
+        );
         return;
       }
       res.writeHead(200, { 'Content-Type': 'text/event-stream' });
@@ -40,6 +59,7 @@ export async function startFakeOpenAI(script) {
   const { port } = server.address();
   return {
     baseUrl: `http://127.0.0.1:${port}/v1`,
+    root: `http://127.0.0.1:${port}`,
     requests,
     close: () => new Promise((r) => server.close(r)),
   };

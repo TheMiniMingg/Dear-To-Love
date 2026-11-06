@@ -30,12 +30,10 @@ use crate::db::usage::{self, NewRequest, RequestOutcome, RequestPurpose, Request
 use crate::db::Database;
 use crate::domain::events::{AssistantPayload, EventBody, EventKind, PlayerPayload};
 use crate::domain::provider::{
-    AdapterKind, Billing, GenerateRequest, GenerationSettings, ModelMessage, Role, StreamMessage,
+    Billing, GenerateRequest, GenerationSettings, ModelMessage, Role, StreamMessage,
 };
 use crate::errors::{AppError, AppResult, ErrorCode};
-use crate::services::adapters::{
-    offline::Offline, openai::OpenAiCompatible, Adapter, Charge, Completion,
-};
+use crate::services::adapters::{offline::Offline, Adapter, Charge, Completion};
 use crate::services::mock_storyteller::{self, MOCK_PROVIDER_LABEL};
 use crate::services::prompt::{self, Budget};
 use crate::services::reader::{route_view, RouteView};
@@ -240,12 +238,11 @@ pub(crate) fn live_adapter(row: &ProfileRow, secrets: &dyn SecretStore) -> AppRe
         Some(r) => secrets.get(r)?,
         None => None,
     };
-    match row.adapter()? {
-        AdapterKind::OpenaiCompatible => Ok(Adapter::OpenAi(OpenAiCompatible::new(
-            row.base_url.as_deref().unwrap_or_default(),
-            key,
-        )?)),
-    }
+    Adapter::live(
+        row.adapter()?,
+        row.base_url.as_deref().unwrap_or_default(),
+        key,
+    )
 }
 
 /// Run one reply to completion, streaming drafts to `sink`. Returns the
@@ -347,6 +344,7 @@ pub async fn generate(
         max_output_tokens: resolved.settings.max_output_tokens,
         temperature: resolved.settings.temperature,
         timeout_ms: resolved.settings.timeout_ms,
+        context_tokens: Some(resolved.settings.max_context_tokens),
     };
 
     // Register the cancel handle before going live so a cancel can't slip
@@ -679,6 +677,7 @@ pub async fn send_test_message(
         max_output_tokens: 40,
         temperature: settings.temperature,
         timeout_ms: settings.timeout_ms,
+        context_tokens: Some(settings.max_context_tokens),
     };
     let (c, _) = call_once(
         db,
