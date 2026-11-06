@@ -1,0 +1,69 @@
+{
+  "templateSchemaVersion": 1,
+  "type": "scenario",
+  "id": "starter:clean-slate",
+  "label": "Clean Slate",
+  "summary": "A fixer offers a job that would wipe out your debt: steal back a memory a corporation took. The memory has your name on it.",
+  "worlds": ["starter:neon-harbor"],
+  "title": "Clean Slate",
+  "description": "A fixer offers you a job that pays enough to erase your debt: steal back a memory a corporation took from someone. The file has your name on it.",
+  "firstChapterTitle": "The Offer",
+  "chapterOutlines": [
+    {
+      "title": "The Offer",
+      "outline": "Meet the fixer and take, or refuse, the job."
+    },
+    {
+      "title": "Below the Waterline",
+      "outline": "Find a way into the corporate archive."
+    },
+    {
+      "title": "Whose Memory",
+      "outline": "Decide what to do with what you find."
+    }
+  ],
+  "scene": {
+    "location": "A noodle bar on a floating market in the Low Canals, past midnight",
+    "summary": "Rain drums on the awning. The fixer slides a data chip across the counter and orders for both of you without asking."
+  },
+  "openThreads": ["Whose memory is on the chip?", "Who is paying the fixer?"],
+  "npcs": [
+    {
+      "id": "starter:npc-juno",
+      "name": "Juno Reyes",
+      "control": "npc",
+      "pronouns": "she/her",
+      "role": "Fixer",
+      "description": "Smiles like a contract with fine print. Has never told anyone her real price.",
+      "personality": ["charming", "ruthless", "honest about being dishonest"],
+      "goals": ["Close the deal", "Stay off the corporate radar"],
+      "abilities": ["Knows someone everywhere"]
+    },
+    {
+      "id": "starter:npc-kai",
+      "name": "KAI-7",
+      "control": "npc",
+      "pronouns": "it/its",
+      "role": "Rogue AI",
+      "species": "Artificial intelligence",
+      "description": "Lives in your phone, uninvited. Says it wants to help, and so far it has.",
+      "personality": ["polite", "curious", "unsettlingly cheerful"],
+      "goals": ["Find out who made it"],
+      "abilities": ["Opens almost any lock that has a chip"]
+    }
+  ],
+  "relationships": [
+    {
+      "fromId": "starter:npc-juno",
+      "toId": "@player",
+      "label": "Fixer",
+      "status": "Thinks you owe her"
+    },
+    {
+      "fromId": "starter:npc-kai",
+      "toId": "@player",
+      "label": "Uninvited helper",
+      "status": "Very interested in you"
+    }
+  ]
+}

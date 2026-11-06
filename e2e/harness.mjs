@@ -113,15 +113,25 @@ export async function typeInto(browser, selector, text) {
   await (await browser.$(selector)).addValue(text);
 }
 
-/** Wait until the reply being written has been committed. */
+/**
+ * Wait until the reply being written has been committed: no draft is
+ * showing and the newest turn, if any, is a reply. (Right after sending,
+ * the draft may not have appeared yet, so "no draft" alone is not enough.)
+ */
 export async function waitForReply(browser, ms = 20000) {
   await browser.waitUntil(
     async () =>
-      browser.execute(
-        () =>
-          !document.querySelector('[data-testid="reply-draft"]') &&
-          !!document.querySelector('[data-testid="narrative"]'),
-      ),
+      browser.execute(() => {
+        if (document.querySelector('[data-testid="reply-draft"]')) return false;
+        const turns = document.querySelectorAll(
+          '[data-testid="narrative"] .turn-player, [data-testid="narrative"] .turn-assistant',
+        );
+        const last = turns[turns.length - 1];
+        return (
+          !!document.querySelector('[data-testid="narrative"]') &&
+          (!last || last.classList.contains('turn-assistant'))
+        );
+      }),
     { timeout: ms, timeoutMsg: 'the reply did not finish' },
   );
 }

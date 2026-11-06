@@ -22,7 +22,7 @@ macro_rules! bundled {
     };
 }
 
-/// Eight worlds, eight scenarios and eight characters, in picker order.
+/// Sixteen worlds, sixteen scenarios and fifteen characters, in picker order.
 const BUNDLED: &[&str] = bundled![
     "world.harbor-town.json",
     "world.glass-orchard.json",
@@ -32,6 +32,14 @@ const BUNDLED: &[&str] = bundled![
     "world.ember-road.json",
     "world.larkport.json",
     "world.vesper-city.json",
+    "world.northgate.json",
+    "world.underhalls.json",
+    "world.neon-harbor.json",
+    "world.dry-country.json",
+    "world.lumen-city.json",
+    "world.dust-creek.json",
+    "world.lantern-palace.json",
+    "world.maple-fern.json",
     "scenario.unsigned-letter.json",
     "scenario.memory-harvest.json",
     "scenario.night-shift.json",
@@ -40,6 +48,14 @@ const BUNDLED: &[&str] = bundled![
     "scenario.last-caravan.json",
     "scenario.wrong-reservation.json",
     "scenario.ghost-ledger.json",
+    "scenario.midterm-week.json",
+    "scenario.lantern-job.json",
+    "scenario.clean-slate.json",
+    "scenario.water-run.json",
+    "scenario.blackout.json",
+    "scenario.redwater-stage.json",
+    "scenario.empress-tea.json",
+    "scenario.cafe-first-week.json",
     "character.new-keeper.json",
     "character.curious-detective.json",
     "character.wandering-musician.json",
@@ -48,6 +64,13 @@ const BUNDLED: &[&str] = bundled![
     "character.ship-engineer.json",
     "character.night-host.json",
     "character.sellsword.json",
+    "character.transfer-student.json",
+    "character.delver.json",
+    "character.goblin-tinkerer.json",
+    "character.lizardfolk-scout.json",
+    "character.rookie-hero.json",
+    "character.drifter.json",
+    "character.court-physician.json",
 ];
 
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]
@@ -171,7 +194,15 @@ fn check_version(v: u32, id: &str) -> AppResult<()> {
 
 /// Story types that roll dice for uncertain moments unless the player
 /// turns it off. Matches `DICE_STORY_TYPES` in the wizard.
-pub const DICE_STORY_TYPES: [&str; 3] = ["Adventure", "Fantasy", "School life"];
+pub const DICE_STORY_TYPES: [&str; 7] = [
+    "Adventure",
+    "Fantasy",
+    "School life",
+    "Action",
+    "Superhero",
+    "Western",
+    "Post-apocalyptic",
+];
 
 pub fn rolls_dice(story_type: &str) -> bool {
     DICE_STORY_TYPES
@@ -342,7 +373,7 @@ mod tests {
         let cat = TemplateCatalog::bundled();
         assert_eq!(
             (cat.worlds.len(), cat.scenarios.len(), cat.characters.len()),
-            (8, 8, 8)
+            (16, 16, 15)
         );
         let draft = cat.resolve_quick_start(&starter()).unwrap();
         draft.base_state.validate().unwrap();
@@ -441,6 +472,33 @@ mod tests {
                 }
             }
         }
+    }
+
+    #[test]
+    fn the_underhalls_has_orcs_goblins_and_lizardfolk() {
+        let cat = TemplateCatalog::bundled();
+        let job = cat
+            .scenarios
+            .iter()
+            .find(|s| s.id == "starter:lantern-job")
+            .unwrap();
+        let races: Vec<_> = job
+            .npcs
+            .iter()
+            .filter_map(|c| c.species.as_deref())
+            .collect();
+        assert_eq!(races, ["Orc", "Goblin", "Lizardfolk"]);
+        let input = QuickStartInput {
+            world_id: "starter:underhalls".into(),
+            scenario_id: job.id.clone(),
+            character_id: "starter:delver".into(),
+            ..starter()
+        };
+        let state = cat.resolve_quick_start(&input).unwrap().base_state;
+        assert!(state.narration.dice, "a dungeon delve rolls dice");
+        let player = &state.characters[&state.player_character_id];
+        assert_eq!(player.species.as_deref(), Some("Orc"));
+        assert_eq!(player.stats.len(), 3);
     }
 
     #[test]

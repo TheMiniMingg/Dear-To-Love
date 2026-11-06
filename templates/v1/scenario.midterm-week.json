@@ -1,0 +1,70 @@
+{
+  "templateSchemaVersion": 1,
+  "type": "scenario",
+  "id": "starter:midterm-week",
+  "label": "Midterm Week",
+  "summary": "Five days until the chemistry midterm, a study group that has fallen apart, and the top student in class asking for your notes.",
+  "worlds": ["starter:northgate"],
+  "title": "Midterm Week",
+  "description": "The chemistry midterm is in five days, your study group has fallen apart, and the top student in the class just asked to borrow your notes.",
+  "firstChapterTitle": "Five Days Left",
+  "chapterOutlines": [
+    {
+      "title": "Five Days Left",
+      "outline": "Meet the study group and decide how to spend the week."
+    },
+    {
+      "title": "The Night Before",
+      "outline": "Cram, sleep or go to the party: every choice changes the odds."
+    },
+    {
+      "title": "The Exam",
+      "outline": "Sit the exam and live with the result."
+    }
+  ],
+  "scene": {
+    "location": "The third floor of the Northgate library, on a Monday evening",
+    "summary": "Your table is covered in notes that make less sense every hour. Someone has left a sticky note on your textbook: \"Study group, 8 p.m., the café. Bring snacks.\""
+  },
+  "openThreads": ["Who left the sticky note?", "Can you pass the chemistry midterm?"],
+  "npcs": [
+    {
+      "id": "starter:npc-haru",
+      "name": "Haru Mizuno",
+      "control": "npc",
+      "pronouns": "he/him",
+      "age": "20",
+      "role": "Top student in chemistry",
+      "description": "Brilliant, sleep-deprived and terrible at asking for help.",
+      "personality": ["proud", "awkward", "kinder than he looks"],
+      "goals": ["Keep his scholarship"],
+      "abilities": ["Explains anything, eventually"]
+    },
+    {
+      "id": "starter:npc-dani",
+      "name": "Dani Okafor",
+      "control": "npc",
+      "pronouns": "she/her",
+      "age": "21",
+      "role": "President of the debate club",
+      "description": "Knows everyone's schedule and most of their secrets.",
+      "personality": ["outgoing", "persuasive", "loyal"],
+      "goals": ["Get you to come out more"],
+      "abilities": ["Talks her way into anywhere"]
+    }
+  ],
+  "relationships": [
+    {
+      "fromId": "starter:npc-haru",
+      "toId": "@player",
+      "label": "Classmate",
+      "status": "Needs your notes and won't say why"
+    },
+    {
+      "fromId": "starter:npc-dani",
+      "toId": "@player",
+      "label": "Friend",
+      "status": "Has decided you need a social life"
+    }
+  ]
+}

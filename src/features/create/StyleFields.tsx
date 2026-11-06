@@ -56,7 +56,15 @@ export function tellingOf(n: Narration): Partial<Narration> {
 }
 
 /** Story types that roll dice unless the player turns it off (as in Rust). */
-export const DICE_STORY_TYPES = ['Adventure', 'Fantasy', 'School life'];
+export const DICE_STORY_TYPES = [
+  'Adventure',
+  'Fantasy',
+  'School life',
+  'Action',
+  'Superhero',
+  'Western',
+  'Post-apocalyptic',
+];
 
 function Check({
   label,

@@ -1,0 +1,25 @@
+{
+  "templateSchemaVersion": 1,
+  "type": "world",
+  "id": "starter:neon-harbor",
+  "label": "Neon Harbor",
+  "summary": "A flooded megacity of corporate towers, canals and floating markets, where everyone rents out something to stay afloat.",
+  "world": {
+    "era": "2089",
+    "setting": "Neon Harbor, a flooded megacity of towers, canals and floating markets",
+    "description": "Corporate towers above the clouds, flooded streets below, and everyone in between renting out their memories, muscles or sleep to stay afloat. The rain never stops, and neither do the ads.",
+    "rules": [
+      "High technology, hard lives: implants, AIs and drones are everywhere",
+      "Corporations own the law, and favors are the only currency that lasts",
+      "Hacks, fights and chases are risky and leave traces"
+    ]
+  },
+  "narration": {
+    "perspective": "second",
+    "detail": "balanced",
+    "tone": "Slick, tense and rain-soaked",
+    "pacing": "fast",
+    "genres": ["Cyberpunk", "Thriller", "Science fiction"],
+    "messageCards": true
+  }
+}

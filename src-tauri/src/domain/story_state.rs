@@ -203,6 +203,11 @@ pub struct Character {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
     pub role: Option<String>,
+    /// Race or species, e.g. "Orc" or "Lizardfolk". Unset means whatever
+    /// fits the world, usually human.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub species: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
     pub description: Option<String>,
@@ -311,6 +316,7 @@ impl StoryStateV1 {
                 &c.pronouns,
                 &c.age,
                 &c.role,
+                &c.species,
                 &c.description,
                 &c.appearance,
             ]
@@ -519,6 +525,7 @@ pub fn sample_lighthouse() -> StoryStateV1 {
             pronouns: Some("they/them".into()),
             age: None,
             role: Some("Lighthouse keeper".into()),
+            species: None,
             description: None,
             appearance: None,
             personality: vec!["curious".into()],
@@ -537,6 +544,7 @@ pub fn sample_lighthouse() -> StoryStateV1 {
             pronouns: Some("she/her".into()),
             age: None,
             role: Some("Ferry captain".into()),
+            species: None,
             description: None,
             appearance: None,
             personality: vec!["wry".into()],

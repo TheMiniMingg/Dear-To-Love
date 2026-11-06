@@ -1,0 +1,33 @@
+{
+  "templateSchemaVersion": 1,
+  "type": "character",
+  "id": "starter:lizardfolk-scout",
+  "label": "The Lizardfolk Scout",
+  "summary": "Cold-blooded, warm-hearted and puzzled by warm-blooded customs.",
+  "character": {
+    "id": "starter:lizardfolk-scout",
+    "name": "Ves-tal",
+    "control": "player",
+    "pronouns": "they/them",
+    "role": "Scout",
+    "species": "Lizardfolk",
+    "description": "A lizardfolk scout from the marsh clans, sent to map the dry lands and understand the people in them.",
+    "personality": ["patient", "literal-minded", "fiercely protective"],
+    "goals": ["Map the unknown", "Understand humans"],
+    "abilities": ["Moves without a sound", "Swims like a fish"],
+    "stats": [
+      {
+        "name": "Stealth",
+        "value": 3
+      },
+      {
+        "name": "Nerve",
+        "value": 2
+      },
+      {
+        "name": "Charm",
+        "value": -1
+      }
+    ]
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "templateSchemaVersion": 1,
+  "type": "world",
+  "id": "starter:underhalls",
+  "label": "The Underhalls",
+  "summary": "A ruined underground city of goblin clans, lizardfolk traders and fungus forests, where delvers go down for treasure.",
+  "world": {
+    "era": "An age of delvers and deep roads",
+    "setting": "The Underhalls, a ruined city in the caverns beneath the mining town of Cragmouth",
+    "description": "Built by dwarves and abandoned four centuries ago, the Underhalls are now home to goblin clans, lizardfolk traders, fungus forests and things that do not like light. Delvers go down for treasure; about half come back up.",
+    "rules": [
+      "Magic and monsters are real; fights are fast and dangerous",
+      "Orcs, goblins, lizardfolk and other peoples live here, each with their own customs",
+      "Light and supplies run out, and resting has a cost"
+    ]
+  },
+  "narration": {
+    "perspective": "second",
+    "detail": "balanced",
+    "tone": "Gritty and thrilling, with dark humor",
+    "pacing": "fast",
+    "genres": ["Adventure", "Fantasy", "Action"],
+    "dice": true
+  }
+}

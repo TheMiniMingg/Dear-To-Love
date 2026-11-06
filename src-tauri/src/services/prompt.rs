@@ -289,6 +289,7 @@ pub fn system_prompt(state: &EffectiveState, frame: &StoryFrame) -> String {
         for (label, v) in [
             ("pronouns", &c.pronouns),
             ("age", &c.age),
+            ("species", &c.species),
             ("role", &c.role),
             ("about", &c.description),
             ("looks", &c.appearance),

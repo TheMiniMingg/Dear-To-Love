@@ -1,0 +1,32 @@
+{
+  "templateSchemaVersion": 1,
+  "type": "character",
+  "id": "starter:court-physician",
+  "label": "The Court Physician",
+  "summary": "Trained in herbs and poisons; the second is why she was invited.",
+  "character": {
+    "id": "starter:court-physician",
+    "name": "Lin Wei",
+    "control": "player",
+    "pronouns": "she/her",
+    "role": "Court physician",
+    "description": "Trained in herbs and in poisons. The second is why she was invited to court.",
+    "personality": ["precise", "observant", "quietly ambitious"],
+    "goals": ["Keep the Dowager Empress alive", "Clear her family's name"],
+    "abilities": ["Names any poison by its smell"],
+    "stats": [
+      {
+        "name": "Smarts",
+        "value": 3
+      },
+      {
+        "name": "Charm",
+        "value": 1
+      },
+      {
+        "name": "Nerve",
+        "value": 1
+      }
+    ]
+  }
+}

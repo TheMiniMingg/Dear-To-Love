@@ -2,7 +2,12 @@
 import type { Control } from "./Control";
 import type { Stat } from "./Stat";
 
-export type Character = { id: string, name: string, control: Control, gender?: string, pronouns?: string, age?: string, role?: string, description?: string, appearance?: string, personality: Array<string>, goals: Array<string>, abilities: Array<string>, 
+export type Character = { id: string, name: string, control: Control, gender?: string, pronouns?: string, age?: string, role?: string, 
+/**
+ * Race or species, e.g. "Orc" or "Lizardfolk". Unset means whatever
+ * fits the world, usually human.
+ */
+species?: string, description?: string, appearance?: string, personality: Array<string>, goals: Array<string>, abilities: Array<string>, 
 /**
  * Numbers added to the dice rolls that use them, e.g. Smarts 2.
  */

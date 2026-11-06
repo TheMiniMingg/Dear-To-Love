@@ -1,0 +1,68 @@
+{
+  "templateSchemaVersion": 1,
+  "type": "scenario",
+  "id": "starter:blackout",
+  "label": "Night of the Blackout",
+  "summary": "Your powers showed up three weeks ago. Tonight the whole city goes dark, and every registered hero is somewhere else.",
+  "worlds": ["starter:lumen-city"],
+  "title": "Night of the Blackout",
+  "description": "Your powers showed up three weeks ago. Tonight the whole city loses power, every registered hero is somewhere else, and you are the only one on the block who can do anything about it.",
+  "firstChapterTitle": "Lights Out",
+  "chapterOutlines": [
+    {
+      "title": "Lights Out",
+      "outline": "Find out what the blackout is hiding and decide whether to step in."
+    },
+    {
+      "title": "Masks On",
+      "outline": "Team up, or not, with a retired hero who never really retired."
+    },
+    {
+      "title": "Who Turned Off the City",
+      "outline": "Face whoever planned it."
+    }
+  ],
+  "scene": {
+    "location": "The roof of your apartment building, the moment every light in Lumen City goes out",
+    "summary": "Sirens start up below. Your phone has one bar of battery and forty unread messages."
+  },
+  "openThreads": ["Who caused the blackout?", "Will anyone find out who you are?"],
+  "npcs": [
+    {
+      "id": "starter:npc-kestrel",
+      "name": "Nadia Kestrel",
+      "control": "npc",
+      "pronouns": "she/her",
+      "role": "Retired hero",
+      "description": "Retired from heroics two years ago. Very much not retired from yelling at rookies.",
+      "personality": ["sharp", "protective", "allergic to praise"],
+      "goals": ["Stay retired", "Keep rookies alive"],
+      "abilities": ["Flies faster than sound, for about a minute"]
+    },
+    {
+      "id": "starter:npc-pip",
+      "name": "Pip Lawson",
+      "control": "npc",
+      "pronouns": "he/him",
+      "role": "Neighbor and hero blogger",
+      "description": "Runs a hero-ranking blog from his kitchen. Has no idea you have powers. Yet.",
+      "personality": ["enthusiastic", "nosy", "loyal"],
+      "goals": ["Get a photo of a real hero"],
+      "abilities": ["Knows every hero's stats by heart"]
+    }
+  ],
+  "relationships": [
+    {
+      "fromId": "starter:npc-pip",
+      "toId": "@player",
+      "label": "Neighbor",
+      "status": "Thinks you are boring"
+    },
+    {
+      "fromId": "starter:npc-kestrel",
+      "toId": "@player",
+      "label": "Reluctant mentor",
+      "status": "Has noticed you"
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "templateSchemaVersion": 1,
+  "type": "character",
+  "id": "starter:transfer-student",
+  "label": "The Transfer Student",
+  "summary": "New to campus mid-year, with one suitcase and big plans.",
+  "character": {
+    "id": "starter:transfer-student",
+    "name": "Riley Song",
+    "control": "player",
+    "pronouns": "they/them",
+    "age": "19",
+    "role": "Transfer student",
+    "description": "Started at a new university mid-year with one suitcase and no idea where anything is.",
+    "personality": ["friendly", "stubborn", "secretly anxious"],
+    "goals": ["Pass midterms", "Make real friends"],
+    "abilities": ["Remembers everyone's name"],
+    "stats": [
+      {
+        "name": "Smarts",
+        "value": 1
+      },
+      {
+        "name": "Charm",
+        "value": 2
+      },
+      {
+        "name": "Nerve",
+        "value": 0
+      }
+    ]
+  }
+}

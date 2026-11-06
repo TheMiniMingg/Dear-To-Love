@@ -1,0 +1,88 @@
+{
+  "templateSchemaVersion": 1,
+  "type": "scenario",
+  "id": "starter:cafe-first-week",
+  "label": "First Week at the Café",
+  "summary": "You just took over the morning shift. Three regulars, one cat and a month until the festival: who will you get to know?",
+  "worlds": ["starter:maple-fern"],
+  "title": "First Week at the Café",
+  "description": "You just took over the morning shift at Maple & Fern. Three regulars, one cat and a month until the festival. Who will you get to know?",
+  "firstChapterTitle": "The Morning Shift",
+  "chapterOutlines": [
+    {
+      "title": "The Morning Shift",
+      "outline": "Meet the regulars and learn their orders."
+    },
+    {
+      "title": "Rainy Day",
+      "outline": "A storm keeps everyone inside the café for the afternoon."
+    },
+    {
+      "title": "The Festival",
+      "outline": "Ask someone to the festival, or be asked."
+    }
+  ],
+  "scene": {
+    "location": "Behind the counter at Maple & Fern, at 7 a.m. on your first day",
+    "summary": "The espresso machine hisses. The bell over the door rings, and your first regular of the day walks in with snow on her coat."
+  },
+  "openThreads": ["Who are the regulars, really?", "Who will you go to the festival with?"],
+  "npcs": [
+    {
+      "id": "starter:npc-mina",
+      "name": "Mina Cho",
+      "control": "npc",
+      "pronouns": "she/her",
+      "age": "27",
+      "role": "Illustrator",
+      "description": "Orders the same oat latte every morning and sketches the customers when she thinks no one is looking.",
+      "personality": ["shy", "observant", "unexpectedly bold"],
+      "goals": ["Finish her picture book"],
+      "abilities": ["Draws anyone in a few lines"]
+    },
+    {
+      "id": "starter:npc-theo",
+      "name": "Theo Lambert",
+      "control": "npc",
+      "pronouns": "he/him",
+      "age": "29",
+      "role": "Firefighter",
+      "description": "Big, gentle and hopeless at small talk. Tips in homemade cookies.",
+      "personality": ["warm", "steady", "easily flustered"],
+      "goals": ["Work up the courage to say what he means"],
+      "abilities": ["Stays calm in any emergency"]
+    },
+    {
+      "id": "starter:npc-rowan",
+      "name": "Rowan Ellis",
+      "control": "npc",
+      "pronouns": "they/them",
+      "age": "31",
+      "role": "Bookshop owner",
+      "description": "Runs the shop upstairs and recommends books like prescriptions.",
+      "personality": ["witty", "kind", "a little guarded"],
+      "goals": ["Keep the shop open another year"],
+      "abilities": ["Knows exactly what book you need"]
+    }
+  ],
+  "relationships": [
+    {
+      "fromId": "starter:npc-mina",
+      "toId": "@player",
+      "label": "Regular",
+      "status": "Curious about the new barista"
+    },
+    {
+      "fromId": "starter:npc-theo",
+      "toId": "@player",
+      "label": "Regular",
+      "status": "Shy around you"
+    },
+    {
+      "fromId": "starter:npc-rowan",
+      "toId": "@player",
+      "label": "Neighbor upstairs",
+      "status": "Friendly"
+    }
+  ]
+}

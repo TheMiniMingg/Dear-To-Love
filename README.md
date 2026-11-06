@@ -52,18 +52,31 @@ your first action.
 
 ![Quick Start](docs/screenshots/quickstart.png)
 
-Eight worlds are included, each with its own scenario:
+Sixteen worlds are included, each with its own scenario:
 
-| World             | Genres                          | Scenario                |
-| ----------------- | ------------------------------- | ----------------------- |
-| Harbor Town       | Mystery, Romance, Slice of life | The Unsigned Letter     |
-| The Glass Orchard | Fantasy, Drama                  | The Memory Harvest      |
-| Meridian Station  | Science fiction, Mystery        | Night Shift on Meridian |
-| Ashcombe, 1923    | Historical, Romance, Comedy     | The Summer Guest        |
-| Hollow Pines      | Horror, Mystery                 | Dead Air                |
-| The Ember Road    | Fantasy, Adventure              | The Last Caravan        |
-| Larkport          | Romance, Comedy, Drama          | The Wrong Reservation   |
-| Vesper City       | Science fiction, Noir, Thriller | Ghost in the Ledger     |
+| World                | Genres                                      | Scenario                |
+| -------------------- | ------------------------------------------- | ----------------------- |
+| Harbor Town          | Mystery, Romance, Slice of life             | The Unsigned Letter     |
+| The Glass Orchard    | Fantasy, Drama                              | The Memory Harvest      |
+| Meridian Station     | Science fiction, Mystery                    | Night Shift on Meridian |
+| Ashcombe, 1923       | Historical, Romance, Comedy                 | The Summer Guest        |
+| Hollow Pines         | Horror, Mystery                             | Dead Air                |
+| The Ember Road       | Fantasy, Adventure                          | The Last Caravan        |
+| Larkport             | Romance, Comedy, Drama                      | The Wrong Reservation   |
+| Vesper City          | Science fiction, Noir, Thriller             | Ghost in the Ledger     |
+| Northgate University | School life, Romance, Comedy, Slice of life | Midterm Week            |
+| The Underhalls       | Adventure, Fantasy, Action                  | The Lantern Job         |
+| Neon Harbor          | Cyberpunk, Thriller, Science fiction        | Clean Slate             |
+| The Dry Country      | Post-apocalyptic, Adventure, Drama          | The Water Run           |
+| Lumen City           | Superhero, Action, Comedy                   | Night of the Blackout   |
+| Dust Creek           | Western, Adventure, Drama                   | The Stage from Redwater |
+| The Lantern Palace   | Historical, Drama, Romance                  | The Empress's Tea       |
+| Maple & Fern         | Dating sim, Romance, Slice of life          | First Week at the Café  |
+
+The Underhalls is home to orcs, goblins and lizardfolk, and the player characters include an
+orc delver, a goblin tinkerer and a lizardfolk scout. Guided creation offers more than 40 races
+and peoples, more than 60 roles, more than 45 personality traits, and lists of eras, settings
+and world rules. Rules and personality are picked from a menu, so the page stays short.
 
 ### Playing
 

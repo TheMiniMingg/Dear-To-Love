@@ -1,4 +1,5 @@
-import { useId } from 'react';
+import { useId, useState } from 'react';
+import { isComposing } from '../../app/keyboard';
 import type { Stat } from '../../types';
 import { ArrowPicker, type PickerOption } from '../../components/ArrowPicker';
 
@@ -259,6 +260,109 @@ export function StatsField({
           Add a stat
         </button>
       )}
+    </fieldset>
+  );
+}
+
+/**
+ * A compact multi-choice: chosen entries as removable chips, a menu of the
+ * rest, and a box to add your own. Keeps long preset lists off the page.
+ */
+export function MultiPicker({
+  label,
+  presets,
+  value,
+  onChange,
+  hint,
+}: {
+  label: string;
+  presets: string[];
+  value: string[];
+  onChange: (v: string[]) => void;
+  hint?: string;
+}) {
+  const id = useId();
+  const [own, setOwn] = useState('');
+  const chosen = uniq(value);
+  const has = (v: string) => chosen.some((c) => c.toLowerCase() === v.trim().toLowerCase());
+  const rest = uniq(presets).filter((p) => !has(p));
+  const add = (v: string) => {
+    if (v.trim() && !has(v)) onChange([...chosen, v.trim()]);
+  };
+  const addOwn = () => {
+    add(own);
+    setOwn('');
+  };
+  return (
+    <fieldset className="field multi-picker" aria-describedby={hint ? `${id}-hint` : undefined}>
+      <legend>{label}</legend>
+      {hint && (
+        <p id={`${id}-hint`} className="muted small">
+          {hint}
+        </p>
+      )}
+      {chosen.length > 0 ? (
+        <ul className="chip-list" aria-label={`Chosen ${label.toLowerCase()}`}>
+          {chosen.map((c) => (
+            <li key={c} className="chip">
+              <span>{c}</span>
+              <button
+                type="button"
+                className="chip-remove"
+                aria-label={`Remove ${c}`}
+                onClick={() => onChange(chosen.filter((x) => x !== c))}
+              >
+                ×
+              </button>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="muted small">None chosen yet.</p>
+      )}
+      <div className="multi-add">
+        {rest.length > 0 && (
+          <>
+            <label htmlFor={`${id}-pick`} className="visually-hidden">
+              Add to {label.toLowerCase()} from the list
+            </label>
+            <select
+              id={`${id}-pick`}
+              value=""
+              onChange={(e) => {
+                add(e.target.value);
+                e.target.blur();
+              }}
+            >
+              <option value="">Add from the list…</option>
+              {rest.map((p) => (
+                <option key={p} value={p}>
+                  {p}
+                </option>
+              ))}
+            </select>
+          </>
+        )}
+        <label htmlFor={`${id}-own`} className="visually-hidden">
+          Add your own to {label.toLowerCase()}
+        </label>
+        <input
+          id={`${id}-own`}
+          value={own}
+          maxLength={200}
+          placeholder="Or write your own"
+          onChange={(e) => setOwn(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && !isComposing(e)) {
+              e.preventDefault();
+              addOwn();
+            }
+          }}
+        />
+        <button type="button" disabled={!own.trim()} onClick={addOwn}>
+          Add
+        </button>
+      </div>
     </fieldset>
   );
 }
