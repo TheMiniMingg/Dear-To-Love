@@ -11,7 +11,7 @@ use std::time::{Duration, Instant};
 
 use crate::db::{contract, latest_migration_version, Database};
 use crate::domain::diagnostics::{CheckStatus, DiagnosticCheck};
-use crate::errors::AppError;
+use crate::errors::{AppError, AppResult};
 use crate::services::secrets::{self, SecretStore};
 
 type Outcome = (CheckStatus, String, Option<String>);
@@ -48,6 +48,7 @@ pub async fn run_all(ctx: DiagnosticsContext) -> Vec<DiagnosticCheck> {
     checks.push(check_database(&ctx.db).await);
     checks.push(check_db_integrity(&ctx.db, ctx.deep).await);
     checks.push(check_usage_ledger(&ctx.db).await);
+    checks.push(check_rate_config(&ctx.db).await);
     checks.push(check_timeline_replay(&ctx.data_dir).await);
     checks.extend(sync_iter);
     checks.push(check_ai_connection(&ctx.db, ctx.secrets.as_ref(), ctx.deep).await);
@@ -403,6 +404,76 @@ pub async fn check_usage_ledger(db: &Result<Database, AppError>) -> DiagnosticCh
     finish("USAGE_LEDGER", "API usage ledger", start, outcome)
 }
 
+/// With a monthly budget on, every paid connection's model needs prices or
+/// its cost stays unknown (and pause mode asks before each request).
+pub async fn check_rate_config(db: &Result<Database, AppError>) -> DiagnosticCheck {
+    let start = Instant::now();
+    let outcome = match db {
+        Err(_) => (
+            CheckStatus::Skipped,
+            "Skipped because the database did not open.".into(),
+            None,
+        ),
+        Ok(db) => match rate_config(db).await {
+            Err(e) => (
+                CheckStatus::Fail,
+                format!("Budget settings could not be read: {}", e.message),
+                None,
+            ),
+            Ok(o) => o,
+        },
+    };
+    finish("RATE_CONFIG", "API prices and budget", start, outcome)
+}
+
+async fn rate_config(db: &Database) -> AppResult<(CheckStatus, String, Option<String>)> {
+    let policy = crate::db::budget::get_policy(db).await?;
+    let rates = crate::db::usage_report::list_rates(db).await?;
+    let paid: Vec<_> = rates
+        .iter()
+        .filter(|r| r.billing == crate::domain::provider::Billing::Paid)
+        .collect();
+    let missing: Vec<String> = paid
+        .iter()
+        .filter(|r| r.card.is_none())
+        .map(|r| format!("{} ({})", r.provider_label, r.model_id))
+        .collect();
+    let Some(limit) = policy.limit_micro_usd() else {
+        return Ok((
+            CheckStatus::Pass,
+            format!(
+                "No monthly budget set; {} of {} paid connection(s) have prices.",
+                paid.len() - missing.len(),
+                paid.len()
+            ),
+            None,
+        ));
+    };
+    let budget = format!(
+        "Monthly budget {} ({}).",
+        crate::db::budget::usd(limit),
+        match policy.mode {
+            crate::db::budget::BudgetMode::Warn => "warn only",
+            crate::db::budget::BudgetMode::PauseNewRequests => "pauses new paid requests",
+        }
+    );
+    if missing.is_empty() {
+        return Ok((
+            CheckStatus::Pass,
+            format!("{budget} Prices are set for every paid connection."),
+            None,
+        ));
+    }
+    Ok((
+        CheckStatus::Warn,
+        format!(
+            "{budget} No prices for {}, so their cost is unknown and the budget cannot count it.",
+            missing.join(", ")
+        ),
+        Some("Open Settings, then Usage & budget, and add prices under Rates.".into()),
+    ))
+}
+
 /// Runs the offline engine self-test on a throwaway database.
 pub async fn check_timeline_replay(data_dir: &Result<PathBuf, String>) -> DiagnosticCheck {
     let start = Instant::now();
@@ -507,6 +578,7 @@ mod tests {
                 "DATABASE",
                 "DB_INTEGRITY",
                 "USAGE_LEDGER",
+                "RATE_CONFIG",
                 "TIMELINE_REPLAY",
                 "SECRETS",
                 "AI_CONNECTION"
@@ -667,5 +739,51 @@ mod tests {
         for r in server.requests() {
             assert_eq!((r.method.as_str(), r.body.as_str()), ("GET", ""));
         }
+    }
+
+    /// RATE_CONFIG: WARN when a budget is on but a paid model has no prices.
+    #[tokio::test]
+    async fn rate_config_warns_on_missing_prices() {
+        use crate::db::budget::{set_policy, BudgetMode, BudgetPolicy};
+        use crate::domain::provider::{
+            AdapterKind, Billing, GenerationSettings, ProviderProfileInput,
+        };
+        let t = test_db().await;
+        let p = crate::db::providers::save_profile(
+            &t.db,
+            &MemoryStore::default(),
+            ProviderProfileInput {
+                id: None,
+                label: "Cloud".into(),
+                adapter: AdapterKind::OpenaiCompatible,
+                base_url: "https://api.example.com/v1".into(),
+                model_id: "m".into(),
+                billing: Billing::Paid,
+                api_key: None,
+                settings: GenerationSettings::default(),
+            },
+        )
+        .await
+        .unwrap();
+        let db = Ok(t.db.clone());
+        assert_eq!(check_rate_config(&db).await.status, CheckStatus::Pass);
+        set_policy(
+            &t.db,
+            BudgetPolicy {
+                enabled: true,
+                monthly_limit_usd: Some("5".into()),
+                mode: BudgetMode::PauseNewRequests,
+                ..Default::default()
+            },
+        )
+        .await
+        .unwrap();
+        let c = check_rate_config(&db).await;
+        assert_eq!(c.status, CheckStatus::Warn);
+        assert!(c.summary.contains("Cloud (m)"), "{}", c.summary);
+        crate::db::usage::set_rate_card(&t.db, &p.id, "m", "1", "2", None)
+            .await
+            .unwrap();
+        assert_eq!(check_rate_config(&db).await.status, CheckStatus::Pass);
     }
 }

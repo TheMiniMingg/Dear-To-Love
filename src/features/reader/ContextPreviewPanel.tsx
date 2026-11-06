@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { commands, errorMessage } from '../../api/commands';
+import { commands, errorMessage, formatUsd } from '../../api/commands';
 import type { ContextPreview, Role } from '../../types';
 
 const ROLE_LABELS: Record<Role, string> = {
@@ -72,6 +72,19 @@ export function ContextPreviewPanel({ routeId }: { routeId: string }) {
         <dd>
           About {fmt(preview.estimatedInputTokens)} of {fmt(room)} prompt tokens, with{' '}
           {fmt(preview.reservedOutputTokens)} kept for the reply
+        </dd>
+        <dt>Cost</dt>
+        <dd>
+          {!preview.live
+            ? '$0 (offline)'
+            : preview.maxCostMicroUsd === null
+              ? 'Unknown: this model has no prices. Add them in Usage & budget.'
+              : preview.maxCostMicroUsd === 0
+                ? '$0 (local model)'
+                : `Up to about ${formatUsd(preview.maxCostMicroUsd)} for this reply`}
+          {preview.live && preview.maxCostMicroUsd !== null && preview.maxCostMicroUsd > 0 && (
+            <span className="muted small"> (if the reply uses its full length)</span>
+          )}
         </dd>
         <dt>Memory</dt>
         <dd>

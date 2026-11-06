@@ -3,6 +3,7 @@
 //! serves queries. Foreign keys are enabled on every connection.
 
 pub mod backup;
+pub mod budget;
 pub mod contract;
 pub mod memory;
 pub mod providers;
@@ -12,6 +13,7 @@ pub mod state;
 pub mod stories;
 pub mod timeline;
 pub mod usage;
+pub mod usage_report;
 
 use std::path::{Path, PathBuf};
 use std::str::FromStr;

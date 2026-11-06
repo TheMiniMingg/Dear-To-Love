@@ -9,6 +9,7 @@ type Note = { tone: 'ok' | 'warn' | 'error'; text: string };
 
 export function SettingsScreen() {
   const goBack = useUiStore((s) => s.goBack);
+  const navigate = useUiStore((s) => s.navigate);
   const [connections, setConnections] = useState<ProviderProfile[] | null>(null);
   const [storyteller, setStoryteller] = useState<StorytellerInfo | null>(null);
   const [editing, setEditing] = useState<ProviderProfile | 'new' | null>(null);
@@ -93,6 +94,9 @@ export function SettingsScreen() {
           Back
         </button>
         <h1 id="settings-title">Settings</h1>
+        <button type="button" onClick={() => navigate({ name: 'usage' })}>
+          Usage &amp; budget
+        </button>
       </div>
       {error && (
         <p role="alert" className="error">

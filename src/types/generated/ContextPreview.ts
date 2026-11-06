@@ -15,4 +15,10 @@ live: boolean, messages: Array<PreviewMessage>, estimatedInputTokens: number, re
 /**
  * How tokens were counted: always "approximate" for now.
  */
-estimateMethod: string, promptSchemaVersion: number, summary: SummaryUse | null, summaryDropped: boolean, verbatimMessages: number, omittedMessages: number, };
+estimateMethod: string, promptSchemaVersion: number, summary: SummaryUse | null, summaryDropped: boolean, verbatimMessages: number, omittedMessages: number, 
+/**
+ * Most this reply could cost (prompt estimate plus a full-length
+ * reply) at the current rates: 0 for local or offline, `null` when the
+ * model has no prices.
+ */
+maxCostMicroUsd: number | null, };

@@ -1,12 +1,18 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { CommandError, commands, errorMessage, runErrorMessage } from '../../api/commands';
+import {
+  CommandError,
+  commands,
+  errorMessage,
+  formatUsd,
+  runErrorMessage,
+} from '../../api/commands';
 import { useUiStore } from '../../app/store';
 import { isComposing, isEditableTarget, isModS } from '../../app/keyboard';
 import { Dialog } from '../../components/Dialog';
 import { ChaptersPanel } from '../routes/ChaptersPanel';
 import { RoutesPanel } from '../routes/RoutesPanel';
 import { SavesPanel } from '../saves/SavesPanel';
-import type { RouteView, SaveView } from '../../types';
+import type { BudgetStatus, ErrorCode, RouteView, SaveView } from '../../types';
 import { Composer } from './Composer';
 import { ContextPreviewPanel } from './ContextPreviewPanel';
 import { NarrativeView } from './NarrativeView';
@@ -46,7 +52,10 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
   const [saveStatus, setSaveStatus] = useState<string>('All changes saved');
   const [reload, setReload] = useState(0);
   const [stream, setStream] = useState<Stream | null>(null);
-  const [replyError, setReplyError] = useState<string | null>(null);
+  const [replyError, setReplyError] = useState<{ text: string; code: ErrorCode | null } | null>(
+    null,
+  );
+  const [budget, setBudget] = useState<BudgetStatus | null>(null);
   const [editText, setEditText] = useState('');
   const narrativeHost = useRef<HTMLDivElement>(null);
   const mounted = useRef(true);
@@ -57,6 +66,20 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
       mounted.current = false;
     };
   }, []);
+
+  /** Month-to-date budget standing; shown as a banner past the warning level. */
+  const refreshBudget = useCallback(() => {
+    commands
+      .getBudgetStatus()
+      .then((b) => {
+        if (mounted.current) setBudget(b);
+      })
+      .catch(() => undefined);
+  }, []);
+
+  useEffect(() => {
+    refreshBudget();
+  }, [refreshBudget]);
 
   /** A reply is being written by someone else (e.g. before this screen
    * remounted): show it as in progress and poll until it lands. */
@@ -82,20 +105,28 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
     [routeId],
   );
 
-  /** Write the reply for a pending run, showing drafts as they stream. */
+  /**
+   * Write the reply for a pending run, showing drafts as they stream.
+   * `budgetOverride` sends one reply the budget cannot price.
+   */
   const generate = useCallback(
-    async (runId: string) => {
+    async (runId: string, budgetOverride = false) => {
       setStream({ runId, text: '' });
       setReplyError(null);
       try {
-        const v = await commands.generateReply(runId, (m) => {
-          if (m.type !== 'delta') return;
-          setStream((s) => (s && s.runId === m.runId ? { ...s, text: s.text + m.text } : s));
-        });
+        const v = await commands.generateReply(
+          runId,
+          (m) => {
+            if (m.type !== 'delta') return;
+            setStream((s) => (s && s.runId === m.runId ? { ...s, text: s.text + m.text } : s));
+          },
+          budgetOverride,
+        );
         if (!mounted.current) return;
         setView(v);
         setStream(null);
         setSaveStatus(`Autosaved ${timeNow()}`);
+        refreshBudget();
       } catch (e) {
         if (!mounted.current) return;
         if (e instanceof CommandError && e.code === 'RUN_NOT_ACTIVE') {
@@ -103,11 +134,15 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
           return;
         }
         setStream(null);
-        setReplyError(errorMessage(e));
+        setReplyError({
+          text: errorMessage(e),
+          code: e instanceof CommandError ? e.code : null,
+        });
         setReload((n) => n + 1);
+        refreshBudget();
       }
     },
-    [follow],
+    [follow, refreshBudget],
   );
 
   useEffect(() => {
@@ -173,7 +208,7 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
       void generate(sub.runId);
     });
 
-  const retry = () =>
+  const retry = (budgetOverride = false) =>
     view &&
     run(async () => {
       const sub = await commands.retryReply({
@@ -182,8 +217,16 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
         expectedHeadId: view.route.headEventId ?? '',
       });
       setView(sub.view);
-      void generate(sub.runId);
+      void generate(sub.runId, budgetOverride);
     });
+
+  const dismissBudget = () =>
+    void commands
+      .dismissBudgetWarning()
+      .then((b) => {
+        if (mounted.current) setBudget(b);
+      })
+      .catch((e: unknown) => setError(errorMessage(e)));
 
   const cancelReply = () => {
     if (stream) void commands.cancelReply(stream.runId).catch(() => undefined);
@@ -285,6 +328,10 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
     );
   }
 
+  const lastRun = view.awaitingReply?.lastRun ?? null;
+  const failCode = replyError ? replyError.code : (lastRun?.errorCode ?? null);
+  const showBudget =
+    budget !== null && budget.policy.enabled && budget.level !== 'none' && !budget.dismissed;
   const chapter = view.state.activeChapter;
   const player = view.state.state.characters[view.state.state.playerCharacterId];
   const events = viewing ? viewing.history : view.history;
@@ -330,6 +377,27 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
           </button>
         </div>
       </header>
+
+      {showBudget && (
+        <div className={`budget-banner ${budget.level}`} role="region" aria-label="Monthly budget">
+          <p>
+            {budget.level === 'reached'
+              ? `You've reached your monthly budget: about ${formatUsd(budget.spentMicroUsd)} of ${formatUsd(budget.limitMicroUsd ?? 0)}.`
+              : `You've used ${budget.percent ?? 0}% of your monthly budget: about ${formatUsd(budget.spentMicroUsd)} of ${formatUsd(budget.limitMicroUsd ?? 0)}.`}
+            {budget.paused
+              ? ' New paid replies are paused; local and offline storytellers still work.'
+              : ''}
+          </p>
+          <div className="button-row">
+            <button type="button" onClick={() => navigate({ name: 'usage' })}>
+              Usage &amp; budget
+            </button>
+            <button type="button" onClick={dismissBudget}>
+              Dismiss for this month
+            </button>
+          </div>
+        </div>
+      )}
 
       {viewing && (
         <div className="view-banner" role="region" aria-label="Viewing a save">
@@ -380,19 +448,27 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
           )}
           {awaitingReply && !writing && (
             <div className="reply-bar" role="region" aria-label="Reply needed">
-              <p className={replyError || view.awaitingReply?.lastRun ? 'error small' : 'small'}>
-                {replyError ??
-                  (view.awaitingReply?.lastRun
-                    ? runErrorMessage(view.awaitingReply.lastRun.errorCode)
-                    : 'This action has no reply yet.')}
-                {view.awaitingReply?.lastRun?.status === 'interrupted' &&
+              <p className={replyError || lastRun ? 'error small' : 'small'}>
+                {replyError?.text ??
+                  (lastRun ? runErrorMessage(lastRun.errorCode) : 'This action has no reply yet.')}
+                {lastRun?.status === 'interrupted' &&
                   !replyError &&
                   ' If it had reached the AI service, it may still have cost a little.'}
               </p>
               <div className="button-row">
                 <button type="button" className="primary" onClick={() => void retry()}>
-                  {view.awaitingReply?.lastRun ? 'Retry' : 'Write a reply'}
+                  {lastRun ? 'Retry' : 'Write a reply'}
                 </button>
+                {failCode === 'BUDGET_OVERRIDE_REQUIRED' && (
+                  <button type="button" onClick={() => void retry(true)}>
+                    Send once without a price
+                  </button>
+                )}
+                {(failCode === 'BUDGET_PAUSED' || failCode === 'BUDGET_OVERRIDE_REQUIRED') && (
+                  <button type="button" onClick={() => navigate({ name: 'usage' })}>
+                    Usage &amp; budget
+                  </button>
+                )}
                 <button type="button" onClick={openEdit}>
                   Change action
                 </button>

@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Usage & budget (Settings): estimated cost, requests and tokens for this session, this UTC
+  month or all time, by connection and model, plus the recent requests with where each count
+  came from. Unknown costs are counted separately, never shown as $0. Enter each paid model's
+  prices per 1M tokens. An optional monthly budget warns at a chosen percentage (dismissible
+  until something changes) and can pause new paid replies that would pass it; a model without
+  prices then needs an explicit "Send once without a price". Preview context shows the most the
+  next reply could cost. Diagnostics warns when a budget is on and a paid model has no prices.
 - Ollama connections use Ollama's own API: each request asks for the connection's context
   limit (so long prompts are not silently cut), token counts are reported, and the API-charge
   estimate is $0. The Ollama preset now uses it; "Test connection" lists installed models.

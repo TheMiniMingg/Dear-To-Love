@@ -7,8 +7,10 @@ export type Screen =
   | { name: 'quickstart' }
   | { name: 'reader'; routeId: string }
   | { name: 'diagnostics' }
-  | { name: 'settings' };
+  | { name: 'settings' }
+  | { name: 'usage' };
 
+const HISTORY_LIMIT = 10;
 const TEXT_SIZE_KEY = 'dtl.textSize';
 const TEXT_SIZES = [0.9, 1, 1.15, 1.3, 1.5] as const;
 
@@ -23,8 +25,8 @@ function loadTextSize(): number {
 
 type UiState = {
   screen: Screen;
-  /** Where the Back button of Diagnostics and Settings returns to. */
-  previous: Screen | null;
+  /** Where Back returns to, newest last (Settings, Usage, Diagnostics). */
+  history: Screen[];
   /** Unsent composer text per route; survives pause menus and screen changes. */
   drafts: Record<string, string>;
   textSize: number;
@@ -37,11 +39,16 @@ type UiState = {
 
 export const useUiStore = create<UiState>((set) => ({
   screen: { name: 'library' },
-  previous: null,
+  history: [],
   drafts: {},
   textSize: loadTextSize(),
-  navigate: (screen) => set((s) => ({ screen, previous: s.screen })),
-  goBack: () => set((s) => ({ screen: s.previous ?? { name: 'library' }, previous: null })),
+  navigate: (screen) =>
+    set((s) => ({ screen, history: [...s.history, s.screen].slice(-HISTORY_LIMIT) })),
+  goBack: () =>
+    set((s) => ({
+      screen: s.history[s.history.length - 1] ?? { name: 'library' },
+      history: s.history.slice(0, -1),
+    })),
   setDraft: (routeId, text) => set((s) => ({ drafts: { ...s.drafts, [routeId]: text } })),
   clearDraft: (routeId) =>
     set((s) => {

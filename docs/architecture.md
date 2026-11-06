@@ -85,3 +85,19 @@ summaries  after each reply (background, never blocks play): when 16+ turns
 - **Preview context** (reader pause menu) shows the exact assembled prompt
   for the next reply, its token estimate and which turns the summary covers.
   It is built locally and never sent. See ADR 0003.
+
+## Usage and budget
+
+```text
+open_request   write txn: paid + budget pause on -> ceiling at current rates
+               posted + reserved + ceiling > limit  -> BUDGET_PAUSED (no row)
+               no rates and no override             -> BUDGET_OVERRIDE_REQUIRED
+               else insert row (status sent, reserved_micro_usd = ceiling)
+close_request  known cost -> posted, reservation released
+               unknown cost -> reservation kept (gate stays conservative)
+```
+
+- The month is the UTC calendar month. Local connections are never counted
+  or gated. Warn-only mode only shows the reader's budget banner.
+- Usage totals come straight from `api_requests`; unknown costs are counted,
+  never summed as 0. See ADR 0004.

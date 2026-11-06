@@ -38,6 +38,7 @@ use crate::services::mock_storyteller::{self, MOCK_PROVIDER_LABEL};
 use crate::services::prompt::{self, Budget};
 use crate::services::reader::{route_view, RouteView};
 use crate::services::secrets::SecretStore;
+use crate::services::tokens::estimate_messages;
 
 /// Cancel handles for runs that are streaming in this process.
 #[derive(Default)]
@@ -78,6 +79,9 @@ pub struct Ctx<'a> {
     pub session_id: &'a str,
     /// Pause between words of the offline storyteller (zero in tests).
     pub offline_delay: Duration,
+    /// The player chose to send this one reply although the budget gate
+    /// cannot price it (`BUDGET_OVERRIDE_REQUIRED`).
+    pub budget_override: bool,
 }
 
 #[derive(Debug, Clone, Serialize, TS)]
@@ -377,13 +381,16 @@ pub async fn generate(
                 session_id: ctx.session_id,
                 route_id: Some(&run.route_id),
                 purpose: RequestPurpose::StoryReply,
+                prompt_tokens: estimate_messages(&request.messages),
+                max_output_tokens: request.max_output_tokens,
+                allow_unpriced: ctx.budget_override,
             },
         )
         .await
         {
             Ok(id) => Some(id),
             Err(e) => {
-                // No ledger row, no call.
+                // No ledger row (budget gate or database), no call.
                 ctx.registry.remove(run_id);
                 runs::transition(
                     db,
@@ -393,6 +400,11 @@ pub async fn generate(
                     Some(e.code),
                 )
                 .await?;
+                sink(StreamMessage::Error {
+                    run_id: run_id.into(),
+                    code: e.code,
+                    message: e.message.clone(),
+                });
                 return Err(e);
             }
         }
@@ -605,6 +617,14 @@ async fn commit_reply(
     Ok(())
 }
 
+/// Why a one-off request is made, for its ledger row and the budget gate.
+pub(crate) struct CallPurpose<'a> {
+    pub purpose: RequestPurpose,
+    pub route_id: Option<&'a str>,
+    /// The user's one-time go-ahead for a model without prices.
+    pub allow_unpriced: bool,
+}
+
 /// One request outside the reply flow (a test message, a memory summary),
 /// with its ledger row opened before dispatch and closed after.
 pub(crate) async fn call_once(
@@ -613,8 +633,7 @@ pub(crate) async fn call_once(
     session_id: &str,
     row: &ProfileRow,
     req: &GenerateRequest,
-    purpose: RequestPurpose,
-    route_id: Option<&str>,
+    why: CallPurpose<'_>,
 ) -> AppResult<(Completion, String)> {
     let adapter = live_adapter(row, secrets)?;
     let ledger = usage::open_request(
@@ -626,8 +645,11 @@ pub(crate) async fn call_once(
             model_id: &row.model_id,
             billing: row.billing(),
             session_id,
-            route_id,
-            purpose,
+            route_id: why.route_id,
+            purpose: why.purpose,
+            prompt_tokens: estimate_messages(&req.messages),
+            max_output_tokens: req.max_output_tokens,
+            allow_unpriced: why.allow_unpriced,
         },
     )
     .await?;
@@ -685,8 +707,14 @@ pub async fn send_test_message(
         session_id,
         &row,
         &req,
-        RequestPurpose::ManualTest,
-        None,
+        CallPurpose {
+            purpose: RequestPurpose::ManualTest,
+            route_id: None,
+            // Pressing "Send a test message" is the explicit one-time
+            // go-ahead for an unpriced model; a reached budget still
+            // refuses it.
+            allow_unpriced: true,
+        },
     )
     .await?;
     Ok(c.text)

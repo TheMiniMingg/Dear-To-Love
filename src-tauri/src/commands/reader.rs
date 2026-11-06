@@ -40,6 +40,7 @@ pub async fn generate_reply(
     state: State<'_, AppState>,
     run_id: String,
     on_event: Channel<StreamMessage>,
+    budget_override: Option<bool>,
 ) -> AppResult<RouteView> {
     let db = state.db()?;
     let ctx = Ctx {
@@ -48,6 +49,7 @@ pub async fn generate_reply(
         registry: &state.runs,
         session_id: &state.session_id,
         offline_delay: Duration::from_millis(18),
+        budget_override: budget_override.unwrap_or(false),
     };
     // A closed window just stops the drafts; the reply still commits.
     let view = generation::generate(&ctx, &run_id, &mut |m| {

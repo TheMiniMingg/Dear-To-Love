@@ -21,6 +21,11 @@ and the roadmap differ, this file wins.
   by fork point and can hide abandoned ones.
 - **Preview context** lives in the reader's pause menu, because it needs a
   route; it previews the next reply on the current route.
+- **Budget:** the pause gate reserves each paid call's ceiling inside the
+  ledger's write transaction, so parallel routes can't share headroom. A model
+  without prices needs a one-time "Send once without a price"; summaries never
+  override. The warning dismissal lasts until the month, level, limit or
+  threshold changes. Only USD.
 - **Summaries** roll forward at fixed turn numbers (every 8th reply, keeping 8+
   recent turns verbatim), so branches that share history share summaries.
   The offline storyteller uses an extractive summary with no API call.
