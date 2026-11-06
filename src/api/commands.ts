@@ -3,6 +3,8 @@ import { Channel, invoke } from '@tauri-apps/api/core';
 import type {
   ApiRequestRow,
   AppError,
+  AssetDto,
+  AssetUsage,
   AppInfo,
   BudgetPolicy,
   BudgetStatus,
@@ -12,6 +14,7 @@ import type {
   ContextPreview,
   DiagnosticCheck,
   ErrorCode,
+  ImageImport,
   ProviderProfile,
   ProviderProfileInput,
   QuickStartInput,
@@ -23,6 +26,7 @@ import type {
   SaveView,
   StoryCreated,
   StorySummary,
+  StoryVisual,
   StreamMessage,
   StorytellerInfo,
   Submitted,
@@ -99,7 +103,7 @@ export function runErrorMessage(code: ErrorCode | null): string {
   }
 }
 
-function sentence(s: string): string {
+export function sentence(s: string): string {
   const t = s.trim();
   if (!t) return t;
   const first = t.charAt(0).toUpperCase() + t.slice(1);
@@ -146,6 +150,14 @@ export const commands = {
   editStoryDetails: (
     r: RouteRef & { expectedHeadId: string; changes: StateEdit[]; note: string | null },
   ) => call<RouteView>('edit_story_details', r),
+  listImages: () => call<AssetDto[]>('list_images'),
+  importImages: (paths: string[]) => call<ImageImport[]>('import_images', { paths }),
+  updateImage: (assetId: string, label: string, tags: string[]) =>
+    call<AssetDto>('update_image', { assetId, label, tags }),
+  imageUsages: (assetId: string) => call<AssetUsage[]>('image_usages', { assetId }),
+  deleteImage: (assetId: string) => call<void>('delete_image', { assetId }),
+  setStoryPicture: (storyId: string, slot: string, assetId: string | null) =>
+    call<StoryVisual[]>('set_story_picture', { storyId, slot, assetId }),
   /** The exact prompt the next reply would send. Assembled locally; nothing is sent. */
   previewContext: (routeId: string) => call<ContextPreview>('preview_context', { routeId }),
   nextChapter: (r: RouteRef & { expectedHeadId: string; title?: string | null }) =>

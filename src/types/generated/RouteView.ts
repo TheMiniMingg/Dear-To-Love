@@ -5,6 +5,12 @@ import type { EventDto } from "./EventDto";
 import type { RouteDto } from "./RouteDto";
 import type { StateView } from "./StateView";
 import type { StoryHeader } from "./StoryHeader";
+import type { StoryVisual } from "./StoryVisual";
 import type { StorytellerInfo } from "./StorytellerInfo";
 
-export type RouteView = { story: StoryHeader, route: RouteDto, routes: Array<RouteDto>, history: Array<EventDto>, chapters: Array<ChapterDto>, state: StateView, awaitingReply: AwaitingReply | null, storyteller: StorytellerInfo, };
+export type RouteView = { story: StoryHeader, route: RouteDto, routes: Array<RouteDto>, history: Array<EventDto>, chapters: Array<ChapterDto>, state: StateView, awaitingReply: AwaitingReply | null, storyteller: StorytellerInfo, 
+/**
+ * Story-default pictures. A route's own choices are in
+ * `state.state.visualRefs` and win over these.
+ */
+visuals: Array<StoryVisual>, };

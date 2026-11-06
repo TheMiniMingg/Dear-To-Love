@@ -12,9 +12,14 @@ React screens -> src/api/commands.ts (typed invoke wrappers)
   -> Rust db/runs        generation runs (CAS state machine)
   -> Rust db/usage       API usage ledger, rate cards, cost estimates
   -> Rust db/providers   AI connections, chosen storyteller
+  -> Rust db/assets      image library rows, story-default pictures,
+                         reference scan for safe deletion
   -> Rust services/      generation, prompt, adapters (OpenAI-compatible,
-                         offline), reader view, diagnostics, secrets
+                         offline), reader view, diagnostics, secrets,
+                         assets (image validation, thumbnails, files)
   -> SQLite (story.db)   OS credential store for API keys
+     assets/originals, assets/thumbs (content-addressed image files)
+  dtlimg: protocol      serves library images to the webview by id
 ```
 
 ## Creating a story
@@ -116,6 +121,21 @@ summaries  after each reply (background, never blocks play): when 16+ turns
 - **Preview context** (reader pause menu) shows the exact assembled prompt
   for the next reply, its token estimate and which turns the summary covers.
   It is built locally and never sent. See ADR 0003.
+
+## Images
+
+```text
+import    read file (<= 20 MB) -> detect format from bytes -> decode (limits)
+          -> sha256 -> same hash? reuse row : write original + thumbnail
+          (temp file, flush, rename) -> insert row
+picture   effective(slot) = this route's setVisualRef up to the head
+                            else the story default (asset_links)
+delete    refused while a default, a starting state or any edit event on
+          any route shows the image; then row, then files
+```
+
+- Slots: `cover` (story only), `background`, `portrait:<character id>`.
+  See ADR 0006.
 
 ## Usage and budget
 

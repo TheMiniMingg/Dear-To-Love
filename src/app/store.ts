@@ -9,7 +9,8 @@ export type Screen =
   | { name: 'reader'; routeId: string }
   | { name: 'diagnostics' }
   | { name: 'settings' }
-  | { name: 'usage' };
+  | { name: 'usage' }
+  | { name: 'images' };
 
 const HISTORY_LIMIT = 10;
 const TEXT_SIZE_KEY = 'dtl.textSize';

@@ -4,4 +4,8 @@ export type StorySummary = { id: string, title: string, description: string, cre
 /**
  * Most recently played visible route; the Library opens this one.
  */
-lastRouteId: string, };
+lastRouteId: string, 
+/**
+ * The story's cover picture, when one is chosen.
+ */
+coverAssetId: string | null, };

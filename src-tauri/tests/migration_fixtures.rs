@@ -60,6 +60,18 @@ async fn v2_fixture_upgrades_to_current() {
 }
 
 #[tokio::test]
+async fn v3_fixture_upgrades_to_current() {
+    let (db, _dir) = upgrade_fixture(3, include_str!("fixtures/data_v3.sql")).await;
+    let (label, links): (String, i64) = sqlx::query_as(
+        "SELECT label, (SELECT COUNT(*) FROM asset_links WHERE asset_id = assets.id) FROM assets",
+    )
+    .fetch_one(db.reader())
+    .await
+    .unwrap();
+    assert_eq!((label.as_str(), links), ("Lantern", 1));
+}
+
+#[tokio::test]
 async fn deleting_a_story_removes_its_memory() {
     let (db, _dir) = upgrade_fixture(2, include_str!("fixtures/data_v2.sql")).await;
     let mut tx = db.write_txn().await.unwrap();

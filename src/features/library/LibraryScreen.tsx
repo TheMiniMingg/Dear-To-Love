@@ -3,6 +3,7 @@ import { commands, errorMessage } from '../../api/commands';
 import { useUiStore } from '../../app/store';
 import { isEditableTarget, moveRovingFocus } from '../../app/keyboard';
 import { Dialog } from '../../components/Dialog';
+import { Thumb } from '../images/ImageGrid';
 import type { StorySummary } from '../../types';
 
 function formatDate(iso: string): string {
@@ -62,6 +63,9 @@ export function LibraryScreen() {
           <button type="button" onClick={() => navigate({ name: 'settings' })}>
             Settings
           </button>
+          <button type="button" onClick={() => navigate({ name: 'images' })}>
+            Images
+          </button>
           <button type="button" onClick={() => navigate({ name: 'create' })}>
             Create your own
           </button>
@@ -99,11 +103,14 @@ export function LibraryScreen() {
               data-roving
               onClick={() => navigate({ name: 'reader', routeId: s.lastRouteId })}
             >
-              <span className="story-title">{s.title}</span>
-              {s.description && <span className="muted">{s.description}</span>}
-              <span className="muted small">
-                {s.routeCount} {s.routeCount === 1 ? 'route' : 'routes'} · last played{' '}
-                {formatDate(s.updatedAt)}
+              {s.coverAssetId && <Thumb assetId={s.coverAssetId} alt="" className="story-cover" />}
+              <span className="story-text">
+                <span className="story-title">{s.title}</span>
+                {s.description && <span className="muted">{s.description}</span>}
+                <span className="muted small">
+                  {s.routeCount} {s.routeCount === 1 ? 'route' : 'routes'} · last played{' '}
+                  {formatDate(s.updatedAt)}
+                </span>
               </span>
             </button>
             <button

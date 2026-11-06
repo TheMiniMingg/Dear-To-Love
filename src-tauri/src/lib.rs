@@ -60,6 +60,15 @@ fn open_database(data_dir: &Result<PathBuf, String>) -> Result<Database, AppErro
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_dialog::init())
+        .register_asynchronous_uri_scheme_protocol("dtlimg", |ctx, request, responder| {
+            let app = ctx.app_handle().clone();
+            let path = request.uri().path().to_string();
+            tauri::async_runtime::spawn(async move {
+                let state = app.state::<AppState>();
+                responder.respond(commands::assets::serve(&state, &path).await);
+            });
+        })
         .setup(|app| {
             let config = app.config();
             let version = config.version.clone().unwrap_or_else(|| "0.0.0".into());
@@ -141,6 +150,12 @@ pub fn run() {
             commands::saves::view_save,
             commands::saves::resume_save,
             commands::saves::delete_save,
+            commands::assets::list_images,
+            commands::assets::import_images,
+            commands::assets::update_image,
+            commands::assets::image_usages,
+            commands::assets::delete_image,
+            commands::assets::set_story_picture,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Dear to Love");

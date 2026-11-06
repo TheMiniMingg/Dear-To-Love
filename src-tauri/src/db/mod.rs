@@ -2,6 +2,7 @@
 //! (each write transaction uses `BEGIN IMMEDIATE`); a small reader pool
 //! serves queries. Foreign keys are enabled on every connection.
 
+pub mod assets;
 pub mod backup;
 pub mod budget;
 pub mod contract;

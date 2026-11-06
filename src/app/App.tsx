@@ -1,4 +1,5 @@
 import { DiagnosticsScreen } from '../features/diagnostics/DiagnosticsScreen';
+import { ImagesScreen } from '../features/images/ImagesScreen';
 import { LibraryScreen } from '../features/library/LibraryScreen';
 import { CreateWizardScreen } from '../features/create/CreateWizardScreen';
 import { QuickStartScreen } from '../features/create/QuickStartScreen';
@@ -20,6 +21,7 @@ export function App() {
         {screen.name === 'diagnostics' && <DiagnosticsScreen />}
         {screen.name === 'settings' && <SettingsScreen />}
         {screen.name === 'usage' && <UsageScreen />}
+        {screen.name === 'images' && <ImagesScreen />}
       </main>
       <StatusFooter />
     </div>

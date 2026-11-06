@@ -156,3 +156,55 @@ async fn long_notes_are_shortened() {
         other => panic!("expected an edit, got {other:?}"),
     }
 }
+
+#[tokio::test]
+async fn route_pictures_need_a_real_slot_image_and_character() {
+    use crate::services::assets::{import_bytes, AssetStore};
+    let (t, s) = story().await;
+    let mut png = Vec::new();
+    image::RgbImage::new(4, 4)
+        .write_to(&mut std::io::Cursor::new(&mut png), image::ImageFormat::Png)
+        .unwrap();
+    let img = import_bytes(&t.db, &AssetStore::new(t.dir.path()), png, "x")
+        .await
+        .unwrap()
+        .asset;
+    let set = |slot: &str, asset: Option<&str>| StateEdit::SetVisualRef {
+        slot: slot.into(),
+        asset_id: asset.map(String::from),
+    };
+    let attempt = |changes: Vec<StateEdit>| {
+        edit_details(
+            &t.db,
+            &s.story_id,
+            &s.main_route_id,
+            &s.head_event_id,
+            changes,
+            None,
+        )
+    };
+    for (changes, needle) in [
+        (vec![set("cover", Some(&img.id))], "whole story"),
+        (
+            vec![set("background", Some("no-such-image"))],
+            "not in the library",
+        ),
+        (
+            vec![set("portrait:nobody", Some(&img.id))],
+            "no character nobody",
+        ),
+        (vec![set("hat:mara", Some(&img.id))], "unknown picture slot"),
+    ] {
+        let e = attempt(changes).await.unwrap_err();
+        assert!(e.message.contains(needle), "{}", e.message);
+    }
+    attempt(vec![
+        set("background", Some(&img.id)),
+        set("portrait:starter:npc-mara", Some(&img.id)),
+    ])
+    .await
+    .unwrap();
+    let v = route_view(&t.db, &s.main_route_id).await.unwrap();
+    assert_eq!(v.state.effective.state.visual_refs.len(), 2);
+    assert!(v.visuals.is_empty(), "story defaults are untouched");
+}

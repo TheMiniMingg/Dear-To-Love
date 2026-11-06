@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Pictures. **Images** in the library holds PNG, JPEG and WebP pictures on this computer (up to
+  20 MB each; the same picture added twice is kept once), with names, kinds and where each one
+  is used. In a story, **Pictures** in the pause menu sets the background, each character's
+  portrait and the cover: on this route from now on, or as the story default for every route
+  that hasn't chosen its own. The current scene's background and portraits show above the story,
+  and covers show in the library. An image can't be deleted while any story shows it, including
+  earlier turns on other routes. Diagnostics warns about missing or damaged image files.
 - Change the story as you play. **Story details** in the pause menu edits characters (add,
   change or remove), the world, narration, the current scene and open questions, and the facts
   the storyteller must keep to. Before anything is written it shows each changed field with its
