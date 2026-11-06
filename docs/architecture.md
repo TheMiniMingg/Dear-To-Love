@@ -16,7 +16,8 @@ React screens -> src/api/commands.ts (typed invoke wrappers)
                          reference scan for safe deletion
   -> Rust db/bookmarks   named places in a route's history
   -> Rust services/      generation, prompt, adapters (OpenAI-compatible,
-                         offline), reader view, diagnostics, secrets,
+                         Anthropic, Ollama, offline), reader view,
+                         diagnostics, secrets,
                          assets (image validation, thumbnails, files),
                          storypack (format, checks, id remapping),
                          archive (storypack export/import, recovery,
@@ -101,7 +102,11 @@ app start       pending/streaming runs -> interrupted; open ledger rows -> unkno
   `openai_compatible` speaks `POST /chat/completions` (SSE); `ollama` speaks
   Ollama's `POST /api/chat` (NDJSON) and sends `options.num_ctx` from the
   connection's context limit, because Ollama otherwise loads models with its
-  own default context and truncates longer prompts from the start.
+  own default context and truncates longer prompts from the start;
+  `anthropic` speaks Anthropic's `POST /messages` (typed SSE events) with
+  `x-api-key` and `anthropic-version`. A leading `<think>…</think>` block
+  from open reasoning models is hidden from drafts and the saved reply. See
+  ADR 0013.
 - The offline storyteller is an adapter too (no ledger row: it is not an API).
 - See ADR 0002 for the stream and ledger contracts.
 

@@ -1,6 +1,6 @@
 // AI connections: add one (key goes to the backend, never shown again),
 // choose the storyteller, and test the connection.
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ProviderProfile, StorytellerInfo } from '../types';
@@ -113,6 +113,43 @@ describe('Settings: AI connections', () => {
       settings: { maxContextTokens: 8192 },
     });
     expect('apiKey' in input).toBe(false);
+  });
+
+  it('offers the big labs, hosted open models and local servers, Claude natively', async () => {
+    render(<SettingsScreen />);
+    await userEvent.click(await screen.findByRole('button', { name: 'Add connection' }));
+    const service = screen.getByLabelText('Service');
+    for (const name of [
+      'Anthropic (Claude)',
+      'Google Gemini',
+      'xAI (Grok)',
+      'Mistral AI',
+      'DeepSeek',
+      'Groq',
+      'Hugging Face',
+      'llama.cpp server',
+      'KoboldCpp',
+      'vLLM',
+    ]) {
+      expect(within(service).getByRole('option', { name })).toBeInTheDocument();
+    }
+    await userEvent.selectOptions(service, 'anthropic');
+    expect(screen.getByLabelText('Type')).toHaveValue('anthropic');
+    expect(screen.getByLabelText('Address')).toHaveValue('https://api.anthropic.com/v1');
+    expect(screen.getByLabelText('Model')).toHaveAttribute(
+      'placeholder',
+      'For example claude-opus-5-5',
+    );
+    await userEvent.type(screen.getByLabelText('Model'), 'claude-opus-5-5');
+    await userEvent.type(screen.getByLabelText('API key'), 'sk-ant-1');
+    await userEvent.click(screen.getByRole('button', { name: 'Save connection' }));
+    const input = invoke.mock.calls.find((c) => c[0] === 'save_connection')?.[1].input;
+    expect(input).toMatchObject({
+      label: 'Anthropic (Claude)',
+      adapter: 'anthropic',
+      billing: 'paid',
+      settings: { maxOutputTokens: 4000, maxContextTokens: 128000 },
+    });
   });
 
   it('editing keeps the saved key unless a new one is typed', async () => {

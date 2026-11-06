@@ -127,14 +127,18 @@ checks in **Settings → Updates** to be told when a new release is out.
 
 Open **Settings → AI connections → Add connection**:
 
-| Choice                             | What you need                                          | Cost          |
-| ---------------------------------- | ------------------------------------------------------ | ------------- |
-| **Offline storyteller** (built in) | Nothing. Short, simple replies for trying things out   | Free          |
-| **Ollama** on your computer        | [Ollama](https://ollama.com) and `ollama pull <model>` | Free, private |
-| **LM Studio** on your computer     | [LM Studio](https://lmstudio.ai) with its server on    | Free, private |
-| **OpenAI**                         | An API key and a model name                            | Paid per use  |
-| **OpenRouter**                     | An API key; one key reaches many models                | Paid per use  |
-| **Other**                          | Any OpenAI-compatible address, key and model name      | Varies        |
+| Choice                                                                                                                                              | What you need                                                            | Cost          |
+| --------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ | ------------- |
+| **Offline storyteller** (built in)                                                                                                                  | Nothing. Short, simple replies for trying things out                     | Free          |
+| **On your computer**: [Ollama](https://ollama.com), [LM Studio](https://lmstudio.ai), llama.cpp server, KoboldCpp, Jan, text-generation-webui, vLLM | The program and an open model (Llama, Qwen, Mistral, Gemma, DeepSeek, …) | Free, private |
+| **AI labs**: OpenAI, Anthropic (Claude), Google Gemini, xAI (Grok), Mistral AI, DeepSeek                                                            | An API key and a model name                                              | Paid per use  |
+| **Open models, hosted**: OpenRouter, Groq, Together AI, Fireworks AI, DeepInfra, Hugging Face                                                       | An API key and a model name                                              | Paid per use  |
+| **Other**                                                                                                                                           | Any OpenAI-compatible address, key and model name                        | Varies        |
+
+Pick the service and the address is filled in for you. Claude uses Anthropic's own API; the
+others use the OpenAI-compatible chat API that each of them offers. Models that think before
+they answer (OpenAI's reasoning models, Claude, DeepSeek R1, Qwen and others) work too: their
+thinking is never shown or saved, and the lab presets leave room for it in the reply length.
 
 Keys are kept in your system's credential store (Windows Credential Manager, macOS Keychain,
 Linux Secret Service), never in story files, exports or backups. **Test connection** checks a

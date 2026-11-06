@@ -13,6 +13,13 @@
 - Four more worlds, each with its own scenario: Hollow Pines (horror), The Ember Road
   (fantasy adventure), Larkport (romantic comedy) and Vesper City (science-fiction noir), and
   two more characters. Every world now lists its genres, shown in Quick Start.
+- More AI services. **Add connection** now lists the big AI labs (OpenAI, Anthropic's Claude,
+  Google Gemini, xAI's Grok, Mistral AI and DeepSeek), hosted open models (OpenRouter, Groq,
+  Together AI, Fireworks AI, DeepInfra and Hugging Face) and local servers (Ollama, LM Studio,
+  llama.cpp, KoboldCpp, Jan, text-generation-webui and vLLM), with the address filled in.
+  Claude uses Anthropic's own API. Models that think before they answer work: their thinking
+  is never shown or saved, OpenAI's reasoning models no longer fail on the temperature
+  setting, and a reply that ran out of room while thinking says which setting to raise.
 - **Create your own → Custom** starts from empty fields with no presets: no world, character
   or scenario to pick, just your own setting, character, starting location and opening scene.
   Other characters in Custom have an age field too. **Clear all fields** empties a draft at any

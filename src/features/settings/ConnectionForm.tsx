@@ -1,68 +1,11 @@
 import { useId, useState } from 'react';
 import { commands, errorMessage } from '../../api/commands';
 import type { AdapterKind, Billing, ProviderProfile, ProviderProfileInput } from '../../types';
+import { GROUP_LABELS, PRESETS, type Preset, type PresetGroup } from './presets';
 
-type Preset = {
-  id: string;
-  label: string;
-  adapter: AdapterKind;
-  baseUrl: string;
-  billing: Billing;
-  needsKey: boolean;
-  /** Prompt plus reply, in tokens. Local servers often load models with 4096. */
-  contextTokens: number;
-};
+const GROUPS = Object.keys(GROUP_LABELS) as PresetGroup[];
 
 const DEFAULT_CONTEXT_TOKENS = 16000;
-
-// Addresses only; nothing is contacted until the user tests or plays.
-const PRESETS: Preset[] = [
-  {
-    id: 'custom',
-    label: 'Other (enter the address)',
-    adapter: 'openai_compatible',
-    baseUrl: '',
-    billing: 'paid',
-    needsKey: true,
-    contextTokens: 16_000,
-  },
-  {
-    id: 'openai',
-    label: 'OpenAI',
-    adapter: 'openai_compatible',
-    baseUrl: 'https://api.openai.com/v1',
-    billing: 'paid',
-    needsKey: true,
-    contextTokens: 128_000,
-  },
-  {
-    id: 'openrouter',
-    label: 'OpenRouter',
-    adapter: 'openai_compatible',
-    baseUrl: 'https://openrouter.ai/api/v1',
-    billing: 'paid',
-    needsKey: true,
-    contextTokens: 32_000,
-  },
-  {
-    id: 'lmstudio',
-    label: 'LM Studio on this computer',
-    adapter: 'openai_compatible',
-    baseUrl: 'http://localhost:1234/v1',
-    billing: 'local',
-    needsKey: false,
-    contextTokens: 4096,
-  },
-  {
-    id: 'ollama',
-    label: 'Ollama on this computer',
-    adapter: 'ollama',
-    baseUrl: 'http://localhost:11434',
-    billing: 'local',
-    needsKey: false,
-    contextTokens: 8192,
-  },
-];
 
 type Props = {
   existing: ProviderProfile | null;
@@ -70,7 +13,7 @@ type Props = {
   onCancel: () => void;
 };
 
-/** Add or edit an OpenAI-compatible connection. The key goes to the OS credential store. */
+/** Add or edit a connection to an AI service. The key goes to the OS credential store. */
 export function ConnectionForm({ existing, onSaved, onCancel }: Props) {
   const id = useId();
   const [label, setLabel] = useState(existing?.label ?? '');
@@ -90,15 +33,18 @@ export function ConnectionForm({ existing, onSaved, onCancel }: Props) {
   );
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [preset, setPreset] = useState<Preset | null>(null);
 
   const applyPreset = (presetId: string) => {
-    const p = PRESETS.find((x) => x.id === presetId);
+    const p = PRESETS.find((x) => x.id === presetId) ?? null;
+    setPreset(p);
     if (!p || p.id === 'custom') return;
     setAdapter(p.adapter);
     setBaseUrl(p.baseUrl);
     setBilling(p.billing);
     setContextTokens(String(p.contextTokens));
-    if (!label.trim()) setLabel(p.label.replace(' on this computer', ''));
+    setMaxTokens(String(p.replyTokens ?? 700));
+    if (!label.trim() || PRESETS.some((x) => x.label === label)) setLabel(p.label);
   };
 
   const submit = async () => {
@@ -152,15 +98,19 @@ export function ConnectionForm({ existing, onSaved, onCancel }: Props) {
             defaultValue="custom"
             onChange={(e) => applyPreset(e.target.value)}
           >
-            {PRESETS.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.label}
-              </option>
+            {GROUPS.map((g) => (
+              <optgroup key={g} label={GROUP_LABELS[g]}>
+                {PRESETS.filter((p) => p.group === g).map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.label}
+                  </option>
+                ))}
+              </optgroup>
             ))}
           </select>
           <p className="muted small">
-            Any service with an OpenAI-compatible chat completions API works, and Ollama has its own
-            type.
+            {preset?.note ??
+              'Big AI labs, hosted open models and models on your own computer all work. Anything with an OpenAI-compatible API works through Other.'}
           </p>
         </div>
       )}
@@ -172,8 +122,16 @@ export function ConnectionForm({ existing, onSaved, onCancel }: Props) {
           onChange={(e) => setAdapter(e.target.value as AdapterKind)}
         >
           <option value="openai_compatible">OpenAI-compatible API</option>
+          <option value="anthropic">Anthropic (Claude) API</option>
           <option value="ollama">Ollama</option>
         </select>
+        {adapter === 'anthropic' && (
+          <p className="muted small">
+            Uses Anthropic&apos;s own Messages API. Claude picks its own temperature, so that
+            setting is not sent. Some Claude models think before they write, so leave room in the
+            reply length.
+          </p>
+        )}
         {adapter === 'ollama' && (
           <p className="muted small">
             Uses Ollama&apos;s own API so each request asks for the context limit below. Install a
@@ -198,7 +156,11 @@ export function ConnectionForm({ existing, onSaved, onCancel }: Props) {
           value={baseUrl}
           onChange={(e) => setBaseUrl(e.target.value)}
           placeholder={
-            adapter === 'ollama' ? 'http://localhost:11434' : 'https://api.example.com/v1'
+            adapter === 'ollama'
+              ? 'http://localhost:11434'
+              : adapter === 'anthropic'
+                ? 'https://api.anthropic.com/v1'
+                : 'https://api.example.com/v1'
           }
           inputMode="url"
           spellCheck={false}
@@ -211,10 +173,17 @@ export function ConnectionForm({ existing, onSaved, onCancel }: Props) {
           id={`${id}-model`}
           value={modelId}
           onChange={(e) => setModelId(e.target.value)}
-          placeholder="Model name, as the service spells it"
+          placeholder={
+            preset?.model ? `For example ${preset.model}` : 'Model name, as the service spells it'
+          }
           spellCheck={false}
           required
+          aria-describedby={`${id}-model-hint`}
         />
+        <p id={`${id}-model-hint`} className="muted small">
+          After saving, <strong>Test connection</strong> checks the name against the service&apos;s
+          list of models, for free.
+        </p>
       </div>
       <div className="field">
         <label htmlFor={`${id}-key`}>API key</label>
@@ -224,7 +193,11 @@ export function ConnectionForm({ existing, onSaved, onCancel }: Props) {
           value={apiKey}
           onChange={(e) => setApiKey(e.target.value)}
           placeholder={
-            existing?.hasKey ? 'Saved. Leave empty to keep it.' : 'Not needed for local servers'
+            existing?.hasKey
+              ? 'Saved. Leave empty to keep it.'
+              : preset && !preset.needsKey
+                ? 'Not needed for local servers'
+                : 'Paste your API key (not needed for local servers)'
           }
           autoComplete="off"
           spellCheck={false}
