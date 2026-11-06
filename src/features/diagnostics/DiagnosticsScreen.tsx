@@ -8,12 +8,12 @@ export function DiagnosticsScreen() {
   const [checks, setChecks] = useState<DiagnosticCheck[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [running, setRunning] = useState(true);
-  const [runCount, setRunCount] = useState(0);
+  const [request, setRequest] = useState({ count: 0, deep: false });
 
   useEffect(() => {
     let cancelled = false;
     commands
-      .runDiagnostics()
+      .runDiagnostics(request.deep)
       .then((result) => {
         if (cancelled) return;
         setChecks(result);
@@ -28,11 +28,11 @@ export function DiagnosticsScreen() {
     return () => {
       cancelled = true;
     };
-  }, [runCount]);
+  }, [request]);
 
-  const runAgain = () => {
+  const runAgain = (deep: boolean) => {
     setRunning(true);
-    setRunCount((n) => n + 1);
+    setRequest((r) => ({ count: r.count + 1, deep }));
   };
 
   return (
@@ -42,8 +42,11 @@ export function DiagnosticsScreen() {
           Back
         </button>
         <h1 id="diagnostics-title">Diagnostics</h1>
-        <button type="button" onClick={runAgain} disabled={running}>
+        <button type="button" onClick={() => runAgain(false)} disabled={running}>
           {running ? 'Running…' : 'Run again'}
+        </button>
+        <button type="button" onClick={() => runAgain(true)} disabled={running}>
+          Run deep check
         </button>
       </div>
       {error && <p role="alert">Diagnostics could not run: {error}</p>}

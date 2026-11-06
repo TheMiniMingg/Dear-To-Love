@@ -3,14 +3,52 @@
 //! The Rust layer owns canonical state. React is a projection of it.
 
 pub mod commands;
+pub mod db;
 pub mod domain;
 pub mod errors;
 pub mod services;
 pub mod state;
 
+use std::path::PathBuf;
+use std::sync::Arc;
+
 use tauri::Manager;
 
+use db::Database;
+use errors::{AppError, ErrorCode};
+use services::secrets::{KeyringStore, KEYRING_SERVICE};
 use state::AppState;
+
+/// Opens the story database inside the app-data directory.
+fn open_database(data_dir: &Result<PathBuf, String>) -> Result<Database, AppError> {
+    let dir = data_dir.as_ref().map_err(|reason| {
+        AppError::new(
+            ErrorCode::Io,
+            format!("app data folder unavailable: {reason}"),
+        )
+    })?;
+    let path = dir.join(db::DB_FILE_NAME);
+    let backups = dir.join("backups");
+    let (database, report) = tauri::async_runtime::block_on(Database::open(&path, &backups))?;
+    if let Some(backup) = report.pre_migration_backup {
+        eprintln!(
+            "database upgraded (migrations {:?}); pre-upgrade backup at {}",
+            report.applied_migrations,
+            backup.display()
+        );
+    }
+    let problems = tauri::async_runtime::block_on(db::contract::verify(&database))?;
+    if !problems.is_empty() {
+        return Err(AppError::new(
+            ErrorCode::Database,
+            format!(
+                "the story database failed consistency checks: {}",
+                problems.join("; ")
+            ),
+        ));
+    }
+    Ok(database)
+}
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -31,10 +69,19 @@ pub fn run() {
                         .map(|_| dir)
                         .map_err(|e| e.to_string())
                 });
+            // A database that fails to open does not stop the app: the UI
+            // shows the error and Diagnostics offers remediation.
+            let db = open_database(&data_dir);
+            if let Err(e) = &db {
+                eprintln!("story database unavailable: {}", e.message);
+            }
             app.manage(AppState {
                 product_name,
                 version,
                 data_dir,
+                db,
+                secrets: Arc::new(KeyringStore::new(KEYRING_SERVICE)),
+                session_id: db::new_id(),
             });
             Ok(())
         })

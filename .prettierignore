@@ -5,3 +5,4 @@ src-tauri/gen/
 src/types/generated/
 coverage/
 docs/roadmap-v4.md
+src/types/index.ts

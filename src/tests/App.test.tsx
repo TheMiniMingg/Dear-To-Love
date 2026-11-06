@@ -51,6 +51,16 @@ describe('App shell', () => {
     expect(screen.getByText('Check permissions')).toBeInTheDocument();
   });
 
+  it('passes deep=true only when the deep check is requested', async () => {
+    useUiStore.setState({ screen: 'diagnostics' });
+    render(<App />);
+    await screen.findByText('FAIL');
+    expect(invoke).toHaveBeenCalledWith('run_diagnostics', { deep: false });
+    await userEvent.click(screen.getByRole('button', { name: 'Run deep check' }));
+    await screen.findByText('FAIL');
+    expect(invoke).toHaveBeenLastCalledWith('run_diagnostics', { deep: true });
+  });
+
   it('shows a typed error when diagnostics cannot run', async () => {
     invoke.mockImplementation(async (cmd: string) => {
       if (cmd === 'run_diagnostics') throw { code: 'INTERNAL', message: 'boom' };

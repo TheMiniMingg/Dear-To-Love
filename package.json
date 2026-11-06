@@ -18,7 +18,9 @@
     "format:check": "prettier --check .",
     "test": "vitest run",
     "test:watch": "vitest",
-    "check:version": "node scripts/check-version.mjs"
+    "check:version": "node scripts/check-version.mjs",
+    "gen:types": "cd src-tauri && cargo test --lib export_bindings && cd .. && node scripts/gen-types-index.mjs",
+    "gen:types-index": "node scripts/gen-types-index.mjs"
   },
   "dependencies": {
     "@tauri-apps/api": "2.12.4",

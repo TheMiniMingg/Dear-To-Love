@@ -28,6 +28,7 @@ pub enum ErrorCode {
     BudgetPaused,
     BudgetOverrideRequired,
     NoProvider,
+    SecretStoreUnavailable,
     NotFound,
     InvalidInput,
     Io,
