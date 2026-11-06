@@ -15,6 +15,7 @@ import { SavesPanel } from '../saves/SavesPanel';
 import type { BudgetStatus, ErrorCode, EventDto, RouteView, SaveView } from '../../types';
 import { Composer } from './Composer';
 import { ContextPreviewPanel } from './ContextPreviewPanel';
+import { ExportPanel } from './ExportPanel';
 import { NarrativeView } from './NarrativeView';
 import { PicturesPanel } from './PicturesPanel';
 import { ScenePictures } from './ScenePictures';
@@ -30,7 +31,8 @@ type Panel =
   | 'regenerate'
   | 'details'
   | 'pictures'
-  | 'context';
+  | 'context'
+  | 'export';
 
 const PANEL_TITLES: Record<Exclude<Panel, null>, string> = {
   menu: 'Paused',
@@ -42,6 +44,7 @@ const PANEL_TITLES: Record<Exclude<Panel, null>, string> = {
   details: 'Story details',
   pictures: 'Pictures',
   context: 'Preview context',
+  export: 'Export',
 };
 
 type Stream = { runId: string; text: string };
@@ -612,6 +615,9 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
               <button type="button" onClick={() => setPanel('context')}>
                 Preview context
               </button>
+              <button type="button" onClick={() => setPanel('export')}>
+                Export…
+              </button>
               <button type="button" onClick={() => navigate({ name: 'settings' })}>
                 Settings
               </button>
@@ -669,6 +675,7 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
             />
           )}
           {panel === 'context' && <ContextPreviewPanel routeId={view.route.id} />}
+          {panel === 'export' && <ExportPanel view={view} />}
           {panel === 'pictures' && (
             <PicturesPanel
               view={view}

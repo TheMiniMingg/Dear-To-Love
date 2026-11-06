@@ -15,6 +15,10 @@ import type {
   DiagnosticCheck,
   ErrorCode,
   ImageImport,
+  StorypackExport,
+  StorypackImport,
+  TextExport,
+  TextFormat,
   ProviderProfile,
   ProviderProfileInput,
   QuickStartInput,
@@ -158,6 +162,13 @@ export const commands = {
   deleteImage: (assetId: string) => call<void>('delete_image', { assetId }),
   setStoryPicture: (storyId: string, slot: string, assetId: string | null) =>
     call<StoryVisual[]>('set_story_picture', { storyId, slot, assetId }),
+  /** Writes the whole story to a `.storypack` file at `path` (from the save dialog). */
+  exportStorypack: (storyId: string, path: string) =>
+    call<StorypackExport>('export_storypack', { storyId, path }),
+  /** Adds the storypack at `path` as a new story. */
+  importStorypack: (path: string) => call<StorypackImport>('import_storypack', { path }),
+  exportRouteText: (routeId: string, path: string, format: TextFormat, timestamps: boolean) =>
+    call<TextExport>('export_route_text', { routeId, path, format, timestamps }),
   /** The exact prompt the next reply would send. Assembled locally; nothing is sent. */
   previewContext: (routeId: string) => call<ContextPreview>('preview_context', { routeId }),
   nextChapter: (r: RouteRef & { expectedHeadId: string; title?: string | null }) =>

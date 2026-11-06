@@ -16,9 +16,13 @@ React screens -> src/api/commands.ts (typed invoke wrappers)
                          reference scan for safe deletion
   -> Rust services/      generation, prompt, adapters (OpenAI-compatible,
                          offline), reader view, diagnostics, secrets,
-                         assets (image validation, thumbnails, files)
+                         assets (image validation, thumbnails, files),
+                         storypack (format, checks, id remapping),
+                         archive (storypack export/import, recovery,
+                         readable text export)
   -> SQLite (story.db)   OS credential store for API keys
      assets/originals, assets/thumbs (content-addressed image files)
+     imports/<operation>  storypack staging (removed when done)
   dtlimg: protocol      serves library images to the webview by id
 ```
 
@@ -136,6 +140,22 @@ delete    refused while a default, a starting state or any edit event on
 
 - Slots: `cover` (story only), `background`, `portrait:<character id>`.
   See ADR 0006.
+
+## Storypacks and text export
+
+```text
+export    one read txn -> PackStory + referenced images -> manifest with
+          sha256/size per file -> <dest>.<id>.part -> flush -> rename
+import    unpack allowed names only, byte-counted limits -> manifest match
+          -> check graph + replay every branch -> decode images
+          -> journal 'staged' -> place image files -> one write txn: assets
+          by sha, story with new ids, journal 'committed' -> 'complete'
+startup   staged -> rolled_back, committed -> complete, clear imports/
+text      route view -> chapters, labelled turns, notes -> .md or .txt
+```
+
+- `.storypack` holds one whole story; no keys, connections, usage,
+  preferences, logs or paths. See ADR 0007.
 
 ## Usage and budget
 

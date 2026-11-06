@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- Share and keep stories. **Export…** in the pause menu saves the current route as readable
+  text (Markdown or plain text, with chapter headings, who said what, and optional times) or
+  the whole story as a `.storypack`: every route, saves, story summaries and the pictures it
+  shows, never API keys, connections, usage records or settings. **Import storypack** in the
+  library adds a pack as a new story; pictures already in your library are shared, and the same
+  pack imported twice gives two separate stories. Damaged, incomplete or unsafe packs are
+  refused with the reason and change nothing; packs from a newer version of the app ask you to
+  update. An import interrupted by a crash or power loss is finished or undone the next time
+  the app starts.
 - Pictures. **Images** in the library holds PNG, JPEG and WebP pictures on this computer (up to
   20 MB each; the same picture added twice is kept once), with names, kinds and where each one
   is used. In a story, **Pictures** in the pause menu sets the background, each character's

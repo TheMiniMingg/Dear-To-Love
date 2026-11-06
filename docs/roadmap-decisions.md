@@ -27,6 +27,11 @@ and the roadmap differ, this file wins.
   them. A picture used in any earlier turn can't be deleted while that story
   exists, because events never change; story defaults can be cleared first.
   Expressions and outfits are tags for now, not separate slots.
+- **Storypacks** carry the whole story only (no single-route packs); a
+  route can be exported as Markdown or `.txt` instead. Importing makes a new
+  story with new ids every time, sharing images already in the library.
+  Image files placed by an import that was rolled back stay in the library
+  folder (harmless, reused by hash) until a later cleanup.
 - **In-story edits** use one `edit` event per Apply, with a short note listing
   what changed (shown in the story). Facts added in Story details are
   confirmed facts; the `fact_confirm` event is kept for the later suggestion

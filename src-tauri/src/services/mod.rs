@@ -1,4 +1,5 @@
 pub mod adapters;
+pub mod archive;
 pub mod assets;
 pub mod context;
 pub mod diagnostics;
@@ -9,4 +10,5 @@ pub mod prompt;
 pub mod reader;
 pub mod secrets;
 pub mod selftest;
+pub mod storypack;
 pub mod tokens;
