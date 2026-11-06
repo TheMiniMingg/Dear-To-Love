@@ -17,9 +17,13 @@ pub enum ErrorCode {
     WrongStory,
     RunNotActive,
     RunInterrupted,
+    /// A reply is already being written for this route.
+    RunActive,
     ProviderUnreachable,
     AuthFailed,
     RateLimited,
+    /// The provider answered with an error that has no specific code.
+    ProviderError,
     Cancelled,
     ContextTooLong,
     MigrationFailed,

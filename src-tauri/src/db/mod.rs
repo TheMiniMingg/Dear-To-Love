@@ -4,10 +4,13 @@
 
 pub mod backup;
 pub mod contract;
+pub mod providers;
+pub mod runs;
 pub mod saves;
 pub mod state;
 pub mod stories;
 pub mod timeline;
+pub mod usage;
 
 use std::path::{Path, PathBuf};
 use std::str::FromStr;

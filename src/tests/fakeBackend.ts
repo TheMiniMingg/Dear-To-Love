@@ -46,5 +46,8 @@ export function fakeRouteView(extra: EventDto[] = []): RouteView {
         characters: { pc: { id: 'pc', name: 'Sam Ashby' } },
       } as unknown as RouteView['state']['state'],
     },
+    awaitingReply:
+      head.kind === 'player' ? { inputEventId: head.id, activeRun: null, lastRun: null } : null,
+    storyteller: { profileId: null, label: 'Offline storyteller', modelId: null, billing: 'local' },
   };
 }

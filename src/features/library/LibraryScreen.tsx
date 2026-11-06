@@ -58,9 +58,18 @@ export function LibraryScreen() {
     <section className="screen" aria-labelledby="library-title">
       <div className="screen-header">
         <h1 id="library-title">Your stories</h1>
-        <button type="button" className="primary" onClick={() => navigate({ name: 'quickstart' })}>
-          New story
-        </button>
+        <div className="button-row">
+          <button type="button" onClick={() => navigate({ name: 'settings' })}>
+            Settings
+          </button>
+          <button
+            type="button"
+            className="primary"
+            onClick={() => navigate({ name: 'quickstart' })}
+          >
+            New story
+          </button>
+        </div>
       </div>
       {error && (
         <p role="alert" className="error">

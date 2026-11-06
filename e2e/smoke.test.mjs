@@ -1,7 +1,15 @@
 // T01 + T25 + T27 (+ save/load/fork/reopen): keyboard-only, offline, real app.
 import { after, test } from 'node:test';
 import assert from 'node:assert/strict';
-import { launch, makeDataDir, tabTo, textOf, typeInto, waitForText } from './harness.mjs';
+import {
+  launch,
+  makeDataDir,
+  tabTo,
+  textOf,
+  typeInto,
+  waitForReply,
+  waitForText,
+} from './harness.mjs';
 
 const dataDir = makeDataDir();
 let session;
@@ -24,6 +32,7 @@ test('keyboard-only: quick start, play, save, load as branch, reopen', async () 
   await typeInto(b, '#composer-input', 'Read the letter');
   await b.keys(['Enter']);
   await waitForText(b, '[data-testid="narrative"]', 'You decide: "Read the letter"');
+  await waitForReply(b);
 
   await b.keys(['Control', 's']);
   await waitForText(b, '[role="status"]', 'Quick-saved');
@@ -42,6 +51,7 @@ test('keyboard-only: quick start, play, save, load as branch, reopen', async () 
   await typeInto(b, '#composer-input', 'Climb down to the harbor');
   await b.keys(['Enter']);
   await waitForText(b, '[data-testid="narrative"]', 'Climb down to the harbor');
+  await waitForReply(b);
 
   // Load the older quick save as a new branch.
   await tabTo(b, 'Save / Load');

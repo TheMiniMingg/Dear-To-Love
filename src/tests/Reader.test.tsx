@@ -5,10 +5,29 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fakeRouteView } from './fakeBackend';
 
 const invoke = vi.fn();
-vi.mock('@tauri-apps/api/core', () => ({ invoke: (...args: unknown[]) => invoke(...args) }));
+vi.mock('@tauri-apps/api/core', () => ({
+  invoke: (...args: unknown[]) => invoke(...args),
+  Channel: class {
+    onmessage: (m: unknown) => void = () => undefined;
+  },
+}));
 
 import { ReaderScreen } from '../features/reader/ReaderScreen';
 import { useUiStore } from '../app/store';
+
+let lastText = '';
+
+function player(text: string) {
+  return {
+    id: 'ev-2',
+    originRouteId: 'route-1',
+    parentEventId: 'ev-1',
+    generationRunId: null,
+    createdAt: '2026-11-06T00:00:01Z',
+    kind: 'player' as const,
+    payload: { text },
+  };
+}
 
 function setup() {
   render(<ReaderScreen routeId="route-1" />);
@@ -22,8 +41,12 @@ describe('Reader keyboard behaviour', () => {
     invoke.mockImplementation(async (cmd: string, args: Record<string, unknown>) => {
       if (cmd === 'get_route_view') return fakeRouteView();
       if (cmd === 'quick_save') return { id: 'save-1' };
-      if (cmd === 'play_mock_turn') {
-        const text = args.text as string;
+      if (cmd === 'submit_action') {
+        lastText = args.text as string;
+        return { runId: 'run-1', view: fakeRouteView([player(lastText)]) };
+      }
+      if (cmd === 'generate_reply') {
+        const text = lastText;
         return fakeRouteView([
           {
             id: 'ev-2',
@@ -54,7 +77,7 @@ describe('Reader keyboard behaviour', () => {
     await userEvent.click(box);
     await userEvent.keyboard('Look around{Shift>}{Enter}{/Shift}carefully');
     expect(box).toHaveValue('Look around\ncarefully');
-    expect(invoke).not.toHaveBeenCalledWith('play_mock_turn', expect.anything());
+    expect(invoke).not.toHaveBeenCalledWith('submit_action', expect.anything());
     await userEvent.keyboard('{Enter}');
     expect(await screen.findByText(/You decide: "Look around/)).toBeInTheDocument();
     expect(box).toHaveValue('');
@@ -66,7 +89,7 @@ describe('Reader keyboard behaviour', () => {
     await userEvent.keyboard('nihon');
     fireEvent.keyDown(box, { key: 'Enter', keyCode: 229 });
     fireEvent.keyDown(box, { key: 'Enter', isComposing: true });
-    expect(invoke).not.toHaveBeenCalledWith('play_mock_turn', expect.anything());
+    expect(invoke).not.toHaveBeenCalledWith('submit_action', expect.anything());
     expect(box).toHaveValue('nihon');
   });
 

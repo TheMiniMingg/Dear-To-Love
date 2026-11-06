@@ -50,6 +50,7 @@ pub async fn run_all(ctx: DiagnosticsContext) -> Vec<DiagnosticCheck> {
     checks.push(check_usage_ledger(&ctx.db).await);
     checks.push(check_timeline_replay(&ctx.data_dir).await);
     checks.extend(sync_iter);
+    checks.push(check_ai_connection(&ctx.db, ctx.secrets.as_ref(), ctx.deep).await);
     checks
 }
 
@@ -238,6 +239,123 @@ pub async fn check_db_integrity(db: &Result<Database, AppError>, deep: bool) -> 
     finish("DB_INTEGRITY", "Database integrity (deep)", start, outcome)
 }
 
+/// The chosen storyteller. Contacts the AI service only on the deep check
+/// (an explicit user action), and then only to list models: no story text,
+/// no paid request.
+pub async fn check_ai_connection(
+    db: &Result<Database, AppError>,
+    secrets: &dyn SecretStore,
+    deep: bool,
+) -> DiagnosticCheck {
+    let start = Instant::now();
+    let label = "AI storyteller";
+    let id = "AI_CONNECTION";
+    let Ok(db) = db else {
+        return finish(
+            id,
+            label,
+            start,
+            (
+                CheckStatus::Skipped,
+                "Needs the story database.".into(),
+                None,
+            ),
+        );
+    };
+    let row = match crate::db::providers::storyteller(db).await {
+        Ok(Some(pid)) => crate::db::providers::get_profile_row(db, &pid).await.ok(),
+        _ => None,
+    };
+    let Some(row) = row else {
+        return finish(
+            id,
+            label,
+            start,
+            (
+                CheckStatus::Skipped,
+                "Using the built-in offline storyteller; there is no AI service to check.".into(),
+                None,
+            ),
+        );
+    };
+    if row.secret_ref.is_none() && row.billing() == crate::domain::provider::Billing::Paid {
+        return finish(
+            id,
+            label,
+            start,
+            (
+                CheckStatus::Warn,
+                format!("\"{}\" has no API key saved.", row.label),
+                Some("Open Settings, edit the connection and add its API key.".into()),
+            ),
+        );
+    }
+    if !deep {
+        return finish(
+            id,
+            label,
+            start,
+            (
+                CheckStatus::Skipped,
+                format!(
+                    "\"{}\" is set up; run the deep check to contact it.",
+                    row.label
+                ),
+                None,
+            ),
+        );
+    }
+    let key = match &row.secret_ref {
+        Some(r) => match secrets.get(r) {
+            Ok(k) => k,
+            Err(e) => {
+                return finish(
+                    id,
+                    label,
+                    start,
+                    (
+                        CheckStatus::Fail,
+                        e.message,
+                        Some("Check the system credential store.".into()),
+                    ),
+                )
+            }
+        },
+        None => None,
+    };
+    let adapter = match crate::services::adapters::openai::OpenAiCompatible::new(
+        row.base_url.as_deref().unwrap_or_default(),
+        key,
+    ) {
+        Ok(a) => a,
+        Err(e) => return finish(id, label, start, (CheckStatus::Fail, e.message, None)),
+    };
+    let outcome = match adapter.list_models().await {
+        Ok(models) if models.iter().any(|m| m == &row.model_id) => (
+            CheckStatus::Pass,
+            format!("Connected to \"{}\"; model {} is available.", row.label, row.model_id),
+            None,
+        ),
+        Ok(_) => (
+            CheckStatus::Warn,
+            format!("Connected to \"{}\", but model {} is not listed.", row.label, row.model_id),
+            Some("Check the model name in Settings.".into()),
+        ),
+        Err(e) => (
+            CheckStatus::Fail,
+            e.message,
+            Some(match e.code {
+                crate::errors::ErrorCode::AuthFailed => "Replace the API key in Settings.".into(),
+                crate::errors::ErrorCode::ProviderUnreachable => {
+                    "Check the address and your internet connection, or start your local model server.".into()
+                }
+                _ => "Check the connection settings, or switch to the offline storyteller.".into(),
+            }),
+        ),
+    };
+    finish(id, label, start, outcome)
+}
+
 pub async fn check_usage_ledger(db: &Result<Database, AppError>) -> DiagnosticCheck {
     let start = Instant::now();
     let outcome = match db {
@@ -387,11 +505,13 @@ mod tests {
                 "DB_INTEGRITY",
                 "USAGE_LEDGER",
                 "TIMELINE_REPLAY",
-                "SECRETS"
+                "SECRETS",
+                "AI_CONNECTION"
             ]
         );
         for c in &checks {
-            let expected = if c.id == "DB_INTEGRITY" {
+            // T38: no AI connection -> model checks skipped, local checks pass.
+            let expected = if c.id == "DB_INTEGRITY" || c.id == "AI_CONNECTION" {
                 CheckStatus::Skipped
             } else {
                 CheckStatus::Pass
@@ -492,5 +612,57 @@ mod tests {
             assert!(check.remediation.is_some());
         }
         fs::set_permissions(&dir, fs::Permissions::from_mode(0o755)).unwrap();
+    }
+
+    /// T41: an explicit check lists models only; bad keys give typed results.
+    #[tokio::test]
+    async fn ai_connection_deep_check() {
+        use crate::domain::provider::{
+            AdapterKind, Billing, GenerationSettings, ProviderProfileInput,
+        };
+        use crate::services::adapters::test_server::{serve, Reply};
+        let t = test_db().await;
+        let secrets = MemoryStore::default();
+        let server = serve(vec![
+            Reply::json(200, r#"{"data":[{"id":"story-model"}]}"#),
+            Reply::json(401, r#"{"error":{"message":"bad key"}}"#),
+        ])
+        .await;
+        let p = crate::db::providers::save_profile(
+            &t.db,
+            &secrets,
+            ProviderProfileInput {
+                id: None,
+                label: "Cloud".into(),
+                adapter: AdapterKind::OpenaiCompatible,
+                base_url: server.base_url.clone(),
+                model_id: "story-model".into(),
+                billing: Billing::Paid,
+                api_key: Some("k".into()),
+                settings: GenerationSettings::default(),
+            },
+        )
+        .await
+        .unwrap();
+        crate::db::providers::set_storyteller(&t.db, Some(&p.id))
+            .await
+            .unwrap();
+        let db = Ok(t.db.clone());
+        let quick = check_ai_connection(&db, &secrets, false).await;
+        assert_eq!(quick.status, CheckStatus::Skipped);
+        assert!(
+            server.requests().is_empty(),
+            "no network without the deep check"
+        );
+        assert_eq!(
+            check_ai_connection(&db, &secrets, true).await.status,
+            CheckStatus::Pass
+        );
+        let bad = check_ai_connection(&db, &secrets, true).await;
+        assert_eq!(bad.status, CheckStatus::Fail);
+        assert!(bad.remediation.unwrap().contains("API key"));
+        for r in server.requests() {
+            assert_eq!((r.method.as_str(), r.body.as_str()), ("GET", ""));
+        }
     }
 }

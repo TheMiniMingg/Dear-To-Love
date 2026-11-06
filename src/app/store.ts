@@ -6,7 +6,8 @@ export type Screen =
   | { name: 'library' }
   | { name: 'quickstart' }
   | { name: 'reader'; routeId: string }
-  | { name: 'diagnostics' };
+  | { name: 'diagnostics' }
+  | { name: 'settings' };
 
 const TEXT_SIZE_KEY = 'dtl.textSize';
 const TEXT_SIZES = [0.9, 1, 1.15, 1.3, 1.5] as const;
@@ -22,7 +23,7 @@ function loadTextSize(): number {
 
 type UiState = {
   screen: Screen;
-  /** Where Diagnostics' Back button returns to. */
+  /** Where the Back button of Diagnostics and Settings returns to. */
   previous: Screen | null;
   /** Unsent composer text per route; survives pause menus and screen changes. */
   drafts: Record<string, string>;

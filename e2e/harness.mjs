@@ -93,3 +93,16 @@ export async function waitForText(browser, selector, needle, ms = 10000) {
 export async function typeInto(browser, selector, text) {
   await (await browser.$(selector)).addValue(text);
 }
+
+/** Wait until the reply being written has been committed. */
+export async function waitForReply(browser, ms = 20000) {
+  await browser.waitUntil(
+    async () =>
+      browser.execute(
+        () =>
+          !document.querySelector('[data-testid="reply-draft"]') &&
+          !!document.querySelector('[data-testid="narrative"]'),
+      ),
+    { timeout: ms, timeoutMsg: 'the reply did not finish' },
+  );
+}

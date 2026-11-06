@@ -1,19 +1,21 @@
-//! Reader-facing operations that combine timeline, state and saves into one
-//! view, plus offline play with the deterministic storyteller.
+//! Reader-facing view that combines timeline, state, saves and the reply
+//! status of the route head into one DTO.
 
 use serde::Serialize;
 use sqlx::FromRow;
 use ts_rs::TS;
 
-use crate::db::state::{state_with_snapshots, store_snapshots, StateView};
+use crate::db::providers;
+use crate::db::runs::{self, RunDto};
+use crate::db::state::StateView;
 use crate::db::timeline::{
-    ancestors, append_event_tx, get_route, list_routes, route_chapters, route_history, AppendEvent,
-    ChapterDto, EventDto, RouteDto,
+    get_route, list_routes, route_chapters, route_history, ChapterDto, EventDto, RouteDto,
 };
 use crate::db::Database;
-use crate::domain::events::{AssistantPayload, EventBody, EventKind, PlayerPayload};
+use crate::domain::events::EventBody;
+use crate::domain::provider::Billing;
 use crate::errors::{AppError, AppResult};
-use crate::services::mock_storyteller;
+use crate::services::mock_storyteller::MOCK_PROVIDER_LABEL;
 
 #[derive(Debug, Clone, Serialize, TS, FromRow)]
 #[serde(rename_all = "camelCase")]
@@ -22,6 +24,30 @@ pub struct StoryHeader {
     pub id: String,
     pub title: String,
     pub description: String,
+}
+
+/// Who writes new replies.
+#[derive(Debug, Clone, Serialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct StorytellerInfo {
+    /// `None` = the built-in offline storyteller.
+    pub profile_id: Option<String>,
+    pub label: String,
+    pub model_id: Option<String>,
+    pub billing: Billing,
+}
+
+/// Present when the route head is a player action without a reply.
+#[derive(Debug, Clone, Serialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct AwaitingReply {
+    pub input_event_id: String,
+    /// A run that is pending or streaming right now.
+    pub active_run: Option<RunDto>,
+    /// The most recent finished attempt (failed, cancelled, interrupted).
+    pub last_run: Option<RunDto>,
 }
 
 #[derive(Debug, Clone, Serialize, TS)]
@@ -34,6 +60,27 @@ pub struct RouteView {
     pub history: Vec<EventDto>,
     pub chapters: Vec<ChapterDto>,
     pub state: StateView,
+    pub awaiting_reply: Option<AwaitingReply>,
+    pub storyteller: StorytellerInfo,
+}
+
+pub async fn storyteller_info(db: &Database) -> AppResult<StorytellerInfo> {
+    if let Some(id) = providers::storyteller(db).await? {
+        if let Ok(row) = providers::get_profile_row(db, &id).await {
+            return Ok(StorytellerInfo {
+                profile_id: Some(row.id.clone()),
+                label: row.label.clone(),
+                model_id: Some(row.model_id.clone()),
+                billing: row.billing(),
+            });
+        }
+    }
+    Ok(StorytellerInfo {
+        profile_id: None,
+        label: MOCK_PROVIDER_LABEL.into(),
+        model_id: None,
+        billing: Billing::Local,
+    })
 }
 
 pub async fn route_view(db: &Database, route_id: &str) -> AppResult<RouteView> {
@@ -50,126 +97,32 @@ pub async fn route_view(db: &Database, route_id: &str) -> AppResult<RouteView> {
         .head_event_id
         .clone()
         .ok_or_else(|| AppError::internal("route has no head event"))?;
+    let history = route_history(db, route_id).await?;
+    let awaiting_reply = match history.last() {
+        Some(e) if matches!(e.body, EventBody::Player(_)) => {
+            let active_run = runs::active_run_for_route(db, route_id)
+                .await?
+                .filter(|r| r.input_event_id == e.id);
+            let last_run = match &active_run {
+                Some(_) => None,
+                None => runs::latest_run_for_input(db, route_id, &e.id).await?,
+            };
+            Some(AwaitingReply {
+                input_event_id: e.id.clone(),
+                active_run,
+                last_run,
+            })
+        }
+        _ => None,
+    };
     Ok(RouteView {
         routes: list_routes(db, &route.story_id).await?,
-        history: route_history(db, route_id).await?,
         chapters: route_chapters(db, route_id).await?,
         state: crate::db::state::state_at(db, &route.story_id, &head).await?,
+        storyteller: storyteller_info(db).await?,
+        history,
+        awaiting_reply,
         story,
         route,
     })
-}
-
-/// Commit the player's action and a deterministic offline reply in one
-/// transaction. Live models use generation runs instead (PR 06).
-pub async fn play_mock_turn(
-    db: &Database,
-    story_id: &str,
-    route_id: &str,
-    expected_head_id: &str,
-    text: &str,
-) -> AppResult<RouteView> {
-    let mut tx = db.write_txn().await?;
-    let player = append_event_tx(
-        &mut tx,
-        AppendEvent {
-            story_id: story_id.into(),
-            route_id: route_id.into(),
-            expected_head_id: expected_head_id.into(),
-            body: EventBody::Player(PlayerPayload { text: text.into() }),
-            generation_run_id: None,
-        },
-    )
-    .await?;
-    let (state, snaps) = state_with_snapshots(&mut tx, story_id, &player.event_id).await?;
-    let turn = ancestors(&mut tx, story_id, &player.event_id)
-        .await?
-        .iter()
-        .filter(|e| e.kind() == Some(EventKind::Player))
-        .count();
-    append_event_tx(
-        &mut tx,
-        AppendEvent {
-            story_id: story_id.into(),
-            route_id: route_id.into(),
-            expected_head_id: player.event_id,
-            body: EventBody::Assistant(AssistantPayload {
-                text: mock_storyteller::reply(&state, text, turn),
-                finish_reason: Some("stop".into()),
-                provider_label: Some(mock_storyteller::MOCK_PROVIDER_LABEL.into()),
-                model_id: None,
-            }),
-            generation_run_id: None,
-        },
-    )
-    .await?;
-    tx.commit().await?;
-    let _ = store_snapshots(db, &snaps).await;
-    route_view(db, route_id).await
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::db::stories::{create_story, list_stories};
-    use crate::db::test_support::test_db;
-    use crate::domain::templates::{QuickStartInput, TemplateCatalog};
-    use crate::errors::ErrorCode;
-
-    /// T01 + T52 at service level: Quick Start, play offline, reopen.
-    #[tokio::test]
-    async fn quick_start_and_offline_play() {
-        let t = test_db().await;
-        let draft = TemplateCatalog::bundled()
-            .resolve_quick_start(&QuickStartInput {
-                world_id: "starter:harbor-town".into(),
-                scenario_id: "starter:unsigned-letter".into(),
-                character_id: "starter:new-keeper".into(),
-                perspective: None,
-                detail: None,
-            })
-            .unwrap();
-        let created = create_story(&t.db, draft).await.unwrap();
-        let v = route_view(&t.db, &created.main_route_id).await.unwrap();
-        assert_eq!(v.chapters[0].title, "The Lamp Room");
-        assert_eq!(
-            v.state.effective.active_chapter.as_ref().unwrap().ordinal,
-            1
-        );
-        assert!(v.route.is_main);
-
-        let v = play_mock_turn(
-            &t.db,
-            &created.story_id,
-            &created.main_route_id,
-            &created.head_event_id,
-            "Read the letter",
-        )
-        .await
-        .unwrap();
-        assert_eq!(v.history.len(), 3);
-        assert!(matches!(v.history[2].body, EventBody::Assistant(_)));
-
-        // A stale head is refused and nothing is written.
-        let e = play_mock_turn(
-            &t.db,
-            &created.story_id,
-            &created.main_route_id,
-            &created.head_event_id,
-            "again",
-        )
-        .await
-        .unwrap_err();
-        assert_eq!(e.code, ErrorCode::HeadChanged);
-        assert_eq!(
-            route_view(&t.db, &created.main_route_id)
-                .await
-                .unwrap()
-                .history
-                .len(),
-            3
-        );
-        let s = &list_stories(&t.db).await.unwrap()[0];
-        assert_eq!(s.last_route_id, created.main_route_id);
-    }
 }

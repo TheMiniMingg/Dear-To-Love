@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Live AI storyteller: connect any OpenAI-compatible service (cloud or a local server such as
+  LM Studio or Ollama) in Settings; keys stay in the system credential store. Replies stream in
+  as they are written, can be stopped, and a failed or interrupted reply keeps your action with
+  Retry and Change action. Every request is recorded in the usage ledger with token counts and a
+  cost estimate when rates are known. Free connection test and an explicit test message.
+  Diagnostics adds the AI storyteller check (contacts the service only on the deep check).
 - Library, Quick Start and reader: pick a starter world, scenario and character with arrow
   pickers, play turns with the built-in offline storyteller, quick save (Ctrl/Cmd+S), save and
   load (older saves continue as a new branch), branch from any reply, restart a chapter, start

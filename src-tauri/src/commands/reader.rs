@@ -1,7 +1,12 @@
+use std::time::Duration;
+
+use tauri::ipc::Channel;
 use tauri::State;
 
 use crate::db::timeline::{self, RouteDto};
+use crate::domain::provider::StreamMessage;
 use crate::errors::AppResult;
+use crate::services::generation::{self, Ctx, Submitted};
 use crate::services::reader::{self, RouteView};
 use crate::state::AppState;
 
@@ -10,15 +15,65 @@ pub async fn get_route_view(state: State<'_, AppState>, route_id: String) -> App
     reader::route_view(state.db()?, &route_id).await
 }
 
+/// Commit the player's action and create a pending reply.
 #[tauri::command]
-pub async fn play_mock_turn(
+pub async fn submit_action(
     state: State<'_, AppState>,
     story_id: String,
     route_id: String,
     expected_head_id: String,
     text: String,
+) -> AppResult<Submitted> {
+    generation::submit_action(state.db()?, &story_id, &route_id, &expected_head_id, &text).await
+}
+
+/// Write the reply for a pending run, streaming drafts over `on_event`.
+/// Resolves with the route view once the reply is committed.
+#[tauri::command]
+pub async fn generate_reply(
+    state: State<'_, AppState>,
+    run_id: String,
+    on_event: Channel<StreamMessage>,
 ) -> AppResult<RouteView> {
-    reader::play_mock_turn(state.db()?, &story_id, &route_id, &expected_head_id, &text).await
+    let ctx = Ctx {
+        db: state.db()?,
+        secrets: state.secrets.as_ref(),
+        registry: &state.runs,
+        session_id: &state.session_id,
+        offline_delay: Duration::from_millis(18),
+    };
+    // A closed window just stops the drafts; the reply still commits.
+    generation::generate(&ctx, &run_id, &mut |m| {
+        let _ = on_event.send(m);
+    })
+    .await
+}
+
+#[tauri::command]
+pub async fn retry_reply(
+    state: State<'_, AppState>,
+    story_id: String,
+    route_id: String,
+    expected_head_id: String,
+) -> AppResult<Submitted> {
+    generation::retry_reply(state.db()?, &story_id, &route_id, &expected_head_id).await
+}
+
+#[tauri::command]
+pub async fn cancel_reply(state: State<'_, AppState>, run_id: String) -> AppResult<()> {
+    generation::cancel(state.db()?, &state.runs, &run_id).await
+}
+
+/// Change an action: a new branch with the new text and a pending reply.
+#[tauri::command]
+pub async fn edit_action(
+    state: State<'_, AppState>,
+    story_id: String,
+    route_id: String,
+    player_event_id: String,
+    text: String,
+) -> AppResult<Submitted> {
+    generation::edit_action(state.db()?, &story_id, &route_id, &player_event_id, &text).await
 }
 
 #[tauri::command]
