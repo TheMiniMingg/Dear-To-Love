@@ -1,0 +1,217 @@
+name: Release
+
+# A `vX.Y.Z` tag builds the installers for Windows, macOS and Linux, installs
+# and starts each one (installer smoke test, T49), and creates a draft GitHub
+# release with checksums for a maintainer to review and publish. The tag must
+# match the packaged version (T48). Pull requests that change the release
+# tooling run the same builds and smoke tests without publishing anything.
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - .github/workflows/release.yml
+      - scripts/check-version.mjs
+      - scripts/release-notes.mjs
+      - scripts/lib/**
+      - scripts/smoke/**
+      - src-tauri/tauri.conf.json
+      - src-tauri/src/services/smoke.rs
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+jobs:
+  version:
+    runs-on: ubuntu-24.04
+    outputs:
+      version: ${{ steps.v.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+      - name: Tag matches the packaged version (T48)
+        run: node scripts/check-version.mjs
+      - id: v
+        run: echo "version=$(node -p "require('./src-tauri/tauri.conf.json').version")" >> "$GITHUB_OUTPUT"
+      - name: The CHANGELOG has notes for this version
+        if: github.ref_type == 'tag'
+        run: node scripts/release-notes.mjs "${{ steps.v.outputs.version }}" > /dev/null
+
+  build:
+    needs: version
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: linux-x64
+            os: ubuntu-22.04
+            bundles: deb,rpm,appimage
+            bundle_dir: src-tauri/target/release/bundle
+          - name: windows-x64
+            os: windows-2022
+            bundles: nsis,msi
+            bundle_dir: src-tauri/target/release/bundle
+          - name: macos-universal
+            os: macos-15
+            bundles: app,dmg
+            target: universal-apple-darwin
+            bundle_dir: src-tauri/target/universal-apple-darwin/release/bundle
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Tauri system dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev build-essential libxdo-dev libssl-dev libayatana-appindicator3-dev librsvg2-dev libsecret-1-dev patchelf
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - uses: dtolnay/rust-toolchain@1.97.0
+        with:
+          targets: ${{ matrix.target && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+          key: release-${{ matrix.name }}
+      - run: pnpm install --frozen-lockfile
+
+      # Signing is used when its secrets exist; without them the builds are
+      # unsigned (macOS ad-hoc signed). See docs/release.md.
+      - name: macOS signing
+        if: runner.os == 'macOS'
+        shell: bash
+        env:
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          if [ -n "$APPLE_CERTIFICATE" ]; then
+            for v in APPLE_CERTIFICATE APPLE_CERTIFICATE_PASSWORD APPLE_SIGNING_IDENTITY APPLE_ID APPLE_PASSWORD APPLE_TEAM_ID; do
+              if [ -n "${!v}" ]; then echo "$v=${!v}" >> "$GITHUB_ENV"; fi
+            done
+          else
+            echo '{"bundle":{"macOS":{"signingIdentity":"-"}}}' > "$RUNNER_TEMP/adhoc.json"
+            echo "TAURI_EXTRA_CONFIG=$RUNNER_TEMP/adhoc.json" >> "$GITHUB_ENV"
+          fi
+      - name: Windows signing
+        if: runner.os == 'Windows'
+        shell: pwsh
+        env:
+          WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE }}
+          WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
+        run: |
+          if (-not $env:WINDOWS_CERTIFICATE) { exit 0 }
+          $pfx = Join-Path $env:RUNNER_TEMP 'signing.pfx'
+          [IO.File]::WriteAllBytes($pfx, [Convert]::FromBase64String($env:WINDOWS_CERTIFICATE))
+          $password = ConvertTo-SecureString $env:WINDOWS_CERTIFICATE_PASSWORD -AsPlainText -Force
+          $cert = Import-PfxCertificate -FilePath $pfx -CertStoreLocation Cert:\CurrentUser\My -Password $password
+          Remove-Item $pfx
+          $config = @{ bundle = @{ windows = @{ certificateThumbprint = $cert.Thumbprint; digestAlgorithm = 'sha256'; timestampUrl = 'http://timestamp.digicert.com' } } }
+          $file = Join-Path $env:RUNNER_TEMP 'signing.json'
+          $config | ConvertTo-Json -Depth 4 | Out-File -Encoding ascii $file
+          "TAURI_EXTRA_CONFIG=$file" | Out-File -Append -Encoding utf8 $env:GITHUB_ENV
+
+      - name: Build installers
+        shell: bash
+        env:
+          # linuxdeploy (AppImage) runs without FUSE on the runner.
+          APPIMAGE_EXTRACT_AND_RUN: 1
+        run: |
+          args=(--bundles "${{ matrix.bundles }}")
+          if [ -n "${{ matrix.target }}" ]; then args+=(--target "${{ matrix.target }}"); fi
+          if [ -n "$TAURI_EXTRA_CONFIG" ]; then args+=(--config "$TAURI_EXTRA_CONFIG"); fi
+          pnpm tauri build "${args[@]}"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: installers-${{ matrix.name }}
+          if-no-files-found: error
+          path: |
+            ${{ matrix.bundle_dir }}/deb/*.deb
+            ${{ matrix.bundle_dir }}/rpm/*.rpm
+            ${{ matrix.bundle_dir }}/appimage/*.AppImage
+            ${{ matrix.bundle_dir }}/nsis/*-setup.exe
+            ${{ matrix.bundle_dir }}/msi/*.msi
+            ${{ matrix.bundle_dir }}/dmg/*.dmg
+
+  # Install each package on a clean machine, start it twice around a
+  # reinstall, and check its own report (T49).
+  smoke:
+    needs: [version, build]
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: linux-x64
+            os: ubuntu-24.04
+          - name: windows-x64
+            os: windows-2022
+          - name: macos-universal
+            os: macos-15
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install a display server
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y xvfb
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+      - uses: actions/download-artifact@v4
+        with:
+          name: installers-${{ matrix.name }}
+          path: installers
+      - name: Install, start, reinstall, start again
+        run: node scripts/smoke/run.mjs --dir installers --version ${{ needs.version.outputs.version }}
+
+  publish:
+    if: github.ref_type == 'tag'
+    needs: [version, build, smoke]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: installers-*
+          path: installers
+          merge-multiple: true
+      - name: Name files without spaces and write checksums
+        run: |
+          mkdir dist
+          find installers -type f -print0 | while IFS= read -r -d '' f; do
+            cp "$f" "dist/$(basename "$f" | tr ' ' '.')"
+          done
+          cd dist && sha256sum * > SHA256SUMS.txt && cat SHA256SUMS.txt
+      - name: Create a draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SIGNED: ${{ secrets.APPLE_CERTIFICATE != '' && secrets.WINDOWS_CERTIFICATE != '' }}
+        run: |
+          version="${{ needs.version.outputs.version }}"
+          flags=()
+          if [ "$SIGNED" = "true" ]; then flags+=(--signed); fi
+          node scripts/release-notes.mjs "$version" "${flags[@]}" > notes.md
+          release=(--draft --verify-tag)
+          if [[ "$version" == *-* ]]; then release+=(--prerelease); fi
+          gh release create "$GITHUB_REF_NAME" dist/* "${release[@]}" \
+            --title "Dear to Love $GITHUB_REF_NAME" --notes-file notes.md

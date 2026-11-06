@@ -1,3 +1,5 @@
+import { useEffect } from 'react';
+import { commands } from '../api/commands';
 import { DiagnosticsScreen } from '../features/diagnostics/DiagnosticsScreen';
 import { BackupsScreen } from '../features/backups/BackupsScreen';
 import { ImagesScreen } from '../features/images/ImagesScreen';
@@ -12,6 +14,10 @@ import { useUiStore } from './store';
 
 export function App() {
   const screen = useUiStore((s) => s.screen);
+  // Tells the app the interface loaded (used by the installer smoke test).
+  useEffect(() => {
+    void commands.frontendReady().catch(() => undefined);
+  }, []);
   return (
     <div className="app-shell">
       <main className="app-main">

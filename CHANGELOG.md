@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Installers for Windows (setup and MSI), macOS (one download for Apple silicon and Intel)
+  and Linux (`.deb`, `.rpm` and AppImage), published with checksums. Each one is installed and
+  started on a clean machine before a release is made, and must keep a test story through a
+  reinstall. The README now explains how to install, open unsigned builds and connect an AI
+  model.
 - Updates, About and support. **Settings → Updates** can check GitHub for a new release once a
   day; it is off until you turn it on, and **Check now** asks once. When a newer stable release is
   out, a small notice in the footer links to its release page; **Got it** hides it until an even
