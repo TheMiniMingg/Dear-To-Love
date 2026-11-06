@@ -85,8 +85,7 @@ impl Env {
     }
 
     async fn act(&self, text: &str) {
-        self.push(EventBody::Player(PlayerPayload { text: text.into() }))
-            .await;
+        self.push(EventBody::Player(PlayerPayload::new(text))).await;
     }
 
     async fn reply(&self, text: &str) {

@@ -31,6 +31,7 @@ import type {
   QuickStartInput,
   RateCardView,
   RouteDto,
+  RollRequest,
   RouteView,
   StateEdit,
   SaveDto,
@@ -147,7 +148,8 @@ export const commands = {
   deleteStory: (storyId: string) => call<void>('delete_story', { storyId }),
 
   getRouteView: (routeId: string) => call<RouteView>('get_route_view', { routeId }),
-  submitAction: (r: RouteRef & { expectedHeadId: string; text: string }) =>
+  /** With `roll`, the app rolls the dice and stores the result with the action. */
+  submitAction: (r: RouteRef & { expectedHeadId: string; text: string; roll?: RollRequest }) =>
     call<Submitted>('submit_action', r),
   /**
    * Streams drafts to `onMessage`; resolves once the reply is committed.

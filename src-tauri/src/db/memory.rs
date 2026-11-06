@@ -168,9 +168,7 @@ mod tests {
                 story_id: story_id.into(),
                 route_id: route_id.into(),
                 expected_head_id: head.into(),
-                body: EventBody::Player(PlayerPayload {
-                    text: format!("action {n}"),
-                }),
+                body: EventBody::Player(PlayerPayload::new(format!("action {n}"))),
                 generation_run_id: None,
             },
         )

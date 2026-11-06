@@ -1,5 +1,6 @@
 pub mod app_info;
 pub mod diagnostics;
+pub mod dice;
 pub mod draft;
 pub mod events;
 pub mod provider;

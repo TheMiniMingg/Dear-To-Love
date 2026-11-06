@@ -5,6 +5,7 @@ use std::borrow::Cow;
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 
+use super::dice::DiceRoll;
 use super::story_state::{Character, KnownFact, Narration, Relationship, Scene, World};
 use crate::errors::{AppError, AppResult};
 
@@ -71,7 +72,31 @@ pub struct ChapterStartPayload {
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[ts(export)]
 pub struct PlayerPayload {
+    /// What the player wrote. May be empty when the action is a roll.
     pub text: String,
+    /// A roll the app made for this action.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub roll: Option<DiceRoll>,
+}
+
+impl PlayerPayload {
+    pub fn new(text: impl Into<String>) -> Self {
+        Self {
+            text: text.into(),
+            roll: None,
+        }
+    }
+
+    /// The action as the storyteller reads it: the roll as a tag, then
+    /// the player's words.
+    pub fn story_text(&self) -> Cow<'_, str> {
+        match &self.roll {
+            None => Cow::Borrowed(&self.text),
+            Some(r) if self.text.trim().is_empty() => Cow::Owned(r.tag()),
+            Some(r) => Cow::Owned(format!("{}\n\n{}", r.tag(), self.text)),
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
@@ -224,7 +249,7 @@ impl EventBody {
     pub fn reader_text(&self) -> Cow<'_, str> {
         match self {
             Self::ChapterStart(p) => Cow::Owned(format!("Chapter {}: {}", p.ordinal, p.title)),
-            Self::Player(p) => Cow::Borrowed(&p.text),
+            Self::Player(p) => p.story_text(),
             Self::Assistant(p) => Cow::Borrowed(&p.text),
             Self::Edit(p) => Cow::Borrowed(p.note.as_deref().unwrap_or_default()),
             Self::Checkpoint(p) => Cow::Borrowed(&p.label),
@@ -246,7 +271,9 @@ impl EventBody {
                 }
             }
             Self::Player(p) => {
-                if p.text.trim().is_empty() {
+                if let Some(roll) = &p.roll {
+                    roll.validate()?;
+                } else if p.text.trim().is_empty() {
                     return bad("action text must not be empty");
                 }
                 if len(&p.text) > MAX_PLAYER_TEXT {
@@ -288,7 +315,7 @@ mod tests {
     #[test]
     fn body_round_trips_through_storage_parts() {
         let bodies = [
-            EventBody::Player(PlayerPayload { text: "Hi".into() }),
+            EventBody::Player(PlayerPayload::new("Hi")),
             EventBody::Edit(EditPayload {
                 changes: vec![StateEdit::SetOpenThreads {
                     open_threads: vec!["x".into()],
@@ -318,7 +345,7 @@ mod tests {
 
     #[test]
     fn rejects_empty_text() {
-        assert!(EventBody::Player(PlayerPayload { text: "  ".into() })
+        assert!(EventBody::Player(PlayerPayload::new("  "))
             .validate()
             .is_err());
     }

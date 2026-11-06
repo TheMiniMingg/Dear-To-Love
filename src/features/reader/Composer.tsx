@@ -1,6 +1,7 @@
 import { useId, useRef, useState, type KeyboardEvent } from 'react';
 import { isComposing } from '../../app/keyboard';
-import { wrapAction, type ComposeMode } from './messages';
+import type { RollRequest, Stat } from '../../types';
+import { DICE_PATTERN, rollFromComposer, wrapAction, type ComposeMode } from './messages';
 
 /** The longest action the app accepts. */
 const MAX_ACTION = 20_000;
@@ -8,32 +9,44 @@ const MAX_ACTION = 20_000;
 type Props = {
   value: string;
   onChange: (text: string) => void;
-  /** Sends `text`: the box's value, or it wrapped as a text, call or thought. */
-  onSubmit: (text: string) => void;
+  /**
+   * Sends `text`: the box's value, or it wrapped as a text, call or
+   * thought. A roll comes with what it is for; the app rolls it.
+   */
+  onSubmit: (text: string, roll?: RollRequest) => void;
   disabled: boolean;
   placeholder: string;
   /** Who you can text or call: the other characters' names. */
   contacts?: string[];
   playerName?: string;
+  /** Offer "Roll dice" (stories with dice on), with the player's stats. */
+  dice?: boolean;
+  stats?: Stat[];
 };
 
-const MODES: { value: ComposeMode; label: string }[] = [
+type Mode = ComposeMode | 'roll';
+
+const MODES: { value: Mode; label: string }[] = [
   { value: 'act', label: 'Do or say' },
   { value: 'text', label: 'Send a text' },
   { value: 'call', label: 'Call' },
   { value: 'think', label: 'Think' },
+  { value: 'roll', label: 'Roll dice' },
 ];
 
-const PLACEHOLDERS: Record<Exclude<ComposeMode, 'act'>, string> = {
+const PLACEHOLDERS: Record<Exclude<Mode, 'act'>, string> = {
   text: 'Your message (Enter to send)',
   call: 'What you say when they pick up, or leave empty to just call',
   think: 'What goes through your head (Enter to send)',
+  roll: 'What you try, for example: climb the wall (optional)',
 };
+
+const DICE = ['1d20', '1d6', '2d6', '1d100', '1d4', '1d8', '1d10', '1d12', '0-100'];
 
 /**
  * Free-text action box. Enter sends, Shift+Enter adds a new line, and Enter
  * that confirms an IME composition never sends. The mode menu turns the
- * action into a text message, a phone call or a thought.
+ * action into a text message, a phone call, a thought or a dice roll.
  */
 export function Composer({
   value,
@@ -43,17 +56,29 @@ export function Composer({
   placeholder,
   contacts = [],
   playerName = 'You',
+  dice = false,
+  stats = [],
 }: Props) {
   const ref = useRef<HTMLTextAreaElement>(null);
   const id = useId();
-  const [mode, setMode] = useState<ComposeMode>('act');
+  const [chosen, setMode] = useState<Mode>('act');
   const [to, setTo] = useState('');
+  const [roll, setRoll] = useState({ dice: '1d20', stat: '', target: '' });
+  const mode = chosen === 'roll' && !dice ? 'act' : chosen;
   const needsTo = mode === 'text' || mode === 'call';
   const ready =
-    !disabled && (!needsTo || to.trim() !== '') && (mode === 'call' || value.trim() !== '');
+    !disabled &&
+    (mode === 'roll'
+      ? DICE_PATTERN.test(roll.dice)
+      : (!needsTo || to.trim() !== '') && (mode === 'call' || value.trim() !== ''));
 
   const submit = () => {
     if (!ready) return;
+    if (mode === 'roll') {
+      const r = rollFromComposer(value, roll);
+      onSubmit(r.text, r.roll);
+      return;
+    }
     onSubmit(wrapAction(mode, value, { to, player: playerName }));
   };
   const onKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
@@ -74,12 +99,8 @@ export function Composer({
         <label htmlFor={`${id}-mode`} className="visually-hidden">
           Kind of action
         </label>
-        <select
-          id={`${id}-mode`}
-          value={mode}
-          onChange={(e) => setMode(e.target.value as ComposeMode)}
-        >
-          {MODES.map((m) => (
+        <select id={`${id}-mode`} value={mode} onChange={(e) => setMode(e.target.value as Mode)}>
+          {MODES.filter((m) => dice || m.value !== 'roll').map((m) => (
             <option key={m.value} value={m.value}>
               {m.label}
             </option>
@@ -103,6 +124,56 @@ export function Composer({
             </datalist>
           </>
         )}
+        {mode === 'roll' && (
+          <>
+            <label htmlFor={`${id}-dice`}>Dice</label>
+            <input
+              id={`${id}-dice`}
+              className="roll-dice-input"
+              value={roll.dice}
+              list={`${id}-dice-list`}
+              maxLength={24}
+              aria-invalid={!DICE_PATTERN.test(roll.dice)}
+              title="Dice such as 1d20 or 2d6+1, or a range such as 40-100"
+              onChange={(e) => setRoll({ ...roll, dice: e.target.value })}
+            />
+            <datalist id={`${id}-dice-list`}>
+              {DICE.map((d) => (
+                <option key={d} value={d} />
+              ))}
+            </datalist>
+            {stats.some((s) => s.name.trim()) && (
+              <>
+                <label htmlFor={`${id}-stat`}>With</label>
+                <select
+                  id={`${id}-stat`}
+                  value={roll.stat}
+                  onChange={(e) => setRoll({ ...roll, stat: e.target.value })}
+                >
+                  <option value="">No stat</option>
+                  {stats
+                    .filter((s) => s.name.trim())
+                    .map((s) => (
+                      <option key={s.name} value={s.name.trim()}>
+                        {s.name.trim()} ({s.value >= 0 ? '+' : ''}
+                        {s.value})
+                      </option>
+                    ))}
+                </select>
+              </>
+            )}
+            <label htmlFor={`${id}-target`}>Need</label>
+            <input
+              id={`${id}-target`}
+              className="roll-target-input"
+              type="number"
+              inputMode="numeric"
+              value={roll.target}
+              placeholder="Any"
+              onChange={(e) => setRoll({ ...roll, target: e.target.value })}
+            />
+          </>
+        )}
       </div>
       <label htmlFor="composer-input" className="visually-hidden">
         What do you do?
@@ -124,7 +195,7 @@ export function Composer({
         </span>
       )}
       <button type="submit" className="primary" disabled={!ready}>
-        {mode === 'call' ? 'Call' : 'Send'}
+        {mode === 'call' ? 'Call' : mode === 'roll' ? 'Roll' : 'Send'}
       </button>
     </form>
   );

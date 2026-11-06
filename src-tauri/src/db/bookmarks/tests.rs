@@ -48,7 +48,7 @@ async fn push(db: &Database, story: &str, route: &str, body: EventBody) -> Strin
 }
 
 fn act(t: &str) -> EventBody {
-    EventBody::Player(PlayerPayload { text: t.into() })
+    EventBody::Player(PlayerPayload::new(t))
 }
 
 fn reply(t: &str) -> EventBody {

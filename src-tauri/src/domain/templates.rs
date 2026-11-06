@@ -169,6 +169,16 @@ fn check_version(v: u32, id: &str) -> AppResult<()> {
     }
 }
 
+/// Story types that roll dice for uncertain moments unless the player
+/// turns it off. Matches `DICE_STORY_TYPES` in the wizard.
+pub const DICE_STORY_TYPES: [&str; 3] = ["Adventure", "Fantasy", "School life"];
+
+pub fn rolls_dice(story_type: &str) -> bool {
+    DICE_STORY_TYPES
+        .iter()
+        .any(|t| t.eq_ignore_ascii_case(story_type.trim()))
+}
+
 impl TemplateCatalog {
     pub fn parse(sources: &[&str]) -> AppResult<Self> {
         let mut cat = Self::default();
@@ -265,6 +275,9 @@ impl TemplateCatalog {
         let mut narration = world.narration.clone();
         // New stories show texts, calls and letters as cards.
         narration.message_cards = true;
+        if input.story_type.as_deref().is_some_and(rolls_dice) {
+            narration.dice = true;
+        }
         if let Some(p) = input.perspective {
             narration.perspective = p;
         }
@@ -366,6 +379,8 @@ mod tests {
             .base_state
             .narration;
         assert_eq!(n.genres[0], "School life");
+        assert!(n.dice, "a school story rolls for its tests");
+        assert!(!plain.dice);
     }
 
     #[test]

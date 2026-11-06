@@ -20,8 +20,16 @@ import {
   withStoryType,
   worldFits,
 } from './ContentFields';
-import { LinesField, PresetPicker, TextArea, TextField, ToggleList, uniq } from './fields';
-import { STYLES, StyleFields, tellingOf } from './StyleFields';
+import {
+  LinesField,
+  PresetPicker,
+  StatsField,
+  TextArea,
+  TextField,
+  ToggleList,
+  uniq,
+} from './fields';
+import { DICE_STORY_TYPES, STYLES, StyleFields, tellingOf } from './StyleFields';
 
 export type StepProps = {
   draft: CreateStoryDraft;
@@ -168,6 +176,11 @@ export function WorldStep({ draft, update, catalog, guided }: StepProps) {
           if (guided && current && next.length > 0 && !next.includes(current)) {
             Object.assign(patch, applyWorld(catalog, next[0]!.id, draft.narration));
           }
+          // Adventures, fantasy and school stories roll dice; you can turn it off.
+          patch.narration = {
+            ...(patch.narration ?? draft.narration),
+            dice: DICE_STORY_TYPES.includes(t) || undefined,
+          };
           update(patch);
         }}
       />
@@ -277,6 +290,9 @@ export function CharacterStep({ draft, update, catalog, guided }: StepProps) {
             value={p.personality}
             onChange={(personality) => set({ personality })}
           />
+          {draft.narration.dice && (
+            <StatsField value={p.stats ?? []} onChange={(stats) => set({ stats })} />
+          )}
         </>
       ) : (
         <>
@@ -312,6 +328,7 @@ export function CharacterStep({ draft, update, catalog, guided }: StepProps) {
             value={p.abilities}
             onChange={(abilities) => set({ abilities })}
           />
+          <StatsField value={p.stats ?? []} onChange={(stats) => set({ stats })} />
         </>
       )}
     </>
@@ -692,6 +709,15 @@ export function ReviewStep({
           {draft.player.name || '(not set)'}
           {draft.player.role && `, ${draft.player.role}`}
           {draft.player.pronouns && <span className="muted"> ({draft.player.pronouns})</span>}
+          {(draft.player.stats ?? []).some((st) => st.name.trim()) && (
+            <span className="muted">
+              {' · '}
+              {(draft.player.stats ?? [])
+                .filter((st) => st.name.trim())
+                .map((st) => `${st.name.trim()} ${st.value}`)
+                .join(', ')}
+            </span>
+          )}
         </dd>
         <dt>Also here</dt>
         <dd>{others || 'Nobody else yet'}</dd>
@@ -706,6 +732,7 @@ export function ReviewStep({
           {DETAILS.find((d) => d.value === draft.narration.detail)?.label}
           {draft.narration.tone && ` · ${draft.narration.tone}`}
           {draft.narration.language && ` · in ${draft.narration.language}`}
+          {draft.narration.dice && ' · dice rolls'}
         </dd>
         <dt>Kind of story</dt>
         <dd>

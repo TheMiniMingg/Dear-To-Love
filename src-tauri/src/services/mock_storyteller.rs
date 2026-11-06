@@ -97,6 +97,31 @@ const THOUGHTS: &[&str] = &[
     "Brave or reckless? I can't tell yet.",
 ];
 
+const ROLL_SUCCESS: &[&str] = &[
+    "The roll goes your way. It works, cleanly enough that you almost don't trust it.",
+    "Luck is with you this time: it comes off better than you hoped.",
+    "You make it, with nothing to spare.",
+];
+
+const ROLL_FAILURE: &[&str] = &[
+    "The roll goes against you. It doesn't work, and now someone may have noticed.",
+    "Not this time. It slips away from you, and it will cost you something.",
+    "You fall short, just barely, and the moment passes.",
+];
+
+/// A roll with no target, where the number itself is the result.
+const ROLL_SCORE: &[&str] = &[
+    "It comes out at {result}. Whether that is good enough remains to be seen.",
+    "The number is {result}, and it settles things for now.",
+];
+
+/// Words that make an action risky enough to roll for.
+const TRY_WORDS: &[&str] = &[
+    "try", "attempt", "sneak", "climb", "jump", "fight", "attack", "dodge", "persuade", "convince",
+    "bluff", "lie", "steal", "force", "break", "escape", "chase", "swim", "hack", "pick", "exam",
+    "test", "race", "duel", "cast", "charm", "lift",
+];
+
 const LOOK_WORDS: &[&str] = &[
     "look",
     "examine",
@@ -143,12 +168,15 @@ const HANDLE_WORDS: &[&str] = &[
     "unlock", "lift", "drop", "write", "fix", "repair", "light", "hide", "put",
 ];
 
-fn pick<'a>(items: &'a [&'a str], seed: &[u8], salt: u8) -> &'a str {
+fn hash_byte(seed: &[u8], salt: u8) -> u8 {
     let mut h = Sha256::new();
     h.update(seed);
     h.update([salt]);
-    let d = h.finalize();
-    items[d[0] as usize % items.len()]
+    h.finalize()[0]
+}
+
+fn pick<'a>(items: &'a [&'a str], seed: &[u8], salt: u8) -> &'a str {
+    items[hash_byte(seed, salt) as usize % items.len()]
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -211,6 +239,28 @@ fn first_tag_attr(text: &str, tag: &str, attr: &str) -> Option<String> {
     (!value.is_empty()).then(|| value.to_string())
 }
 
+/// Whether the action is a gamble worth a roll.
+fn is_risky(action: &str) -> bool {
+    action
+        .to_lowercase()
+        .split(|c: char| !c.is_alphabetic())
+        .any(|w| TRY_WORDS.contains(&w) || TRY_WORDS.contains(&w.strip_suffix('s').unwrap_or(w)))
+}
+
+/// A short "for" label for a roll from the player's words.
+fn roll_label(action: &str) -> String {
+    let first = action
+        .split(['.', '!', '?', '\n'])
+        .map(str::trim)
+        .find(|s| !s.is_empty())
+        .unwrap_or("Try your luck");
+    let mut label: String = first.chars().take(60).collect();
+    if let Some(c) = label.chars().next() {
+        label.replace_range(..c.len_utf8(), &c.to_uppercase().to_string());
+    }
+    attr(&label)
+}
+
 /// A name safe to put inside an attribute.
 fn attr(name: &str) -> String {
     name.trim().replace(['"', '<', '>'], "'")
@@ -259,21 +309,43 @@ pub fn reply(state: &EffectiveState, action: &str, turn: usize, opens_chapter: b
         parts.push(opening);
     }
 
-    let response = match classify(action) {
-        ActionKind::Look => pick(LOOK, seed, 2),
-        ActionKind::Talk if npc.is_some() => pick(TALK, seed, 2),
-        ActionKind::Talk => pick(TALK_ALONE, seed, 2),
-        ActionKind::Move => pick(MOVE, seed, 2),
-        ActionKind::Handle => pick(HANDLE, seed, 2),
-        ActionKind::Other => pick(OTHER, seed, 2),
+    // A roll's result decides what happens, exactly as it fell.
+    let rolled = first_tag_attr(action, "roll", "result");
+    let response = match (
+        rolled.as_deref(),
+        first_tag_attr(action, "roll", "outcome").as_deref(),
+    ) {
+        (Some(_), Some("success")) => pick(ROLL_SUCCESS, seed, 2).to_string(),
+        (Some(_), Some("failure")) => pick(ROLL_FAILURE, seed, 2).to_string(),
+        (Some(result), _) => pick(ROLL_SCORE, seed, 2).replace("{result}", result),
+        (None, _) => match classify(action) {
+            ActionKind::Look => pick(LOOK, seed, 2),
+            ActionKind::Talk if npc.is_some() => pick(TALK, seed, 2),
+            ActionKind::Talk => pick(TALK_ALONE, seed, 2),
+            ActionKind::Move => pick(MOVE, seed, 2),
+            ActionKind::Handle => pick(HANDLE, seed, 2),
+            ActionKind::Other => pick(OTHER, seed, 2),
+        }
+        .to_string(),
     };
-    parts.push(format!("{} {}", pick(BEATS, seed, 1), fill(response)));
+    parts.push(format!("{} {}", pick(BEATS, seed, 1), fill(&response)));
     if let (true, Some(c)) = (thoughts, npc) {
         parts.push(format!(
             "<thought who=\"{}\">{}</thought>",
             attr(&c.name),
             pick(THOUGHTS, seed, 7)
         ));
+    }
+
+    // With dice on, a risky action stops at the moment of truth.
+    if narration.dice && rolled.is_none() && is_risky(action) {
+        let target = 8 + hash_byte(seed, 8) % 6;
+        parts.push("Everything hangs on the next moment.".into());
+        parts.push(format!(
+            "<roll for=\"{}\" dice=\"1d20\" target=\"{target}\"/>",
+            roll_label(action)
+        ));
+        return parts.join("\n\n");
     }
 
     let closer = if npc.is_some() && pick(&["npc", "plain"], seed, 4) == "npc" {
@@ -373,5 +445,46 @@ mod tests {
         let r = reply(&EffectiveState::new(state), "Wave", 3, false);
         assert!(r.contains("<thought who=\"Mara\">"), "{r}");
         assert_eq!(first_tag_attr("<text to=\"\">x</text>", "text", "to"), None);
+    }
+
+    #[test]
+    fn asks_for_rolls_when_dice_are_on_and_follows_the_result() {
+        let mut state = sample_lighthouse();
+        let s = EffectiveState::new(state.clone());
+        assert!(!reply(&s, "Try to pick the lock", 2, false).contains("<roll"));
+        state.narration.dice = true;
+        let s = EffectiveState::new(state);
+        let r = reply(&s, "try to pick the lock. Carefully.", 2, false);
+        assert!(
+            r.contains("<roll for=\"Try to pick the lock\" dice=\"1d20\" target=\""),
+            "{r}"
+        );
+        assert!(r.ends_with("\"/>"), "the roll is the last thing: {r}");
+        assert!(!reply(&s, "Look around", 3, false).contains("<roll"));
+
+        let won = reply(
+            &s,
+            "<roll for=\"Pick the lock\" dice=\"1d20\" target=\"10\" result=\"14\" \
+             outcome=\"success\"/>",
+            3,
+            false,
+        );
+        assert!(ROLL_SUCCESS.iter().any(|l| won.contains(l)), "{won}");
+        assert!(!won.contains("<roll"), "no second roll for the same moment");
+        let lost = reply(
+            &s,
+            "<roll for=\"Pick the lock\" dice=\"1d20\" target=\"10\" result=\"4\" \
+             outcome=\"failure\"/>",
+            3,
+            false,
+        );
+        assert!(ROLL_FAILURE.iter().any(|l| lost.contains(l)), "{lost}");
+        let score = reply(
+            &s,
+            "<roll for=\"Exam score\" dice=\"40-100\" result=\"73\"/>",
+            3,
+            false,
+        );
+        assert!(score.contains("73"), "{score}");
     }
 }

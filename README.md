@@ -23,6 +23,9 @@ offline storyteller lets you try everything without either.
   how it is told: a narrator, characters' inner thoughts with no narrator, a script, or
   mostly messages. Texts, calls and letters show up as phone and letter cards, and you can
   text or call characters yourself. Set the story's language, such as Japanese or Korean.
+- **Roll dice** for risky moments. The storyteller sets the odds from the story (study for a
+  test and your lowest score goes up), the app rolls fairly, and your character's stats add
+  to the roll.
 - **End a chapter** when it feels finished: the storyteller writes a recap of what happened,
   you edit it, and the chapter is saved. Every later chapter reads the recaps, so the story
   remembers.

@@ -55,8 +55,9 @@ mod tests {
     }
 }
 
-/// Tags the storyteller uses for texts, calls, thoughts, letters and posts.
-const MESSAGE_TAGS: [&str; 5] = ["text", "call", "thought", "letter", "post"];
+/// Tags the storyteller uses for texts, calls, thoughts, letters, posts
+/// and dice rolls.
+const MESSAGE_TAGS: [&str; 6] = ["text", "call", "thought", "letter", "post", "roll"];
 
 /// `key="value"` pairs from inside a tag.
 fn tag_attrs(head: &str) -> Vec<(String, String)> {
@@ -131,6 +132,28 @@ pub fn plain_message_tags(text: &str) -> String {
                 Some(from) => format!("Letter from {from}"),
                 None => "Letter".to_string(),
             },
+            "roll" => {
+                let mut label = match get("for") {
+                    Some(what) => format!("Roll for {what}: "),
+                    None => "Roll: ".to_string(),
+                };
+                let mut dice = get("dice").unwrap_or("dice").to_string();
+                if let Some(stat) = get("stat") {
+                    dice.push_str(&format!(" with {stat} {}", get("bonus").unwrap_or("")));
+                    dice = dice.trim_end().to_string();
+                }
+                match get("result") {
+                    Some(result) => label.push_str(&format!("{result} on {dice}")),
+                    None => label.push_str(&dice),
+                }
+                if let Some(target) = get("target") {
+                    label.push_str(&format!(", needs {target}"));
+                }
+                if let Some(outcome) = get("outcome") {
+                    label.push_str(&format!(", {outcome}"));
+                }
+                label
+            }
             _ => match get("from") {
                 Some(from) => format!("Post by {from}"),
                 None => "Post".to_string(),
@@ -177,6 +200,15 @@ mod message_tag_tests {
         assert_eq!(
             plain_message_tags("<text from=\"A\">cut off"),
             "[Text from A] cut off"
+        );
+        assert_eq!(
+            plain_message_tags(
+                "<roll for=\"Pass the test\" dice=\"40-100\" target=\"60\"/> \
+                 <roll for=\"Pick the lock\" dice=\"1d20\" stat=\"Hands\" bonus=\"+2\" \
+                 target=\"12\" result=\"15\" outcome=\"success\"/>"
+            ),
+            "[Roll for Pass the test: 40-100, needs 60] [Roll for Pick the lock: 15 on 1d20 \
+             with Hands +2, needs 12, success]"
         );
     }
 }

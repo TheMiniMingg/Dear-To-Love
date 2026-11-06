@@ -64,9 +64,7 @@ async fn mock_turn(db: &Database, story: &str, route: &str, n: u32) -> AppResult
         db,
         story,
         route,
-        EventBody::Player(PlayerPayload {
-            text: format!("Test action {n}"),
-        }),
+        EventBody::Player(PlayerPayload::new(format!("Test action {n}"))),
     )
     .await?;
     push(

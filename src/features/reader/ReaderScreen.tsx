@@ -18,6 +18,7 @@ import type {
   BudgetStatus,
   ErrorCode,
   EventDto,
+  RollRequest,
   RouteView,
   SaveView,
   SearchResults,
@@ -249,7 +250,8 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
   const writing = stream !== null;
   const lastAction = view?.history[view.history.length - 1];
 
-  const send = (text: string = draft) =>
+  /** Send an action. A roll from a dice card leaves the typed draft alone. */
+  const send = (text: string = draft, roll?: RollRequest, fromComposer = true) =>
     view &&
     run(async () => {
       const sub = await commands.submitAction({
@@ -257,8 +259,9 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
         routeId: view.route.id,
         expectedHeadId: view.route.headEventId ?? '',
         text,
+        roll,
       });
-      clearDraft(routeId);
+      if (fromComposer) clearDraft(routeId);
       setView(sub.view);
       void generate(sub.runId);
     });
@@ -536,6 +539,11 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
           onBookmark={viewing ? undefined : (id) => void toggleBookmark(id)}
           bookmarked={viewing ? undefined : bookmarked}
           focus={viewing ? null : focus}
+          onRoll={
+            viewing || busy || writing || awaitingReply
+              ? undefined
+              : (req) => void send('', req, false)
+          }
           intro={
             viewing
               ? undefined
@@ -596,10 +604,12 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
           <Composer
             value={draft}
             onChange={(t) => setDraft(routeId, t)}
-            onSubmit={(text) => void send(text)}
+            onSubmit={(text, roll) => void send(text, roll)}
             disabled={busy || awaitingReply || writing}
             placeholder="What do you do? (Enter to send, Shift+Enter for a new line)"
             playerName={player?.name ?? 'You'}
+            dice={!!view.state.state.narration?.dice}
+            stats={player?.stats}
             contacts={Object.values(view.state.state.characters)
               .filter((c) => c.control !== 'player')
               .map((c) => c.name)}

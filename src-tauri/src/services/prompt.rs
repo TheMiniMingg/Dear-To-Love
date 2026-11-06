@@ -31,7 +31,7 @@ use crate::domain::story_state::{
 use crate::errors::{AppError, AppResult, ErrorCode};
 use crate::services::tokens::{estimate_message, estimate_messages, estimate_text};
 
-pub const PROMPT_SCHEMA_VERSION: u32 = 5;
+pub const PROMPT_SCHEMA_VERSION: u32 = 6;
 /// Newest messages (excluding the latest action) placed before the summary
 /// competes for room.
 pub const MIN_RECENT_MESSAGES: usize = 4;
@@ -196,6 +196,29 @@ pub fn system_prompt(state: &EffectiveState, frame: &StoryFrame) -> String {
              kind when it fits.\n"
         ));
     }
+    if s.narration.dice {
+        out.push_str(&format!(
+            "\nDICE\nDice decide uncertain moments in this story. The app rolls them fairly; \
+             you set the odds.\n\
+             - When {player_name} tries something that could go either way and matters, do \
+             not decide how it turns out. Write up to the moment of truth, then end your \
+             reply with a roll for the player to make: <roll for=\"what the roll decides\" \
+             dice=\"1d20\" target=\"12\"/>.\n\
+             - dice is dice (1d20, 2d6+1, 1d100) or a range of whole numbers (40-100). \
+             target is the total needed to succeed; leave it out when the number itself is \
+             the result, such as a test score. Add stat=\"Name\" to add one of \
+             {player_name}'s stats.\n\
+             - Set the odds from the story so far: practice, preparation, skill, help and \
+             good choices raise the low end or lower the target; injury, haste, fear and \
+             poor choices do the opposite. For example, a test scored 0-100 becomes \
+             dice=\"40-100\" after {player_name} studied for it twice.\n\
+             - Ask for at most one roll per reply, and none for easy or trivial things.\n\
+             - An action can start with a roll's result: <roll for=\"…\" dice=\"…\" \
+             result=\"17\" outcome=\"success\"/>. Write what happens with exactly that \
+             result: never reroll, ignore or soften it. {player_name} may also roll on \
+             their own; treat that roll the same way.\n"
+        ));
+    }
 
     let n = &s.narration;
     let mut story = String::new();
@@ -282,6 +305,14 @@ pub fn system_prompt(state: &EffectiveState, frame: &StoryFrame) -> String {
         }
         if !c.abilities.is_empty() {
             parts.push(format!("abilities: {}", c.abilities.join(", ")));
+        }
+        if !c.stats.is_empty() {
+            let stats: Vec<String> = c
+                .stats
+                .iter()
+                .map(|st| format!("{} {}", st.name.trim(), st.value))
+                .collect();
+            parts.push(format!("stats: {}", stats.join(", ")));
         }
         if !parts.is_empty() {
             out.push_str(&format!(": {}", parts.join("; ")));
@@ -408,7 +439,7 @@ fn turn_message(e: &EventRow) -> AppResult<Option<ModelMessage>> {
         match (e.kind(), EventBody::from_parts(&e.kind, &e.payload_json)?) {
             (Some(EventKind::Player), EventBody::Player(p)) => Some(ModelMessage {
                 role: Role::User,
-                content: p.text,
+                content: p.story_text().into_owned(),
             }),
             (Some(EventKind::Assistant), EventBody::Assistant(p)) => Some(ModelMessage {
                 role: Role::Assistant,

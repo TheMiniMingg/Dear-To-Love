@@ -25,7 +25,16 @@ export function cleanCharacter(c: Character): Character {
     personality: cleanList(c.personality),
     goals: cleanList(c.goals),
     abilities: cleanList(c.abilities),
+    ...cleanStats(c.stats),
   };
+}
+
+/** Stats with a name, trimmed; left out when there are none. */
+function cleanStats(stats: Character['stats']): Pick<Character, 'stats'> {
+  const out = (stats ?? [])
+    .map((s) => ({ name: s.name.trim(), value: Math.trunc(Number(s.value) || 0) }))
+    .filter((s) => s.name);
+  return out.length ? { stats: out } : {};
 }
 
 const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
@@ -50,10 +59,21 @@ function cleanNarration(n: Narration): Narration {
   if (n.messageCards) out.messageCards = true;
   const language = n.language?.trim();
   if (language) out.language = language;
+  if (n.dice) out.dice = true;
   return out;
 }
 const show = (v: unknown) =>
-  Array.isArray(v) ? (v.length ? v.join(', ') : '(none)') : v ? String(v) : '(empty)';
+  Array.isArray(v)
+    ? v.length
+      ? v.map((x: unknown) => (isStat(x) ? `${x.name} ${x.value}` : String(x))).join(', ')
+      : '(none)'
+    : v
+      ? String(v)
+      : '(empty)';
+
+function isStat(x: unknown): x is { name: string; value: number } {
+  return typeof x === 'object' && x !== null && 'name' in x && 'value' in x;
+}
 
 const CHARACTER_FIELDS: [keyof Character, string][] = [
   ['name', 'Name'],
@@ -65,6 +85,7 @@ const CHARACTER_FIELDS: [keyof Character, string][] = [
   ['personality', 'Personality'],
   ['goals', 'Goals'],
   ['abilities', 'Abilities'],
+  ['stats', 'Stats'],
 ];
 
 function fieldLines<T>(
@@ -122,6 +143,7 @@ export function diffState(
       innerThoughts: n.innerThoughts ? 'On' : 'Off',
       messageCards: n.messageCards ? 'On' : 'Off',
       language: n.language ?? 'Not set',
+      dice: n.dice ? 'On' : 'Off',
     });
     lines.push(
       ...fieldLines('Narration · ', shown(before.narration), shown(narration), [
@@ -137,6 +159,7 @@ export function diffState(
         ['innerThoughts', 'Inner thoughts'],
         ['messageCards', 'Texts and calls as cards'],
         ['language', 'Story language'],
+        ['dice', 'Dice'],
       ]),
     );
   }

@@ -51,8 +51,12 @@ export function tellingOf(n: Narration): Partial<Narration> {
     innerThoughts: n.innerThoughts,
     messageCards: n.messageCards,
     language: n.language,
+    dice: n.dice,
   };
 }
+
+/** Story types that roll dice unless the player turns it off (as in Rust). */
+export const DICE_STORY_TYPES = ['Adventure', 'Fantasy', 'School life'];
 
 function Check({
   label,
@@ -88,7 +92,7 @@ function Check({
 }
 
 /**
- * Style, inner thoughts, message cards and the story language. Used by the
+ * Style, inner thoughts, message cards, dice and the story language. Used by the
  * wizard's Narration step and by Story details.
  */
 export function StyleFields({
@@ -128,6 +132,12 @@ export function StyleFields({
         checked={style === 'messages' || !!narration.messageCards}
         disabled={style === 'messages'}
         onChange={(on) => onChange({ messageCards: on || undefined })}
+      />
+      <Check
+        label="Roll dice for uncertain moments"
+        hint="When you try something risky, the storyteller asks for a roll and sets the odds from the story (studying for a test raises your lowest score, for example), and the app rolls fairly. You can also roll on your own with your character's stats."
+        checked={!!narration.dice}
+        onChange={(on) => onChange({ dice: on || undefined })}
       />
       {typeLanguage ? (
         <div className="field">

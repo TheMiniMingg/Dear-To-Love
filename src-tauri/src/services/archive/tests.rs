@@ -56,13 +56,7 @@ async fn push(db: &Database, story: &str, route: &str, body: EventBody) -> Strin
 }
 
 async fn turn(db: &Database, story: &str, route: &str, act: &str, reply: &str) -> String {
-    push(
-        db,
-        story,
-        route,
-        EventBody::Player(PlayerPayload { text: act.into() }),
-    )
-    .await;
+    push(db, story, route, EventBody::Player(PlayerPayload::new(act))).await;
     push(
         db,
         story,
@@ -919,9 +913,7 @@ async fn route_text_is_ordered_and_labelled() {
         &t.db,
         sid,
         main,
-        EventBody::Player(PlayerPayload {
-            text: "# not a heading\n\n> nor a quote".into(),
-        }),
+        EventBody::Player(PlayerPayload::new("# not a heading\n\n> nor a quote")),
     )
     .await;
     push(

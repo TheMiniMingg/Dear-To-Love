@@ -29,6 +29,7 @@ use crate::db::timeline::{
 };
 use crate::db::usage::{self, NewRequest, RequestOutcome, RequestPurpose, RequestStatus};
 use crate::db::Database;
+use crate::domain::dice::{self, RollRequest};
 use crate::domain::events::{AssistantPayload, EventBody, EventKind, PlayerPayload};
 use crate::domain::provider::{
     Billing, GenerateRequest, GenerationSettings, ModelMessage, Role, StreamMessage,
@@ -103,13 +104,28 @@ async fn create_run_for_head(
 }
 
 /// Commit the player's action and a pending run for the chosen storyteller.
+/// With `roll`, the app rolls the dice now (adding the player character's
+/// stat as it is at this point of the route) and stores the result with
+/// the action.
 pub async fn submit_action(
     db: &Database,
     story_id: &str,
     route_id: &str,
     expected_head_id: &str,
     text: &str,
+    roll: Option<&RollRequest>,
 ) -> AppResult<Submitted> {
+    let roll = match roll {
+        None => None,
+        Some(req) => {
+            let state = crate::db::state::state_at(db, story_id, expected_head_id)
+                .await?
+                .effective
+                .state;
+            let player = state.characters.get(&state.player_character_id);
+            Some(dice::roll(req, player, &mut dice::os_uniform)?)
+        }
+    };
     let profile = providers::storyteller(db).await?;
     let mut tx = db.write_txn().await?;
     let player = append_event_tx(
@@ -118,7 +134,10 @@ pub async fn submit_action(
             story_id: story_id.into(),
             route_id: route_id.into(),
             expected_head_id: expected_head_id.into(),
-            body: EventBody::Player(PlayerPayload { text: text.into() }),
+            body: EventBody::Player(PlayerPayload {
+                text: text.into(),
+                roll,
+            }),
             generation_run_id: None,
         },
     )
@@ -563,7 +582,7 @@ async fn resolve(
             let action = history
                 .last()
                 .and_then(|e| match EventBody::from_parts(&e.kind, &e.payload_json) {
-                    Ok(EventBody::Player(p)) => Some(p.text),
+                    Ok(EventBody::Player(p)) => Some(p.story_text().into_owned()),
                     _ => None,
                 })
                 .unwrap_or_default();

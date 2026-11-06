@@ -48,9 +48,7 @@ fn history(turns: usize, words: usize) -> Vec<EventRow> {
     for t in 0..turns {
         out.push(event(
             out.len(),
-            EventBody::Player(PlayerPayload {
-                text: format!("action {t}{filler}"),
-            }),
+            EventBody::Player(PlayerPayload::new(format!("action {t}{filler}"))),
         ));
         out.push(event(
             out.len(),
@@ -64,9 +62,7 @@ fn history(turns: usize, words: usize) -> Vec<EventRow> {
     }
     out.push(event(
         out.len(),
-        EventBody::Player(PlayerPayload {
-            text: "the latest action".into(),
-        }),
+        EventBody::Player(PlayerPayload::new("the latest action")),
     ));
     out
 }
@@ -288,5 +284,57 @@ fn narration_style_thoughts_messages_and_language_reach_the_storyteller() {
     assert!(
         p.contains("\nMESSAGES\n"),
         "the messages style needs the tags"
+    );
+}
+
+#[test]
+fn dice_stats_and_rolls_reach_the_storyteller() {
+    let mut s = state();
+    let p = system_prompt(&s, &frame());
+    assert!(!p.contains("\nDICE\n") && !p.contains("stats: "));
+
+    s.state.narration.dice = true;
+    let pc = s.state.player_character_id.clone();
+    s.state.characters.get_mut(&pc).unwrap().stats = vec![
+        crate::domain::story_state::Stat {
+            name: "Smarts".into(),
+            value: 2,
+        },
+        crate::domain::story_state::Stat {
+            name: "Nerve".into(),
+            value: -1,
+        },
+    ];
+    let p = system_prompt(&s, &frame());
+    assert!(p.contains("\nDICE\nDice decide uncertain moments"));
+    assert!(p.contains("<roll for=\"what the roll decides\" dice=\"1d20\" target=\"12\"/>"));
+    assert!(p.contains("a test scored 0-100 becomes dice=\"40-100\" after Sam Ashby studied"));
+    assert!(p.contains("stats: Smarts 2, Nerve -1"));
+
+    // The roll goes to the storyteller ahead of the player's words.
+    let roll = crate::domain::dice::roll(
+        &crate::domain::dice::RollRequest {
+            label: "Pass the exam".into(),
+            dice: "40-100".into(),
+            stat: None,
+            target: Some(60),
+            asked: true,
+        },
+        None,
+        &mut |_n| Ok(33),
+    )
+    .unwrap();
+    let action = event(
+        1,
+        EventBody::Player(PlayerPayload {
+            text: "I turn the paper over.".into(),
+            roll: Some(roll),
+        }),
+    );
+    let m = turn_message(&action).unwrap().unwrap();
+    assert_eq!(
+        m.content,
+        "<roll for=\"Pass the exam\" dice=\"40-100\" target=\"60\" result=\"73\" \
+         outcome=\"success\"/>\n\nI turn the paper over."
     );
 }

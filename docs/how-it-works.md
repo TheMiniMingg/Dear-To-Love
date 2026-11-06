@@ -64,16 +64,18 @@ again, in this order:
    pacing, tone, other characters' inner thoughts and the story language.
 2. **MESSAGES**: how to write texts, calls, letters and posts so the reader can show them as
    cards, when that is switched on.
-3. **STORY**: title, premise, genre, content rating, themes you want and hard limits.
-4. **WORLD**: setting, era, description and the world's rules.
-5. **CHARACTERS** and **RELATIONSHIPS**: everyone in the story as of this point on the route.
-6. **ESTABLISHED FACTS**: facts the storyteller must keep to, and who knows them.
-7. **EARLIER CHAPTERS**: the recap of each chapter you ended with **End chapter** on this
+3. **DICE**: how to ask for a roll and set its odds, when dice are on.
+4. **STORY**: title, premise, genre, content rating, themes you want and hard limits.
+5. **WORLD**: setting, era, description and the world's rules.
+6. **CHARACTERS** and **RELATIONSHIPS**: everyone in the story as of this point on the route,
+   with their stats.
+7. **ESTABLISHED FACTS**: facts the storyteller must keep to, and who knows them.
+8. **EARLIER CHAPTERS**: the recap of each chapter you ended with **End chapter** on this
    route (the 10 most recent), so later chapters remember what happened.
-8. **NOW**: the chapter and its plan, where you are, what is happening, who is present and
+9. **NOW**: the chapter and its plan, where you are, what is happening, who is present and
    the open questions.
-9. **STORY SO FAR**: a summary of older turns, when there is one.
-10. **Recent turns**, word for word, then **your action** last.
+10. **STORY SO FAR**: a summary of older turns, when there is one.
+11. **Recent turns**, word for word, then **your action** last.
 
 Every 8 replies, the older part of the story is summarized (by the same AI connection, or by
 the offline storyteller without any API call), and at least the 8 most recent turns are always
@@ -258,6 +260,25 @@ Also in **Narration** (wizard and Story details):
 The menu next to the action box sends what you write as a **text** to someone, a **call**, or
 a **thought** of your own instead of an action. They are saved in the story as the same tags,
 so exports write them out as plain text, such as `[Text to Mara] Are you awake?`.
+
+## Dice
+
+Turn on **Roll dice for uncertain moments** in **Narration** (on by default for Adventure,
+Fantasy and School life stories). Then:
+
+- When you try something risky, the storyteller stops at the moment of truth and asks for a
+  roll, such as `1d20, needs 12` or a range such as `40-100`. It sets the odds from the story
+  so far: if your character studied twice for a test scored 0 to 100, the roll might be 40
+  to 100. Press **Roll** on the card.
+- The app rolls, not the AI, using your computer's random source, so every number is equally
+  likely. The result is saved with your action: asking for another reply or changing your
+  words never rerolls it.
+- Your character can have **stats** (a name and a number, such as Smarts 2). Add them in the
+  wizard's **You** step or in **Story details → Characters**. A roll that uses a stat adds it.
+- **Roll dice** in the menu next to the action box rolls on your own: pick the dice, a stat
+  and the number you need.
+- The storyteller narrates what the roll decided, success or failure. The offline storyteller
+  asks for a roll when you try something risky.
 
 ## Adult and explicit stories
 

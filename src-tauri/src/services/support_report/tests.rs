@@ -84,9 +84,9 @@ async fn report_has_counts_and_results_but_nothing_private() {
             story_id: s.story_id.clone(),
             route_id: s.main_route_id.clone(),
             expected_head_id: s.head_event_id.clone(),
-            body: EventBody::Player(PlayerPayload {
-                text: "I hide the brass key under the third stone.".into(),
-            }),
+            body: EventBody::Player(PlayerPayload::new(
+                "I hide the brass key under the third stone.",
+            )),
             generation_run_id: None,
         },
     )

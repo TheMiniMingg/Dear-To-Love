@@ -1,5 +1,6 @@
 import { Fragment, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import type { EventDto } from '../../types';
+import type { EventDto, RollRequest } from '../../types';
+import { RollResult } from './DiceCards';
 import { picturesOnly } from './pictures';
 import { RichText } from './RichText';
 
@@ -21,6 +22,8 @@ type Props = {
   playerName: string;
   /** The premise under Chapter 1, and where things stand before the first action. */
   intro?: StoryIntro;
+  /** Offer a Roll button when the latest reply asks for a roll. */
+  onRoll?: (request: RollRequest) => void;
 };
 
 export type StoryIntro = { premise: string; location: string; scene: string };
@@ -44,7 +47,9 @@ function EventBlock({
   bookmarked,
   focused,
   playerName,
-}: { e: EventDto; focused: boolean } & Omit<Props, 'events' | 'focus'>) {
+  onRoll,
+  latest,
+}: { e: EventDto; focused: boolean; latest: boolean } & Omit<Props, 'events' | 'focus'>) {
   const marked = !!bookmarked?.has(e.id);
   const bookmark = onBookmark && (
     <button
@@ -118,7 +123,8 @@ function EventBlock({
       return (
         <div className={cls('turn-player')} data-event-id={e.id} tabIndex={-1}>
           <span className="speaker">{playerName}</span>
-          <RichText text={e.payload.text} playerName={playerName} />
+          {e.payload.roll && <RollResult roll={e.payload.roll} fresh={latest} />}
+          {e.payload.text.trim() && <RichText text={e.payload.text} playerName={playerName} />}
           {(change || bookmark) && (
             <div className="turn-actions">
               {change}
@@ -130,7 +136,11 @@ function EventBlock({
     case 'assistant':
       return (
         <div className={cls('turn-assistant')} data-event-id={e.id} tabIndex={-1}>
-          <RichText text={e.payload.text} playerName={playerName} />
+          <RichText
+            text={e.payload.text}
+            playerName={playerName}
+            onRoll={latest ? onRoll : undefined}
+          />
           {(branch || regenerate || bookmark) && (
             <div className="turn-actions">
               {regenerate}
@@ -162,6 +172,10 @@ function EventBlock({
   }
 }
 
+function lastOfKind(events: EventDto[], kind: EventDto['kind']): number {
+  return events.findLastIndex((e) => e.kind === kind);
+}
+
 /**
  * Reading column. New content keeps the reader's position unless they are
  * already at the bottom; otherwise a "Jump to latest" button appears.
@@ -177,6 +191,7 @@ export function NarrativeView({
   focus,
   playerName,
   intro,
+  onRoll,
 }: Props) {
   const opening = events[0]?.kind === 'chapter_start' && events[0].payload.ordinal === 1;
   const notStarted = !draft && !events.some((e) => e.kind === 'player');
@@ -275,6 +290,8 @@ export function NarrativeView({
                 bookmarked={bookmarked}
                 focused={focused}
                 playerName={playerName}
+                onRoll={onRoll}
+                latest={i >= events.length - 2 && i === lastOfKind(events, e.kind)}
               />
             );
             return i === 0 && opening ? (

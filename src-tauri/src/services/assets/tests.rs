@@ -224,9 +224,7 @@ async fn image_in_any_history_cannot_be_deleted() {
             story_id: st.story_id.clone(),
             route_id: alt.id.clone(),
             expected_head_id: cleared.event_id,
-            body: EventBody::Player(PlayerPayload {
-                text: "Walk on".into(),
-            }),
+            body: EventBody::Player(PlayerPayload::new("Walk on")),
             generation_run_id: None,
         },
     )

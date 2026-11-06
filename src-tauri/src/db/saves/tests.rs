@@ -55,9 +55,7 @@ async fn turn(db: &Database, s: &StoryCreated, route: &str, n: usize) -> String 
         db,
         s,
         route,
-        EventBody::Player(PlayerPayload {
-            text: format!("act {n}"),
-        }),
+        EventBody::Player(PlayerPayload::new(format!("act {n}"))),
     )
     .await;
     push(
@@ -336,9 +334,7 @@ async fn interrupted_write_leaves_route_unchanged() {
                 story_id: s.story_id.clone(),
                 route_id: s.main_route_id.clone(),
                 expected_head_id: s.head_event_id.clone(),
-                body: EventBody::Player(PlayerPayload {
-                    text: "lost".into(),
-                }),
+                body: EventBody::Player(PlayerPayload::new("lost")),
                 generation_run_id: None,
             },
         )
