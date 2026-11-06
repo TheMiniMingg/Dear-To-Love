@@ -17,7 +17,10 @@ async fn upgrade_fixture(version: i64, sql: &'static str) -> (Database, tempfile
     old.close().await;
 
     let (db, report) = Database::open(&path, &backups).await.unwrap();
-    assert_eq!(db.schema_version().await.unwrap(), latest_migration_version());
+    assert_eq!(
+        db.schema_version().await.unwrap(),
+        latest_migration_version()
+    );
     if version < latest_migration_version() {
         let backup = report.pre_migration_backup.expect("pre-upgrade backup");
         assert!(Path::new(&backup).exists());
