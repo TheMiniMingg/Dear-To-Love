@@ -45,6 +45,7 @@ impl Env {
             registry: &self.registry,
             session_id: "session-1",
             offline_delay: Duration::ZERO,
+            budget_override: false,
         }
     }
 
@@ -505,6 +506,9 @@ async fn startup_recovery_interrupts_stranded_runs() {
             session_id: "old-session",
             route_id: Some(env.route()),
             purpose: RequestPurpose::StoryReply,
+            prompt_tokens: 100,
+            max_output_tokens: 100,
+            allow_unpriced: false,
         },
     )
     .await
@@ -674,4 +678,71 @@ async fn switching_cloud_to_local_ollama() {
             ),
         ]
     );
+}
+
+/// T63 + T64 through the reply path: a paused budget refuses the paid reply
+/// before sending (the action stays, offline play still works), and an
+/// unpriced model needs the player's one-time go-ahead.
+#[tokio::test]
+async fn budget_gate_on_replies() {
+    use crate::db::budget::{set_policy, BudgetMode, BudgetPolicy};
+    let env = Env::new().await;
+    let server = serve(vec![Reply::sse_text(&["Allowed once."], None)]).await;
+    let pid = env.connect(&server, Billing::Paid).await;
+    set_policy(
+        env.db(),
+        BudgetPolicy {
+            enabled: true,
+            monthly_limit_usd: Some("0.001".into()),
+            mode: BudgetMode::PauseNewRequests,
+            ..Default::default()
+        },
+    )
+    .await
+    .unwrap();
+
+    // No prices yet: ask first.
+    let sub = env.submit(env.route(), "Knock").await.unwrap();
+    let (out, msgs) = env.gen(&sub.run_id).await;
+    assert_eq!(out.unwrap_err().code, ErrorCode::BudgetOverrideRequired);
+    assert!(matches!(
+        msgs.last(),
+        Some(StreamMessage::Error {
+            code: ErrorCode::BudgetOverrideRequired,
+            ..
+        })
+    ));
+    assert!(env.ledger().await.is_empty(), "nothing was sent");
+    let head = env.head(env.route()).await;
+    let retry = retry_reply(env.db(), &env.story.story_id, env.route(), &head)
+        .await
+        .unwrap();
+    let ctx = Ctx {
+        budget_override: true,
+        ..env.ctx()
+    };
+    let v = generate(&ctx, &retry.run_id, &mut |_| {}).await.unwrap();
+    assert_eq!(assistant_text(&v), "Allowed once.");
+    assert_eq!(env.ledger().await.len(), 1);
+
+    // With prices, a reply that could pass $0.001 is paused.
+    usage::set_rate_card(env.db(), &pid, "story-model", "10", "10", None)
+        .await
+        .unwrap();
+    let sub = env.submit(env.route(), "Knock again").await.unwrap();
+    let err = env.gen(&sub.run_id).await.0.unwrap_err();
+    assert_eq!(err.code, ErrorCode::BudgetPaused);
+    assert_eq!(env.ledger().await.len(), 1, "refused before any call");
+    let view = route_view(env.db(), env.route()).await.unwrap();
+    let last = view.awaiting_reply.unwrap().last_run.unwrap();
+    assert_eq!(last.error_code, Some(ErrorCode::BudgetPaused));
+
+    // Local story operations stay usable: the offline storyteller answers.
+    providers::set_storyteller(env.db(), None).await.unwrap();
+    let head = env.head(env.route()).await;
+    let retry = retry_reply(env.db(), &env.story.story_id, env.route(), &head)
+        .await
+        .unwrap();
+    env.gen(&retry.run_id).await.0.unwrap();
+    assert_eq!(server.requests().len(), 1);
 }

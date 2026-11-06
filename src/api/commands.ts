@@ -1,8 +1,11 @@
 // Typed wrappers around Tauri commands. Screens call these, never `invoke` directly.
 import { Channel, invoke } from '@tauri-apps/api/core';
 import type {
+  ApiRequestRow,
   AppError,
   AppInfo,
+  BudgetPolicy,
+  BudgetStatus,
   ConnectionCheck,
   ContextPreview,
   DiagnosticCheck,
@@ -10,6 +13,7 @@ import type {
   ProviderProfile,
   ProviderProfileInput,
   QuickStartInput,
+  RateCardView,
   RouteDto,
   RouteView,
   SaveDto,
@@ -20,6 +24,8 @@ import type {
   StorytellerInfo,
   Submitted,
   TemplateCatalog,
+  UsageScope,
+  UsageSummary,
 } from '../types';
 
 /** Error thrown by every wrapper; mirrors the Rust `AppError`. */
@@ -78,6 +84,10 @@ export function runErrorMessage(code: ErrorCode | null): string {
       return "The story setup and your action don't fit this connection's context limit. Shorten the action, or raise the context limit in Settings.";
     case 'PROVIDER_ERROR':
       return 'The AI service returned an error.';
+    case 'BUDGET_PAUSED':
+      return 'Paid replies are paused: this would pass your monthly budget. Raise the budget or switch to Warn only in Usage & budget, or use a local or offline storyteller.';
+    case 'BUDGET_OVERRIDE_REQUIRED':
+      return "Your budget pauses paid replies, and this model has no prices, so the app can't tell whether this reply fits. Add prices in Usage & budget, or send this one anyway.";
     case null:
       return 'The reply did not finish.';
     default:
@@ -106,11 +116,14 @@ export const commands = {
   getRouteView: (routeId: string) => call<RouteView>('get_route_view', { routeId }),
   submitAction: (r: RouteRef & { expectedHeadId: string; text: string }) =>
     call<Submitted>('submit_action', r),
-  /** Streams drafts to `onMessage`; resolves once the reply is committed. */
-  generateReply: (runId: string, onMessage: (m: StreamMessage) => void) => {
+  /**
+   * Streams drafts to `onMessage`; resolves once the reply is committed.
+   * `budgetOverride` sends one reply the budget gate cannot price.
+   */
+  generateReply: (runId: string, onMessage: (m: StreamMessage) => void, budgetOverride = false) => {
     const onEvent = new Channel<StreamMessage>();
     onEvent.onmessage = onMessage;
-    return call<RouteView>('generate_reply', { runId, onEvent });
+    return call<RouteView>('generate_reply', { runId, onEvent, budgetOverride });
   },
   retryReply: (r: RouteRef & { expectedHeadId: string }) => call<Submitted>('retry_reply', r),
   cancelReply: (runId: string) => call<void>('cancel_reply', { runId }),
@@ -143,4 +156,25 @@ export const commands = {
     call<StorytellerInfo>('set_storyteller', { profileId }),
   testConnection: (id: string) => call<ConnectionCheck>('test_connection', { id }),
   sendTestMessage: (id: string) => call<string>('send_test_message', { id }),
+
+  getUsageSummary: (scope: UsageScope, profileId: string | null = null) =>
+    call<UsageSummary>('get_usage_summary', { scope, profileId }),
+  listApiRequests: (scope: UsageScope, profileId: string | null = null, limit = 100) =>
+    call<ApiRequestRow[]>('list_api_requests', { scope, profileId, limit }),
+  listRates: () => call<RateCardView[]>('list_rates'),
+  setRates: (r: {
+    profileId: string;
+    inputUsdPerMillion: string;
+    outputUsdPerMillion: string;
+    cachedInputUsdPerMillion: string | null;
+  }) => call<RateCardView[]>('set_rates', r),
+  getBudgetStatus: () => call<BudgetStatus>('get_budget_status'),
+  setBudgetPolicy: (policy: BudgetPolicy) => call<BudgetStatus>('set_budget_policy', { policy }),
+  dismissBudgetWarning: () => call<BudgetStatus>('dismiss_budget_warning'),
 };
+
+/** `$0.0123` for small amounts, `$12.34` from $100 up. Estimates only. */
+export function formatUsd(micro: number): string {
+  const dollars = micro / 1_000_000;
+  return `$${dollars.toFixed(dollars >= 100 ? 2 : 4)}`;
+}

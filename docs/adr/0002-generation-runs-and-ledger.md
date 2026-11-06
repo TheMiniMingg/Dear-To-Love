@@ -36,5 +36,5 @@ interrupted`, every transition a compare-and-swap on the current status.
 ## Consequences
 
 Retries are always visible to the user and always counted. Budget preflight
-(PR 07) can reserve against the same rows (`status = 'reserved'`,
-`reserved_micro_usd`) without changing this contract.
+(PR 07) reserves against the same rows through `reserved_micro_usd` without
+changing this contract; see ADR 0004.

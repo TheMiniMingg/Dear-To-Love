@@ -26,7 +26,7 @@ use crate::db::Database;
 use crate::domain::events::{EventBody, EventKind};
 use crate::domain::provider::{GenerateRequest, ModelMessage, Role};
 use crate::errors::{AppError, AppResult, ErrorCode};
-use crate::services::generation::call_once;
+use crate::services::generation::{call_once, CallPurpose};
 use crate::services::secrets::SecretStore;
 use crate::services::tokens::estimate_messages;
 
@@ -314,8 +314,11 @@ async fn write_summary(
                 env.session_id,
                 &row,
                 &req,
-                RequestPurpose::MemorySummary,
-                Some(route_id),
+                CallPurpose {
+                    purpose: RequestPurpose::MemorySummary,
+                    route_id: Some(route_id),
+                    allow_unpriced: false,
+                },
             )
             .await?;
             let text = c.text.trim().to_string();

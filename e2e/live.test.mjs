@@ -75,4 +75,14 @@ test('live storyteller: stream a reply, retry a failure', async () => {
   const last = JSON.parse(chats[2].body);
   assert.equal(last.stream, true);
   assert.equal(JSON.stringify(last.messages).split('Look outside').length - 1, 1);
+
+  // Usage & budget counts every call, the failed one too, at $0 for a local model.
+  await b.keys(['Escape']);
+  await (await b.$('button=Settings')).click();
+  await (await b.$('button=Usage & budget')).click();
+  await waitForText(b, 'main', 'Recent requests');
+  await waitForText(b, '[aria-label="Totals"]', '3 to local models');
+  const recent = await (await b.$('table[aria-label="Recent requests"]')).getText();
+  assert.match(recent, /failed/);
+  assert.equal(recent.split('$0 (local)').length - 1, 3);
 });

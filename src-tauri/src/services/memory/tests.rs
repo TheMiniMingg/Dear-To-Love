@@ -280,6 +280,7 @@ async fn branches_only_see_summaries_of_their_own_past() {
         registry: &registry,
         session_id: "session-1",
         offline_delay: Duration::ZERO,
+        budget_override: false,
     };
     for branch in [&before.id, &after.id] {
         let head = env.head(branch).await;

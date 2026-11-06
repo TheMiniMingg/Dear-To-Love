@@ -3,6 +3,7 @@ import { LibraryScreen } from '../features/library/LibraryScreen';
 import { QuickStartScreen } from '../features/create/QuickStartScreen';
 import { ReaderScreen } from '../features/reader/ReaderScreen';
 import { SettingsScreen } from '../features/settings/SettingsScreen';
+import { UsageScreen } from '../features/usage/UsageScreen';
 import { StatusFooter } from '../components/StatusFooter';
 import { useUiStore } from './store';
 
@@ -16,6 +17,7 @@ export function App() {
         {screen.name === 'reader' && <ReaderScreen key={screen.routeId} routeId={screen.routeId} />}
         {screen.name === 'diagnostics' && <DiagnosticsScreen />}
         {screen.name === 'settings' && <SettingsScreen />}
+        {screen.name === 'usage' && <UsageScreen />}
       </main>
       <StatusFooter />
     </div>

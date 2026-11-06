@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 use sqlx::{FromRow, SqliteConnection};
 use ts_rs::TS;
 
-use super::{new_id, now, Database};
+use super::{budget, new_id, now, Database};
 use crate::domain::provider::{Billing, NormalizedUsage};
 use crate::errors::{AppError, AppResult, ErrorCode};
 
@@ -191,10 +191,18 @@ pub struct NewRequest<'a> {
     pub session_id: &'a str,
     pub route_id: Option<&'a str>,
     pub purpose: RequestPurpose,
+    /// Estimated prompt size; with `max_output_tokens` it gives the cost
+    /// reserved for this call and checked by the budget gate.
+    pub prompt_tokens: u32,
+    pub max_output_tokens: u32,
+    /// The user explicitly allowed one request the gate cannot price.
+    pub allow_unpriced: bool,
 }
 
 /// Insert the ledger row before dispatch (status `sent`) with the rate
-/// snapshot in force right now.
+/// snapshot in force right now. For paid calls the budget gate runs in the
+/// same transaction and the projected cost is reserved; a refused call
+/// leaves no row because nothing was sent.
 pub async fn open_request(db: &Database, r: NewRequest<'_>) -> AppResult<String> {
     let id = new_id();
     let mut tx = db.write_txn().await?;
@@ -212,10 +220,28 @@ pub async fn open_request(db: &Database, r: NewRequest<'_>) -> AppResult<String>
         }
         _ => None,
     };
+    let reserved = if r.billing == Billing::Paid {
+        let projected = NormalizedUsage {
+            input_tokens: Some(u64::from(r.prompt_tokens)),
+            cached_input_tokens: None,
+            output_tokens: Some(u64::from(r.max_output_tokens)),
+        };
+        budget::preflight_tx(
+            &mut tx,
+            budget::Preflight {
+                estimate_micro_usd: snapshot.as_ref().and_then(|s| estimate_cost(&projected, s)),
+                allow_unpriced: r.allow_unpriced,
+            },
+            chrono::Utc::now(),
+        )
+        .await?
+    } else {
+        0
+    };
     sqlx::query(
         "INSERT INTO api_requests (id, generation_run_id, provider_profile_id, provider_label, model_id, \
-         billing, session_id, route_id, purpose, status, rate_snapshot_json, started_at) \
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'sent', ?, ?)",
+         billing, session_id, route_id, purpose, status, rate_snapshot_json, reserved_micro_usd, \
+         started_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'sent', ?, ?, ?)",
     )
     .bind(&id)
     .bind(r.generation_run_id)
@@ -227,6 +253,7 @@ pub async fn open_request(db: &Database, r: NewRequest<'_>) -> AppResult<String>
     .bind(r.route_id)
     .bind(r.purpose.as_str())
     .bind(snapshot.and_then(|s| serde_json::to_string(&s).ok()))
+    .bind(i64::try_from(reserved).unwrap_or(i64::MAX))
     .bind(now())
     .execute(&mut *tx)
     .await?;
@@ -280,6 +307,7 @@ pub async fn close_request(db: &Database, id: &str, o: RequestOutcome) -> AppRes
     sqlx::query(
         "UPDATE api_requests SET status = ?, usage_source = ?, input_tokens = ?, \
          cached_input_tokens = ?, output_tokens = ?, cost_micro_usd = ?, error_code = ?, \
+         reserved_micro_usd = CASE WHEN ? THEN 0 ELSE reserved_micro_usd END, \
          finished_at = ? WHERE id = ? AND status = 'sent'",
     )
     .bind(o.status.as_str())
@@ -289,6 +317,8 @@ pub async fn close_request(db: &Database, id: &str, o: RequestOutcome) -> AppRes
     .bind(as_i64(o.usage.output_tokens))
     .bind(as_i64(cost))
     .bind(o.error_code.map(super::runs::code_str))
+    // A known cost replaces the reservation; an unknown one keeps it.
+    .bind(cost.is_some())
     .bind(now())
     .bind(id)
     .execute(&mut *tx)

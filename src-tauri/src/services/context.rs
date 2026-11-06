@@ -9,9 +9,10 @@ use crate::db::memory::latest_eligible_summary;
 use crate::db::providers;
 use crate::db::state::state_with_snapshots;
 use crate::db::timeline::{ancestors, get_route};
+use crate::db::usage::{current_rate_card, estimate_cost, RateCard, RateSnapshot};
 use crate::db::Database;
 use crate::domain::events::EventKind;
-use crate::domain::provider::{GenerationSettings, Role};
+use crate::domain::provider::{Billing, GenerationSettings, NormalizedUsage, Role};
 use crate::errors::{AppError, AppResult};
 use crate::services::mock_storyteller::MOCK_PROVIDER_LABEL;
 use crate::services::prompt::{self, Budget, SummaryUse, PROMPT_SCHEMA_VERSION};
@@ -53,6 +54,17 @@ pub struct ContextPreview {
     pub summary_dropped: bool,
     pub verbatim_messages: u32,
     pub omitted_messages: u32,
+    /// Most this reply could cost (prompt estimate plus a full-length
+    /// reply) at the current rates: 0 for local or offline, `null` when the
+    /// model has no prices.
+    #[ts(type = "number | null")]
+    pub max_cost_micro_usd: Option<u64>,
+}
+
+enum Pricing {
+    Free,
+    Unknown,
+    Rates(RateCard),
 }
 
 fn n(v: usize) -> u32 {
@@ -60,17 +72,28 @@ fn n(v: usize) -> u32 {
 }
 
 pub async fn preview_context(db: &Database, route_id: &str) -> AppResult<ContextPreview> {
-    let (label, model_id, live, settings) = match providers::storyteller(db).await? {
+    let (label, model_id, live, settings, pricing) = match providers::storyteller(db).await? {
         Some(pid) => {
             let row = providers::get_profile_row(db, &pid).await?;
             let settings = row.settings();
-            (row.label, row.model_id, true, settings)
+            let pricing = match row.billing() {
+                Billing::Local => Pricing::Free,
+                Billing::Paid => {
+                    let mut conn = db.reader().acquire().await?;
+                    match current_rate_card(&mut conn, &row.id, &row.model_id).await? {
+                        Some(card) => Pricing::Rates(card),
+                        None => Pricing::Unknown,
+                    }
+                }
+            };
+            (row.label, row.model_id, true, settings, pricing)
         }
         None => (
             MOCK_PROVIDER_LABEL.to_string(),
             "offline".to_string(),
             false,
             GenerationSettings::default(),
+            Pricing::Free,
         ),
     };
     let mut conn = db.reader().acquire().await?;
@@ -96,7 +119,26 @@ pub async fn preview_context(db: &Database, route_id: &str) -> AppResult<Context
         (!waiting).then_some(NEXT_ACTION_PLACEHOLDER),
         budget,
     )?;
+    let max_cost_micro_usd = match pricing {
+        Pricing::Free => Some(0),
+        Pricing::Unknown => None,
+        Pricing::Rates(card) => estimate_cost(
+            &NormalizedUsage {
+                input_tokens: Some(u64::from(a.estimated_input_tokens)),
+                cached_input_tokens: None,
+                output_tokens: Some(u64::from(budget.max_output_tokens)),
+            },
+            &RateSnapshot {
+                rate_card_id: card.id,
+                input_usd_per_million: card.input_usd_per_million,
+                output_usd_per_million: card.output_usd_per_million,
+                cached_input_usd_per_million: card.cached_input_usd_per_million,
+                cached_rate_assumed: false,
+            },
+        ),
+    };
     Ok(ContextPreview {
+        max_cost_micro_usd,
         route_id: route.id,
         for_waiting_action: waiting,
         storyteller_label: label,

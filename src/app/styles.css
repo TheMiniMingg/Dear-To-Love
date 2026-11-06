@@ -717,3 +717,137 @@ details summary {
     margin-bottom: 0.4rem;
   }
 }
+
+/* ---------- usage & budget ---------- */
+.notice {
+  margin: 0.75rem 0 0;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--warn);
+  border-radius: 6px;
+  font-size: 0.9rem;
+}
+.usage-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.25rem;
+  align-items: center;
+  margin: 0.75rem 0;
+}
+.segmented {
+  display: inline-flex;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.segmented label {
+  position: relative;
+  cursor: pointer;
+}
+.segmented input {
+  position: absolute;
+  opacity: 0;
+  inset: 0;
+  margin: 0;
+  cursor: pointer;
+}
+.segmented span {
+  display: block;
+  padding: 0.3rem 0.75rem;
+}
+.segmented label + label span {
+  border-left: 1px solid var(--border);
+}
+.segmented input:checked + span {
+  background: var(--accent);
+  color: #fff;
+}
+.segmented input:focus-visible + span {
+  outline: 2px solid var(--accent);
+  outline-offset: -4px;
+}
+.inline-field {
+  display: inline-flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+.table-wrap {
+  overflow-x: auto;
+  margin: 0.75rem 0;
+}
+.table-wrap table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 0.9rem;
+}
+.table-wrap th,
+.table-wrap td {
+  text-align: left;
+  padding: 0.35rem 0.6rem;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+.table-wrap th {
+  font-weight: 600;
+}
+.rate-list {
+  list-style: none;
+  padding: 0;
+  margin: 0.75rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+.rate-list > li {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.6rem 0.8rem;
+  overflow-wrap: anywhere;
+}
+.rate-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  align-items: center;
+}
+.rate-head button {
+  margin-left: auto;
+}
+.rate-form {
+  margin-top: 0.6rem;
+  min-width: 0;
+}
+.rate-form .field-row label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+.form fieldset {
+  border: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  min-width: 0;
+}
+.form fieldset:disabled {
+  opacity: 0.6;
+}
+.budget-banner {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 1rem;
+  border-bottom: 1px solid var(--border);
+  border-left: 3px solid var(--warn);
+  font-size: 0.9rem;
+}
+.budget-banner.reached {
+  border-left-color: var(--fail);
+}
+.budget-banner p {
+  margin: 0;
+}

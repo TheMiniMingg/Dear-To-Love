@@ -49,6 +49,7 @@ const preview: ContextPreview = {
   summaryDropped: false,
   verbatimMessages: 3,
   omittedMessages: 2,
+  maxCostMicroUsd: 1152,
 };
 
 describe('Preview context', () => {
@@ -73,6 +74,7 @@ describe('Preview context', () => {
     expect(within(dialog).getByText(/Summary of turns 1–16/)).toBeInTheDocument();
     expect(within(dialog).getByText(/turns 9–16 by Test cloud · story-model/)).toBeInTheDocument();
     expect(within(dialog).getByText(/2 older left out to fit/)).toBeInTheDocument();
+    expect(within(dialog).getByText('Up to about $0.0012 for this reply')).toBeInTheDocument();
     const list = within(dialog).getByRole('list', { name: 'Prompt messages' });
     expect(within(list).getAllByRole('listitem')).toHaveLength(4);
     expect(within(list).getByText('Open the door')).toBeInTheDocument();
