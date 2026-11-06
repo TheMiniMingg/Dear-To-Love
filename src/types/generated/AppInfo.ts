@@ -5,4 +5,12 @@ export type AppInfo = { name: string,
 /**
  * Packaged SemVer from `tauri.conf.json` (single source of truth).
  */
-version: string, os: string, arch: string, buildProfile: BuildProfile, };
+version: string, os: string, arch: string, buildProfile: BuildProfile, 
+/**
+ * The public repository, for the About section.
+ */
+repositoryUrl: string, 
+/**
+ * "Support development" link, only when one is configured.
+ */
+supportUrl: string | null, };

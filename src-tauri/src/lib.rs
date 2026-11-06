@@ -80,6 +80,7 @@ fn open_database(data_dir: &Result<PathBuf, String>) -> Result<Database, AppErro
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_opener::init())
         .register_asynchronous_uri_scheme_protocol("dtlimg", |ctx, request, responder| {
             let app = ctx.app_handle().clone();
             let path = request.uri().path().to_string();
@@ -209,6 +210,15 @@ pub fn run() {
             commands::search::add_bookmark,
             commands::search::rename_bookmark,
             commands::search::delete_bookmark,
+            commands::app::diagnostics_report,
+            commands::app::save_diagnostics_report,
+            commands::app::open_support_page,
+            commands::app::open_repository_page,
+            commands::updates::get_update_status,
+            commands::updates::check_for_updates,
+            commands::updates::set_update_checks,
+            commands::updates::acknowledge_update,
+            commands::updates::open_release_page,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Dear to Love");

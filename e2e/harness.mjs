@@ -30,9 +30,10 @@ async function waitForPort(port, ms = 20000) {
 }
 
 /** Start tauri-driver + the app with an isolated data folder. */
-export async function launch(dataDir) {
+export async function launch(dataDir, extraEnv = {}) {
   const env = {
     ...process.env,
+    ...extraEnv,
     XDG_DATA_HOME: dataDir,
     XDG_CONFIG_HOME: dataDir,
     APPDATA: dataDir,

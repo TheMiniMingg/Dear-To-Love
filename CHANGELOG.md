@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- Updates, About and support. **Settings → Updates** can check GitHub for a new release once a
+  day; it is off until you turn it on, and **Check now** asks once. When a newer stable release is
+  out, a small notice in the footer links to its release page; **Got it** hides it until an even
+  newer release appears. Nothing is downloaded or installed, nothing about you or your stories
+  is sent, and a failed check only shows in Settings. **About** shows the version and license
+  and links to the source code. A **Support development** link appears in the footer and About
+  only when one is configured.
+- Diagnostics report. **Copy report…** in Diagnostics shows a report to paste into a support
+  request or save as a file: versions, counts and check results, never story text, titles, API
+  keys or file paths. Diagnostics also shows the state of update checks.
 - Search and bookmarks. **Story search** (pause menu, the Search button or Ctrl/Cmd+F) finds
   words in what happened on the current route, never on other branches, and lists each place
   with its chapter and the matching words marked. Choosing one shows it in the story. Every

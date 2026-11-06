@@ -7,4 +7,5 @@ pub mod reader;
 pub mod saves;
 pub mod search;
 pub mod stories;
+pub mod updates;
 pub mod usage;

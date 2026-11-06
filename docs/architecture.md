@@ -22,7 +22,9 @@ React screens -> src/api/commands.ts (typed invoke wrappers)
                          archive (storypack export/import, recovery,
                          readable text export), backups (automatic
                          copies, .dtlbackup, staged restore), search
-                         (route-scoped word search with snippets)
+                         (route-scoped word search with snippets),
+                         updates (opt-in GitHub release check),
+                         support_report (sanitized diagnostics report)
   -> SQLite (story.db)   OS credential store for API keys
      assets/originals, assets/thumbs (content-addressed image files)
      imports/<operation>  storypack staging (removed when done)
@@ -189,6 +191,19 @@ reader    result or bookmark -> close panel -> scroll, focus, highlight
 ```
 
 - See ADR 0009.
+
+## Updates and the diagnostics report
+
+```text
+footer    mount + every 6 h -> check(manual=false): off or fresh -> cached status
+Settings  Check now -> check(manual=true) -> GitHub releases (8 s, no credentials)
+          -> stable SemVer on this repo's release pages -> highest -> update_cache
+notice    enabled && latest > installed && latest > acknowledged
+report    run checks + versions + counts -> sanitize every line -> dialog
+```
+
+- Nothing goes online while checks are off, except Check now. Pages open in
+  the system browser from Rust, after checking the URL. See ADR 0010.
 
 ## Usage and budget
 

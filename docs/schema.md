@@ -29,7 +29,7 @@ foreign keys enabled on every connection. Migrations live in
 | `provider_profiles` | Model connections; `billing` is `paid` or `local`; API key lives in the OS credential store (`secret_ref`) |
 | `api_rate_cards`    | User-entered USD prices per 1M tokens for a profile + model                                                |
 | `api_requests`      | One row per outbound model call; the only source for usage totals                                          |
-| `app_preferences`   | Schema-validated JSON preferences (budget policy, dismissals, drafts)                                      |
+| `app_preferences`   | Schema-validated JSON preferences (budget policy, dismissals, drafts, update checks)                       |
 
 ## Tables (0002_memory_caches)
 

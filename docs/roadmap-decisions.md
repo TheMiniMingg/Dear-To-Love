@@ -41,6 +41,12 @@ and the roadmap differ, this file wins.
   every word in any order ignoring case, and scans the history without an
   index. **Bookmarks** belong to a route; a new branch copies the ones on the
   history it shares, and they travel in storypacks.
+- **Updates** are off until turned on; Check now always works. The newest of
+  the first 100 releases wins by SemVer; drafts, prereleases and pages off the
+  repository are ignored. The notice lives in the footer, and Got it stores the
+  highest acknowledged version. There is no auto-update. The **diagnostics
+  report** is built and sanitized in Rust and shown in full before it is copied
+  or saved.
 - **In-story edits** use one `edit` event per Apply, with a short note listing
   what changed (shown in the story). Facts added in Story details are
   confirmed facts; the `fact_confirm` event is kept for the later suggestion

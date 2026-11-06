@@ -55,6 +55,7 @@ pub async fn run_all(ctx: DiagnosticsContext) -> Vec<DiagnosticCheck> {
     checks.push(check_backups(&ctx.db, &ctx.data_dir, ctx.deep).await);
     checks.extend(sync_iter);
     checks.push(check_ai_connection(&ctx.db, ctx.secrets.as_ref(), ctx.deep).await);
+    checks.push(check_updates(&ctx.db, &ctx.version).await);
     checks
 }
 
@@ -132,7 +133,7 @@ pub fn check_data_dir(data_dir: &Result<PathBuf, String>) -> DiagnosticCheck {
 }
 
 const RESTORE_HINT: &str =
-    "Restore the most recent backup from Settings > Data, or reinstall the app version that created this database.";
+    "Restore a backup from Settings → Backups, or reinstall the app version that created this database.";
 
 pub async fn check_database(db: &Result<Database, AppError>) -> DiagnosticCheck {
     let start = Instant::now();
@@ -680,6 +681,70 @@ async fn rate_config(db: &Database) -> AppResult<(CheckStatus, String, Option<St
     ))
 }
 
+/// The update check's opt-in state and last result. Never contacts GitHub.
+pub async fn check_updates(db: &Result<Database, AppError>, installed: &str) -> DiagnosticCheck {
+    use crate::services::updates::{self, UpdateState};
+    let start = Instant::now();
+    let when = |at: &Option<String>| {
+        at.as_deref()
+            .and_then(|a| chrono::DateTime::parse_from_rfc3339(a).ok())
+            .map(|d| d.format("%Y-%m-%d").to_string())
+            .unwrap_or_else(|| "earlier".into())
+    };
+    let outcome = match db {
+        Err(_) => (
+            CheckStatus::Skipped,
+            "Needs the story database.".into(),
+            None,
+        ),
+        Ok(db) => match updates::status(db, installed).await {
+            Err(e) => (CheckStatus::Warn, e.message, None),
+            Ok(st) => match st.state {
+                UpdateState::Off => (
+                    CheckStatus::Skipped,
+                    "Update checks are off.".into(),
+                    Some("Settings → Updates can check now or once a day.".into()),
+                ),
+                UpdateState::NotChecked => (
+                    CheckStatus::Skipped,
+                    "Update checks are on but haven't run yet.".into(),
+                    None,
+                ),
+                UpdateState::UpToDate => (
+                    CheckStatus::Pass,
+                    format!(
+                        "v{installed} is the newest release (checked {}).",
+                        when(&st.checked_at)
+                    ),
+                    None,
+                ),
+                UpdateState::Available => (
+                    CheckStatus::Warn,
+                    format!(
+                        "v{} is available; this is v{installed} (checked {}).",
+                        st.latest.map(|l| l.version).unwrap_or_default(),
+                        when(&st.checked_at)
+                    ),
+                    Some("Settings → Updates → View release. Nothing installs by itself.".into()),
+                ),
+                UpdateState::Unavailable => (
+                    CheckStatus::Warn,
+                    format!(
+                        "The last update check failed ({}, {}). Everything else works.",
+                        st.message.unwrap_or_default(),
+                        when(&st.checked_at)
+                    ),
+                    Some(
+                        "Check your internet connection, then Settings → Updates → Check now."
+                            .into(),
+                    ),
+                ),
+            },
+        },
+    };
+    finish("UPDATES", "Updates", start, outcome)
+}
+
 /// Runs the offline engine self-test on a throwaway database.
 pub async fn check_timeline_replay(data_dir: &Result<PathBuf, String>) -> DiagnosticCheck {
     let start = Instant::now();
@@ -789,12 +854,15 @@ mod tests {
                 "ASSETS",
                 "BACKUPS",
                 "SECRETS",
-                "AI_CONNECTION"
+                "AI_CONNECTION",
+                "UPDATES"
             ]
         );
         for c in &checks {
-            // T38: no AI connection -> model checks skipped, local checks pass.
-            let expected = if c.id == "DB_INTEGRITY" || c.id == "AI_CONNECTION" {
+            // T38: no AI connection -> model checks skipped, local checks
+            // pass; update checks are off by default (T44).
+            let expected = if matches!(c.id.as_str(), "DB_INTEGRITY" | "AI_CONNECTION" | "UPDATES")
+            {
                 CheckStatus::Skipped
             } else {
                 CheckStatus::Pass
