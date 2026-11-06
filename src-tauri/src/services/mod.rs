@@ -1,4 +1,5 @@
 pub mod adapters;
+pub mod assets;
 pub mod context;
 pub mod diagnostics;
 pub mod generation;

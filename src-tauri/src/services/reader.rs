@@ -5,6 +5,7 @@ use serde::Serialize;
 use sqlx::FromRow;
 use ts_rs::TS;
 
+use crate::db::assets::{self, StoryVisual};
 use crate::db::providers;
 use crate::db::runs::{self, RunDto};
 use crate::db::state::StateView;
@@ -15,6 +16,7 @@ use crate::db::timeline::{
 use crate::db::Database;
 use crate::domain::events::{EditPayload, EventBody, StateEdit};
 use crate::domain::provider::Billing;
+use crate::domain::visuals::VisualSlot;
 use crate::errors::{AppError, AppResult};
 use crate::services::mock_storyteller::MOCK_PROVIDER_LABEL;
 
@@ -63,6 +65,9 @@ pub struct RouteView {
     pub state: StateView,
     pub awaiting_reply: Option<AwaitingReply>,
     pub storyteller: StorytellerInfo,
+    /// Story-default pictures. A route's own choices are in
+    /// `state.state.visualRefs` and win over these.
+    pub visuals: Vec<StoryVisual>,
 }
 
 pub async fn storyteller_info(db: &Database) -> AppResult<StorytellerInfo> {
@@ -121,6 +126,7 @@ pub async fn route_view(db: &Database, route_id: &str) -> AppResult<RouteView> {
         chapters: route_chapters(db, route_id).await?,
         state: crate::db::state::state_at(db, &route.story_id, &head).await?,
         storyteller: storyteller_info(db).await?,
+        visuals: assets::story_visuals(db, &route.story_id).await?,
         history,
         awaiting_reply,
         story,
@@ -153,6 +159,7 @@ pub async fn edit_details(
                 n
             }
         });
+    check_pictures(db, story_id, expected_head_id, &changes).await?;
     append_event(
         db,
         AppendEvent {
@@ -164,6 +171,52 @@ pub async fn edit_details(
         },
     )
     .await
+}
+
+/// A route-specific picture must name a real slot, an image that is in
+/// the library, and (for a portrait) a character who is in the story here.
+async fn check_pictures(
+    db: &Database,
+    story_id: &str,
+    head_id: &str,
+    changes: &[StateEdit],
+) -> AppResult<()> {
+    let mut characters = None;
+    for change in changes {
+        let StateEdit::SetVisualRef { slot, asset_id } = change else {
+            continue;
+        };
+        let parsed = VisualSlot::parse(slot)?;
+        if !parsed.route_scoped() {
+            return Err(AppError::invalid_input(
+                "the cover belongs to the whole story; set it as a story default",
+            ));
+        }
+        if let Some(id) = asset_id {
+            assets::get(db, id).await?;
+        }
+        if let VisualSlot::Portrait(cid) = &parsed {
+            if characters.is_none() {
+                characters = Some(
+                    crate::db::state::state_at(db, story_id, head_id)
+                        .await?
+                        .effective
+                        .state
+                        .characters,
+                );
+            }
+            let known = characters.as_ref().is_some_and(|c| c.contains_key(cid));
+            let added = changes.iter().any(
+                |c| matches!(c, StateEdit::UpsertCharacter { character } if &character.id == cid),
+            );
+            if !known && !added {
+                return Err(AppError::invalid_input(format!(
+                    "no character {cid} is in the story at this point"
+                )));
+            }
+        }
+    }
+    Ok(())
 }
 
 #[cfg(test)]

@@ -3,6 +3,7 @@ use std::sync::Arc;
 
 use crate::db::Database;
 use crate::errors::{AppError, AppResult, ErrorCode};
+use crate::services::assets::AssetStore;
 use crate::services::generation::RunRegistry;
 use crate::services::memory::MemoryJobs;
 use crate::services::secrets::SecretStore;
@@ -26,6 +27,14 @@ pub struct AppState {
 }
 
 impl AppState {
+    /// The image library's folder inside app data.
+    pub fn assets(&self) -> AppResult<AssetStore> {
+        self.data_dir
+            .as_ref()
+            .map(|d| AssetStore::new(d))
+            .map_err(|r| AppError::new(ErrorCode::Io, format!("app data folder unavailable: {r}")))
+    }
+
     pub fn db(&self) -> AppResult<&Database> {
         self.db.as_ref().map_err(|e| {
             AppError::new(

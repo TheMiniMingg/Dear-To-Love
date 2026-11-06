@@ -16,10 +16,21 @@ import type { BudgetStatus, ErrorCode, EventDto, RouteView, SaveView } from '../
 import { Composer } from './Composer';
 import { ContextPreviewPanel } from './ContextPreviewPanel';
 import { NarrativeView } from './NarrativeView';
+import { PicturesPanel } from './PicturesPanel';
+import { ScenePictures } from './ScenePictures';
 import { StoryDetailsPanel } from './StoryDetailsPanel';
 
 type Panel =
-  null | 'menu' | 'saves' | 'routes' | 'chapters' | 'edit' | 'regenerate' | 'details' | 'context';
+  | null
+  | 'menu'
+  | 'saves'
+  | 'routes'
+  | 'chapters'
+  | 'edit'
+  | 'regenerate'
+  | 'details'
+  | 'pictures'
+  | 'context';
 
 const PANEL_TITLES: Record<Exclude<Panel, null>, string> = {
   menu: 'Paused',
@@ -29,6 +40,7 @@ const PANEL_TITLES: Record<Exclude<Panel, null>, string> = {
   edit: 'Change your action',
   regenerate: 'Another reply',
   details: 'Story details',
+  pictures: 'Pictures',
   context: 'Preview context',
 };
 
@@ -452,6 +464,8 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
         </div>
       )}
 
+      {!viewing && <ScenePictures view={view} />}
+
       <div ref={narrativeHost} className="reader-body">
         <NarrativeView
           events={events}
@@ -544,7 +558,7 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
         <Dialog
           key={panel}
           title={PANEL_TITLES[panel]}
-          wide={panel === 'context' || panel === 'details'}
+          wide={panel === 'context' || panel === 'details' || panel === 'pictures'}
           onClose={() => setPanel(panel === 'menu' || panel === 'edit' ? null : 'menu')}
           initialFocusId={
             panel === 'menu'
@@ -592,6 +606,9 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
                   Story details can change once the waiting action has its reply.
                 </p>
               )}
+              <button type="button" onClick={() => setPanel('pictures')}>
+                Pictures
+              </button>
               <button type="button" onClick={() => setPanel('context')}>
                 Preview context
               </button>
@@ -652,6 +669,16 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
             />
           )}
           {panel === 'context' && <ContextPreviewPanel routeId={view.route.id} />}
+          {panel === 'pictures' && (
+            <PicturesPanel
+              view={view}
+              awaitingReply={awaitingReply || writing}
+              onChanged={(v, status) => {
+                setView(v);
+                setSaveStatus(`${status} ${timeNow()}`);
+              }}
+            />
+          )}
           {panel === 'details' && (
             <StoryDetailsPanel
               view={view}

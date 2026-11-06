@@ -12,6 +12,7 @@ use std::time::{Duration, Instant};
 use crate::db::{contract, latest_migration_version, Database};
 use crate::domain::diagnostics::{CheckStatus, DiagnosticCheck};
 use crate::errors::{AppError, AppResult};
+use crate::services::assets::{AssetReport, AssetStore};
 use crate::services::secrets::{self, SecretStore};
 
 type Outcome = (CheckStatus, String, Option<String>);
@@ -50,6 +51,7 @@ pub async fn run_all(ctx: DiagnosticsContext) -> Vec<DiagnosticCheck> {
     checks.push(check_usage_ledger(&ctx.db).await);
     checks.push(check_rate_config(&ctx.db).await);
     checks.push(check_timeline_replay(&ctx.data_dir).await);
+    checks.push(check_assets(&ctx.db, &ctx.data_dir, ctx.deep).await);
     checks.extend(sync_iter);
     checks.push(check_ai_connection(&ctx.db, ctx.secrets.as_ref(), ctx.deep).await);
     checks
@@ -360,6 +362,103 @@ pub async fn check_ai_connection(
     finish(id, label, start, outcome)
 }
 
+/// Image library: files present (and, in the deep check, unchanged), and
+/// no story points at an image the library no longer has. Problems are a
+/// warning: stories stay readable and a missing picture shows as blank.
+pub async fn check_assets(
+    db: &Result<Database, AppError>,
+    data_dir: &Result<PathBuf, String>,
+    deep: bool,
+) -> DiagnosticCheck {
+    let start = Instant::now();
+    let outcome = match (db, data_dir) {
+        (Err(_), _) => (
+            CheckStatus::Skipped,
+            "Skipped because the database did not open.".into(),
+            None,
+        ),
+        (_, Err(_)) => (
+            CheckStatus::Skipped,
+            "Skipped because the app data folder is unavailable.".into(),
+            None,
+        ),
+        (Ok(db), Ok(dir)) => {
+            match crate::services::assets::check(db, &AssetStore::new(dir), deep).await {
+                Err(e) => (
+                    CheckStatus::Warn,
+                    format!("The image library could not be checked: {}", e.message),
+                    None,
+                ),
+                Ok(r) => asset_outcome(&r, deep),
+            }
+        }
+    };
+    finish("ASSETS", "Image library", start, outcome)
+}
+
+fn short_ids(ids: &[String]) -> String {
+    let shown: Vec<&str> = ids.iter().take(5).map(|i| &i[..i.len().min(8)]).collect();
+    let more = ids.len().saturating_sub(5);
+    if more > 0 {
+        format!("{} and {more} more", shown.join(", "))
+    } else {
+        shown.join(", ")
+    }
+}
+
+fn asset_outcome(r: &AssetReport, deep: bool) -> Outcome {
+    let mut parts = Vec::new();
+    if !r.missing.is_empty() {
+        parts.push(format!(
+            "{} image file(s) missing ({})",
+            r.missing.len(),
+            short_ids(&r.missing)
+        ));
+    }
+    if !r.damaged.is_empty() {
+        parts.push(format!(
+            "{} image file(s) changed or damaged ({})",
+            r.damaged.len(),
+            short_ids(&r.damaged)
+        ));
+    }
+    if !r.missing_thumbs.is_empty() {
+        parts.push(format!(
+            "{} thumbnail(s) missing ({})",
+            r.missing_thumbs.len(),
+            short_ids(&r.missing_thumbs)
+        ));
+    }
+    if !r.dangling.is_empty() {
+        parts.push(format!(
+            "stories refer to {} image(s) that are not in the library ({})",
+            r.dangling.len(),
+            short_ids(&r.dangling)
+        ));
+    }
+    if parts.is_empty() {
+        let how = if deep {
+            "files present and unchanged"
+        } else {
+            "files present (the deep check also verifies their contents)"
+        };
+        return (
+            CheckStatus::Pass,
+            format!("{} image(s); {how}.", r.images),
+            None,
+        );
+    }
+    (
+        CheckStatus::Warn,
+        format!("{}.", parts.join("; ")),
+        Some(
+            "Stories still open; a missing picture shows as blank. Add the same image again to \
+             restore its file, or restore a backup."
+                .into(),
+        ),
+    )
+}
+
 pub async fn check_usage_ledger(db: &Result<Database, AppError>) -> DiagnosticCheck {
     let start = Instant::now();
     let outcome = match db {
@@ -580,6 +679,7 @@ mod tests {
                 "USAGE_LEDGER",
                 "RATE_CONFIG",
                 "TIMELINE_REPLAY",
+                "ASSETS",
                 "SECRETS",
                 "AI_CONNECTION"
             ]
@@ -599,6 +699,62 @@ mod tests {
             .await
             .unwrap();
         assert_eq!(n, 0);
+    }
+
+    /// T40: a broken image reference warns with the image id; the story
+    /// that shows it still opens.
+    #[tokio::test]
+    async fn broken_image_files_warn_with_ids_and_stories_still_open() {
+        use crate::db::assets::set_story_visual;
+        use crate::domain::visuals::VisualSlot;
+        use crate::services::assets::import_bytes;
+        let t = test_db().await;
+        let data: Result<PathBuf, String> = Ok(t.dir.path().to_path_buf());
+        let store = AssetStore::new(t.dir.path());
+        let mut png = Vec::new();
+        image::RgbImage::new(8, 8)
+            .write_to(&mut std::io::Cursor::new(&mut png), image::ImageFormat::Png)
+            .unwrap();
+        let img = import_bytes(&t.db, &store, png, "x").await.unwrap().asset;
+        let db = Ok(t.db.clone());
+        assert_eq!(
+            check_assets(&db, &data, true).await.status,
+            CheckStatus::Pass
+        );
+
+        let story = crate::db::stories::create_story(
+            &t.db,
+            crate::domain::story::CreateStoryInput {
+                title: "Lamp".into(),
+                description: String::new(),
+                base_state: crate::domain::story_state::fixtures::lighthouse(),
+                first_chapter_title: "One".into(),
+                chapter_outlines: vec![],
+            },
+        )
+        .await
+        .unwrap();
+        set_story_visual(
+            &t.db,
+            &story.story_id,
+            &VisualSlot::Background,
+            Some(&img.id),
+        )
+        .await
+        .unwrap();
+        for dir in ["originals", "thumbs"] {
+            for f in fs::read_dir(store.root().join(dir)).unwrap() {
+                fs::remove_file(f.unwrap().path()).unwrap();
+            }
+        }
+        let c = check_assets(&db, &data, false).await;
+        assert_eq!(c.status, CheckStatus::Warn);
+        assert!(c.summary.contains(&img.id[..8]), "{}", c.summary);
+        assert!(c.remediation.unwrap().contains("Stories still open"));
+        let view = crate::services::reader::route_view(&t.db, &story.main_route_id)
+            .await
+            .unwrap();
+        assert_eq!(view.visuals.len(), 1);
     }
 
     #[tokio::test]

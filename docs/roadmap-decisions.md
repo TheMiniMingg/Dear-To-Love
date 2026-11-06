@@ -23,6 +23,10 @@ and the roadmap differ, this file wins.
   Chapter & Route Picker comes later.
 - **Regenerate:** each regenerate creates a route; the route list groups routes
   by fork point and can hide abandoned ones.
+- **Images** are app-wide (one library for every story); stories link to
+  them. A picture used in any earlier turn can't be deleted while that story
+  exists, because events never change; story defaults can be cleared first.
+  Expressions and outfits are tags for now, not separate slots.
 - **In-story edits** use one `edit` event per Apply, with a short note listing
   what changed (shown in the story). Facts added in Story details are
   confirmed facts; the `fact_confirm` event is kept for the later suggestion

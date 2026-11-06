@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { EventDto } from '../../types';
+import { picturesOnly } from './pictures';
 
 type Props = {
   events: EventDto[];
@@ -95,7 +96,8 @@ function EventBlock({
     case 'edit':
       return (
         <p className="turn-note" data-event-id={e.id}>
-          Story details changed{e.payload.note ? `: ${e.payload.note}` : ''}.
+          {picturesOnly(e.payload.changes) ? 'Picture changed' : 'Story details changed'}
+          {e.payload.note ? `: ${e.payload.note}` : ''}.
         </p>
       );
     case 'checkpoint':

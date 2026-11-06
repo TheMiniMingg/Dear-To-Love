@@ -122,7 +122,9 @@ pub async fn list_stories(db: &Database) -> AppResult<Vec<StorySummary>> {
                 (SELECT COUNT(*) FROM routes r WHERE r.story_id = s.id AND r.hidden = 0) AS route_count, \
                 (SELECT r.id FROM routes r WHERE r.story_id = s.id AND r.is_main = 1) AS main_route_id, \
                 (SELECT r.id FROM routes r WHERE r.story_id = s.id AND r.hidden = 0 \
-                   ORDER BY r.updated_at DESC, r.id DESC LIMIT 1) AS last_route_id \
+                   ORDER BY r.updated_at DESC, r.id DESC LIMIT 1) AS last_route_id, \
+                (SELECT l.asset_id FROM asset_links l WHERE l.story_id = s.id \
+                   AND l.owner_type = 'story' AND l.variant = 'cover') AS cover_asset_id \
          FROM stories s ORDER BY s.updated_at DESC, s.id DESC",
     )
     .fetch_all(db.reader())

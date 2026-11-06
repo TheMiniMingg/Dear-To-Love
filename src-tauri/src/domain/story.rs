@@ -49,4 +49,6 @@ pub struct StorySummary {
     pub main_route_id: String,
     /// Most recently played visible route; the Library opens this one.
     pub last_route_id: String,
+    /// The story's cover picture, when one is chosen.
+    pub cover_asset_id: Option<String>,
 }
