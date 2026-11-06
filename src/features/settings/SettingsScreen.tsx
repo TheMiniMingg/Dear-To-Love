@@ -3,6 +3,7 @@ import { commands, errorMessage } from '../../api/commands';
 import { useUiStore } from '../../app/store';
 import { Dialog } from '../../components/Dialog';
 import type { ProviderProfile, StorytellerInfo } from '../../types';
+import { AboutSection, UpdatesSection } from '../updates/UpdatesSection';
 import { ConnectionForm } from './ConnectionForm';
 
 type Note = { tone: 'ok' | 'warn' | 'error'; text: string };
@@ -221,6 +222,9 @@ export function SettingsScreen() {
           limit in your provider&apos;s own dashboard too; this app cannot see your balance.
         </p>
       </section>
+
+      <UpdatesSection />
+      <AboutSection />
 
       {editing && (
         <Dialog

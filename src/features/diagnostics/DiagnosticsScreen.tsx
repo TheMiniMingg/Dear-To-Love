@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { CommandError, commands } from '../../api/commands';
 import { useUiStore } from '../../app/store';
 import type { DiagnosticCheck } from '../../types';
+import { ReportDialog } from './ReportDialog';
 
 export function DiagnosticsScreen() {
   const goBack = useUiStore((s) => s.goBack);
@@ -9,6 +10,7 @@ export function DiagnosticsScreen() {
   const [error, setError] = useState<string | null>(null);
   const [running, setRunning] = useState(true);
   const [request, setRequest] = useState({ count: 0, deep: false });
+  const [reporting, setReporting] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -48,6 +50,14 @@ export function DiagnosticsScreen() {
         <button type="button" onClick={() => runAgain(true)} disabled={running}>
           Run deep check
         </button>
+        <button
+          type="button"
+          onClick={() => setReporting(true)}
+          disabled={running}
+          title="A report to copy into a support request. No story text, keys or paths."
+        >
+          Copy report…
+        </button>
       </div>
       {error && <p role="alert">Diagnostics could not run: {error}</p>}
       {checks && (
@@ -64,6 +74,7 @@ export function DiagnosticsScreen() {
           ))}
         </ul>
       )}
+      {reporting && <ReportDialog deep={request.deep} onClose={() => setReporting(false)} />}
     </section>
   );
 }

@@ -13,4 +13,6 @@ pub mod search;
 pub mod secrets;
 pub mod selftest;
 pub mod storypack;
+pub mod support_report;
 pub mod tokens;
+pub mod updates;

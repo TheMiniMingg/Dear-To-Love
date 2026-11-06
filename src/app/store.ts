@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import type { UpdateStatus } from '../types';
 
 // UI-only state. Story data never lives here: the Rust layer owns canonical
 // state and screens fetch views from it.
@@ -33,6 +34,9 @@ type UiState = {
   /** Unsent composer text per route; survives pause menus and screen changes. */
   drafts: Record<string, string>;
   textSize: number;
+  /** The update check's state, shared by the footer notice and Settings. */
+  updates: UpdateStatus | null;
+  setUpdates: (u: UpdateStatus | null) => void;
   navigate: (screen: Screen) => void;
   goBack: () => void;
   setDraft: (routeId: string, text: string) => void;
@@ -45,6 +49,8 @@ export const useUiStore = create<UiState>((set) => ({
   history: [],
   drafts: {},
   textSize: loadTextSize(),
+  updates: null,
+  setUpdates: (updates) => set({ updates }),
   navigate: (screen) =>
     set((s) => ({ screen, history: [...s.history, s.screen].slice(-HISTORY_LIMIT) })),
   goBack: () =>

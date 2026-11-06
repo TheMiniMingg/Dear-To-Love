@@ -42,6 +42,7 @@ import type {
   StorytellerInfo,
   Submitted,
   TemplateCatalog,
+  UpdateStatus,
   UsageScope,
   UsageSummary,
   WizardDraft,
@@ -240,6 +241,20 @@ export const commands = {
   getBudgetStatus: () => call<BudgetStatus>('get_budget_status'),
   setBudgetPolicy: (policy: BudgetPolicy) => call<BudgetStatus>('set_budget_policy', { policy }),
   dismissBudgetWarning: () => call<BudgetStatus>('dismiss_budget_warning'),
+
+  /** Runs the checks and returns a report with no story text, keys or paths. */
+  diagnosticsReport: (deep: boolean) => call<string>('diagnostics_report', { deep }),
+  saveDiagnosticsReport: (path: string, report: string) =>
+    call<string>('save_diagnostics_report', { path, report }),
+  openSupportPage: () => call<void>('open_support_page'),
+  openRepositoryPage: () => call<void>('open_repository_page'),
+  /** What is known about updates; never goes online. */
+  getUpdateStatus: () => call<UpdateStatus>('get_update_status'),
+  /** `manual`: Check now. Otherwise the daily check, which does nothing while off. */
+  checkForUpdates: (manual: boolean) => call<UpdateStatus>('check_for_updates', { manual }),
+  setUpdateChecks: (enabled: boolean) => call<UpdateStatus>('set_update_checks', { enabled }),
+  acknowledgeUpdate: (version: string) => call<UpdateStatus>('acknowledge_update', { version }),
+  openReleasePage: () => call<void>('open_release_page'),
 };
 
 /** `$0.0123` for small amounts, `$12.34` from $100 up. Estimates only. */

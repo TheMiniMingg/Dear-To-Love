@@ -11,6 +11,10 @@ pub struct AppInfo {
     pub os: String,
     pub arch: String,
     pub build_profile: BuildProfile,
+    /// The public repository, for the About section.
+    pub repository_url: String,
+    /// "Support development" link, only when one is configured.
+    pub support_url: Option<String>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, TS)]
