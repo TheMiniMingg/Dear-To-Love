@@ -20,7 +20,8 @@
     "test:watch": "vitest",
     "check:version": "node scripts/check-version.mjs",
     "gen:types": "cd src-tauri && cargo test --lib export_bindings && cd .. && node scripts/gen-types-index.mjs",
-    "gen:types-index": "node scripts/gen-types-index.mjs"
+    "gen:types-index": "node scripts/gen-types-index.mjs",
+    "e2e": "node --test --test-concurrency=1 e2e/smoke.test.mjs"
   },
   "dependencies": {
     "@tauri-apps/api": "2.12.4",
@@ -47,6 +48,7 @@
     "typescript": "6.0.3",
     "typescript-eslint": "8.72.1",
     "vite": "8.3.6",
-    "vitest": "5.1.0"
+    "vitest": "5.1.0",
+    "webdriverio": "^10.2.0"
   }
 }

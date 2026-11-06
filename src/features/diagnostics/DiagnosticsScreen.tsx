@@ -4,7 +4,7 @@ import { useUiStore } from '../../app/store';
 import type { DiagnosticCheck } from '../../types';
 
 export function DiagnosticsScreen() {
-  const navigate = useUiStore((s) => s.navigate);
+  const goBack = useUiStore((s) => s.goBack);
   const [checks, setChecks] = useState<DiagnosticCheck[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [running, setRunning] = useState(true);
@@ -38,7 +38,7 @@ export function DiagnosticsScreen() {
   return (
     <section className="screen" aria-labelledby="diagnostics-title">
       <div className="screen-header">
-        <button type="button" onClick={() => navigate('library')}>
+        <button type="button" onClick={goBack}>
           Back
         </button>
         <h1 id="diagnostics-title">Diagnostics</h1>

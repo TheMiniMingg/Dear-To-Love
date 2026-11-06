@@ -25,7 +25,11 @@ export function StatusFooter() {
   return (
     <footer className="status-footer">
       <span data-testid="app-version">{version ? `v${version}` : 'version unknown'}</span>
-      <button type="button" className="link-button" onClick={() => navigate('diagnostics')}>
+      <button
+        type="button"
+        className="link-button"
+        onClick={() => navigate({ name: 'diagnostics' })}
+      >
         Diagnostics
       </button>
     </footer>

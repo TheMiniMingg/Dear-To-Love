@@ -1,0 +1,18 @@
+{
+  "templateSchemaVersion": 1,
+  "type": "character",
+  "id": "starter:new-keeper",
+  "label": "The New Keeper",
+  "summary": "Took the lighthouse job to start over somewhere quiet. It is not quiet.",
+  "character": {
+    "id": "starter:new-keeper",
+    "name": "Sam Ashby",
+    "control": "player",
+    "pronouns": "they/them",
+    "role": "New lighthouse keeper",
+    "description": "Arrived in Wrenmouth this week with two suitcases and a strong opinion about tea.",
+    "personality": ["observant", "kind", "a little too honest"],
+    "goals": ["Settle in", "Find out who wrote the letter"],
+    "abilities": ["Remembers small details"]
+  }
+}

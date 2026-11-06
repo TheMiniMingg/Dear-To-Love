@@ -119,7 +119,10 @@ pub async fn create_story(db: &Database, input: CreateStoryInput) -> AppResult<S
 pub async fn list_stories(db: &Database) -> AppResult<Vec<StorySummary>> {
     Ok(sqlx::query_as::<_, StorySummary>(
         "SELECT s.id, s.title, s.description, s.created_at, s.updated_at, \
-                (SELECT COUNT(*) FROM routes r WHERE r.story_id = s.id AND r.hidden = 0) AS route_count \
+                (SELECT COUNT(*) FROM routes r WHERE r.story_id = s.id AND r.hidden = 0) AS route_count, \
+                (SELECT r.id FROM routes r WHERE r.story_id = s.id AND r.is_main = 1) AS main_route_id, \
+                (SELECT r.id FROM routes r WHERE r.story_id = s.id AND r.hidden = 0 \
+                   ORDER BY r.updated_at DESC, r.id DESC LIMIT 1) AS last_route_id \
          FROM stories s ORDER BY s.updated_at DESC, s.id DESC",
     )
     .fetch_all(db.reader())
