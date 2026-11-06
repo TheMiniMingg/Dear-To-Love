@@ -22,22 +22,32 @@ macro_rules! bundled {
     };
 }
 
-/// Four worlds, four scenarios and six characters, in picker order.
+/// Eight worlds, eight scenarios and eight characters, in picker order.
 const BUNDLED: &[&str] = bundled![
     "world.harbor-town.json",
     "world.glass-orchard.json",
     "world.meridian-station.json",
     "world.ashcombe-1923.json",
+    "world.hollow-pines.json",
+    "world.ember-road.json",
+    "world.larkport.json",
+    "world.vesper-city.json",
     "scenario.unsigned-letter.json",
     "scenario.memory-harvest.json",
     "scenario.night-shift.json",
     "scenario.summer-guest.json",
+    "scenario.dead-air.json",
+    "scenario.last-caravan.json",
+    "scenario.wrong-reservation.json",
+    "scenario.ghost-ledger.json",
     "character.new-keeper.json",
     "character.curious-detective.json",
     "character.wandering-musician.json",
     "character.botanist.json",
     "character.runaway-heir.json",
     "character.ship-engineer.json",
+    "character.night-host.json",
+    "character.sellsword.json",
 ];
 
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]
@@ -311,7 +321,7 @@ mod tests {
         let cat = TemplateCatalog::bundled();
         assert_eq!(
             (cat.worlds.len(), cat.scenarios.len(), cat.characters.len()),
-            (4, 4, 6)
+            (8, 8, 8)
         );
         let draft = cat.resolve_quick_start(&starter()).unwrap();
         draft.base_state.validate().unwrap();

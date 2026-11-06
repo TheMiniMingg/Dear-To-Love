@@ -1,0 +1,24 @@
+{
+  "templateSchemaVersion": 1,
+  "type": "world",
+  "id": "starter:vesper-city",
+  "label": "Vesper City",
+  "summary": "A rain-soaked megacity run by three corporations, where favors are currency and nobody trusts their own eyes.",
+  "world": {
+    "era": "2089",
+    "setting": "Vesper City, a megacity of towers, rain and neon",
+    "description": "Three corporations own the towers, the police and most of the weather. Down in the street markets, anything can be bought except the truth.",
+    "rules": [
+      "Technology is everywhere, and every device can be watched",
+      "Corporations own the police; favors are currency",
+      "Violence is quick, and it always has consequences"
+    ]
+  },
+  "narration": {
+    "perspective": "first",
+    "detail": "balanced",
+    "tone": "Hard-boiled and rain-soaked, dryly funny",
+    "pacing": "fast",
+    "genres": ["Science fiction", "Noir", "Thriller"]
+  }
+}

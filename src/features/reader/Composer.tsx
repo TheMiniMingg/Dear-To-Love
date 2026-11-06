@@ -1,6 +1,9 @@
 import { useRef, type KeyboardEvent } from 'react';
 import { isComposing } from '../../app/keyboard';
 
+/** The longest action the app accepts. */
+const MAX_ACTION = 20_000;
+
 type Props = {
   value: string;
   onChange: (text: string) => void;
@@ -37,6 +40,7 @@ export function Composer({ value, onChange, onSubmit, disabled, placeholder }: P
         ref={ref}
         value={value}
         rows={2}
+        maxLength={MAX_ACTION}
         placeholder={placeholder}
         onChange={(e) => onChange(e.target.value)}
         onKeyDown={onKeyDown}

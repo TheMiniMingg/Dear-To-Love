@@ -18,6 +18,7 @@
     "perspective": "third",
     "detail": "detailed",
     "tone": "Witty, warm, a little scandalous",
-    "pacing": "normal"
+    "pacing": "normal",
+    "genres": ["Historical", "Romance", "Comedy"]
   }
 }

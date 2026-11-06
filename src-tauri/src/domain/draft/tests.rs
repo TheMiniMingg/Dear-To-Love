@@ -148,3 +148,26 @@ fn incomplete_json_still_loads() {
     let newer: CreateStoryDraft = serde_json::from_str(r#"{"draftSchemaVersion":2}"#).unwrap();
     assert_eq!(messages(&newer)[0].0, DraftStep::Review);
 }
+
+#[test]
+fn content_settings_are_cleaned_and_minors_refused_in_adult_stories() {
+    let mut d = starter();
+    d.narration.genres = vec![" Romance ".into(), "".into(), "Fantasy".into()];
+    d.narration.themes = vec!["slow burn".into(), "  ".into()];
+    d.narration.limits = vec![" gore ".into()];
+    d.narration.rating = Some(ContentRating::Explicit);
+    assert!(d.check().is_empty(), "{:?}", d.check());
+    let n = d.clone().into_story_input().unwrap().base_state.narration;
+    assert_eq!(n.genres, ["Romance", "Fantasy"]);
+    assert_eq!(n.themes, ["slow burn"]);
+    assert_eq!(n.limits, ["gore"]);
+
+    d.player.age = Some("17".into());
+    d.npcs[0].age = Some("a teenager".into());
+    let m = messages(&d);
+    assert_eq!(m.len(), 2, "{m:?}");
+    assert_eq!(m[0].0, DraftStep::Character);
+    assert!(m[0].1.contains("18 or older"));
+    assert_eq!(m[1].0, DraftStep::Story);
+    assert!(d.into_story_input().is_err());
+}

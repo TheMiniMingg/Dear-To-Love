@@ -11,8 +11,8 @@ use ts_rs::TS;
 
 use super::story::{ChapterOutlineInput, CreateStoryInput};
 use super::story_state::{
-    Character, Control, Narration, Relationship, Scene, StoryStateV1, World,
-    STORY_STATE_SCHEMA_VERSION,
+    names_a_minor, Character, ContentRating, Control, Narration, Relationship, Scene, StoryStateV1,
+    World, STORY_STATE_SCHEMA_VERSION,
 };
 use super::templates::{check_id, SceneTemplate, PLAYER_PLACEHOLDER};
 use crate::errors::{AppError, AppResult};
@@ -246,6 +246,27 @@ impl CreateStoryDraft {
                 );
             }
         }
+        if self.narration.rating == Some(ContentRating::Explicit) {
+            let minor = |c: &Character| c.age.as_deref().is_some_and(names_a_minor);
+            if minor(&self.player) {
+                add(
+                    &mut out,
+                    DraftStep::Character,
+                    "Your character must be 18 or older in an adults-only story.".into(),
+                );
+            }
+            for npc in self.npcs.iter().filter(|c| minor(c)) {
+                add(
+                    &mut out,
+                    DraftStep::Story,
+                    format!(
+                        "{} must be 18 or older in an adults-only story. Change their age or \
+                         remove them.",
+                        npc.name.trim()
+                    ),
+                );
+            }
+        }
         if out.is_empty() {
             if let Err(e) = self.build().and_then(|i| i.base_state.validate()) {
                 add(&mut out, DraftStep::Review, sentence(&e.message));
@@ -302,6 +323,9 @@ impl CreateStoryDraft {
             },
             narration: Narration {
                 tone: clean_text(&self.narration.tone),
+                genres: clean_list(&self.narration.genres),
+                themes: clean_list(&self.narration.themes),
+                limits: clean_list(&self.narration.limits),
                 ..self.narration.clone()
             },
             characters,

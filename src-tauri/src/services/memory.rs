@@ -166,7 +166,8 @@ pub fn extractive(prev: Option<&str>, chunk: &[EventRow], player_name: &str) -> 
     Ok(lines.join("\n"))
 }
 
-fn transcript(chunk: &[EventRow], player_name: &str, max_chars: usize) -> AppResult<String> {
+/// The turns as "Name: …" and "Narrator: …" lines, each clipped to `max_chars`.
+pub fn transcript(chunk: &[EventRow], player_name: &str, max_chars: usize) -> AppResult<String> {
     let mut out = Vec::new();
     for e in chunk {
         match EventBody::from_parts(&e.kind, &e.payload_json)? {
@@ -286,9 +287,10 @@ async fn write_summary(
         Some(pid) => {
             let row = providers::get_profile_row(env.db, pid).await?;
             let settings = row.settings();
+            // Models that think first need room beyond the summary itself.
+            let max_output = settings.max_output_tokens.max(SUMMARY_MAX_OUTPUT_TOKENS);
             let fits = |m: &[ModelMessage]| {
-                estimate_messages(m).saturating_add(SUMMARY_MAX_OUTPUT_TOKENS)
-                    <= settings.max_context_tokens
+                estimate_messages(m).saturating_add(max_output) <= settings.max_context_tokens
             };
             let mut messages = summary_messages(prev_text, chunk, player_name, usize::MAX)?;
             if !fits(&messages) {
@@ -303,7 +305,7 @@ async fn write_summary(
             let req = GenerateRequest {
                 model_id: row.model_id.clone(),
                 messages,
-                max_output_tokens: SUMMARY_MAX_OUTPUT_TOKENS,
+                max_output_tokens: max_output,
                 temperature: settings.temperature.map(|t| t.min(0.5)),
                 timeout_ms: settings.timeout_ms,
                 context_tokens: Some(settings.max_context_tokens),

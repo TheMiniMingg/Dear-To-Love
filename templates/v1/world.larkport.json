@@ -1,0 +1,24 @@
+{
+  "templateSchemaVersion": 1,
+  "type": "world",
+  "id": "starter:larkport",
+  "label": "Larkport",
+  "summary": "A riverside city of bookshops, late trains and rooftop bars, where everyone is one coincidence away from someone.",
+  "world": {
+    "era": "Present day",
+    "setting": "Larkport, a riverside city of bridges, bookshops and late trains",
+    "description": "Old warehouses turned into restaurants, a river crossed by eleven bridges, and a night train that leaves at 1:10 whether you are on it or not.",
+    "rules": [
+      "Grounded and realistic: no magic",
+      "Romance is at the heart of the story and grows through choices, chemistry and consent",
+      "Everyone has a life, a past and plans of their own"
+    ]
+  },
+  "narration": {
+    "perspective": "second",
+    "detail": "balanced",
+    "tone": "Warm, witty, with real tension",
+    "pacing": "normal",
+    "genres": ["Romance", "Comedy", "Drama"]
+  }
+}

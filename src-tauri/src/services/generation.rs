@@ -22,6 +22,7 @@ use crate::db::memory::latest_eligible_summary;
 use crate::db::providers::{self, ProfileRow};
 use crate::db::runs::{self, RunDto, RunStatus};
 use crate::db::state::{state_with_snapshots, store_snapshots};
+use crate::db::stories::story_frame;
 use crate::db::timeline::{
     ancestors, append_event_tx, edit_prior_player_turn_tx, get_event, get_route, get_story_route,
     regenerate_fork_tx, AppendEvent,
@@ -301,14 +302,20 @@ pub async fn generate(
     }
 
     // The run only ever answers its own input event on its own route.
-    let (route, history, state, snaps, summary) = {
+    let (route, history, state, snaps, summary, frame) = {
         let mut conn = db.reader().acquire().await?;
         let route = get_route(&mut conn, &run.route_id).await?;
         let history = ancestors(&mut conn, &route.story_id, &run.input_event_id).await?;
         let (state, snaps) =
             state_with_snapshots(&mut conn, &route.story_id, &run.input_event_id).await?;
         let summary = latest_eligible_summary(&mut conn, &route.story_id, &history).await?;
-        (route, history, state, snaps, summary)
+        let frame = story_frame(
+            &mut conn,
+            &route.story_id,
+            state.active_chapter.as_ref().map(|c| c.ordinal),
+        )
+        .await?;
+        (route, history, state, snaps, summary, frame)
     };
     let _ = store_snapshots(db, &snaps).await;
     if route.head_event_id.as_deref() != Some(run.input_event_id.as_str()) {
@@ -332,6 +339,7 @@ pub async fn generate(
         let messages = if r.live {
             prompt::assemble(
                 &state,
+                &frame,
                 &history,
                 summary.as_ref(),
                 None,
@@ -563,9 +571,17 @@ async fn resolve(
                 .iter()
                 .filter(|e| e.kind() == Some(EventKind::Player))
                 .count();
+            // The first action since the chapter started: set the scene.
+            let opens_chapter = history
+                .iter()
+                .rev()
+                .take_while(|e| e.kind() != Some(EventKind::ChapterStart))
+                .filter(|e| e.kind() == Some(EventKind::Player))
+                .count()
+                == 1;
             Ok(Resolved {
                 adapter: Adapter::Offline(Offline {
-                    text: mock_storyteller::reply(state, &action, turn),
+                    text: mock_storyteller::reply(state, &action, turn, opens_chapter),
                     delay: ctx.offline_delay,
                 }),
                 label: MOCK_PROVIDER_LABEL.into(),

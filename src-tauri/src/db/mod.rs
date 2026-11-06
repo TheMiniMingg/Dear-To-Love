@@ -29,7 +29,7 @@ use sqlx::sqlite::{
 };
 use sqlx::{Sqlite, Transaction};
 
-use crate::errors::{AppError, AppResult, ErrorCode};
+use crate::errors::{is_disk_full, AppError, AppResult, ErrorCode};
 
 pub static MIGRATOR: Migrator = sqlx::migrate!("./migrations");
 
@@ -51,6 +51,16 @@ pub struct OpenReport {
 
 impl From<sqlx::Error> for AppError {
     fn from(err: sqlx::Error) -> Self {
+        // SQLITE_FULL (13): the database could not grow because the disk is
+        // full.
+        let full = match &err {
+            sqlx::Error::Database(e) => e.code().as_deref() == Some("13"),
+            sqlx::Error::Io(e) => is_disk_full(e),
+            _ => false,
+        };
+        if full {
+            return AppError::disk_full();
+        }
         AppError::new(ErrorCode::Database, err.to_string())
     }
 }
@@ -264,6 +274,34 @@ mod tests {
             t.db.schema_version().await.unwrap(),
             latest_migration_version()
         );
+    }
+
+    /// A database that cannot grow (as on a full disk) reports DISK_FULL
+    /// with a plain message, not SQLite's error text.
+    #[tokio::test]
+    async fn a_database_that_cannot_grow_reports_a_full_disk() {
+        let t = test_db().await;
+        let mut conn = t.db.writer().acquire().await.unwrap();
+        let pages: i64 = sqlx::query_scalar("PRAGMA page_count")
+            .fetch_one(&mut *conn)
+            .await
+            .unwrap();
+        sqlx::query(sqlx::AssertSqlSafe(format!(
+            "PRAGMA max_page_count = {pages}"
+        )))
+        .execute(&mut *conn)
+        .await
+        .unwrap();
+        let big = "x".repeat(64 * 1024);
+        let err: AppError =
+            sqlx::query("INSERT INTO app_preferences (key, value_json) VALUES ('big', ?)")
+                .bind(serde_json::to_string(&big).unwrap())
+                .execute(&mut *conn)
+                .await
+                .unwrap_err()
+                .into();
+        assert_eq!(err.code, ErrorCode::DiskFull, "{}", err.message);
+        assert_eq!(err.message, crate::errors::DISK_FULL_MESSAGE);
     }
 
     #[tokio::test]

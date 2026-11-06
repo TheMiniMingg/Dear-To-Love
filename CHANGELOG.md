@@ -2,6 +2,47 @@
 
 ## Unreleased
 
+- **End chapter** replaces **Next chapter**. The storyteller writes a recap of the chapter
+  (offline, from the chapter's own turns, when no AI is connected); you can edit it or write
+  your own, and name the next chapter. Ending saves your place as "End of Chapter N: title",
+  shows the recap at the chapter break, and sends every recap on that route with later
+  replies (the new **EARLIER CHAPTERS** part of the prompt), so the story keeps what happened.
+- What kind of story. The wizard's **Narration** step and **Story details → Narration** set the
+  genre (any mix, or your own), a content rating (_All ages_, _Mature_ or _Adults only_),
+  themes and elements you want, and hard limits the storyteller never writes. The storyteller
+  now also reads the story's title, premise and the current chapter's plan with every reply.
+  Adults-only stories are for players 18 or older (asked once) and refuse any character whose
+  age reads as under 18; sexual content involving minors is never allowed.
+- When a hosted AI service's content filter blocks a reply, you are told so and offered what to
+  try next, instead of "The reply did not finish".
+- Four more worlds, each with its own scenario: Hollow Pines (horror), The Ember Road
+  (fantasy adventure), Larkport (romantic comedy) and Vesper City (science-fiction noir), and
+  two more characters. Every world now lists its genres, shown in Quick Start.
+- More AI services. **Add connection** now lists the big AI labs (OpenAI, Anthropic's Claude,
+  Google Gemini, xAI's Grok, Mistral AI and DeepSeek), hosted open models (OpenRouter, Groq,
+  Together AI, Fireworks AI, DeepInfra and Hugging Face) and local servers (Ollama, LM Studio,
+  llama.cpp, KoboldCpp, Jan, text-generation-webui and vLLM), with the address filled in.
+  Claude uses Anthropic's own API. Models that think before they answer work: their thinking
+  is never shown or saved, OpenAI's reasoning models no longer fail on the temperature
+  setting, and a reply that ran out of room while thinking says which setting to raise.
+- **Create your own → Custom** starts from empty fields with no presets: no world, character
+  or scenario to pick, just your own setting, character, starting location and opening scene.
+  Other characters in Custom have an age field too. **Clear all fields** empties a draft at any
+  time. To build on a preset, pick it in Guided first and switch; it carries over.
+- A new story opens with its premise, the opening scene and a hint, instead of a blank page.
+- The offline storyteller reacts to what you do (looking, talking, moving, handling things),
+  speaks through a character who is present, and sets the scene only at the start of a
+  chapter instead of in every reply.
+- A full disk no longer shows a database error: you are told the disk is full and that
+  everything saved before is safe. Automatic backups wait until there is room, and
+  **Diagnostics** warns when free space runs low.
+- Fixes: the preset character list ran names and roles together, the Story details scrollbar
+  covered the fields, the Routes list showed "Main" twice (the first route is now marked
+  "Original"), the Library's Delete link touched the card edge, and an over-long action is now
+  stopped in the box instead of failing on send.
+- [How it works](docs/how-it-works.md) explains storage, memory, limits and workarounds,
+  templates and content settings. The README has examples and screenshots.
+
 - Installers for Windows (setup and MSI), macOS (one download for Apple silicon and Intel)
   and Linux (`.deb`, `.rpm` and AppImage), published with checksums. Each one is installed and
   started on a clean machine before a release is made, and must keep a test story through a

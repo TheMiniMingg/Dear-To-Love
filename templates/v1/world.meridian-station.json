@@ -18,6 +18,7 @@
     "perspective": "second",
     "detail": "balanced",
     "tone": "Wistful, curious, quietly funny",
-    "pacing": "normal"
+    "pacing": "normal",
+    "genres": ["Science fiction", "Mystery"]
   }
 }

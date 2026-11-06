@@ -9,6 +9,7 @@ import type {
   BackupInfo,
   BookmarkDto,
   AppInfo,
+  ChapterRecapDraft,
   BudgetPolicy,
   BudgetStatus,
   CreateStoryDraft,
@@ -83,6 +84,10 @@ const FRIENDLY: Partial<Record<ErrorCode, string>> = {
   RUN_ACTIVE: 'A reply is already being written on this route.',
   CANCELLED: 'You stopped the reply.',
   NO_PROVIDER: 'The AI connection for this reply was removed. Choose a storyteller and retry.',
+  CONTENT_FILTERED:
+    "The AI service's content filter stopped this reply. Try another reply, change the action, or use a model whose rules allow this story, such as a local model.",
+  DISK_FULL:
+    'The disk is full, so this could not be saved. Everything saved before is safe. Free up some space, then try again.',
 };
 
 /** Human-readable message for any thrown value. */
@@ -101,7 +106,7 @@ export function runErrorMessage(code: ErrorCode | null): string {
     case 'PROVIDER_UNREACHABLE':
       return 'The AI service could not be reached.';
     case 'CONTEXT_TOO_LONG':
-      return "The story setup and your action don't fit this connection's context limit. Shorten the action, or raise the context limit in Settings.";
+      return "The story setup and your action don't fit this connection's context limit. Shorten the action, trim long story details (facts, character descriptions), or raise the context limit in Settings.";
     case 'PROVIDER_ERROR':
       return 'The AI service returned an error.';
     case 'BUDGET_PAUSED':
@@ -189,8 +194,13 @@ export const commands = {
   takeRestoreResult: () => call<RestoreResult | null>('take_restore_result'),
   /** The exact prompt the next reply would send. Assembled locally; nothing is sent. */
   previewContext: (routeId: string) => call<ContextPreview>('preview_context', { routeId }),
-  nextChapter: (r: RouteRef & { expectedHeadId: string; title?: string | null }) =>
-    call<RouteView>('next_chapter', { ...r, title: r.title ?? null }),
+  /** A recap of the chapter being played, for the player to edit. Nothing is stored. */
+  draftChapterRecap: (routeId: string) =>
+    call<ChapterRecapDraft>('draft_chapter_recap', { routeId }),
+  /** Keeps `recap` on this route, saves, and starts the next chapter. */
+  endChapter: (
+    r: RouteRef & { expectedHeadId: string; recap: string; nextTitle?: string | null },
+  ) => call<RouteView>('end_chapter', { ...r, nextTitle: r.nextTitle ?? null }),
   forkRoute: (r: RouteRef & { eventId: string; label?: string | null }) =>
     call<RouteView>('fork_route', { ...r, label: r.label ?? null }),
   restartChapter: (r: RouteRef & { chapterEventId: string }) =>

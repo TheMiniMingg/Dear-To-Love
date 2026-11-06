@@ -24,6 +24,7 @@ import type {
 } from '../../types';
 import { Composer } from './Composer';
 import { ContextPreviewPanel } from './ContextPreviewPanel';
+import { EndChapterPanel } from './EndChapterPanel';
 import { ExportPanel } from './ExportPanel';
 import { NarrativeView } from './NarrativeView';
 import { PicturesPanel } from './PicturesPanel';
@@ -42,7 +43,8 @@ type Panel =
   | 'pictures'
   | 'context'
   | 'export'
-  | 'search';
+  | 'search'
+  | 'end';
 
 const PANEL_TITLES: Record<Exclude<Panel, null>, string> = {
   menu: 'Paused',
@@ -56,6 +58,7 @@ const PANEL_TITLES: Record<Exclude<Panel, null>, string> = {
   context: 'Preview context',
   export: 'Export',
   search: 'Story search',
+  end: 'End chapter',
 };
 
 type Stream = { runId: string; text: string };
@@ -336,19 +339,6 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
     });
   }, [run, view]);
 
-  const nextChapter = () =>
-    view &&
-    run(async () => {
-      const v = await commands.nextChapter({
-        storyId: view.story.id,
-        routeId: view.route.id,
-        expectedHeadId: view.route.headEventId ?? '',
-      });
-      setView(v);
-      setPanel(null);
-      setSaveStatus(`Autosaved ${timeNow()}`);
-    });
-
   const toggleBookmark = async (eventId: string) => {
     if (!view) return;
     setError(null);
@@ -546,6 +536,15 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
           onBookmark={viewing ? undefined : (id) => void toggleBookmark(id)}
           bookmarked={viewing ? undefined : bookmarked}
           focus={viewing ? null : focus}
+          intro={
+            viewing
+              ? undefined
+              : {
+                  premise: view.story.description,
+                  location: view.state.state.scene.location,
+                  scene: view.state.state.scene.summary,
+                }
+          }
         />
       </div>
 
@@ -610,10 +609,11 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
             </button>
             <button
               type="button"
-              onClick={() => void nextChapter()}
+              onClick={() => setPanel('end')}
               disabled={busy || awaitingReply || writing}
+              title="Recap this chapter, save, and start the next one"
             >
-              Next chapter
+              End chapter
             </button>
             <button type="button" onClick={() => setPanel('routes')}>
               Routes ({view.routes.filter((r) => !r.hidden).length})
@@ -634,8 +634,12 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
         <Dialog
           key={panel}
           title={PANEL_TITLES[panel]}
-          wide={panel === 'context' || panel === 'details' || panel === 'pictures'}
-          onClose={() => setPanel(panel === 'menu' || panel === 'edit' ? null : 'menu')}
+          wide={
+            panel === 'context' || panel === 'details' || panel === 'pictures' || panel === 'end'
+          }
+          onClose={() =>
+            setPanel(panel === 'menu' || panel === 'edit' || panel === 'end' ? null : 'menu')
+          }
           initialFocusId={
             panel === 'menu'
               ? 'pause-resume'
@@ -753,6 +757,17 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
             />
           )}
           {panel === 'context' && <ContextPreviewPanel routeId={view.route.id} />}
+          {panel === 'end' && (
+            <EndChapterPanel
+              view={view}
+              onCancel={() => setPanel(null)}
+              onEnded={(v, saveLabel) => {
+                setView(v);
+                setPanel(null);
+                setSaveStatus(`Saved "${saveLabel}" ${timeNow()}`);
+              }}
+            />
+          )}
           {panel === 'export' && <ExportPanel view={view} />}
           {panel === 'search' && (
             <SearchPanel

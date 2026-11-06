@@ -91,7 +91,18 @@ pub struct Recorded {
     pub method: String,
     pub path: String,
     pub authorization: Option<String>,
+    /// Every header, names lowercased.
+    pub headers: Vec<(String, String)>,
     pub body: String,
+}
+
+impl Recorded {
+    pub fn header(&self, name: &str) -> Option<&str> {
+        self.headers
+            .iter()
+            .find(|(k, _)| k == name)
+            .map(|(_, v)| v.as_str())
+    }
 }
 
 pub struct TestServer {
@@ -187,8 +198,10 @@ async fn read_request(sock: &mut tokio::net::TcpStream) -> Option<Recorded> {
     let path = first.next()?.to_string();
     let mut len = 0usize;
     let mut authorization = None;
+    let mut headers = Vec::new();
     for l in lines {
         if let Some((k, v)) = l.split_once(':') {
+            headers.push((k.trim().to_ascii_lowercase(), v.trim().to_string()));
             match k.trim().to_ascii_lowercase().as_str() {
                 "content-length" => len = v.trim().parse().unwrap_or(0),
                 "authorization" => authorization = Some(v.trim().to_string()),
@@ -208,6 +221,7 @@ async fn read_request(sock: &mut tokio::net::TcpStream) -> Option<Recorded> {
         method,
         path,
         authorization,
+        headers,
         body: String::from_utf8_lossy(&body).to_string(),
     })
 }

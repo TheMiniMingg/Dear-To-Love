@@ -1,0 +1,18 @@
+{
+  "templateSchemaVersion": 1,
+  "type": "character",
+  "id": "starter:sellsword",
+  "label": "The Sellsword",
+  "summary": "Fights for pay, and pretends that is the only reason.",
+  "character": {
+    "id": "starter:sellsword",
+    "name": "Cass Thorne",
+    "control": "player",
+    "pronouns": "she/her",
+    "role": "Sellsword",
+    "description": "Scarred, practical and better educated than she lets on.",
+    "personality": ["dry", "watchful", "protective"],
+    "goals": ["Get paid", "Stop running from an old promise"],
+    "abilities": ["Good with a blade and better at avoiding needing one"]
+  }
+}

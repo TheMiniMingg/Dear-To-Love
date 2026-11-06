@@ -280,6 +280,122 @@ describe('Create a story', () => {
     expect(saved).toBeNull();
   });
 
+  it('Custom: no presets, every field written from empty', async () => {
+    render(<CreateWizardScreen />);
+    await screen.findByRole('combobox', { name: 'Start from a world' });
+    await userEvent.click(screen.getByRole('radio', { name: 'Custom' }));
+    expect(screen.queryByRole('combobox', { name: 'Start from a world' })).toBeNull();
+    const setting = screen.getByRole('textbox', { name: /^Setting/ });
+    expect(setting).toHaveValue('');
+    await userEvent.type(setting, 'A floating market');
+
+    await userEvent.click(screen.getByRole('button', { name: 'Next' }));
+    const name = await screen.findByRole('textbox', { name: /^Name/ });
+    expect(screen.queryByRole('combobox', { name: 'Start from a character' })).toBeNull();
+    expect(name).toHaveValue('');
+    await userEvent.type(name, 'Ivo');
+    await userEvent.type(screen.getByRole('textbox', { name: 'Age' }), '34');
+
+    await userEvent.click(screen.getByRole('button', { name: 'Next' }));
+    const title = await screen.findByRole('textbox', { name: /^Title/ });
+    expect(screen.queryByRole('combobox', { name: 'Start from a scenario' })).toBeNull();
+    expect(screen.queryByText('Bring in a preset character')).toBeNull();
+    await userEvent.type(title, 'Lanterns');
+    await userEvent.type(
+      screen.getByRole('textbox', { name: /^Starting location/ }),
+      'The east pier',
+    );
+    expect(screen.getByRole('textbox', { name: /^First chapter title/ })).toHaveValue('Chapter 1');
+    await userEvent.click(screen.getByRole('button', { name: 'Add a character' }));
+    await userEvent.type(screen.getByRole('textbox', { name: /^Name/ }), 'Oona');
+    await userEvent.type(screen.getByRole('textbox', { name: 'Age' }), '41');
+
+    await userEvent.click(screen.getByRole('button', { name: '5. Review' }));
+    await userEvent.click(await screen.findByRole('button', { name: 'Create story' }));
+    const draft = lastCall('create_story')?.draft as CreateStoryDraft;
+    expect(draft.worldTemplateId).toBeNull();
+    expect(draft.scenarioTemplateId).toBeNull();
+    expect(draft.characterTemplateId).toBeNull();
+    expect(draft.world).toEqual({
+      era: '',
+      setting: 'A floating market',
+      description: '',
+      rules: [],
+    });
+    expect(draft.player).toMatchObject({ name: 'Ivo', age: '34', personality: [] });
+    expect(draft.scene.location).toBe('The east pier');
+    expect(draft.npcs.map((n) => [n.name, n.age])).toEqual([['Oona', '41']]);
+    expect(draft.narration.tone).toBe('');
+  });
+
+  it('Custom before changing anything, then Guided, brings the presets back', async () => {
+    render(<CreateWizardScreen />);
+    await screen.findByRole('combobox', { name: 'Start from a world' });
+    await userEvent.click(screen.getByRole('radio', { name: 'Custom' }));
+    expect(screen.getByRole('textbox', { name: /^Setting/ })).toHaveValue('');
+    await userEvent.click(screen.getByRole('radio', { name: 'Guided' }));
+    expect(screen.getByRole('combobox', { name: 'Start from a world' })).toHaveDisplayValue(
+      'Harbor Town',
+    );
+    expect(screen.getByRole('combobox', { name: 'Setting' })).toHaveDisplayValue('Wrenmouth');
+  });
+
+  it('Clear all fields empties what Guided filled in', async () => {
+    render(<CreateWizardScreen />);
+    const world = await screen.findByRole('combobox', { name: 'Start from a world' });
+    await userEvent.selectOptions(world, 'starter:station');
+    await userEvent.click(screen.getByRole('radio', { name: 'Custom' }));
+    // A preset picked in Guided carries over into Custom.
+    expect(screen.getByRole('textbox', { name: /^Setting/ })).toHaveValue('Meridian');
+    await userEvent.click(screen.getByRole('button', { name: 'Clear all fields' }));
+    await userEvent.click(
+      within(screen.getByRole('dialog')).getByRole('button', { name: 'Clear all fields' }),
+    );
+    expect(screen.getByRole('textbox', { name: /^Setting/ })).toHaveValue('');
+    expect(screen.getByRole('textbox', { name: 'Era' })).toHaveValue('');
+    await userEvent.click(screen.getByRole('button', { name: '3. Story' }));
+    expect(await screen.findByRole('textbox', { name: /^Title/ })).toHaveValue('');
+  });
+
+  it('genre, content rating, themes and limits reach the new story', async () => {
+    localStorage.clear();
+    render(<CreateWizardScreen />);
+    await userEvent.click(await screen.findByRole('button', { name: '4. Narration' }));
+    await userEvent.click(await screen.findByRole('checkbox', { name: 'Romance' }));
+    await userEvent.click(screen.getByRole('checkbox', { name: 'Horror' }));
+
+    // Adults only asks once whether the player is 18 or older.
+    const rating = screen.getByRole('combobox', { name: 'Content rating' });
+    await userEvent.selectOptions(rating, 'explicit');
+    const ask = await screen.findByRole('dialog', { name: 'Adults only' });
+    await userEvent.click(within(ask).getByRole('button', { name: 'Cancel' }));
+    expect(rating).toHaveDisplayValue('Not set');
+    await userEvent.selectOptions(rating, 'explicit');
+    await userEvent.click(
+      within(await screen.findByRole('dialog')).getByRole('button', { name: 'I am 18 or older' }),
+    );
+    expect(rating).toHaveDisplayValue('Adults only (explicit)');
+    await userEvent.selectOptions(rating, 'mature');
+    await userEvent.selectOptions(rating, 'explicit');
+    expect(screen.queryByRole('dialog')).toBeNull();
+
+    await userEvent.type(
+      screen.getByRole('textbox', { name: 'Themes and elements you want' }),
+      'slow burn{Enter}{Enter}rivals',
+    );
+    await userEvent.type(screen.getByRole('textbox', { name: 'Hard limits' }), 'gore');
+    await userEvent.click(screen.getByRole('button', { name: '5. Review' }));
+    expect(await screen.findByLabelText('Story summary')).toHaveTextContent(
+      'Romance, Horror · Adults only',
+    );
+    await userEvent.click(await screen.findByRole('button', { name: 'Create story' }));
+    const draft = lastCall('create_story')?.draft as CreateStoryDraft;
+    expect(draft.narration.genres).toEqual(['Romance', 'Horror']);
+    expect(draft.narration.rating).toBe('explicit');
+    expect(draft.narration.themes?.filter(Boolean)).toEqual(['slow burn', 'rivals']);
+    expect(draft.narration.limits).toEqual(['gore']);
+  });
+
   it('Review lists problems and links to the step that fixes them', async () => {
     problems = [{ step: 'character', message: 'Give your character a name.' }];
     render(<CreateWizardScreen />);

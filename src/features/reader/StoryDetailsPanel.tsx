@@ -2,6 +2,7 @@ import { useId, useState } from 'react';
 import { commands, errorMessage } from '../../api/commands';
 import { ArrowPicker } from '../../components/ArrowPicker';
 import type { Character, EventDto, Pacing, RouteView, StoryStateV1 } from '../../types';
+import { ContentFields } from '../create/ContentFields';
 import { LinesField, TextArea, TextField } from '../create/fields';
 import { DETAILS, PERSPECTIVES } from '../create/WizardSteps';
 import { diffState, editProblems, summarize, type ChangeLine } from './stateDiff';
@@ -341,6 +342,13 @@ export function StoryDetailsPanel({
               label="Tone"
               value={edited.narration.tone}
               onChange={(tone) => set({ narration: { ...edited.narration, tone } })}
+            />
+            <ContentFields
+              narration={edited.narration}
+              pickGenres={false}
+              onChange={(patch) =>
+                setEdited((s) => ({ ...s, narration: { ...s.narration, ...patch } }))
+              }
             />
           </>
         )}

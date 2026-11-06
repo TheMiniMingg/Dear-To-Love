@@ -28,11 +28,19 @@ test('keyboard-only: quick start, play, save, load as branch, reopen', async () 
   await b.keys(['Enter']);
 
   await waitForText(b, '[data-testid="narrative"]', 'The Lamp Room');
+  // A new story opens with its premise and a hint, not a blank page.
+  await waitForText(b, '[data-testid="story-intro"]', 'Write what you do');
   await tabTo(b, 'composer-input');
   await typeInto(b, '#composer-input', 'Read the letter');
   await b.keys(['Enter']);
-  await waitForText(b, '[data-testid="narrative"]', 'You decide: "Read the letter"');
+  await waitForText(b, '.turn-player', 'Read the letter');
+  // The first reply of a chapter sets the scene.
+  await waitForText(b, '.turn-assistant', 'The lamp room at the top of the Wrenmouth lighthouse');
   await waitForReply(b);
+  assert.ok(
+    !(await textOf(b, '[data-testid="story-intro"]')).includes('Write what you do'),
+    'the hint goes once the story has started',
+  );
 
   await b.keys(['Control', 's']);
   await waitForText(b, '[role="status"]', 'Quick-saved');

@@ -10,8 +10,9 @@ and the roadmap differ, this file wins.
   `api_requests.generation_run_id` UNIQUE valid).
 - **Deletion:** only whole stories can be deleted. Routes can be hidden, never
   deleted, because other routes may share their events.
-- **Chapters:** a new chapter starts when the player chooses **Next chapter**,
-  which appends a `chapter_start` event (using the next outline if one exists).
+- **Chapters:** a new chapter starts when the player chooses **End chapter**,
+  which appends a `chapter_start` event (using the next outline if one exists)
+  carrying the edited recap of the chapter that ended, and saves (ADR 0014).
 - **Templates:** four worlds, four scenarios and six characters ship with the
   creation wizard (PR 08). A scenario can name the worlds it was written for;
   pickers only offer fitting scenarios. The set grows as we build.
@@ -66,6 +67,13 @@ and the roadmap differ, this file wins.
 - **Summaries** roll forward at fixed turn numbers (every 8th reply, keeping 8+
   recent turns verbatim), so branches that share history share summaries.
   The offline storyteller uses an extractive summary with no API call.
+
+- **Content settings** (2026-11-06, MiniMe: support every story type,
+  including adult and fetish fiction between adults): genre, content rating,
+  themes and hard limits in `Narration`, sent with every reply. Adults-only
+  stories refuse characters under 18 and the minors rule is never relaxed.
+  The app does not filter replies; provider policy applies. Builds ship
+  unsigned for now. See ADR 0012.
 
 ## Schema and contracts
 

@@ -1,4 +1,5 @@
-import type { Character, KnownFact, StateEdit, StoryStateV1 } from '../../types';
+import type { Character, KnownFact, Narration, StateEdit, StoryStateV1 } from '../../types';
+import { cleanOptionalList, minorsIn, RATING_LABELS } from '../create/ContentFields';
 
 /** One line of the "what changes" preview. */
 export type ChangeLine = { what: string; before?: string; after?: string };
@@ -27,6 +28,24 @@ export function cleanCharacter(c: Character): Character {
 }
 
 const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
+
+/** Narration in a fixed key order, with empty lists and an unset rating left out. */
+function cleanNarration(n: Narration): Narration {
+  const out: Narration = {
+    perspective: n.perspective,
+    detail: n.detail,
+    tone: n.tone.trim(),
+    pacing: n.pacing,
+  };
+  const genres = cleanOptionalList(n.genres);
+  if (genres) out.genres = genres;
+  if (n.rating) out.rating = n.rating;
+  const themes = cleanOptionalList(n.themes);
+  if (themes) out.themes = themes;
+  const limits = cleanOptionalList(n.limits);
+  if (limits) out.limits = limits;
+  return out;
+}
 const show = (v: unknown) =>
   Array.isArray(v) ? (v.length ? v.join(', ') : '(none)') : v ? String(v) : '(empty)';
 
@@ -84,15 +103,26 @@ export function diffState(
     );
   }
 
-  const narration = { ...after.narration, tone: after.narration.tone.trim() };
-  if (!same(narration, before.narration)) {
+  const narration = cleanNarration(after.narration);
+  if (!same(narration, cleanNarration(before.narration))) {
     changes.push({ op: 'setNarration', narration });
+    const shown = (n: Narration) => ({
+      ...n,
+      rating: n.rating ? RATING_LABELS[n.rating] : 'Not set',
+      genres: n.genres ?? [],
+      themes: n.themes ?? [],
+      limits: n.limits ?? [],
+    });
     lines.push(
-      ...fieldLines('Narration · ', before.narration, narration, [
+      ...fieldLines('Narration · ', shown(before.narration), shown(narration), [
         ['perspective', 'Point of view'],
         ['detail', 'Detail'],
         ['pacing', 'Pacing'],
         ['tone', 'Tone'],
+        ['genres', 'Genre'],
+        ['rating', 'Content rating'],
+        ['themes', 'Themes'],
+        ['limits', 'Hard limits'],
       ]),
     );
   }
@@ -176,6 +206,13 @@ export function editProblems(after: StoryStateV1): string[] {
   }
   for (const f of after.knownFacts) {
     if (!f.text.trim()) out.push('A fact is empty. Write it or remove it.');
+  }
+  if (after.narration.rating === 'explicit') {
+    for (const name of minorsIn(Object.values(after.characters))) {
+      out.push(
+        `${name} is under 18. Everyone in an adults-only story must be an adult: change their age or the content rating.`,
+      );
+    }
   }
   return [...new Set(out)];
 }

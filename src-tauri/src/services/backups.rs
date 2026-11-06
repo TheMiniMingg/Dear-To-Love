@@ -28,6 +28,7 @@ use crate::db::backup::vacuum_into;
 use crate::db::{contract, new_id, now, Database, DB_FILE_NAME};
 use crate::errors::{AppError, AppResult, ErrorCode};
 use crate::services::archive::{copy_limited, file_name, write_atomic_with};
+use crate::services::disk;
 use crate::services::storypack::PackFile;
 
 pub const BACKUPS_DIR: &str = "backups";
@@ -201,6 +202,13 @@ pub async fn auto_backup_if_due(
         return Ok(None);
     };
     if latest.as_ref().is_some_and(|l| changed <= l.created_at) {
+        return Ok(None);
+    }
+    // A copy needs about the database's size; never use up the last of
+    // the disk, which the story itself needs.
+    let db_size = fs::metadata(db.path()).map(|m| m.len()).unwrap_or(0);
+    if disk::free_space(data_dir).is_some_and(|free| free < db_size + disk::CRITICAL_SPACE_BYTES) {
+        eprintln!("automatic backup skipped: not enough free disk space");
         return Ok(None);
     }
     let dir = data_dir.join(BACKUPS_DIR).join(AUTO_DIR);

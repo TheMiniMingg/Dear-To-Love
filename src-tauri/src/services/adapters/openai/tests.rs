@@ -255,3 +255,65 @@ fn official_openai_uses_max_completion_tokens() {
     assert_eq!(body["max_completion_tokens"], 300);
     assert!(body.get("max_tokens").is_none());
 }
+
+#[test]
+fn openai_reasoning_models_get_their_default_temperature() {
+    let official = OpenAiCompatible::new("https://api.openai.com/v1", None).unwrap();
+    for model in ["gpt-5", "gpt-5.1-mini", "o3", "o4-mini", "o1-preview"] {
+        let r = GenerateRequest {
+            model_id: model.into(),
+            ..req()
+        };
+        assert!(
+            official.request_body(&r).get("temperature").is_none(),
+            "{model}"
+        );
+    }
+    for model in ["gpt-4.1", "gpt-5-chat-latest", "o3x-custom"] {
+        let r = GenerateRequest {
+            model_id: model.into(),
+            ..req()
+        };
+        assert!(
+            official.request_body(&r).get("temperature").is_some(),
+            "{model}"
+        );
+    }
+    // Other services keep the setting, whatever the model is called.
+    let other = OpenAiCompatible::new("https://openrouter.ai/api/v1", None).unwrap();
+    let r = GenerateRequest {
+        model_id: "openai/gpt-5".into(),
+        ..req()
+    };
+    assert!(other.request_body(&r).get("temperature").is_some());
+}
+
+#[tokio::test]
+async fn google_model_names_are_listed_without_their_prefix() {
+    let server = serve(vec![Reply::json(
+        200,
+        r#"{"object":"list","data":[{"id":"models/gemini-flash","object":"model"}]}"#,
+    )])
+    .await;
+    let a = OpenAiCompatible::new(&server.base_url, Some("k".into())).unwrap();
+    assert_eq!(
+        a.list_models().await.unwrap(),
+        vec!["gemini-flash".to_string()]
+    );
+}
+
+#[tokio::test]
+async fn length_with_no_text_says_to_raise_the_reply_length() {
+    let body = format!(
+        "data: {}\n\n",
+        serde_json::json!({"choices":[{"delta":{},"finish_reason":"length"}]})
+    );
+    let server = serve(vec![Reply::sse_raw(&body)]).await;
+    let a = OpenAiCompatible::new(&server.base_url, None).unwrap();
+    let err = run(&a, &req()).await.0.unwrap_err();
+    assert!(
+        err.error.message.contains("Longest reply"),
+        "{}",
+        err.error.message
+    );
+}

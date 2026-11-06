@@ -1,0 +1,24 @@
+{
+  "templateSchemaVersion": 1,
+  "type": "world",
+  "id": "starter:ember-road",
+  "label": "The Ember Road",
+  "summary": "A caravan route across burned plains between two old empires, where magic is real and always costs something.",
+  "world": {
+    "era": "An age of old empires and new roads",
+    "setting": "The Ember Road, a caravan route across the Ashen Marches",
+    "description": "Waystations every day's ride, bandit-held ruins in between, and a sky that still glows at night from a war of mages three hundred years ago.",
+    "rules": [
+      "Magic is real, rare and costly, and people notice when it is used",
+      "Monsters exist; fights are fast and dangerous",
+      "Gods are distant; people are not"
+    ]
+  },
+  "narration": {
+    "perspective": "second",
+    "detail": "balanced",
+    "tone": "Bold and adventurous, with room for wonder",
+    "pacing": "fast",
+    "genres": ["Fantasy", "Adventure"]
+  }
+}

@@ -16,7 +16,7 @@ use super::http::{
     short, unreachable_err,
 };
 use super::sse::SseReader;
-use super::{Completion, GenerateError};
+use super::{empty_reply_error, Completion, GenerateError};
 use crate::domain::provider::{GenerateRequest, NormalizedUsage, Role};
 use crate::errors::AppError;
 
@@ -80,7 +80,9 @@ impl OpenAiCompatible {
         };
         body[limit_field] = json!(req.max_output_tokens);
         if let Some(t) = req.temperature {
-            body["temperature"] = json!(t);
+            if !(self.uses_max_completion_tokens() && fixed_temperature(&req.model_id)) {
+                body["temperature"] = json!(t);
+            }
         }
         body
     }
@@ -180,9 +182,7 @@ impl OpenAiCompatible {
         }
 
         if state.text.trim().is_empty() {
-            return Err(GenerateError::maybe_charged(provider_err(
-                "the AI service returned an empty reply",
-            )));
+            return Err(empty_reply_error(state.finish_reason.as_deref()));
         }
         Ok(Completion {
             text: state.text,
@@ -219,10 +219,23 @@ impl OpenAiCompatible {
                 m.get("id")
                     .or_else(|| m.get("name"))
                     .and_then(Value::as_str)
-                    .map(str::to_string)
+                    // Google lists "models/gemini-…" but takes "gemini-…".
+                    .map(|id| id.strip_prefix("models/").unwrap_or(id).to_string())
             })
             .collect())
     }
+}
+
+/// OpenAI's reasoning models (o1, o3, o4-mini, gpt-5 and later) accept only
+/// their default temperature and reject any other value.
+fn fixed_temperature(model_id: &str) -> bool {
+    let m = model_id.trim().to_ascii_lowercase();
+    let m = m.rsplit('/').next().unwrap_or(&m);
+    let reasoning = ["o1", "o3", "o4"]
+        .iter()
+        .any(|p| m == *p || m.starts_with(&format!("{p}-")))
+        || m.starts_with("gpt-5");
+    reasoning && !m.contains("-chat")
 }
 
 #[derive(Default)]

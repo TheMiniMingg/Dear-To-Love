@@ -73,6 +73,21 @@ pub enum Pacing {
     Slow,
 }
 
+/// How much the storyteller may show. Unset leaves it to the model.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "lowercase")]
+#[ts(export)]
+pub enum ContentRating {
+    /// Suitable for everyone: no sexual content, graphic violence or strong
+    /// language.
+    General,
+    /// Violence, horror, strong language and sexual situations without
+    /// explicit detail.
+    Mature,
+    /// Adults only: explicit sexual content between adults is allowed.
+    Explicit,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[ts(export)]
@@ -81,6 +96,21 @@ pub struct Narration {
     pub detail: Detail,
     pub tone: String,
     pub pacing: Pacing,
+    /// What kind of story this is, e.g. "Romance" or "Horror".
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[ts(as = "Option<Vec<String>>", optional)]
+    pub genres: Vec<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub rating: Option<ContentRating>,
+    /// Themes and elements the player wants when they fit the story.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[ts(as = "Option<Vec<String>>", optional)]
+    pub themes: Vec<String>,
+    /// Hard limits: things the storyteller must never write.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[ts(as = "Option<Vec<String>>", optional)]
+    pub limits: Vec<String>,
 }
 
 impl Default for Narration {
@@ -90,6 +120,10 @@ impl Default for Narration {
             detail: Detail::Balanced,
             tone: String::new(),
             pacing: Pacing::Normal,
+            genres: Vec::new(),
+            rating: None,
+            themes: Vec::new(),
+            limits: Vec::new(),
         }
     }
 }
@@ -265,8 +299,97 @@ impl StoryStateV1 {
         }
         check_list("world rules", &self.world.rules)?;
         check_list("open threads", &self.open_threads)?;
+        check_list("genres", &self.narration.genres)?;
+        check_list("themes", &self.narration.themes)?;
+        check_list("limits", &self.narration.limits)?;
+        if self.narration.rating == Some(ContentRating::Explicit) {
+            if let Some(c) = self
+                .characters
+                .values()
+                .find(|c| c.age.as_deref().is_some_and(names_a_minor))
+            {
+                return bad(format!(
+                    "{} is under 18. Every character in an adults-only story must be an adult; \
+                     change their age or choose a different content rating",
+                    c.name.trim()
+                ));
+            }
+        }
         Ok(())
     }
+}
+
+/// Whether a character's age text says they are under 18: a first number
+/// below 18 ("16", "17 years old", "sixteen") or a word for a child or
+/// teenager ("teen", "child", "minor"). Strict on purpose: an adults-only
+/// story refuses anything that reads as a minor.
+pub fn names_a_minor(age: &str) -> bool {
+    const MINOR_WORDS: &[&str] = &[
+        "child",
+        "children",
+        "kid",
+        "kids",
+        "minor",
+        "underage",
+        "teen",
+        "teens",
+        "teenage",
+        "teenager",
+        "preteen",
+        "tween",
+        "adolescent",
+        "toddler",
+        "infant",
+        "schoolgirl",
+        "schoolboy",
+        "schoolchild",
+        "juvenile",
+        "youngster",
+        "loli",
+        "shota",
+    ];
+    const SMALL_NUMBERS: &[&str] = &[
+        "one",
+        "two",
+        "three",
+        "four",
+        "five",
+        "six",
+        "seven",
+        "eight",
+        "nine",
+        "ten",
+        "eleven",
+        "twelve",
+        "thirteen",
+        "fourteen",
+        "fifteen",
+        "sixteen",
+        "seventeen",
+    ];
+    const LARGE_NUMBERS: &[&str] = &[
+        "eighteen", "nineteen", "twenty", "thirty", "forty", "fifty", "sixty", "seventy", "eighty",
+        "ninety", "hundred", "thousand", "million",
+    ];
+    let lower = age.to_lowercase().replace(',', "");
+    let first_number: String = lower
+        .chars()
+        .skip_while(|c| !c.is_ascii_digit())
+        .take_while(|c| c.is_ascii_digit())
+        .collect();
+    if first_number.parse::<u64>().is_ok_and(|n| n < 18) {
+        return true;
+    }
+    let words: Vec<&str> = lower
+        .split(|c: char| !c.is_alphanumeric())
+        .filter(|w| !w.is_empty())
+        .collect();
+    if words.iter().any(|w| MINOR_WORDS.contains(w)) {
+        return true;
+    }
+    first_number.is_empty()
+        && !words.iter().any(|w| LARGE_NUMBERS.contains(w))
+        && words.iter().any(|w| SMALL_NUMBERS.contains(w))
 }
 
 fn check_text(what: &str, text: &str) -> AppResult<()> {
@@ -339,6 +462,7 @@ pub fn sample_lighthouse() -> StoryStateV1 {
             detail: Detail::Balanced,
             tone: "Warm, mysterious".into(),
             pacing: Pacing::Normal,
+            ..Narration::default()
         },
         characters,
         relationships: vec![Relationship {
@@ -415,5 +539,73 @@ mod tests {
         let mut s = lighthouse();
         s.schema_version = 2;
         assert!(s.validate().is_err());
+    }
+
+    #[test]
+    fn content_settings_are_optional_and_keep_old_hashes() {
+        let s = lighthouse();
+        let json = s.to_canonical_json();
+        assert!(!json.contains("genres") && !json.contains("rating"));
+        // A state saved before content settings existed reads back the same.
+        let back = StoryStateV1::from_json(&json).unwrap();
+        assert_eq!(back.state_hash(), s.state_hash());
+        let mut s = lighthouse();
+        s.narration.genres = vec!["Romance".into()];
+        s.narration.rating = Some(ContentRating::Explicit);
+        s.narration.themes = vec!["slow burn".into()];
+        s.narration.limits = vec!["gore".into()];
+        let json = s.to_canonical_json();
+        assert!(json.contains(r#""rating":"explicit""#), "{json}");
+        assert_eq!(StoryStateV1::from_json(&json).unwrap(), s);
+    }
+
+    #[test]
+    fn adults_only_stories_refuse_minors() {
+        let mut s = lighthouse();
+        s.narration.rating = Some(ContentRating::Explicit);
+        s.validate().unwrap();
+        for age in [
+            "16",
+            "17 years old",
+            "sixteen",
+            "a teenager",
+            "Teen",
+            "child",
+            "minor",
+        ] {
+            let mut t = s.clone();
+            t.characters.get_mut("pc").unwrap().age = Some(age.into());
+            let err = t.validate().unwrap_err();
+            assert!(err.message.contains("under 18"), "{age}: {}", err.message);
+        }
+        for age in [
+            "18",
+            "25",
+            "twenty-five",
+            "late thirties",
+            "1,000 (a vampire)",
+            "Adult",
+        ] {
+            let mut t = s.clone();
+            t.characters.get_mut("pc").unwrap().age = Some(age.into());
+            t.validate()
+                .unwrap_or_else(|e| panic!("{age}: {}", e.message));
+        }
+        // Other ratings leave ages alone.
+        let mut t = lighthouse();
+        t.narration.rating = Some(ContentRating::Mature);
+        t.characters.get_mut("pc").unwrap().age = Some("16".into());
+        t.validate().unwrap();
+    }
+
+    #[test]
+    fn minor_ages_are_recognized() {
+        assert!(names_a_minor("12"));
+        assert!(names_a_minor("seventeen"));
+        assert!(names_a_minor("looks like a kid"));
+        assert!(!names_a_minor("nineteen"));
+        assert!(!names_a_minor("thirty-one"));
+        assert!(!names_a_minor("40s"));
+        assert!(!names_a_minor(""));
     }
 }

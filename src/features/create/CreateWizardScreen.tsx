@@ -11,6 +11,7 @@ import type {
   WizardMode,
 } from '../../types';
 import {
+  blankDraft,
   CharacterStep,
   fittingScenarios,
   NarrationStep,
@@ -47,8 +48,11 @@ async function freshDraft(catalog: TemplateCatalog): Promise<CreateStoryDraft> {
 
 /**
  * Create a story step by step. Guided mode needs no typing (arrows,
- * menus and checkboxes); Custom mode lets you type any field. Both edit
- * the same draft, which is saved as you go and restored on reopen.
+ * menus and checkboxes) and starts from presets; Custom mode has no
+ * presets and lets you type every field. Both edit the same draft, which
+ * is saved as you go and restored on reopen. Switching to Custom before
+ * changing anything empties the fields; anything picked in Guided first
+ * carries over.
  */
 export function CreateWizardScreen() {
   const navigate = useUiStore((s) => s.navigate);
@@ -63,6 +67,11 @@ export function CreateWizardScreen() {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [confirmReset, setConfirmReset] = useState(false);
+  const [confirmClear, setConfirmClear] = useState(false);
+  // The preset-filled draft a fresh wizard starts from, while nothing in
+  // it has been changed yet. Switching modes then swaps between it and an
+  // empty draft instead of carrying presets into Custom.
+  const [untouched, setUntouched] = useState<CreateStoryDraft | null>(null);
   const heading = useRef<HTMLHeadingElement>(null);
   const [dirty, setDirty] = useState(false);
   const pending = useRef<WizardDraft | null>(null);
@@ -82,7 +91,9 @@ export function CreateWizardScreen() {
           setRestoredAt(saved.savedAt);
         } else {
           const d = await freshDraft(cat);
-          if (!cancelled) setDraft(d);
+          if (cancelled) return;
+          setUntouched(d);
+          setDraft(d);
         }
       })
       .catch((e: unknown) => {
@@ -147,6 +158,7 @@ export function CreateWizardScreen() {
 
   const update = (patch: Partial<CreateStoryDraft>) => {
     touch();
+    setUntouched(null);
     setDraft((d) => (d ? { ...d, ...patch } : d));
   };
 
@@ -160,6 +172,15 @@ export function CreateWizardScreen() {
   const changeMode = (m: WizardMode) => {
     touch();
     setMode(m);
+    if (untouched) setDraft(m === 'custom' ? blankDraft(untouched) : untouched);
+  };
+
+  const clearAll = () => {
+    setConfirmClear(false);
+    touch();
+    setUntouched(null);
+    setDraft((d) => (d ? blankDraft(d) : d));
+    setProblems(null);
   };
 
   const startOver = async () => {
@@ -170,7 +191,9 @@ export function CreateWizardScreen() {
     setDirty(false);
     try {
       await commands.clearWizardDraft();
-      setDraft(await freshDraft(catalog));
+      const d = await freshDraft(catalog);
+      setUntouched(d);
+      setDraft(mode === 'custom' ? blankDraft(d) : d);
       setStep('world');
       setRestoredAt(null);
       setSaveState('idle');
@@ -227,7 +250,12 @@ export function CreateWizardScreen() {
       <p className="muted small">
         {guided
           ? 'Choose everything with arrows, menus and checkboxes. Nothing to type.'
-          : 'Type your own value for any field. Presets are still there to start from.'}{' '}
+          : 'Write everything yourself; no presets needed. To build on a preset instead, pick it in Guided first and it carries over.'}{' '}
+        {!guided && draft && (
+          <button type="button" className="link-button" onClick={() => setConfirmClear(true)}>
+            Clear all fields
+          </button>
+        )}{' '}
         <span role="status">
           {saveState === 'saving' && 'Saving draft…'}
           {saveState === 'saved' && 'Draft saved.'}
@@ -312,6 +340,22 @@ export function CreateWizardScreen() {
       )}
       {!props && !error && <p className="muted">Loading…</p>}
 
+      {confirmClear && (
+        <Dialog title="Clear all fields?" onClose={() => setConfirmClear(false)}>
+          <p>
+            Every field in this story is emptied, and narration goes back to the defaults, so you
+            can write it all yourself.
+          </p>
+          <div className="button-row">
+            <button type="button" onClick={() => setConfirmClear(false)}>
+              Keep them
+            </button>
+            <button type="button" className="danger" onClick={clearAll}>
+              Clear all fields
+            </button>
+          </div>
+        </Dialog>
+      )}
       {confirmReset && (
         <Dialog title="Start over?" onClose={() => setConfirmReset(false)}>
           <p>Your unfinished story will be discarded.</p>

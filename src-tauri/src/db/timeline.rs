@@ -496,8 +496,8 @@ pub async fn restart_chapter(
     Ok(route)
 }
 
-/// Start the next chapter on this route ("Next chapter" action). Uses the
-/// authored outline for that number when one exists.
+/// Start the next chapter on this route. Uses the authored outline for that
+/// number when one exists.
 pub async fn next_chapter(
     db: &Database,
     story_id: &str,
@@ -506,29 +506,66 @@ pub async fn next_chapter(
     title: Option<String>,
 ) -> AppResult<Appended> {
     let mut tx = db.write_txn().await?;
-    let route = get_story_route(&mut tx, story_id, route_id).await?;
-    if route.head_event_id.as_deref() != Some(expected_head_id) {
-        return Err(head_changed(route_id));
-    }
-    let history = ancestors(&mut tx, story_id, expected_head_id).await?;
-    let ordinal = chapters_of(&history)?
-        .last()
-        .map(|c| c.ordinal)
-        .unwrap_or(0)
-        + 1;
+    let out = next_chapter_tx(&mut tx, story_id, route_id, expected_head_id, title, None).await?;
+    tx.commit().await?;
+    Ok(out)
+}
+
+/// The next chapter's number and title (the outline's, or "Chapter N").
+pub async fn next_chapter_title(
+    conn: &mut SqliteConnection,
+    story_id: &str,
+    history: &[EventRow],
+) -> AppResult<(u32, String, Option<String>)> {
+    let ordinal = chapters_of(history)?.last().map(|c| c.ordinal).unwrap_or(0) + 1;
     let outline: Option<(String, String)> =
         sqlx::query_as("SELECT id, title FROM chapter_outlines WHERE story_id = ? AND ordinal = ?")
             .bind(story_id)
             .bind(ordinal as i64)
-            .fetch_optional(&mut *tx)
+            .fetch_optional(&mut *conn)
             .await?;
-    let title = title
-        .map(|t| t.trim().to_string())
+    let title = outline
+        .as_ref()
+        .map(|(_, t)| t.trim().to_string())
         .filter(|t| !t.is_empty())
-        .or_else(|| outline.as_ref().map(|(_, t)| t.clone()))
         .unwrap_or_else(|| format!("Chapter {ordinal}"));
-    let out = append_event_tx(
-        &mut tx,
+    Ok((ordinal, title, outline.map(|(id, _)| id)))
+}
+
+/// `next_chapter` inside a transaction, optionally carrying the recap of
+/// the chapter that just ended.
+pub async fn next_chapter_tx(
+    tx: &mut SqliteConnection,
+    story_id: &str,
+    route_id: &str,
+    expected_head_id: &str,
+    title: Option<String>,
+    previous_chapter_recap: Option<String>,
+) -> AppResult<Appended> {
+    let tx = &mut *tx;
+    let route = get_story_route(&mut *tx, story_id, route_id).await?;
+    if route.head_event_id.as_deref() != Some(expected_head_id) {
+        return Err(head_changed(route_id));
+    }
+    let history = ancestors(&mut *tx, story_id, expected_head_id).await?;
+    let (ordinal, planned, outline_id) = next_chapter_title(&mut *tx, story_id, &history).await?;
+    let title: String = title
+        .map(|t| t.trim().chars().take(MAX_CHAPTER_TITLE).collect::<String>())
+        .filter(|t| !t.trim().is_empty())
+        .unwrap_or(planned);
+    let previous_chapter_recap = previous_chapter_recap
+        .map(|r| r.trim().to_string())
+        .filter(|r| !r.is_empty());
+    if previous_chapter_recap
+        .as_ref()
+        .is_some_and(|r| r.chars().count() > MAX_CHAPTER_RECAP)
+    {
+        return Err(AppError::invalid_input(format!(
+            "the recap can be at most {MAX_CHAPTER_RECAP} characters"
+        )));
+    }
+    append_event_tx(
+        &mut *tx,
         AppendEvent {
             story_id: story_id.into(),
             route_id: route_id.into(),
@@ -537,15 +574,17 @@ pub async fn next_chapter(
                 chapter_instance_id: new_id(),
                 title,
                 ordinal,
-                source_outline_id: outline.map(|(id, _)| id),
+                source_outline_id: outline_id,
+                previous_chapter_recap,
             }),
             generation_run_id: None,
         },
     )
-    .await?;
-    tx.commit().await?;
-    Ok(out)
+    .await
 }
+
+pub const MAX_CHAPTER_TITLE: usize = 120;
+pub const MAX_CHAPTER_RECAP: usize = 6_000;
 
 /// Regenerate a completed reply: fork at the player action it answered.
 /// The new route's head is that player event, ready for a new generation.

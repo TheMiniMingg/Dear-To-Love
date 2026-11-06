@@ -3,4 +3,4 @@
 /**
  * Wire protocol an adapter speaks.
  */
-export type AdapterKind = "openai_compatible" | "ollama";
+export type AdapterKind = "openai_compatible" | "ollama" | "anthropic";

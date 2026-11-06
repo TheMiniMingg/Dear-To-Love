@@ -16,6 +16,8 @@ pub enum AdapterKind {
     OpenaiCompatible,
     /// Ollama's native `POST {baseUrl}/api/chat` (sets the context size).
     Ollama,
+    /// Anthropic's Messages API, `POST {baseUrl}/messages`, for Claude.
+    Anthropic,
 }
 
 impl AdapterKind {
@@ -23,6 +25,7 @@ impl AdapterKind {
         match self {
             Self::OpenaiCompatible => "openai_compatible",
             Self::Ollama => "ollama",
+            Self::Anthropic => "anthropic",
         }
     }
 
@@ -30,6 +33,7 @@ impl AdapterKind {
         match s {
             "openai_compatible" => Some(Self::OpenaiCompatible),
             "ollama" => Some(Self::Ollama),
+            "anthropic" => Some(Self::Anthropic),
             _ => None,
         }
     }

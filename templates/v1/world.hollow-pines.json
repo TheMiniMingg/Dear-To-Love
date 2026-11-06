@@ -1,0 +1,24 @@
+{
+  "templateSchemaVersion": 1,
+  "type": "world",
+  "id": "starter:hollow-pines",
+  "label": "Hollow Pines",
+  "summary": "A mountain town cut off by the first snow of winter, where the radio picks up voices it shouldn't.",
+  "world": {
+    "era": "Present day",
+    "setting": "Hollow Pines, a logging town high in the mountains, snowed in until spring",
+    "description": "One road in, closed by snow. A diner, a sheriff's office, a radio station in an old fire lookout, and a forest that is quieter than a forest should be.",
+    "rules": [
+      "Horror builds slowly: dread first, answers late",
+      "Something supernatural is real here, and it is never fully explained",
+      "People can be hurt, and choices have consequences"
+    ]
+  },
+  "narration": {
+    "perspective": "second",
+    "detail": "detailed",
+    "tone": "Quiet, creeping dread with moments of warmth",
+    "pacing": "slow",
+    "genres": ["Horror", "Mystery"]
+  }
+}

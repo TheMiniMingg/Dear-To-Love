@@ -16,7 +16,8 @@ React screens -> src/api/commands.ts (typed invoke wrappers)
                          reference scan for safe deletion
   -> Rust db/bookmarks   named places in a route's history
   -> Rust services/      generation, prompt, adapters (OpenAI-compatible,
-                         offline), reader view, diagnostics, secrets,
+                         Anthropic, Ollama, offline), reader view,
+                         diagnostics, secrets,
                          assets (image validation, thumbnails, files),
                          storypack (format, checks, id remapping),
                          archive (storypack export/import, recovery,
@@ -54,8 +55,12 @@ Guided / Custom      -> CreateStoryDraft edited in the wizard, saved as
   `HEAD_CHANGED`.
 - A fork creates a route whose head is an existing event; no events are copied.
   Membership is always "is an ancestor of the route head".
-- `restart_chapter` forks at a `chapter_start` event. `next_chapter` appends one
-  with the next ordinal (title from the authored outline when present).
+- `restart_chapter` forks at a `chapter_start` event. `end_chapter` (in
+  `services/chapters.rs`) appends one with the next ordinal (title from the
+  authored outline when present) carrying `previousChapterRecap`, and makes a
+  manual save pointing at it, in one transaction. `draft_chapter_recap`
+  writes the recap first (one `memory_summary` request, or offline) and
+  stores nothing. See ADR 0014.
 - `regenerate_fork` forks at the player action a reply answered;
   `edit_prior_player_turn` forks at the event before the action and appends the
   edited action there. Neither touches the original route.
@@ -101,7 +106,11 @@ app start       pending/streaming runs -> interrupted; open ledger rows -> unkno
   `openai_compatible` speaks `POST /chat/completions` (SSE); `ollama` speaks
   Ollama's `POST /api/chat` (NDJSON) and sends `options.num_ctx` from the
   connection's context limit, because Ollama otherwise loads models with its
-  own default context and truncates longer prompts from the start.
+  own default context and truncates longer prompts from the start;
+  `anthropic` speaks Anthropic's `POST /messages` (typed SSE events) with
+  `x-api-key` and `anthropic-version`. A leading `<think>…</think>` block
+  from open reasoning models is hidden from drafts and the saved reply. See
+  ADR 0013.
 - The offline storyteller is an adapter too (no ledger row: it is not an API).
 - See ADR 0002 for the stream and ledger contracts.
 

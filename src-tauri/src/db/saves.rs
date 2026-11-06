@@ -102,6 +102,19 @@ pub async fn create_save(
     let head = route
         .head_event_id
         .ok_or_else(|| AppError::internal("route has no head event"))?;
+    let s = insert_manual_save_tx(&mut tx, route_id, &head, label).await?;
+    tx.commit().await?;
+    Ok(s)
+}
+
+/// A manual save of `event_id` on `route_id`, inside a transaction.
+pub async fn insert_manual_save_tx(
+    tx: &mut SqliteConnection,
+    route_id: &str,
+    event_id: &str,
+    label: &str,
+) -> AppResult<SaveDto> {
+    let label: String = label.trim().chars().take(120).collect();
     let id = new_id();
     let ts = now();
     sqlx::query(
@@ -110,15 +123,13 @@ pub async fn create_save(
     )
     .bind(&id)
     .bind(route_id)
-    .bind(&head)
-    .bind(label)
+    .bind(event_id)
+    .bind(&label)
     .bind(&ts)
     .bind(&ts)
     .execute(&mut *tx)
     .await?;
-    let s = get_save(&mut tx, &id).await?;
-    tx.commit().await?;
-    Ok(s)
+    get_save(&mut *tx, &id).await
 }
 
 /// One quick-save slot per route; saving again moves its pointer.

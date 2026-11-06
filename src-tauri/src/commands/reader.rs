@@ -8,6 +8,7 @@ use crate::db::timeline::{self, RouteDto};
 use crate::domain::events::StateEdit;
 use crate::domain::provider::StreamMessage;
 use crate::errors::AppResult;
+use crate::services::chapters::{self, ChapterRecapDraft};
 use crate::services::context::{self, ContextPreview};
 use crate::services::generation::{self, Ctx, Submitted};
 use crate::services::memory::{self, SummaryEnv};
@@ -143,16 +144,43 @@ pub async fn edit_story_details(
     reader::route_view(db, &route_id).await
 }
 
+/// A recap of the chapter being played, written by the chosen storyteller
+/// (one possibly paid request) or offline. Nothing is stored yet.
 #[tauri::command]
-pub async fn next_chapter(
+pub async fn draft_chapter_recap(
+    state: State<'_, AppState>,
+    route_id: String,
+) -> AppResult<ChapterRecapDraft> {
+    let env = SummaryEnv {
+        db: state.db()?,
+        secrets: state.secrets.as_ref(),
+        jobs: &state.memory,
+        session_id: &state.session_id,
+    };
+    chapters::draft_recap(&env, &route_id).await
+}
+
+/// End the chapter: keep the recap on this route, save, and start the next
+/// chapter.
+#[tauri::command]
+pub async fn end_chapter(
     state: State<'_, AppState>,
     story_id: String,
     route_id: String,
     expected_head_id: String,
-    title: Option<String>,
+    recap: String,
+    next_title: Option<String>,
 ) -> AppResult<RouteView> {
     let db = state.db()?;
-    timeline::next_chapter(db, &story_id, &route_id, &expected_head_id, title).await?;
+    chapters::end_chapter(
+        db,
+        &story_id,
+        &route_id,
+        &expected_head_id,
+        &recap,
+        next_title,
+    )
+    .await?;
     reader::route_view(db, &route_id).await
 }
 

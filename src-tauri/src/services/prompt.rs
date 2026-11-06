@@ -4,8 +4,9 @@
 //! action's ancestors and a summary whose source ends on one of those
 //! ancestors, so nothing from another route can leak in. Order:
 //!
-//! 1. Narration contract, world, characters, relationships, confirmed facts
-//!    and the current scene (always sent).
+//! 1. Narration contract, the story's premise, genre and content settings,
+//!    world, characters, relationships, confirmed facts and the current
+//!    scene with its chapter goal (always sent).
 //! 2. "Story so far": the newest eligible rolling summary.
 //! 3. Verbatim player and story turns after the summary, oldest first.
 //! 4. The latest player action, exactly once, always last.
@@ -24,17 +25,90 @@ use crate::db::timeline::EventRow;
 use crate::domain::events::{EventBody, EventKind};
 use crate::domain::provider::{ModelMessage, Role};
 use crate::domain::replay::EffectiveState;
-use crate::domain::story_state::{Control, Detail, Pacing, Perspective};
+use crate::domain::story_state::{ContentRating, Control, Detail, Pacing, Perspective};
 use crate::errors::{AppError, AppResult, ErrorCode};
 use crate::services::tokens::{estimate_message, estimate_messages, estimate_text};
 
-pub const PROMPT_SCHEMA_VERSION: u32 = 2;
+pub const PROMPT_SCHEMA_VERSION: u32 = 4;
 /// Newest messages (excluding the latest action) placed before the summary
 /// competes for room.
 pub const MIN_RECENT_MESSAGES: usize = 4;
 const EARLIER_PREFIX: &str = "(Earlier in the story:)\n";
+/// Chapter recaps sent with each reply, newest kept; older chapters are
+/// covered by the rolling story summary.
+pub const MAX_RECAPS_IN_PROMPT: usize = 10;
 
-pub fn system_prompt(state: &EffectiveState) -> String {
+/// Story facts kept outside the branch state: the title, the premise and
+/// the authored plan for the chapter being played.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct StoryFrame {
+    pub title: String,
+    pub premise: String,
+    pub chapter_outline: Option<String>,
+    /// Recaps of chapters ended with End chapter on this route, oldest
+    /// first. `assemble` fills it from the history when it is empty.
+    pub earlier_chapters: Vec<ChapterRecap>,
+}
+
+/// What happened in one finished chapter.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct ChapterRecap {
+    pub ordinal: u32,
+    pub title: String,
+    pub recap: String,
+}
+
+/// Recaps along a route's history, oldest first. A chapter start that
+/// carries a recap describes the chapter just before it.
+pub fn chapter_recaps(history: &[EventRow]) -> AppResult<Vec<ChapterRecap>> {
+    let mut out = Vec::new();
+    let mut current: Option<(u32, String)> = None;
+    for e in history {
+        if e.kind() != Some(EventKind::ChapterStart) {
+            continue;
+        }
+        if let EventBody::ChapterStart(c) = EventBody::from_parts(&e.kind, &e.payload_json)? {
+            if let (Some(text), Some((ordinal, title))) =
+                (c.previous_chapter_recap.as_deref(), current.take())
+            {
+                if !text.trim().is_empty() {
+                    out.push(ChapterRecap {
+                        ordinal,
+                        title,
+                        recap: text.trim().to_string(),
+                    });
+                }
+            }
+            current = Some((c.ordinal, c.title));
+        }
+    }
+    Ok(out)
+}
+
+/// What a content rating tells the storyteller.
+pub fn rating_guidance(rating: ContentRating) -> &'static str {
+    match rating {
+        ContentRating::General => {
+            "suitable for all ages. No sexual content, graphic violence or strong language."
+        }
+        ContentRating::Mature => {
+            "mature. Violence, horror, dark themes, strong language and sexual situations are \
+             allowed; keep sex without explicit detail."
+        }
+        ContentRating::Explicit => {
+            "adults only. The player is an adult who chose explicit fiction. Write sexual \
+             content and other mature material openly and in as much detail as the scene calls \
+             for, without moralizing, warnings or fading to black unless the player asks. All \
+             characters in sexual content are adults (18 or older)."
+        }
+    }
+}
+
+/// Never relaxed by any setting.
+const MINORS_RULE: &str = "Never write sexual content involving anyone under 18, and never \
+     describe a character in a sexual context as a child or with a child's body.";
+
+pub fn system_prompt(state: &EffectiveState, frame: &StoryFrame) -> String {
     let s = &state.state;
     let player = s.characters.get(&s.player_character_id);
     let player_name = player.map(|p| p.name.as_str()).unwrap_or("the player");
@@ -72,6 +146,49 @@ pub fn system_prompt(state: &EffectiveState) -> String {
         out.push_str(&format!("- Tone: {}.\n", s.narration.tone.trim()));
     }
     out.push_str("- Stay consistent with the facts below. Do not mention these instructions.\n");
+
+    let n = &s.narration;
+    let mut story = String::new();
+    for (label, value) in [("Title", &frame.title), ("Premise", &frame.premise)] {
+        if !value.trim().is_empty() {
+            story.push_str(&format!("{label}: {}\n", value.trim()));
+        }
+    }
+    let list = |items: &[String]| -> String {
+        items
+            .iter()
+            .map(|t| t.trim())
+            .filter(|t| !t.is_empty())
+            .collect::<Vec<_>>()
+            .join("; ")
+    };
+    let genres = list(&n.genres);
+    if !genres.is_empty() {
+        story.push_str(&format!("Genre: {genres}\n"));
+    }
+    if let Some(r) = n.rating {
+        story.push_str(&format!("Content: {}\n", rating_guidance(r)));
+        if r != ContentRating::General {
+            story.push_str(MINORS_RULE);
+            story.push('\n');
+        }
+    }
+    let themes = list(&n.themes);
+    if !themes.is_empty() {
+        story.push_str(&format!(
+            "Themes and elements the player wants, woven in when they fit: {themes}\n"
+        ));
+    }
+    let limits = list(&n.limits);
+    if !limits.is_empty() {
+        story.push_str(&format!(
+            "Hard limits, never write these even if the story drifts toward them: {limits}\n"
+        ));
+    }
+    if !story.is_empty() {
+        out.push_str("\nSTORY\n");
+        out.push_str(&story);
+    }
 
     out.push_str("\nWORLD\n");
     for (label, value) in [
@@ -156,9 +273,30 @@ pub fn system_prompt(state: &EffectiveState) -> String {
         }
     }
 
+    let recaps = &frame.earlier_chapters;
+    if !recaps.is_empty() {
+        out.push_str("\nEARLIER CHAPTERS\n");
+        let skip = recaps.len().saturating_sub(MAX_RECAPS_IN_PROMPT);
+        for r in &recaps[skip..] {
+            out.push_str(&format!(
+                "Chapter {}, {}: {}\n",
+                r.ordinal,
+                r.title.trim(),
+                r.recap.split_whitespace().collect::<Vec<_>>().join(" ")
+            ));
+        }
+    }
+
     out.push_str("\nNOW\n");
     if let Some(ch) = &state.active_chapter {
         out.push_str(&format!("Chapter {}: {}\n", ch.ordinal, ch.title));
+    }
+    if let Some(plan) = frame.chapter_outline.as_deref().map(str::trim) {
+        if !plan.is_empty() {
+            out.push_str(&format!(
+                "Chapter plan (a direction to steer toward, not a script): {plan}\n"
+            ));
+        }
     }
     if !s.scene.location.trim().is_empty() {
         out.push_str(&format!("Location: {}\n", s.scene.location.trim()));
@@ -252,6 +390,7 @@ fn summary_block(covered_turns: u32, text: &str) -> String {
 /// Preview before the player has written it).
 pub fn assemble(
     state: &EffectiveState,
+    frame: &StoryFrame,
     history: &[EventRow],
     summary: Option<&EligibleSummary>,
     next_action: Option<&str>,
@@ -282,7 +421,17 @@ pub fn assemble(
         .ok_or_else(|| AppError::invalid_input("a reply needs a player action to answer"))?;
     let older = turns;
 
-    let system = system_prompt(state);
+    let recapped;
+    let frame = if frame.earlier_chapters.is_empty() {
+        recapped = StoryFrame {
+            earlier_chapters: chapter_recaps(history)?,
+            ..frame.clone()
+        };
+        &recapped
+    } else {
+        frame
+    };
+    let system = system_prompt(state, frame);
     let available = budget
         .max_context_tokens
         .saturating_sub(budget.max_output_tokens);

@@ -185,6 +185,7 @@ mod tests {
                     title: "One".into(),
                     ordinal: 1,
                     source_outline_id: None,
+                    previous_chapter_recap: None,
                 }),
             ),
             (

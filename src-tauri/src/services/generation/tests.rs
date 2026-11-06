@@ -129,6 +129,20 @@ impl Env {
     }
 }
 
+/// The player's action that the route's last reply answered.
+fn answered(v: &RouteView) -> String {
+    let reply = v.history.last().unwrap();
+    assert!(
+        matches!(reply.body, EventBody::Assistant(_)),
+        "expected a reply"
+    );
+    let parent = reply.parent_event_id.as_deref().unwrap();
+    match &v.history.iter().find(|e| e.id == parent).unwrap().body {
+        EventBody::Player(p) => p.text.clone(),
+        other => panic!("expected an action, got {other:?}"),
+    }
+}
+
 fn assistant_text(v: &RouteView) -> String {
     match &v.history.last().unwrap().body {
         EventBody::Assistant(p) => p.text.clone(),
@@ -437,6 +451,56 @@ async fn auth_failure_is_typed_and_not_charged() {
     );
 }
 
+/// A hosted service that filters the reply away, or sends nothing, fails the
+/// run with a plain reason; the action waits for another try.
+#[tokio::test]
+async fn filtered_or_empty_replies_fail_plainly() {
+    let env = Env::new().await;
+    let filtered = concat!(
+        "data: {\"choices\":[{\"index\":0,\"delta\":{},\"finish_reason\":\"content_filter\"}]}\n\n",
+        "data: {\"choices\":[],\"usage\":{\"prompt_tokens\":900,\"completion_tokens\":0}}\n\n",
+        "data: [DONE]\n\n",
+    );
+    let server = serve(vec![
+        Reply::sse_raw(filtered),
+        Reply::sse_text(&["  "], None),
+    ])
+    .await;
+    env.connect(&server, Billing::Paid).await;
+    let sub = env.submit(env.route(), "Kiss them").await.unwrap();
+    let (out, msgs) = env.gen(&sub.run_id).await;
+    let e = out.unwrap_err();
+    assert_eq!(e.code, ErrorCode::ContentFiltered);
+    assert!(e.message.contains("content filter"), "{}", e.message);
+    assert!(msgs.iter().any(|m| matches!(
+        m,
+        StreamMessage::Error {
+            code: ErrorCode::ContentFiltered,
+            ..
+        }
+    )));
+    assert_eq!(env.ledger().await[0].1, "failed");
+    let v = route_view(env.db(), env.route()).await.unwrap();
+    let waiting = v.awaiting_reply.unwrap();
+    assert_eq!(
+        waiting.last_run.unwrap().error_code,
+        Some(ErrorCode::ContentFiltered)
+    );
+    assert_eq!(env.assistant_count(env.route()).await, 0);
+
+    let retry = retry_reply(
+        env.db(),
+        &env.story.story_id,
+        env.route(),
+        &waiting.input_event_id,
+    )
+    .await
+    .unwrap();
+    let e = env.gen(&retry.run_id).await.0.unwrap_err();
+    assert_eq!(e.code, ErrorCode::ProviderError);
+    assert!(e.message.contains("empty reply"), "{}", e.message);
+}
+
 /// T20: switching storyteller changes only new replies.
 #[tokio::test]
 async fn switching_storyteller_affects_only_new_runs() {
@@ -545,7 +609,7 @@ async fn edit_unanswered_action_branches() {
     .unwrap();
     assert_ne!(edited.view.route.id, env.story.main_route_id);
     let v = env.gen(&edited.run_id).await.0.unwrap();
-    assert!(assistant_text(&v).contains("Fixed action"));
+    assert_eq!(answered(&v), "Fixed action");
     let main = route_view(env.db(), env.route()).await.unwrap();
     assert_eq!(main.route.head_event_id.as_deref(), Some(player.as_str()));
 }
@@ -574,7 +638,7 @@ async fn regenerate_and_edit_earlier_action_branch() {
     );
     assert!(regen.view.awaiting_reply.is_some());
     let alt = env.gen(&regen.run_id).await.0.unwrap();
-    assert!(assistant_text(&alt).contains("Read the letter"));
+    assert_eq!(answered(&alt), "Read the letter");
     assert_eq!(env.assistant_count(&alt.route.id).await, 1);
 
     // Only replies can be regenerated.
@@ -594,7 +658,7 @@ async fn regenerate_and_edit_earlier_action_branch() {
     .await
     .unwrap();
     let v = env.gen(&edited.run_id).await.0.unwrap();
-    assert!(assistant_text(&v).contains("Burn the letter"));
+    assert_eq!(answered(&v), "Burn the letter");
 
     let after = route_view(env.db(), env.route()).await.unwrap();
     assert_eq!(
