@@ -54,6 +54,14 @@ fn open_database(data_dir: &Result<PathBuf, String>) -> Result<Database, AppErro
         ),
         Err(e) => eprintln!("could not recover unfinished replies: {}", e.message),
     }
+    match tauri::async_runtime::block_on(services::archive::recover_imports(&database, dir)) {
+        Ok(r) if r == Default::default() => {}
+        Ok(r) => eprintln!(
+            "finished {} interrupted imports and rolled back {}",
+            r.finished, r.rolled_back
+        ),
+        Err(e) => eprintln!("could not recover unfinished imports: {}", e.message),
+    }
     Ok(database)
 }
 
@@ -156,6 +164,9 @@ pub fn run() {
             commands::assets::image_usages,
             commands::assets::delete_image,
             commands::assets::set_story_picture,
+            commands::archive::export_storypack,
+            commands::archive::import_storypack,
+            commands::archive::export_route_text,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Dear to Love");

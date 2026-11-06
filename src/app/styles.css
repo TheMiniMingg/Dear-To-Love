@@ -78,8 +78,13 @@ a:focus-visible {
 }
 
 .screen-header h1 {
-  flex: 1;
+  flex: 1 0 auto;
   margin: 0;
+  white-space: nowrap;
+}
+.screen-header > .button-row {
+  flex: 0 1 auto;
+  justify-content: flex-end;
 }
 
 .muted {
@@ -1255,4 +1260,36 @@ details summary {
   .image-details {
     position: static;
   }
+}
+
+/* Reader -> Export */
+.export-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+.export-panel section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+.export-panel section + section {
+  border-top: 1px solid var(--border);
+  padding-top: 1rem;
+}
+.export-panel h3,
+.export-panel p {
+  margin: 0;
+}
+.export-panel .inline-choices {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 1.5rem;
+}
+.export-panel .choices-label {
+  font-weight: 600;
+}
+.library-tools {
+  margin-top: 0.75rem;
 }

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
+import { describeImport, pickStorypackFile } from '../../api/archive';
 import { commands, errorMessage } from '../../api/commands';
 import { useUiStore } from '../../app/store';
 import { isEditableTarget, moveRovingFocus } from '../../app/keyboard';
@@ -17,6 +18,8 @@ export function LibraryScreen() {
   const [error, setError] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<StorySummary | null>(null);
   const [reload, setReload] = useState(0);
+  const [importing, setImporting] = useState(false);
+  const [status, setStatus] = useState<string | null>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -55,17 +58,27 @@ export function LibraryScreen() {
     }
   };
 
+  const importPack = async () => {
+    setError(null);
+    setStatus(null);
+    try {
+      const path = await pickStorypackFile();
+      if (!path) return;
+      setImporting(true);
+      setStatus(describeImport(await commands.importStorypack(path)));
+      setReload((n) => n + 1);
+    } catch (e) {
+      setError(errorMessage(e));
+    } finally {
+      setImporting(false);
+    }
+  };
+
   return (
     <section className="screen" aria-labelledby="library-title">
       <div className="screen-header">
         <h1 id="library-title">Your stories</h1>
         <div className="button-row">
-          <button type="button" onClick={() => navigate({ name: 'settings' })}>
-            Settings
-          </button>
-          <button type="button" onClick={() => navigate({ name: 'images' })}>
-            Images
-          </button>
           <button type="button" onClick={() => navigate({ name: 'create' })}>
             Create your own
           </button>
@@ -77,6 +90,21 @@ export function LibraryScreen() {
             New story
           </button>
         </div>
+      </div>
+      <div className="button-row library-tools">
+        <button type="button" onClick={() => navigate({ name: 'settings' })}>
+          Settings
+        </button>
+        <button type="button" onClick={() => navigate({ name: 'images' })}>
+          Images
+        </button>
+        <button type="button" disabled={importing} onClick={() => void importPack()}>
+          Import storypack
+        </button>
+      </div>
+      <div aria-live="polite">
+        {importing && <p className="muted">Importing…</p>}
+        {status && <p role="status">{status}</p>}
       </div>
       {error && (
         <p role="alert" className="error">
@@ -90,7 +118,8 @@ export function LibraryScreen() {
             Start one with <strong>New story</strong> to pick from presets, or{' '}
             <strong>Create your own</strong> to set up the world, your character and the opening
             step by step. You can play offline with the built-in storyteller before connecting an AI
-            model.
+            model. A story someone shared as a storypack comes in with{' '}
+            <strong>Import storypack</strong>.
           </p>
         </div>
       )}

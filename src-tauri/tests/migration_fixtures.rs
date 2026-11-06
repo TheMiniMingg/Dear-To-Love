@@ -72,6 +72,20 @@ async fn v3_fixture_upgrades_to_current() {
 }
 
 #[tokio::test]
+async fn v4_fixture_upgrades_to_current() {
+    let (db, _dir) = upgrade_fixture(4, include_str!("fixtures/data_v4.sql")).await;
+    let (status, story): (String, Option<String>) =
+        sqlx::query_as("SELECT status, story_id FROM archive_operations WHERE id = 'op1'")
+            .fetch_one(db.reader())
+            .await
+            .unwrap();
+    assert_eq!(
+        (status.as_str(), story.as_deref()),
+        ("complete", Some("s4"))
+    );
+}
+
+#[tokio::test]
 async fn deleting_a_story_removes_its_memory() {
     let (db, _dir) = upgrade_fixture(2, include_str!("fixtures/data_v2.sql")).await;
     let mut tx = db.write_txn().await.unwrap();

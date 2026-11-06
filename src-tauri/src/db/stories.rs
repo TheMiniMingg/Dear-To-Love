@@ -125,7 +125,10 @@ pub async fn list_stories(db: &Database) -> AppResult<Vec<StorySummary>> {
                    ORDER BY r.updated_at DESC, r.id DESC LIMIT 1) AS last_route_id, \
                 (SELECT l.asset_id FROM asset_links l WHERE l.story_id = s.id \
                    AND l.owner_type = 'story' AND l.variant = 'cover') AS cover_asset_id \
-         FROM stories s ORDER BY s.updated_at DESC, s.id DESC",
+         FROM stories s \
+         WHERE NOT EXISTS (SELECT 1 FROM archive_operations a \
+                           WHERE a.story_id = s.id AND a.status = 'committed') \
+         ORDER BY s.updated_at DESC, s.id DESC",
     )
     .fetch_all(db.reader())
     .await?)

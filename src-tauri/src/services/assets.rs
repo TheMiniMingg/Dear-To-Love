@@ -65,7 +65,7 @@ impl AssetStore {
 
     /// Writes `bytes` to `rel` through a flushed temp file and a rename.
     /// Content-addressed: an existing file of the right size is kept.
-    fn put(&self, rel: &str, bytes: &[u8]) -> AppResult<()> {
+    pub(crate) fn put(&self, rel: &str, bytes: &[u8]) -> AppResult<()> {
         let dest = self.path(rel)?;
         if std::fs::metadata(&dest).is_ok_and(|m| m.is_file() && m.len() == bytes.len() as u64) {
             return Ok(());

@@ -37,13 +37,27 @@ foreign keys enabled on every connection. Migrations live in
 | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `memory_caches` | Rolling story summaries. Replaceable cache, never canonical. No `route_id`: usable where `source_end_event_id` is an ancestor and `source_hash` still matches |
 
+## Tables (0003_assets)
+
+| Table         | Purpose                                                                                                                     |
+| ------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `assets`      | One row per image file (SHA-256 unique): relative original and thumbnail paths, type, size, name, tags. See ADR 0006        |
+| `asset_links` | Story-default pictures (`cover`, `background`, `portrait:<id>`). Route-specific choices are `setVisualRef` edits, not links |
+
+## Tables (0004_archive_operations)
+
+| Table                | Purpose                                                                                                                                 |
+| -------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `archive_operations` | Storypack import journal: `staged`, `committed`, `complete`, `rolled_back` or `failed`, with the staging folder and story. See ADR 0007 |
+
 ## Startup checks
 
 `db::contract::verify` runs at startup and in Diagnostics: foreign keys on,
 `foreign_key_check` clean, usage-ledger columns present, route heads and event
 parents in the same story, exactly one main route per story, no parent cycles,
 every save points into its route's history, and every story summary points
-into its own story.
+into its own story. After the checks, unfinished storypack imports are
+finished or rolled back and their staging folders removed.
 
 ## Upgrades
 
