@@ -35,7 +35,9 @@ offline storyteller lets you try everything without either.
 - **Change the story as you go** in **Story details**: characters, world, narration, the scene
   and facts the storyteller must keep to. Changes apply from that point, on that route only.
 - **Long stories just work.** Older turns are summarized automatically, so a story can run for
-  thousands of turns. **Preview context** shows exactly what the AI will read.
+  thousands of turns. **Story memory** shows the summary, chapter recaps and facts, which stay
+  with the story when you switch storytellers. **Preview context** shows exactly what the AI
+  will read.
 - **Pictures**: portraits, backgrounds and covers from your own images. Keep a picture for one
   story, or share it with all of them. With a picture connection, **Make portrait** draws a
   character from their description.

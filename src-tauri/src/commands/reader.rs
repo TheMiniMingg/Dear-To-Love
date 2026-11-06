@@ -15,6 +15,7 @@ use crate::services::generation::{self, Ctx, Submitted};
 use crate::services::memory::{self, SummaryEnv};
 use crate::services::reader::{self, RouteView};
 use crate::services::route_map::{self, RouteNode};
+use crate::services::story_memory::{self, StoryMemory};
 use crate::state::AppState;
 
 #[tauri::command]
@@ -230,6 +231,16 @@ pub async fn get_route_map(
     story_id: String,
 ) -> AppResult<Vec<RouteNode>> {
     route_map::route_map(state.db()?, &story_id).await
+}
+
+/// What the route's storyteller remembers beyond the newest turns: the
+/// summary of earlier turns and the recaps of ended chapters.
+#[tauri::command]
+pub async fn get_story_memory(
+    state: State<'_, AppState>,
+    route_id: String,
+) -> AppResult<StoryMemory> {
+    story_memory::story_memory(state.db()?, &route_id).await
 }
 
 #[tauri::command]

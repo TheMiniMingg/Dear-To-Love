@@ -87,6 +87,11 @@ the offline storyteller without any API call), and at least the 8 most recent tu
 sent word for word. Summaries are a cache: branches that share history share summaries, and a
 summary that no longer matches the story is ignored and redone.
 
+**Story memory** in the pause menu shows what the storyteller reads besides the newest
+turns: the summary (which turns it covers and who wrote it), the recaps of ended chapters,
+and the facts, relationships and open threads from **Story details**. All of it is stored in
+the story, never with an AI service, so a storyteller you switch to reads the same memory.
+
 **Preview context** in the pause menu shows exactly what would be sent for the next reply,
 with a token estimate. Nothing is sent until you play.
 

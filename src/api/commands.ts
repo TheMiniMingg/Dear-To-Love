@@ -35,6 +35,7 @@ import type {
   RateCardView,
   RouteDto,
   RouteNode,
+  StoryMemory,
   RollRequest,
   RouteView,
   StateEdit,
@@ -223,6 +224,7 @@ export const commands = {
     call<RouteView>('restart_chapter', r),
   /** Every route with where it branched and how far it got. */
   getRouteMap: (storyId: string) => call<RouteNode[]>('get_route_map', { storyId }),
+  getStoryMemory: (routeId: string) => call<StoryMemory>('get_story_memory', { routeId }),
   renameRoute: (r: RouteRef & { label: string }) => call<RouteDto>('rename_route', r),
   setRouteHidden: (r: RouteRef & { hidden: boolean }) => call<RouteDto>('set_route_hidden', r),
 

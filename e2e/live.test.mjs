@@ -110,6 +110,16 @@ test('live storyteller: stream a reply, retry a failure', async () => {
     system,
   );
 
+  // Story memory shows what any next storyteller reads: the recap, and no
+  // summary yet after three turns.
+  await b.keys(['Escape']);
+  await waitForText(b, '[role="dialog"]', 'Paused');
+  await (await b.$('button=Story memory')).click();
+  await waitForText(b, '[role="dialog"]', 'Chapter 1: The Lamp Room');
+  await waitForText(b, '[role="dialog"]', 'a boat moved with no lights.');
+  await waitForText(b, '[role="dialog"]', 'Now writing: Fake cloud');
+  await waitForText(b, '[role="dialog"]', 'still reads all 3 turns word for word');
+
   // Usage & budget counts every call, the failed one too, at $0 for a local model.
   await b.keys(['Escape']);
   await waitForText(b, '[role="dialog"]', 'Paused');

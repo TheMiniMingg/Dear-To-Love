@@ -45,6 +45,9 @@ export function fakeRouteView(extra: EventDto[] = []): RouteView {
         playerCharacterId: 'pc',
         characters: { pc: { id: 'pc', name: 'Sam Ashby' } },
         scene: { location: 'The lamp room', summary: '', participantIds: ['pc'] },
+        relationships: [],
+        knownFacts: [],
+        openThreads: [],
       } as unknown as RouteView['state']['state'],
     },
     awaitingReply:

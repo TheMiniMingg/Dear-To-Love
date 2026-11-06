@@ -31,6 +31,7 @@ import { NarrativeView } from './NarrativeView';
 import { PicturesPanel } from './PicturesPanel';
 import { ScenePictures } from './ScenePictures';
 import { StoryDetailsPanel } from './StoryDetailsPanel';
+import { StoryMemoryPanel } from './StoryMemoryPanel';
 import { StorytellerPanel } from './StorytellerPanel';
 
 type Panel =
@@ -47,6 +48,7 @@ type Panel =
   | 'export'
   | 'search'
   | 'storyteller'
+  | 'memory'
   | 'end';
 
 const PANEL_TITLES: Record<Exclude<Panel, null>, string> = {
@@ -62,6 +64,7 @@ const PANEL_TITLES: Record<Exclude<Panel, null>, string> = {
   export: 'Export',
   search: 'Story search',
   storyteller: 'Storyteller',
+  memory: 'Story memory',
   end: 'End chapter',
 };
 
@@ -652,7 +655,11 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
           key={panel}
           title={PANEL_TITLES[panel]}
           wide={
-            panel === 'context' || panel === 'details' || panel === 'pictures' || panel === 'end'
+            panel === 'context' ||
+            panel === 'details' ||
+            panel === 'pictures' ||
+            panel === 'memory' ||
+            panel === 'end'
           }
           onClose={() =>
             setPanel(
@@ -714,6 +721,9 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
               </button>
               <button type="button" onClick={() => setPanel('storyteller')}>
                 Storyteller
+              </button>
+              <button type="button" onClick={() => setPanel('memory')}>
+                Story memory
               </button>
               <button type="button" onClick={() => setPanel('search')}>
                 Story search
@@ -825,6 +835,16 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
                 setSaveStatus(`Storyteller: ${info.label} ${timeNow()}`);
               }}
               onOpenSettings={() => navigate({ name: 'settings' })}
+              onOpenMemory={() => setPanel('memory')}
+            />
+          )}
+          {panel === 'memory' && (
+            <StoryMemoryPanel
+              view={view}
+              playerName={player?.name ?? 'You'}
+              detailsDisabled={awaitingReply || writing}
+              onOpenDetails={() => setPanel('details')}
+              onOpenStoryteller={() => setPanel('storyteller')}
             />
           )}
           {panel === 'details' && (

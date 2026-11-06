@@ -17,6 +17,7 @@ pub mod search;
 pub mod secrets;
 pub mod selftest;
 pub mod smoke;
+pub mod story_memory;
 pub mod storypack;
 pub mod support_report;
 pub mod tokens;
