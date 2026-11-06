@@ -1,8 +1,11 @@
 // Writes src/types/index.ts re-exporting every ts-rs generated DTO.
 // Run after `cargo test` regenerates src/types/generated/.
 import { readdirSync, writeFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 
-const dir = 'src/types/generated';
+// Resolve from the repo root so the script works from any working directory.
+const root = fileURLToPath(new URL('..', import.meta.url));
+const dir = `${root}src/types/generated`;
 const names = readdirSync(dir)
   .filter((f) => f.endsWith('.ts'))
   .map((f) => f.slice(0, -3))
@@ -13,5 +16,5 @@ const lines = [
   ...names.map((n) => `export type { ${n} } from './generated/${n}';`),
   '',
 ];
-writeFileSync('src/types/index.ts', lines.join('\n'));
+writeFileSync(`${root}src/types/index.ts`, lines.join('\n'));
 console.log(`src/types/index.ts: ${names.length} types`);
