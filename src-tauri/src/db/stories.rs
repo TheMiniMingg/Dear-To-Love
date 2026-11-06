@@ -41,6 +41,7 @@ pub async fn create_story(db: &Database, input: CreateStoryInput) -> AppResult<S
         title: chapter_title.to_string(),
         ordinal: 1,
         source_outline_id: first_outline_id.clone(),
+        previous_chapter_recap: None,
     };
 
     let mut tx = db.write_txn().await?;
@@ -172,6 +173,7 @@ pub async fn story_frame(
         title,
         premise,
         chapter_outline,
+        earlier_chapters: Vec::new(),
     })
 }
 

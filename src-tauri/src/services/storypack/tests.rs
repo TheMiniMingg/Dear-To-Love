@@ -118,6 +118,7 @@ fn sample() -> PackStory {
                     title: "One".into(),
                     ordinal: 1,
                     source_outline_id: Some("o1".into()),
+                    previous_chapter_recap: None,
                 }),
             ),
         ],

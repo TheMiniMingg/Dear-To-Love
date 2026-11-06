@@ -9,6 +9,7 @@ import type {
   BackupInfo,
   BookmarkDto,
   AppInfo,
+  ChapterRecapDraft,
   BudgetPolicy,
   BudgetStatus,
   CreateStoryDraft,
@@ -193,8 +194,13 @@ export const commands = {
   takeRestoreResult: () => call<RestoreResult | null>('take_restore_result'),
   /** The exact prompt the next reply would send. Assembled locally; nothing is sent. */
   previewContext: (routeId: string) => call<ContextPreview>('preview_context', { routeId }),
-  nextChapter: (r: RouteRef & { expectedHeadId: string; title?: string | null }) =>
-    call<RouteView>('next_chapter', { ...r, title: r.title ?? null }),
+  /** A recap of the chapter being played, for the player to edit. Nothing is stored. */
+  draftChapterRecap: (routeId: string) =>
+    call<ChapterRecapDraft>('draft_chapter_recap', { routeId }),
+  /** Keeps `recap` on this route, saves, and starts the next chapter. */
+  endChapter: (
+    r: RouteRef & { expectedHeadId: string; recap: string; nextTitle?: string | null },
+  ) => call<RouteView>('end_chapter', { ...r, nextTitle: r.nextTitle ?? null }),
   forkRoute: (r: RouteRef & { eventId: string; label?: string | null }) =>
     call<RouteView>('fork_route', { ...r, label: r.label ?? null }),
   restartChapter: (r: RouteRef & { chapterEventId: string }) =>

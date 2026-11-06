@@ -22,6 +22,7 @@ export type { BudgetStatus } from './generated/BudgetStatus';
 export type { BuildProfile } from './generated/BuildProfile';
 export type { ChapterDto } from './generated/ChapterDto';
 export type { ChapterOutlineInput } from './generated/ChapterOutlineInput';
+export type { ChapterRecapDraft } from './generated/ChapterRecapDraft';
 export type { ChapterStartPayload } from './generated/ChapterStartPayload';
 export type { Character } from './generated/Character';
 export type { CharacterTemplate } from './generated/CharacterTemplate';

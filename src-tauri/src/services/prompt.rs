@@ -29,11 +29,14 @@ use crate::domain::story_state::{ContentRating, Control, Detail, Pacing, Perspec
 use crate::errors::{AppError, AppResult, ErrorCode};
 use crate::services::tokens::{estimate_message, estimate_messages, estimate_text};
 
-pub const PROMPT_SCHEMA_VERSION: u32 = 3;
+pub const PROMPT_SCHEMA_VERSION: u32 = 4;
 /// Newest messages (excluding the latest action) placed before the summary
 /// competes for room.
 pub const MIN_RECENT_MESSAGES: usize = 4;
 const EARLIER_PREFIX: &str = "(Earlier in the story:)\n";
+/// Chapter recaps sent with each reply, newest kept; older chapters are
+/// covered by the rolling story summary.
+pub const MAX_RECAPS_IN_PROMPT: usize = 10;
 
 /// Story facts kept outside the branch state: the title, the premise and
 /// the authored plan for the chapter being played.
@@ -42,6 +45,44 @@ pub struct StoryFrame {
     pub title: String,
     pub premise: String,
     pub chapter_outline: Option<String>,
+    /// Recaps of chapters ended with End chapter on this route, oldest
+    /// first. `assemble` fills it from the history when it is empty.
+    pub earlier_chapters: Vec<ChapterRecap>,
+}
+
+/// What happened in one finished chapter.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct ChapterRecap {
+    pub ordinal: u32,
+    pub title: String,
+    pub recap: String,
+}
+
+/// Recaps along a route's history, oldest first. A chapter start that
+/// carries a recap describes the chapter just before it.
+pub fn chapter_recaps(history: &[EventRow]) -> AppResult<Vec<ChapterRecap>> {
+    let mut out = Vec::new();
+    let mut current: Option<(u32, String)> = None;
+    for e in history {
+        if e.kind() != Some(EventKind::ChapterStart) {
+            continue;
+        }
+        if let EventBody::ChapterStart(c) = EventBody::from_parts(&e.kind, &e.payload_json)? {
+            if let (Some(text), Some((ordinal, title))) =
+                (c.previous_chapter_recap.as_deref(), current.take())
+            {
+                if !text.trim().is_empty() {
+                    out.push(ChapterRecap {
+                        ordinal,
+                        title,
+                        recap: text.trim().to_string(),
+                    });
+                }
+            }
+            current = Some((c.ordinal, c.title));
+        }
+    }
+    Ok(out)
 }
 
 /// What a content rating tells the storyteller.
@@ -232,6 +273,20 @@ pub fn system_prompt(state: &EffectiveState, frame: &StoryFrame) -> String {
         }
     }
 
+    let recaps = &frame.earlier_chapters;
+    if !recaps.is_empty() {
+        out.push_str("\nEARLIER CHAPTERS\n");
+        let skip = recaps.len().saturating_sub(MAX_RECAPS_IN_PROMPT);
+        for r in &recaps[skip..] {
+            out.push_str(&format!(
+                "Chapter {}, {}: {}\n",
+                r.ordinal,
+                r.title.trim(),
+                r.recap.split_whitespace().collect::<Vec<_>>().join(" ")
+            ));
+        }
+    }
+
     out.push_str("\nNOW\n");
     if let Some(ch) = &state.active_chapter {
         out.push_str(&format!("Chapter {}: {}\n", ch.ordinal, ch.title));
@@ -366,6 +421,16 @@ pub fn assemble(
         .ok_or_else(|| AppError::invalid_input("a reply needs a player action to answer"))?;
     let older = turns;
 
+    let recapped;
+    let frame = if frame.earlier_chapters.is_empty() {
+        recapped = StoryFrame {
+            earlier_chapters: chapter_recaps(history)?,
+            ..frame.clone()
+        };
+        &recapped
+    } else {
+        frame
+    };
     let system = system_prompt(state, frame);
     let available = budget
         .max_context_tokens

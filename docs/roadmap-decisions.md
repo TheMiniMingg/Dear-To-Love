@@ -10,8 +10,9 @@ and the roadmap differ, this file wins.
   `api_requests.generation_run_id` UNIQUE valid).
 - **Deletion:** only whole stories can be deleted. Routes can be hidden, never
   deleted, because other routes may share their events.
-- **Chapters:** a new chapter starts when the player chooses **Next chapter**,
-  which appends a `chapter_start` event (using the next outline if one exists).
+- **Chapters:** a new chapter starts when the player chooses **End chapter**,
+  which appends a `chapter_start` event (using the next outline if one exists)
+  carrying the edited recap of the chapter that ended, and saves (ADR 0014).
 - **Templates:** four worlds, four scenarios and six characters ship with the
   creation wizard (PR 08). A scenario can name the worlds it was written for;
   pickers only offer fitting scenarios. The set grows as we build.

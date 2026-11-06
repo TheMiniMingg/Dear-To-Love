@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- **End chapter** replaces **Next chapter**. The storyteller writes a recap of the chapter
+  (offline, from the chapter's own turns, when no AI is connected); you can edit it or write
+  your own, and name the next chapter. Ending saves your place as "End of Chapter N: title",
+  shows the recap at the chapter break, and sends every recap on that route with later
+  replies (the new **EARLIER CHAPTERS** part of the prompt), so the story keeps what happened.
 - What kind of story. The wizard's **Narration** step and **Story details → Narration** set the
   genre (any mix, or your own), a content rating (_All ages_, _Mature_ or _Adults only_),
   themes and elements you want, and hard limits the storyteller never writes. The storyteller

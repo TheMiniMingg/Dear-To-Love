@@ -90,16 +90,29 @@ function EventBlock({
     </button>
   );
   switch (e.kind) {
-    case 'chapter_start':
+    case 'chapter_start': {
+      const recap = e.payload.previousChapterRecap?.trim();
       return (
-        <header className={cls('chapter-heading')} data-event-id={e.id} tabIndex={-1}>
-          <h2>
-            Chapter {e.payload.ordinal}: {e.payload.title}
-          </h2>
-          {branch}
-          {bookmark}
-        </header>
+        <>
+          {recap && (
+            <aside
+              className="chapter-recap"
+              aria-label={`Recap of Chapter ${e.payload.ordinal - 1}`}
+            >
+              <p className="recap-label">Recap of Chapter {e.payload.ordinal - 1}</p>
+              <Paragraphs text={recap} />
+            </aside>
+          )}
+          <header className={cls('chapter-heading')} data-event-id={e.id} tabIndex={-1}>
+            <h2>
+              Chapter {e.payload.ordinal}: {e.payload.title}
+            </h2>
+            {branch}
+            {bookmark}
+          </header>
+        </>
       );
+    }
     case 'player':
       return (
         <div className={cls('turn-player')} data-event-id={e.id} tabIndex={-1}>

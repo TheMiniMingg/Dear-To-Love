@@ -47,6 +47,10 @@ They never appear in the database, logs, exports, backups or support reports.
   20 events (`snapshots`); the cache can always be rebuilt.
 - **Saves** are named pointers to a point on a route: manual saves, quick saves (Ctrl/Cmd+S)
   and five rotating autosaves per story.
+- **Chapters and recaps.** **End chapter** asks the storyteller for a recap of the chapter
+  (or writes one offline from the chapter's own turns), lets you edit it, then starts the next
+  chapter with the recap kept on its `chapter_start` event and makes a save named "End of
+  Chapter N: title". The recap belongs to that route only, like everything else on it.
 - **App settings** (budget, update checks, the half-made story in the wizard) are in the
   `app_preferences` table. AI connections are in `provider_profiles`, with only a reference
   to the key.
@@ -61,10 +65,12 @@ again, in this order:
 3. **WORLD**: setting, era, description and the world's rules.
 4. **CHARACTERS** and **RELATIONSHIPS**: everyone in the story as of this point on the route.
 5. **ESTABLISHED FACTS**: facts the storyteller must keep to, and who knows them.
-6. **NOW**: the chapter and its plan, where you are, what is happening, who is present and
+6. **EARLIER CHAPTERS**: the recap of each chapter you ended with **End chapter** on this
+   route (the 10 most recent), so later chapters remember what happened.
+7. **NOW**: the chapter and its plan, where you are, what is happening, who is present and
    the open questions.
-7. **STORY SO FAR**: a summary of older turns, when there is one.
-8. **Recent turns**, word for word, then **your action** last.
+8. **STORY SO FAR**: a summary of older turns, when there is one.
+9. **Recent turns**, word for word, then **your action** last.
 
 Every 8 replies, the older part of the story is summarized (by the same AI connection, or by
 the offline storyteller without any API call), and at least the 8 most recent turns are always
@@ -101,8 +107,9 @@ When that happens, or replies start forgetting things:
 - **Trim the story setup.** Character descriptions, world rules and facts are sent with every
   reply. In **Story details**, shorten long descriptions and remove facts that no longer
   matter.
-- **Start the next chapter.** **Next chapter** gives the storyteller the chapter's plan and a
-  clear new focus.
+- **End the chapter.** **End chapter** keeps a short recap of what happened, which every
+  later reply reads, and gives the storyteller the next chapter's plan and a clear new focus.
+  Edit the recap to keep the names, promises and secrets that matter.
 - **Pin what matters as a fact.** Facts are always sent, so a detail the summary might lose
   belongs in **Story details → Facts**.
 - **Lower the detail level or reply length** to leave more room for history.

@@ -55,8 +55,12 @@ Guided / Custom      -> CreateStoryDraft edited in the wizard, saved as
   `HEAD_CHANGED`.
 - A fork creates a route whose head is an existing event; no events are copied.
   Membership is always "is an ancestor of the route head".
-- `restart_chapter` forks at a `chapter_start` event. `next_chapter` appends one
-  with the next ordinal (title from the authored outline when present).
+- `restart_chapter` forks at a `chapter_start` event. `end_chapter` (in
+  `services/chapters.rs`) appends one with the next ordinal (title from the
+  authored outline when present) carrying `previousChapterRecap`, and makes a
+  manual save pointing at it, in one transaction. `draft_chapter_recap`
+  writes the recap first (one `memory_summary` request, or offline) and
+  stores nothing. See ADR 0014.
 - `regenerate_fork` forks at the player action a reply answered;
   `edit_prior_player_turn` forks at the event before the action and appends the
   edited action there. Neither touches the original route.

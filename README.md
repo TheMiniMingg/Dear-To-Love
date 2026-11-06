@@ -19,6 +19,9 @@ offline storyteller lets you try everything without either.
   no typing; _Custom_ starts from empty fields with no presets, so you write everything.
 - **Play** by typing what you do. Save anywhere, quick-save with Ctrl/Cmd+S, and five
   autosaves keep your place.
+- **End a chapter** when it feels finished: the storyteller writes a recap of what happened,
+  you edit it, and the chapter is saved. Every later chapter reads the recaps, so the story
+  remembers.
 - **Branch** from any point, ask for **another reply**, or **change an earlier action**. Each
   makes a new route and leaves the original as it was.
 - **Change the story as you go** in **Story details**: characters, world, narration, the scene

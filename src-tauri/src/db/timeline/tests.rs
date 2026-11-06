@@ -260,6 +260,7 @@ async fn chapter_ordinals_must_be_sequential() {
             title: "Skip".into(),
             ordinal: 5,
             source_outline_id: None,
+            previous_chapter_recap: None,
         }),
     )
     .await

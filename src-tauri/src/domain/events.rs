@@ -60,6 +60,11 @@ pub struct ChapterStartPayload {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
     pub source_outline_id: Option<String>,
+    /// What happened in the chapter before this one, written when the
+    /// player ended it with **End chapter**. Later chapters read it.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub previous_chapter_recap: Option<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]

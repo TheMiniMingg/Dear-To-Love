@@ -450,6 +450,23 @@ textarea:focus-visible,
   margin: 0;
   font-size: 1.3em;
 }
+.chapter-recap {
+  margin: 1.5rem 0 0;
+  padding: 0.6rem 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 0.95em;
+}
+.chapter-recap p {
+  margin: 0.3rem 0;
+}
+.chapter-recap .recap-label {
+  font-size: 0.85em;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
 .turn-player {
   margin: 1.25rem 0;
   padding-left: 0.9rem;

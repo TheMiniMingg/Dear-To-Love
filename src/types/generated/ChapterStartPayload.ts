@@ -4,4 +4,9 @@
  * Payload of a `chapter_start` event. Chapters belong to route history,
  * not to the (optional) authored outline.
  */
-export type ChapterStartPayload = { chapterInstanceId: string, title: string, ordinal: number, sourceOutlineId?: string, };
+export type ChapterStartPayload = { chapterInstanceId: string, title: string, ordinal: number, sourceOutlineId?: string, 
+/**
+ * What happened in the chapter before this one, written when the
+ * player ended it with **End chapter**. Later chapters read it.
+ */
+previousChapterRecap?: string, };

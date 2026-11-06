@@ -22,6 +22,7 @@ fn frame() -> StoryFrame {
         title: "The Unsigned Letter".into(),
         premise: "A letter addressed to the keeper.".into(),
         chapter_outline: Some("Arrive, find the letter.".into()),
+        earlier_chapters: Vec::new(),
     }
 }
 
