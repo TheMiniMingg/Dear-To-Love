@@ -12,6 +12,8 @@ use crate::errors::{AppError, AppResult};
 use crate::services::secrets::{provider_secret_ref, SecretStore};
 
 const STORYTELLER_KEY: &str = "storyteller";
+/// The connection portraits are made with (`null`: none chosen).
+const PICTURE_MAKER_KEY: &str = "picture_maker";
 
 #[derive(Debug, Clone, FromRow)]
 pub struct ProfileRow {
@@ -149,6 +151,21 @@ pub async fn save_profile(
         .execute(&mut *tx)
         .await?;
     }
+    // A connection changed between writing stories and making pictures
+    // stops doing the job it can no longer do.
+    if input.adapter.makes_pictures() {
+        if storyteller_tx(&mut tx).await?.as_deref() == Some(id.as_str()) {
+            set_pref_id_tx(&mut tx, STORYTELLER_KEY, None).await?;
+        }
+        sqlx::query(
+            "UPDATE stories SET storyteller_profile_id = NULL WHERE storyteller_profile_id = ?",
+        )
+        .bind(&id)
+        .execute(&mut *tx)
+        .await?;
+    } else if pref_id_tx(&mut tx, PICTURE_MAKER_KEY).await?.as_deref() == Some(id.as_str()) {
+        set_pref_id_tx(&mut tx, PICTURE_MAKER_KEY, None).await?;
+    }
     tx.commit().await?;
     get_profile_row(db, &id).await?.to_profile()
 }
@@ -170,8 +187,10 @@ pub async fn delete_profile(db: &Database, secrets: &dyn SecretStore, id: &str) 
         .bind(id)
         .execute(&mut *tx)
         .await?;
-    if storyteller_tx(&mut tx).await?.as_deref() == Some(id) {
-        set_storyteller_tx(&mut tx, None).await?;
+    for key in [STORYTELLER_KEY, PICTURE_MAKER_KEY] {
+        if pref_id_tx(&mut tx, key).await?.as_deref() == Some(id) {
+            set_pref_id_tx(&mut tx, key, None).await?;
+        }
     }
     tx.commit().await?;
     if let Some(r) = row.secret_ref {
@@ -181,28 +200,50 @@ pub async fn delete_profile(db: &Database, secrets: &dyn SecretStore, id: &str) 
     Ok(())
 }
 
-async fn storyteller_tx(conn: &mut sqlx::SqliteConnection) -> AppResult<Option<String>> {
+/// A connection id kept in app preferences (`None` when unset).
+async fn pref_id_tx(conn: &mut sqlx::SqliteConnection, key: &str) -> AppResult<Option<String>> {
     let v: Option<String> =
         sqlx::query_scalar("SELECT value_json FROM app_preferences WHERE key = ?")
-            .bind(STORYTELLER_KEY)
+            .bind(key)
             .fetch_optional(&mut *conn)
             .await?;
     Ok(v.and_then(|j| serde_json::from_str::<Option<String>>(&j).ok().flatten()))
 }
 
-async fn set_storyteller_tx(
+async fn set_pref_id_tx(
     conn: &mut sqlx::SqliteConnection,
+    key: &str,
     profile_id: Option<&str>,
 ) -> AppResult<()> {
     sqlx::query(
         "INSERT INTO app_preferences (key, value_json) VALUES (?, ?) \
          ON CONFLICT(key) DO UPDATE SET value_json = excluded.value_json",
     )
-    .bind(STORYTELLER_KEY)
+    .bind(key)
     .bind(serde_json::to_string(&profile_id).unwrap_or_else(|_| "null".into()))
     .execute(&mut *conn)
     .await?;
     Ok(())
+}
+
+async fn storyteller_tx(conn: &mut sqlx::SqliteConnection) -> AppResult<Option<String>> {
+    pref_id_tx(conn, STORYTELLER_KEY).await
+}
+
+/// The kind of a saved connection, read inside a transaction.
+async fn adapter_tx(conn: &mut sqlx::SqliteConnection, id: &str) -> AppResult<Option<AdapterKind>> {
+    let a: Option<String> =
+        sqlx::query_scalar("SELECT adapter FROM provider_profiles WHERE id = ?")
+            .bind(id)
+            .fetch_optional(&mut *conn)
+            .await?;
+    Ok(a.as_deref().and_then(AdapterKind::parse))
+}
+
+fn not_a_storyteller() -> AppError {
+    AppError::invalid_input(
+        "that connection makes pictures, not story replies; choose one that writes stories",
+    )
 }
 
 /// The connection new replies use, or `None` for the offline storyteller.
@@ -213,10 +254,33 @@ pub async fn storyteller(db: &Database) -> AppResult<Option<String>> {
 
 pub async fn set_storyteller(db: &Database, profile_id: Option<&str>) -> AppResult<()> {
     if let Some(id) = profile_id {
-        get_profile_row(db, id).await?;
+        if get_profile_row(db, id).await?.adapter()?.makes_pictures() {
+            return Err(not_a_storyteller());
+        }
     }
     let mut tx = db.write_txn().await?;
-    set_storyteller_tx(&mut tx, profile_id).await?;
+    set_pref_id_tx(&mut tx, STORYTELLER_KEY, profile_id).await?;
+    tx.commit().await?;
+    Ok(())
+}
+
+/// The connection portraits are made with, if one was chosen.
+pub async fn picture_maker(db: &Database) -> AppResult<Option<String>> {
+    let mut conn = db.reader().acquire().await?;
+    pref_id_tx(&mut conn, PICTURE_MAKER_KEY).await
+}
+
+/// Choose (or, with `None`, clear) the connection portraits are made with.
+pub async fn set_picture_maker(db: &Database, profile_id: Option<&str>) -> AppResult<()> {
+    if let Some(id) = profile_id {
+        if !get_profile_row(db, id).await?.adapter()?.makes_pictures() {
+            return Err(AppError::invalid_input(
+                "that connection writes stories; choose a picture connection",
+            ));
+        }
+    }
+    let mut tx = db.write_txn().await?;
+    set_pref_id_tx(&mut tx, PICTURE_MAKER_KEY, profile_id).await?;
     tx.commit().await?;
     Ok(())
 }
@@ -274,15 +338,14 @@ pub async fn set_story_choice_tx(
         None => (None, 0),
         Some(StorytellerChoice::Offline) => (None, 1),
         Some(StorytellerChoice::Connection { id }) => {
-            let known: Option<i64> =
-                sqlx::query_scalar("SELECT 1 FROM provider_profiles WHERE id = ?")
-                    .bind(id)
-                    .fetch_optional(&mut *conn)
-                    .await?;
-            if known.is_none() {
-                return Err(AppError::invalid_input(
-                    "that AI connection was removed; choose another storyteller",
-                ));
+            match adapter_tx(conn, id).await? {
+                None => {
+                    return Err(AppError::invalid_input(
+                        "that AI connection was removed; choose another storyteller",
+                    ))
+                }
+                Some(kind) if kind.makes_pictures() => return Err(not_a_storyteller()),
+                Some(_) => {}
             }
             (Some(id.as_str()), 0)
         }

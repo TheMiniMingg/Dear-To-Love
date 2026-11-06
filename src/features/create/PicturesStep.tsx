@@ -2,9 +2,11 @@ import { useEffect, useRef, useState } from 'react';
 import { commands, errorMessage } from '../../api/commands';
 import { ImageGrid, Thumb } from '../images/ImageGrid';
 import { ImportResult, useAddImages } from '../images/ImagesScreen';
+import { MakePortrait } from '../images/MakePortrait';
 import { StorytellerPicker } from '../settings/StorytellerPicker';
 import type {
   AssetDto,
+  Character,
   CreateStoryDraft,
   DraftPicture,
   ProviderProfile,
@@ -88,14 +90,21 @@ export function PicturesStep({ draft, update }: StepProps) {
   }, [choosing]);
 
   const own = new Set(draft.storyImages ?? []);
-  const { add, adding, result } = useAddImages((added) => {
+  const added = (list: AssetDto[]) => {
     // Pictures added for this story that aren't shared become its own
     // (even one another story already keeps: it is then in both).
-    const mine = added.filter((a) => !a.shared).map((a) => a.id);
+    const mine = list.filter((a) => !a.shared).map((a) => a.id);
     if (mine.length) update({ storyImages: [...new Set([...(draft.storyImages ?? []), ...mine])] });
-    if (added[0]) setPick(added[0].id);
+    if (list[0]) setPick(list[0].id);
     setReload((n) => n + 1);
-  });
+  };
+  const { add, adding, result } = useAddImages(added);
+
+  /** The character a portrait slot is for. */
+  const characterFor = (slot: string): Character | null =>
+    slot === portraitOf(PLAYER)
+      ? draft.player
+      : (draft.npcs.find((c) => portraitOf(c.id) === slot) ?? null);
 
   const ownImages = images?.filter((a) => own.has(a.id) && !a.shared);
   const sharedImages = images?.filter((a) => a.shared);
@@ -108,6 +117,7 @@ export function PicturesStep({ draft, update }: StepProps) {
   };
 
   if (choosing) {
+    const portrayed = characterFor(choosing.slot);
     return (
       <div className="picture-chooser" ref={rootRef}>
         <h3 className="small-heading" tabIndex={-1}>
@@ -132,6 +142,9 @@ export function PicturesStep({ draft, update }: StepProps) {
           </button>
         </div>
         <ImportResult result={result} />
+        {portrayed && (
+          <MakePortrait character={portrayed} world={draft.world} onMade={(a) => added([a])} />
+        )}
         {ownImages && sharedImages && ownImages.length + sharedImages.length === 0 && (
           <p className="muted">No pictures yet. Add some from this computer.</p>
         )}

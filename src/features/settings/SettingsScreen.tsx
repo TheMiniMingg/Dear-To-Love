@@ -5,6 +5,7 @@ import { Dialog } from '../../components/Dialog';
 import type { ProviderProfile, StorytellerInfo } from '../../types';
 import { AboutSection, UpdatesSection } from '../updates/UpdatesSection';
 import { ConnectionForm } from './ConnectionForm';
+import { ADAPTER_LABELS, makesPictures, pictureConnections, storyConnections } from './kinds';
 
 type Note = { tone: 'ok' | 'warn' | 'error'; text: string };
 
@@ -13,6 +14,7 @@ export function SettingsScreen() {
   const navigate = useUiStore((s) => s.navigate);
   const [connections, setConnections] = useState<ProviderProfile[] | null>(null);
   const [storyteller, setStoryteller] = useState<StorytellerInfo | null>(null);
+  const [pictureMaker, setPictureMaker] = useState<string | null>(null);
   const [editing, setEditing] = useState<ProviderProfile | 'new' | null>(null);
   const [deleting, setDeleting] = useState<ProviderProfile | null>(null);
   const [notes, setNotes] = useState<Record<string, Note>>({});
@@ -22,11 +24,12 @@ export function SettingsScreen() {
 
   useEffect(() => {
     let cancelled = false;
-    Promise.all([commands.listConnections(), commands.getStoryteller()])
-      .then(([c, s]) => {
+    Promise.all([commands.listConnections(), commands.getStoryteller(), commands.getPictureMaker()])
+      .then(([c, s, p]) => {
         if (cancelled) return;
         setConnections(c);
         setStoryteller(s);
+        setPictureMaker(p);
       })
       .catch((e: unknown) => {
         if (!cancelled) setError(errorMessage(e));
@@ -40,6 +43,15 @@ export function SettingsScreen() {
     setError(null);
     try {
       setStoryteller(await commands.setStoryteller(profileId));
+    } catch (e) {
+      setError(errorMessage(e));
+    }
+  };
+
+  const choosePictures = async (profileId: string | null) => {
+    setError(null);
+    try {
+      setPictureMaker(await commands.setPictureMaker(profileId));
     } catch (e) {
       setError(errorMessage(e));
     }
@@ -87,6 +99,8 @@ export function SettingsScreen() {
   };
 
   const active = storyteller?.profileId ?? null;
+  const writers = connections ? storyConnections(connections) : null;
+  const painters = connections ? pictureConnections(connections) : null;
 
   return (
     <section className="screen" aria-labelledby="settings-title">
@@ -132,7 +146,7 @@ export function SettingsScreen() {
               </span>
             </span>
           </label>
-          {connections?.map((c) => (
+          {writers?.map((c) => (
             <label key={c.id} className="choice">
               <input
                 type="radio"
@@ -149,6 +163,51 @@ export function SettingsScreen() {
             </label>
           ))}
         </div>
+      </section>
+
+      <section className="settings-section" aria-labelledby="pictures-title">
+        <h2 id="pictures-title">Pictures</h2>
+        <p className="muted">
+          Makes a character&apos;s portrait from their description, when you choose a portrait while
+          creating or reading a story. Portraits are always asked for as safe-for-work pictures.
+        </p>
+        <div role="radiogroup" aria-labelledby="pictures-title" className="choice-list">
+          <label className="choice">
+            <input
+              type="radio"
+              name="picture-maker"
+              checked={pictureMaker === null}
+              onChange={() => void choosePictures(null)}
+            />
+            <span>
+              <strong>Don&apos;t make pictures</strong>
+              <span className="muted small">Use only pictures you add yourself.</span>
+            </span>
+          </label>
+          {painters?.map((c) => (
+            <label key={c.id} className="choice">
+              <input
+                type="radio"
+                name="picture-maker"
+                checked={pictureMaker === c.id}
+                onChange={() => void choosePictures(c.id)}
+              />
+              <span>
+                <strong>{c.label}</strong>
+                <span className="muted small">
+                  {c.modelId} ·{' '}
+                  {c.billing === 'local' ? 'local, no API charges' : 'paid per picture'}
+                </span>
+              </span>
+            </label>
+          ))}
+        </div>
+        {painters && painters.length === 0 && (
+          <p className="muted small">
+            To make portraits, add a picture connection (OpenAI images, or Stable Diffusion WebUI on
+            this computer) under AI connections.
+          </p>
+        )}
       </section>
 
       <section className="settings-section" aria-labelledby="connections-title">
@@ -172,8 +231,7 @@ export function SettingsScreen() {
                 <div>
                   <strong>{c.label}</strong>
                   <div className="muted small">
-                    {c.modelId} · {c.adapter === 'ollama' ? 'Ollama' : 'OpenAI-compatible'} ·{' '}
-                    {c.baseUrl} ·{' '}
+                    {c.modelId} · {ADAPTER_LABELS[c.adapter]} · {c.baseUrl} ·{' '}
                     {c.hasKey ? 'key saved' : c.billing === 'local' ? 'no key needed' : 'no key'}
                   </div>
                 </div>
@@ -186,14 +244,16 @@ export function SettingsScreen() {
                   >
                     Test connection
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => void sendTest(c)}
-                    disabled={busyId === c.id}
-                    title="Sends one short message to the model. Paid services may charge a tiny amount."
-                  >
-                    Send test message
-                  </button>
+                  {!makesPictures(c) && (
+                    <button
+                      type="button"
+                      onClick={() => void sendTest(c)}
+                      disabled={busyId === c.id}
+                      title="Sends one short message to the model. Paid services may charge a tiny amount."
+                    >
+                      Send test message
+                    </button>
+                  )}
                   <button type="button" onClick={() => setEditing(c)}>
                     Edit
                   </button>
@@ -238,7 +298,11 @@ export function SettingsScreen() {
             onSaved={(p) => {
               setEditing(null);
               setReload((n) => n + 1);
-              if (editing === 'new' && active === null) void choose(p.id);
+              if (editing !== 'new') return;
+              // The first connection of each kind is put to use.
+              if (makesPictures(p)) {
+                if (pictureMaker === null) void choosePictures(p.id);
+              } else if (active === null) void choose(p.id);
             }}
           />
         </Dialog>

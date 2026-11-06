@@ -1,5 +1,6 @@
 import { useId } from 'react';
 import type { ProviderProfile, StorytellerChoice } from '../../types';
+import { storyConnections } from './kinds';
 
 /** Short description of one connection: "story-model · paid API". */
 export function connectionDetail(c: ProviderProfile): string {
@@ -32,7 +33,9 @@ export function StorytellerPicker({
 }) {
   const name = useId();
   const current = key(value);
-  const missing = value?.kind === 'connection' && !connections.some((c) => c.id === value.id);
+  // Picture connections never write replies.
+  const writers = storyConnections(connections);
+  const missing = value?.kind === 'connection' && !writers.some((c) => c.id === value.id);
   const option = (choice: StorytellerChoice | null, title: string, detail: string) => (
     <label className="choice" key={key(choice)}>
       <input
@@ -57,9 +60,7 @@ export function StorytellerPicker({
         'Offline storyteller',
         'Built in. Simple replies, works without internet, never costs anything.',
       )}
-      {connections.map((c) =>
-        option({ kind: 'connection', id: c.id }, c.label, connectionDetail(c)),
-      )}
+      {writers.map((c) => option({ kind: 'connection', id: c.id }, c.label, connectionDetail(c)))}
       {missing && (
         <p className="muted small" role="status">
           The connection this story used was removed. Pick another one.

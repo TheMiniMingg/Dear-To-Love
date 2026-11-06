@@ -177,6 +177,9 @@ pub enum Adapter {
     Anthropic(anthropic::Anthropic),
     Ollama(ollama::Ollama),
     Offline(offline::Offline),
+    /// A picture connection: it can list its models (the free connection
+    /// check) but never writes story replies.
+    Pictures(super::pictures::PictureMaker),
 }
 
 impl Adapter {
@@ -190,6 +193,9 @@ impl Adapter {
                 Self::Anthropic(anthropic::Anthropic::new(base_url, api_key)?)
             }
             AdapterKind::Ollama => Self::Ollama(ollama::Ollama::new(base_url, api_key)?),
+            AdapterKind::OpenaiImages | AdapterKind::StableDiffusion => {
+                Self::Pictures(super::pictures::PictureMaker::new(kind, base_url, api_key)?)
+            }
         })
     }
 
@@ -200,6 +206,7 @@ impl Adapter {
             Self::Anthropic(a) => a.list_models().await,
             Self::Ollama(a) => a.list_models().await,
             Self::Offline(_) => Ok(vec!["offline".into()]),
+            Self::Pictures(a) => a.list_models().await,
         }
     }
 
@@ -224,6 +231,9 @@ impl Adapter {
                 Self::Anthropic(a) => a.generate(req, cancel, &mut shown).await,
                 Self::Ollama(a) => a.generate(req, cancel, &mut shown).await,
                 Self::Offline(a) => a.generate(cancel, &mut shown).await,
+                Self::Pictures(_) => Err(GenerateError::not_sent(AppError::invalid_input(
+                    "this connection makes pictures, not story replies; choose another storyteller",
+                ))),
             }
         };
         let mut c = result?;

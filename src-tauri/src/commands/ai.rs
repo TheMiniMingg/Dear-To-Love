@@ -44,6 +44,23 @@ pub async fn set_storyteller(
     storyteller_info(db).await
 }
 
+/// The connection portraits are made with, if any.
+#[tauri::command]
+pub async fn get_picture_maker(state: State<'_, AppState>) -> AppResult<Option<String>> {
+    providers::picture_maker(state.db()?).await
+}
+
+/// Choose the picture connection; `None` turns portrait making off.
+#[tauri::command]
+pub async fn set_picture_maker(
+    state: State<'_, AppState>,
+    profile_id: Option<String>,
+) -> AppResult<Option<String>> {
+    let db = state.db()?;
+    providers::set_picture_maker(db, profile_id.as_deref()).await?;
+    providers::picture_maker(db).await
+}
+
 /// One story's own storyteller; `None` makes it follow the app's again.
 #[tauri::command]
 pub async fn set_story_storyteller(

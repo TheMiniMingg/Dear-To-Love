@@ -1,6 +1,6 @@
 import type { AdapterKind, Billing } from '../../types';
 
-export type PresetGroup = 'local' | 'labs' | 'hosted' | 'other';
+export type PresetGroup = 'local' | 'labs' | 'hosted' | 'pictures' | 'other';
 
 export type Preset = {
   id: string;
@@ -24,6 +24,7 @@ export const GROUP_LABELS: Record<PresetGroup, string> = {
   local: 'On this computer (free and private)',
   labs: 'AI labs (API key, paid per use)',
   hosted: 'Open models, hosted (API key)',
+  pictures: 'Pictures (for character portraits)',
   other: 'Anything else',
 };
 
@@ -195,6 +196,30 @@ export const PRESETS: Preset[] = [
     adapter: COMPATIBLE,
     baseUrl: 'https://router.huggingface.co/v1',
     note: 'Use a Hugging Face access token as the key.',
+  },
+  {
+    id: 'openai-images',
+    label: 'OpenAI images',
+    group: 'pictures',
+    adapter: 'openai_images',
+    baseUrl: 'https://api.openai.com/v1',
+    billing: 'paid',
+    needsKey: true,
+    contextTokens: 16_000,
+    model: 'gpt-image-1',
+    note: "Makes character portraits. OpenAI charges for each picture; the app records every request but can't price pictures.",
+  },
+  {
+    id: 'sd-webui',
+    label: 'Stable Diffusion WebUI',
+    group: 'pictures',
+    adapter: 'stable_diffusion',
+    baseUrl: 'http://127.0.0.1:7860',
+    billing: 'local',
+    needsKey: false,
+    contextTokens: 16_000,
+    model: 'default',
+    note: 'Makes portraits on this computer, for free. Start the WebUI with --api. The model "default" uses whichever one it has loaded.',
   },
   {
     id: 'custom',

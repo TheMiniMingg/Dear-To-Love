@@ -33,13 +33,26 @@ const saved: ProviderProfile = {
   updatedAt: '',
 };
 
+const painter: ProviderProfile = {
+  ...saved,
+  id: 'p2',
+  label: 'Stable Diffusion WebUI',
+  adapter: 'stable_diffusion',
+  baseUrl: 'http://127.0.0.1:7860',
+  modelId: 'default',
+  billing: 'local',
+  hasKey: false,
+};
+
 describe('Settings: AI connections', () => {
   let connections: ProviderProfile[];
   let storyteller: StorytellerInfo;
+  let pictureMaker: string | null;
 
   beforeEach(() => {
     connections = [];
     storyteller = offline;
+    pictureMaker = null;
     invoke.mockReset();
     invoke.mockImplementation(async (cmd: string, args: Record<string, unknown>) => {
       switch (cmd) {
@@ -47,9 +60,17 @@ describe('Settings: AI connections', () => {
           return connections;
         case 'get_storyteller':
           return storyteller;
-        case 'save_connection':
-          connections = [saved];
-          return saved;
+        case 'save_connection': {
+          const input = args.input as { adapter: string };
+          const made = input.adapter === 'stable_diffusion' ? painter : saved;
+          connections = [...connections.filter((c) => c.id !== made.id), made];
+          return made;
+        }
+        case 'get_picture_maker':
+          return pictureMaker;
+        case 'set_picture_maker':
+          pictureMaker = (args.profileId as string | null) ?? null;
+          return pictureMaker;
         case 'set_storyteller':
           storyteller = args.profileId
             ? { profileId: 'p1', label: 'OpenAI', modelId: 'story-model', billing: 'paid' }
@@ -172,5 +193,44 @@ describe('Settings: AI connections', () => {
     render(<SettingsScreen />);
     await userEvent.click(await screen.findByRole('button', { name: 'Test connection' }));
     expect(await screen.findByText('The AI service refused the API key.')).toBeInTheDocument();
+  });
+
+  it('adds a picture connection for portraits, never as a storyteller', async () => {
+    connections = [saved];
+    render(<SettingsScreen />);
+    const pictures = await screen.findByRole('radiogroup', { name: 'Pictures' });
+    expect(within(pictures).getByRole('radio', { name: /Don.t make pictures/ })).toBeChecked();
+    expect(screen.getByText(/add a picture connection/)).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('button', { name: 'Add connection' }));
+    await userEvent.selectOptions(screen.getByLabelText('Service'), 'sd-webui');
+    expect(screen.getByLabelText('Type')).toHaveValue('stable_diffusion');
+    expect(screen.getByLabelText('Address')).toHaveValue('http://127.0.0.1:7860');
+    expect(screen.getByLabelText('Model')).toHaveValue('default');
+    expect(screen.queryByLabelText('Temperature')).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Save connection' }));
+    const input = invoke.mock.calls.find((c) => c[0] === 'save_connection')?.[1].input;
+    expect(input).toMatchObject({
+      adapter: 'stable_diffusion',
+      billing: 'local',
+      modelId: 'default',
+      settings: { timeoutMs: 300000 },
+    });
+
+    // The first picture connection makes the portraits; it never writes replies.
+    expect(invoke).toHaveBeenCalledWith('set_picture_maker', { profileId: 'p2' });
+    expect(invoke).not.toHaveBeenCalledWith('set_storyteller', { profileId: 'p2' });
+    expect(
+      await within(pictures).findByRole('radio', { name: /Stable Diffusion WebUI/ }),
+    ).toBeChecked();
+    const tellers = screen.getByRole('radiogroup', { name: 'Storyteller' });
+    expect(within(tellers).queryByRole('radio', { name: /Stable Diffusion/ })).toBeNull();
+    expect(within(tellers).getByRole('radio', { name: /OpenAI/ })).toBeInTheDocument();
+    // Picture connections can be checked for free, but not sent a story message.
+    const cards = screen.getAllByRole('listitem');
+    const card = cards.find((li) => li.textContent?.includes('Stable Diffusion WebUI ·'));
+    expect(card).toBeDefined();
+    expect(within(card!).getByRole('button', { name: 'Test connection' })).toBeInTheDocument();
+    expect(within(card!).queryByRole('button', { name: 'Send test message' })).toBeNull();
   });
 });

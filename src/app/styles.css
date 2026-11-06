@@ -1811,3 +1811,26 @@ details summary {
 .pictures-step .picture-list {
   margin-bottom: 1.25rem;
 }
+.make-portrait {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+  padding: 0.6rem 0.75rem;
+}
+.make-portrait > p {
+  margin: 0;
+}
+.make-portrait .field {
+  max-width: 14rem;
+}
+.portrait-prompt {
+  border-left: 3px solid var(--border);
+  padding: 0.25rem 0.6rem;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.portrait-prompt p {
+  margin: 0 0 0.25rem;
+}

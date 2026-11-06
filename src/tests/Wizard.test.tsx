@@ -236,7 +236,26 @@ describe('Create a story', () => {
               createdAt: '',
               updatedAt: '',
             },
+            {
+              id: 'p9',
+              label: 'Picture maker',
+              adapter: 'stable_diffusion',
+              baseUrl: 'http://127.0.0.1:7860',
+              modelId: 'default',
+              billing: 'local',
+              hasKey: false,
+              settings: {},
+              createdAt: '',
+              updatedAt: '',
+            },
           ];
+        case 'get_picture_maker':
+          return 'p9';
+        case 'make_portrait': {
+          const made = picture('img-made', 'Portrait of Juno', false);
+          library = [made, ...library];
+          return made;
+        }
         case 'get_storyteller':
           return { profileId: null, label: 'Offline storyteller', modelId: null, billing: 'local' };
         default:
@@ -585,5 +604,32 @@ describe('Create a story', () => {
     ]);
     expect(draft.storyImages).toEqual(['img-me']);
     expect(draft.storyteller).toEqual({ kind: 'connection', id: 'p1' });
+  });
+
+  it('a portrait made from the description belongs to the new story', async () => {
+    render(<CreateWizardScreen />);
+    await userEvent.click(await screen.findByRole('button', { name: '5. Pictures' }));
+    await screen.findByRole('heading', { name: 'Pictures and storyteller' });
+    // Picture connections never write replies.
+    expect(await screen.findByRole('radio', { name: /Home server/ })).toBeInTheDocument();
+    expect(screen.queryByRole('radio', { name: /Picture maker/ })).toBeNull();
+
+    await userEvent.click(await screen.findByRole('button', { name: /Choose Your portrait/ }));
+    expect(await screen.findByText(/Uses Picture maker \(default\)/)).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Make portrait' }));
+    const input = lastCall('make_portrait')?.input as Record<string, unknown>;
+    expect(input).toMatchObject({ newStory: true, style: 'painted' });
+    expect(input.storyId).toBeUndefined();
+    const own = await screen.findByRole('list', { name: "This story's pictures" });
+    expect(within(own).getByRole('button', { name: 'Portrait of Juno' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+    await userEvent.click(screen.getByRole('button', { name: 'Use this picture' }));
+    await userEvent.click(screen.getByRole('button', { name: '6. Review' }));
+    await userEvent.click(await screen.findByRole('button', { name: 'Create story' }));
+    const draft = lastCall('create_story')?.draft as CreateStoryDraft;
+    expect(draft.pictures).toEqual([{ slot: 'portrait:@player', assetId: 'img-made' }]);
+    expect(draft.storyImages).toEqual(['img-made']);
   });
 });

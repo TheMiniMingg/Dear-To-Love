@@ -1,6 +1,7 @@
 import { useId, useState } from 'react';
 import { commands, errorMessage } from '../../api/commands';
 import type { AdapterKind, Billing, ProviderProfile, ProviderProfileInput } from '../../types';
+import { makesPictures } from './kinds';
 import { GROUP_LABELS, PRESETS, type Preset, type PresetGroup } from './presets';
 
 const GROUPS = Object.keys(GROUP_LABELS) as PresetGroup[];
@@ -34,6 +35,7 @@ export function ConnectionForm({ existing, onSaved, onCancel }: Props) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [preset, setPreset] = useState<Preset | null>(null);
+  const pictures = makesPictures({ adapter });
 
   const applyPreset = (presetId: string) => {
     const p = PRESETS.find((x) => x.id === presetId) ?? null;
@@ -44,6 +46,9 @@ export function ConnectionForm({ existing, onSaved, onCancel }: Props) {
     setBilling(p.billing);
     setContextTokens(String(p.contextTokens));
     setMaxTokens(String(p.replyTokens ?? 700));
+    // Pictures can take minutes on a home computer.
+    if (p.group === 'pictures') setTimeoutS('300');
+    if (p.model && makesPictures(p)) setModelId(p.model);
     if (!label.trim() || PRESETS.some((x) => x.label === label)) setLabel(p.label);
   };
 
@@ -124,7 +129,15 @@ export function ConnectionForm({ existing, onSaved, onCancel }: Props) {
           <option value="openai_compatible">OpenAI-compatible API</option>
           <option value="anthropic">Anthropic (Claude) API</option>
           <option value="ollama">Ollama</option>
+          <option value="openai_images">Images API, OpenAI-style (pictures)</option>
+          <option value="stable_diffusion">Stable Diffusion WebUI (pictures)</option>
         </select>
+        {pictures && (
+          <p className="muted small">
+            Makes character portraits from their descriptions. It never writes story replies; choose
+            it under Pictures in Settings.
+          </p>
+        )}
         {adapter === 'anthropic' && (
           <p className="muted small">
             Uses Anthropic&apos;s own Messages API. Claude picks its own temperature, so that
@@ -160,7 +173,9 @@ export function ConnectionForm({ existing, onSaved, onCancel }: Props) {
               ? 'http://localhost:11434'
               : adapter === 'anthropic'
                 ? 'https://api.anthropic.com/v1'
-                : 'https://api.example.com/v1'
+                : adapter === 'stable_diffusion'
+                  ? 'http://127.0.0.1:7860'
+                  : 'https://api.example.com/v1'
           }
           inputMode="url"
           spellCheck={false}
@@ -226,7 +241,9 @@ export function ConnectionForm({ existing, onSaved, onCancel }: Props) {
             checked={billing === 'paid'}
             onChange={() => setBilling('paid')}
           />
-          Paid API (usage is estimated from your rates)
+          {pictures
+            ? "Paid API (each picture is recorded; the app can't price pictures)"
+            : 'Paid API (usage is estimated from your rates)'}
         </label>
         <label className="check">
           <input
@@ -241,41 +258,45 @@ export function ConnectionForm({ existing, onSaved, onCancel }: Props) {
       <details>
         <summary>Advanced</summary>
         <div className="field-row">
-          <div className="field">
-            <label htmlFor={`${id}-temp`}>Temperature</label>
-            <input
-              id={`${id}-temp`}
-              type="number"
-              min={0}
-              max={2}
-              step={0.1}
-              value={temperature}
-              onChange={(e) => setTemperature(e.target.value)}
-            />
-          </div>
-          <div className="field">
-            <label htmlFor={`${id}-max`}>Longest reply (tokens)</label>
-            <input
-              id={`${id}-max`}
-              type="number"
-              min={16}
-              max={32000}
-              value={maxTokens}
-              onChange={(e) => setMaxTokens(e.target.value)}
-            />
-          </div>
-          <div className="field">
-            <label htmlFor={`${id}-context`}>Context limit (tokens)</label>
-            <input
-              id={`${id}-context`}
-              type="number"
-              min={2048}
-              max={2000000}
-              value={contextTokens}
-              onChange={(e) => setContextTokens(e.target.value)}
-              aria-describedby={`${id}-context-hint`}
-            />
-          </div>
+          {!pictures && (
+            <>
+              <div className="field">
+                <label htmlFor={`${id}-temp`}>Temperature</label>
+                <input
+                  id={`${id}-temp`}
+                  type="number"
+                  min={0}
+                  max={2}
+                  step={0.1}
+                  value={temperature}
+                  onChange={(e) => setTemperature(e.target.value)}
+                />
+              </div>
+              <div className="field">
+                <label htmlFor={`${id}-max`}>Longest reply (tokens)</label>
+                <input
+                  id={`${id}-max`}
+                  type="number"
+                  min={16}
+                  max={32000}
+                  value={maxTokens}
+                  onChange={(e) => setMaxTokens(e.target.value)}
+                />
+              </div>
+              <div className="field">
+                <label htmlFor={`${id}-context`}>Context limit (tokens)</label>
+                <input
+                  id={`${id}-context`}
+                  type="number"
+                  min={2048}
+                  max={2000000}
+                  value={contextTokens}
+                  onChange={(e) => setContextTokens(e.target.value)}
+                  aria-describedby={`${id}-context-hint`}
+                />
+              </div>
+            </>
+          )}
           <div className="field">
             <label htmlFor={`${id}-timeout`}>Give up after (seconds of silence)</label>
             <input
@@ -288,11 +309,13 @@ export function ConnectionForm({ existing, onSaved, onCancel }: Props) {
             />
           </div>
         </div>
-        <p id={`${id}-context-hint`} className="muted small">
-          The context limit covers the prompt and the reply. Use the model&apos;s context length, or
-          the length your local server loads it with. Older story turns are summarized to fit; a
-          lower limit also keeps paid requests cheaper.
-        </p>
+        {!pictures && (
+          <p id={`${id}-context-hint`} className="muted small">
+            The context limit covers the prompt and the reply. Use the model&apos;s context length,
+            or the length your local server loads it with. Older story turns are summarized to fit;
+            a lower limit also keeps paid requests cheaper.
+          </p>
+        )}
       </details>
       {error && (
         <p role="alert" className="error">

@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- **Portraits from a description.** Add a picture connection (**OpenAI images**, or **Stable
+  Diffusion WebUI** on your own computer) and choose it under **Settings → Pictures**. Then
+  **Make portrait**, while creating a story or from a story's **Pictures**, draws a character
+  from their looks, species, role and traits in the style you pick (painted, anime, photo or
+  pencil sketch). **Show what is sent** shows the description first; names and story text are
+  never sent, and portraits are always safe-for-work. Each portrait belongs to its story, and
+  every request appears in **Usage** as "Character picture".
 - **Pictures for one story or for all.** Pictures added from a story's **Pictures**, or
   while creating a story, belong to that story only; pictures added in **Images** can be used
   in any story. **Images** shows them apart (for all stories, only in a story, and not in any

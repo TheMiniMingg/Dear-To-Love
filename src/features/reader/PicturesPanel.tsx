@@ -2,6 +2,7 @@ import { useEffect, useId, useRef, useState } from 'react';
 import { commands, errorMessage } from '../../api/commands';
 import { ImageGrid, Thumb } from '../images/ImageGrid';
 import { ImportResult, useAddImages } from '../images/ImagesScreen';
+import { MakePortrait } from '../images/MakePortrait';
 import type { AssetDto, RouteView } from '../../types';
 import { BACKGROUND, COVER, picture, portraitSlot, slotName, type Picture } from './pictures';
 
@@ -132,6 +133,9 @@ export function PicturesPanel({ view, awaitingReply, onChanged }: Props) {
   if (choosing) {
     const name = slotName(view, choosing);
     const routeScoped = choosing !== COVER;
+    const portrayed = choosing.startsWith('portrait:')
+      ? state.characters?.[choosing.slice('portrait:'.length)]
+      : undefined;
     return (
       <div className="picture-chooser" ref={panelRef}>
         <h3 className="small-heading" tabIndex={-1}>
@@ -156,6 +160,17 @@ export function PicturesPanel({ view, awaitingReply, onChanged }: Props) {
           </button>
         </div>
         <ImportResult result={result} />
+        {portrayed && (
+          <MakePortrait
+            character={portrayed}
+            world={state.world}
+            storyId={storyId}
+            onMade={(a) => {
+              setReload((n) => n + 1);
+              setPick(a.id);
+            }}
+          />
+        )}
         {ownImages && sharedImages && ownImages.length + sharedImages.length === 0 && (
           <p className="muted">No images yet. Add some from this computer first.</p>
         )}
