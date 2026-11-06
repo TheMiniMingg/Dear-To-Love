@@ -47,6 +47,13 @@ fn open_database(data_dir: &Result<PathBuf, String>) -> Result<Database, AppErro
             ),
         ));
     }
+    match tauri::async_runtime::block_on(services::generation::recover_on_startup(&database)) {
+        Ok((0, 0)) => {}
+        Ok((runs, calls)) => eprintln!(
+            "marked {runs} unfinished replies as interrupted and {calls} API calls as unknown"
+        ),
+        Err(e) => eprintln!("could not recover unfinished replies: {}", e.message),
+    }
     Ok(database)
 }
 
@@ -82,6 +89,7 @@ pub fn run() {
                 db,
                 secrets: Arc::new(KeyringStore::new(KEYRING_SERVICE)),
                 session_id: db::new_id(),
+                runs: Default::default(),
             });
             Ok(())
         })
@@ -93,12 +101,23 @@ pub fn run() {
             commands::stories::list_stories,
             commands::stories::delete_story,
             commands::reader::get_route_view,
-            commands::reader::play_mock_turn,
+            commands::reader::submit_action,
+            commands::reader::generate_reply,
+            commands::reader::retry_reply,
+            commands::reader::cancel_reply,
+            commands::reader::edit_action,
             commands::reader::next_chapter,
             commands::reader::fork_route,
             commands::reader::restart_chapter,
             commands::reader::rename_route,
             commands::reader::set_route_hidden,
+            commands::ai::list_connections,
+            commands::ai::save_connection,
+            commands::ai::delete_connection,
+            commands::ai::get_storyteller,
+            commands::ai::set_storyteller,
+            commands::ai::test_connection,
+            commands::ai::send_test_message,
             commands::saves::list_saves,
             commands::saves::create_save,
             commands::saves::quick_save,

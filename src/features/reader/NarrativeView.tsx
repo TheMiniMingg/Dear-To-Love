@@ -3,6 +3,8 @@ import type { EventDto } from '../../types';
 
 type Props = {
   events: EventDto[];
+  /** Reply being written right now (display only until it is committed). */
+  draft?: { text: string } | null;
   /** Offer "Branch from here" on replies and chapter starts. */
   onBranch?: (eventId: string) => void;
   playerName: string;
@@ -79,11 +81,12 @@ function EventBlock({ e, onBranch, playerName }: { e: EventDto } & Omit<Props, '
  * Reading column. New content keeps the reader's position unless they are
  * already at the bottom; otherwise a "Jump to latest" button appears.
  */
-export function NarrativeView({ events, onBranch, playerName }: Props) {
+export function NarrativeView({ events, draft, onBranch, playerName }: Props) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const atBottomRef = useRef(true);
   const [showJump, setShowJump] = useState(false);
-  const lastId = events[events.length - 1]?.id;
+  // Changes whenever content grows: a new event or more streamed text.
+  const lastId = `${events[events.length - 1]?.id ?? ''}:${draft ? draft.text.length : -1}`;
 
   const onScroll = () => {
     const el = scrollRef.current;
@@ -127,6 +130,11 @@ export function NarrativeView({ events, onBranch, playerName }: Props) {
           {events.map((e) => (
             <EventBlock key={e.id} e={e} onBranch={onBranch} playerName={playerName} />
           ))}
+          {draft && (
+            <div className="turn-assistant turn-draft" aria-busy="true" data-testid="reply-draft">
+              {draft.text ? <Paragraphs text={draft.text} /> : <p className="muted">Writing…</p>}
+            </div>
+          )}
         </div>
       </div>
       {showJump && (

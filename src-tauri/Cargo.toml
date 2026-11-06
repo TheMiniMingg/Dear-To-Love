@@ -25,7 +25,10 @@ semver = "1"
 ts-rs = "12"
 chrono = { version = "0.4", default-features = false, features = ["clock", "std"] }
 sqlx = { version = "0.9", default-features = false, features = ["runtime-tokio", "sqlite", "migrate", "macros", "derive", "json"] }
-tokio = { version = "1", features = ["sync", "macros", "rt-multi-thread", "fs"] }
+tokio = { version = "1", features = ["sync", "macros", "rt-multi-thread", "fs", "time"] }
+tokio-util = "0.7"
+reqwest = { version = "0.13", default-features = false, features = ["rustls", "http2", "system-proxy"] }
+url = "2"
 sha2 = "0.10"
 hex = "0.4"
 uuid = { version = "1", features = ["v7", "serde"] }
@@ -33,3 +36,4 @@ keyring = { version = "3", features = ["apple-native", "windows-native", "sync-s
 
 [dev-dependencies]
 tempfile = "3"
+tokio = { version = "1", features = ["net", "io-util", "test-util"] }

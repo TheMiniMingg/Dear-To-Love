@@ -584,21 +584,34 @@ pub async fn edit_prior_player_turn(
     new_text: String,
 ) -> AppResult<(RouteDto, Appended)> {
     let mut tx = db.write_txn().await?;
-    let ev = get_event(&mut tx, player_event_id).await?;
+    let out =
+        edit_prior_player_turn_tx(&mut tx, story_id, route_id, player_event_id, new_text).await?;
+    tx.commit().await?;
+    Ok(out)
+}
+
+pub async fn edit_prior_player_turn_tx(
+    conn: &mut SqliteConnection,
+    story_id: &str,
+    route_id: &str,
+    player_event_id: &str,
+    new_text: String,
+) -> AppResult<(RouteDto, Appended)> {
+    let ev = get_event(conn, player_event_id).await?;
     if ev.kind() != Some(EventKind::Player) {
         return Err(AppError::invalid_input("only player actions can be edited"));
     }
     let parent = ev
         .parent_event_id
         .ok_or_else(|| AppError::internal("action without a parent event"))?;
-    let route = get_story_route(&mut tx, story_id, route_id).await?;
+    let route = get_story_route(conn, story_id, route_id).await?;
     let head = route.head_event_id.unwrap_or_default();
-    if !is_ancestor(&mut tx, story_id, player_event_id, &head).await? {
+    if !is_ancestor(conn, story_id, player_event_id, &head).await? {
         return Err(invalid_ancestor(player_event_id));
     }
-    let fork = fork_route_tx(&mut tx, story_id, route_id, &parent, None).await?;
+    let fork = fork_route_tx(conn, story_id, route_id, &parent, None).await?;
     let appended = append_event_tx(
-        &mut tx,
+        conn,
         AppendEvent {
             story_id: story_id.into(),
             route_id: fork.id.clone(),
@@ -608,8 +621,7 @@ pub async fn edit_prior_player_turn(
         },
     )
     .await?;
-    let fork = get_route(&mut tx, &fork.id).await?;
-    tx.commit().await?;
+    let fork = get_route(conn, &fork.id).await?;
     Ok((fork, appended))
 }
 

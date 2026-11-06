@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { CommandError, commands, errorMessage } from '../../api/commands';
+import { CommandError, commands, errorMessage, runErrorMessage } from '../../api/commands';
 import { useUiStore } from '../../app/store';
 import { isComposing, isEditableTarget, isModS } from '../../app/keyboard';
 import { Dialog } from '../../components/Dialog';
@@ -10,14 +10,19 @@ import type { RouteView, SaveView } from '../../types';
 import { Composer } from './Composer';
 import { NarrativeView } from './NarrativeView';
 
-type Panel = null | 'menu' | 'saves' | 'routes' | 'chapters';
+type Panel = null | 'menu' | 'saves' | 'routes' | 'chapters' | 'edit';
 
 const PANEL_TITLES: Record<Exclude<Panel, null>, string> = {
   menu: 'Paused',
   saves: 'Save / Load',
   routes: 'Routes',
   chapters: 'Chapters',
+  edit: 'Change your action',
 };
+
+type Stream = { runId: string; text: string };
+
+const POLL_MS = 1500;
 
 function timeNow(): string {
   return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -38,14 +43,84 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
   const [error, setError] = useState<string | null>(null);
   const [saveStatus, setSaveStatus] = useState<string>('All changes saved');
   const [reload, setReload] = useState(0);
+  const [stream, setStream] = useState<Stream | null>(null);
+  const [replyError, setReplyError] = useState<string | null>(null);
+  const [editText, setEditText] = useState('');
   const narrativeHost = useRef<HTMLDivElement>(null);
+  const mounted = useRef(true);
+
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+    };
+  }, []);
+
+  /** A reply is being written by someone else (e.g. before this screen
+   * remounted): show it as in progress and poll until it lands. */
+  const follow = useCallback(
+    async (runId: string) => {
+      setStream({ runId, text: '' });
+      for (;;) {
+        await new Promise((r) => setTimeout(r, POLL_MS));
+        if (!mounted.current) return;
+        try {
+          const v = await commands.getRouteView(routeId);
+          if (!mounted.current) return;
+          if (v.awaitingReply?.activeRun?.id !== runId) {
+            setView(v);
+            setStream(null);
+            return;
+          }
+        } catch {
+          // keep waiting; the next poll may succeed
+        }
+      }
+    },
+    [routeId],
+  );
+
+  /** Write the reply for a pending run, showing drafts as they stream. */
+  const generate = useCallback(
+    async (runId: string) => {
+      setStream({ runId, text: '' });
+      setReplyError(null);
+      try {
+        const v = await commands.generateReply(runId, (m) => {
+          if (m.type !== 'delta') return;
+          setStream((s) => (s && s.runId === m.runId ? { ...s, text: s.text + m.text } : s));
+        });
+        if (!mounted.current) return;
+        setView(v);
+        setStream(null);
+        setSaveStatus(`Autosaved ${timeNow()}`);
+      } catch (e) {
+        if (!mounted.current) return;
+        if (e instanceof CommandError && e.code === 'RUN_NOT_ACTIVE') {
+          void follow(runId);
+          return;
+        }
+        setStream(null);
+        setReplyError(errorMessage(e));
+        setReload((n) => n + 1);
+      }
+    },
+    [follow],
+  );
 
   useEffect(() => {
     let cancelled = false;
     commands
       .getRouteView(routeId)
       .then((v) => {
-        if (!cancelled) setView(v);
+        if (cancelled) return;
+        setView(v);
+        // Pick up a reply that is waiting to start or still being written.
+        const active = v.awaitingReply?.activeRun;
+        if (active && reload === 0) {
+          if (active.status === 'pending') void generate(active.id);
+          else void follow(active.id);
+        }
       })
       .catch((e: unknown) => {
         if (!cancelled) setError(errorMessage(e));
@@ -53,7 +128,7 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
     return () => {
       cancelled = true;
     };
-  }, [routeId, reload]);
+  }, [routeId, reload, generate, follow]);
 
   const goToRoute = useCallback(
     (v: RouteView) => {
@@ -78,22 +153,57 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
     }
   }, []);
 
-  const headKind = view?.history[view.history.length - 1]?.kind;
-  const awaitingReply = headKind === 'player';
+  const awaitingReply = !!view?.awaitingReply;
+  const writing = stream !== null;
+  const lastAction = view?.history[view.history.length - 1];
 
   const send = () =>
     view &&
     run(async () => {
-      const text = draft;
-      const v = await commands.playMockTurn({
+      const sub = await commands.submitAction({
         storyId: view.story.id,
         routeId: view.route.id,
         expectedHeadId: view.route.headEventId ?? '',
-        text,
+        text: draft,
       });
       clearDraft(routeId);
-      setView(v);
-      setSaveStatus(`Autosaved ${timeNow()}`);
+      setView(sub.view);
+      void generate(sub.runId);
+    });
+
+  const retry = () =>
+    view &&
+    run(async () => {
+      const sub = await commands.retryReply({
+        storyId: view.story.id,
+        routeId: view.route.id,
+        expectedHeadId: view.route.headEventId ?? '',
+      });
+      setView(sub.view);
+      void generate(sub.runId);
+    });
+
+  const cancelReply = () => {
+    if (stream) void commands.cancelReply(stream.runId).catch(() => undefined);
+  };
+
+  const openEdit = () => {
+    if (lastAction?.kind === 'player') setEditText(lastAction.payload.text);
+    setPanel('edit');
+  };
+
+  const submitEdit = () =>
+    view &&
+    lastAction?.kind === 'player' &&
+    run(async () => {
+      const sub = await commands.editAction({
+        storyId: view.story.id,
+        routeId: view.route.id,
+        playerEventId: lastAction.id,
+        text: editText,
+      });
+      // The new branch's reader picks up its pending reply when it opens.
+      goToRoute(sub.view);
     });
 
   const quickSave = useCallback(() => {
@@ -198,14 +308,20 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
           </div>
         </div>
         <div className="reader-meta">
-          <span
-            className="chip"
-            title="No AI model is connected; replies come from the built-in offline storyteller."
+          <button
+            type="button"
+            className="chip chip-button"
+            onClick={() => navigate({ name: 'settings' })}
+            title={
+              view.storyteller.profileId
+                ? `Replies come from ${view.storyteller.label} (${view.storyteller.modelId ?? ''}). Click to change.`
+                : 'Replies come from the built-in offline storyteller. Click to connect an AI model.'
+            }
           >
-            Offline storyteller
-          </span>
+            {view.storyteller.label}
+          </button>
           <span className="chip" role="status" aria-live="polite">
-            {busy ? 'Writing…' : saveStatus}
+            {writing ? 'Writing…' : busy ? 'Working…' : saveStatus}
           </span>
           <button type="button" onClick={() => setPanel('menu')} aria-label="Open menu (Escape)">
             Menu
@@ -238,6 +354,7 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
       <div ref={narrativeHost} className="reader-body">
         <NarrativeView
           events={events}
+          draft={viewing ? null : stream}
           playerName={player?.name ?? 'You'}
           onBranch={viewing ? undefined : (id) => void branchFrom(id)}
         />
@@ -251,17 +368,40 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
 
       {!viewing && (
         <div className="reader-bottom">
-          {awaitingReply && (
-            <p className="muted small">
-              This branch is waiting for a reply to the last action. Live AI replies arrive in a
-              later update; for now, branch from an earlier reply to keep playing.
-            </p>
+          {writing && (
+            <div className="reply-bar" role="region" aria-label="Reply in progress">
+              <span className="muted small">{view.storyteller.label} is writing…</span>
+              <button type="button" onClick={cancelReply}>
+                Stop
+              </button>
+            </div>
+          )}
+          {awaitingReply && !writing && (
+            <div className="reply-bar" role="region" aria-label="Reply needed">
+              <p className={replyError || view.awaitingReply?.lastRun ? 'error small' : 'small'}>
+                {replyError ??
+                  (view.awaitingReply?.lastRun
+                    ? runErrorMessage(view.awaitingReply.lastRun.errorCode)
+                    : 'This action has no reply yet.')}
+                {view.awaitingReply?.lastRun?.status === 'interrupted' &&
+                  !replyError &&
+                  ' If it had reached the AI service, it may still have cost a little.'}
+              </p>
+              <div className="button-row">
+                <button type="button" className="primary" onClick={() => void retry()}>
+                  {view.awaitingReply?.lastRun ? 'Retry' : 'Write a reply'}
+                </button>
+                <button type="button" onClick={openEdit}>
+                  Change action
+                </button>
+              </div>
+            </div>
           )}
           <Composer
             value={draft}
             onChange={(t) => setDraft(routeId, t)}
             onSubmit={() => void send()}
-            disabled={busy || awaitingReply}
+            disabled={busy || awaitingReply || writing}
             placeholder="What do you do? (Enter to send, Shift+Enter for a new line)"
           />
           <div className="action-bar">
@@ -274,7 +414,7 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
             <button
               type="button"
               onClick={() => void nextChapter()}
-              disabled={busy || awaitingReply}
+              disabled={busy || awaitingReply || writing}
             >
               Next chapter
             </button>
@@ -289,8 +429,10 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
         <Dialog
           key={panel}
           title={PANEL_TITLES[panel]}
-          onClose={() => setPanel(panel === 'menu' ? null : 'menu')}
-          initialFocusId={panel === 'menu' ? 'pause-resume' : undefined}
+          onClose={() => setPanel(panel === 'menu' || panel === 'edit' ? null : 'menu')}
+          initialFocusId={
+            panel === 'menu' ? 'pause-resume' : panel === 'edit' ? 'edit-action-input' : undefined
+          }
         >
           {panel === 'menu' && (
             <nav className="menu-list" aria-label="Pause menu">
@@ -315,6 +457,9 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
                   A+
                 </button>
               </div>
+              <button type="button" onClick={() => navigate({ name: 'settings' })}>
+                Settings
+              </button>
               <button type="button" onClick={() => navigate({ name: 'diagnostics' })}>
                 Diagnostics
               </button>
@@ -367,6 +512,33 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
                 )
               }
             />
+          )}
+          {panel === 'edit' && (
+            <form
+              className="form"
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (editText.trim()) void submitEdit();
+              }}
+            >
+              <label htmlFor="edit-action-input">
+                Your action. The story continues on a new branch; the original stays as it was.
+              </label>
+              <textarea
+                id="edit-action-input"
+                value={editText}
+                rows={4}
+                onChange={(e) => setEditText(e.target.value)}
+              />
+              <div className="button-row">
+                <button type="button" onClick={() => setPanel(null)}>
+                  Cancel
+                </button>
+                <button type="submit" className="primary" disabled={!editText.trim() || busy}>
+                  Send changed action
+                </button>
+              </div>
+            </form>
           )}
         </Dialog>
       )}
