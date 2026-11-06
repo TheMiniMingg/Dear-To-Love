@@ -1,10 +1,11 @@
 import { useId, useState } from 'react';
 import { commands, errorMessage } from '../../api/commands';
-import type { Billing, ProviderProfile, ProviderProfileInput } from '../../types';
+import type { AdapterKind, Billing, ProviderProfile, ProviderProfileInput } from '../../types';
 
 type Preset = {
   id: string;
   label: string;
+  adapter: AdapterKind;
   baseUrl: string;
   billing: Billing;
   needsKey: boolean;
@@ -19,6 +20,7 @@ const PRESETS: Preset[] = [
   {
     id: 'custom',
     label: 'Other (enter the address)',
+    adapter: 'openai_compatible',
     baseUrl: '',
     billing: 'paid',
     needsKey: true,
@@ -27,6 +29,7 @@ const PRESETS: Preset[] = [
   {
     id: 'openai',
     label: 'OpenAI',
+    adapter: 'openai_compatible',
     baseUrl: 'https://api.openai.com/v1',
     billing: 'paid',
     needsKey: true,
@@ -35,6 +38,7 @@ const PRESETS: Preset[] = [
   {
     id: 'openrouter',
     label: 'OpenRouter',
+    adapter: 'openai_compatible',
     baseUrl: 'https://openrouter.ai/api/v1',
     billing: 'paid',
     needsKey: true,
@@ -43,6 +47,7 @@ const PRESETS: Preset[] = [
   {
     id: 'lmstudio',
     label: 'LM Studio on this computer',
+    adapter: 'openai_compatible',
     baseUrl: 'http://localhost:1234/v1',
     billing: 'local',
     needsKey: false,
@@ -51,10 +56,11 @@ const PRESETS: Preset[] = [
   {
     id: 'ollama',
     label: 'Ollama on this computer',
-    baseUrl: 'http://localhost:11434/v1',
+    adapter: 'ollama',
+    baseUrl: 'http://localhost:11434',
     billing: 'local',
     needsKey: false,
-    contextTokens: 4096,
+    contextTokens: 8192,
   },
 ];
 
@@ -68,6 +74,7 @@ type Props = {
 export function ConnectionForm({ existing, onSaved, onCancel }: Props) {
   const id = useId();
   const [label, setLabel] = useState(existing?.label ?? '');
+  const [adapter, setAdapter] = useState<AdapterKind>(existing?.adapter ?? 'openai_compatible');
   const [baseUrl, setBaseUrl] = useState(existing?.baseUrl ?? '');
   const [modelId, setModelId] = useState(existing?.modelId ?? '');
   const [billing, setBilling] = useState<Billing>(existing?.billing ?? 'paid');
@@ -87,6 +94,7 @@ export function ConnectionForm({ existing, onSaved, onCancel }: Props) {
   const applyPreset = (presetId: string) => {
     const p = PRESETS.find((x) => x.id === presetId);
     if (!p || p.id === 'custom') return;
+    setAdapter(p.adapter);
     setBaseUrl(p.baseUrl);
     setBilling(p.billing);
     setContextTokens(String(p.contextTokens));
@@ -105,7 +113,7 @@ export function ConnectionForm({ existing, onSaved, onCancel }: Props) {
     const input: ProviderProfileInput = {
       ...(existing ? { id: existing.id } : {}),
       label,
-      adapter: 'openai_compatible',
+      adapter,
       baseUrl,
       modelId,
       billing,
@@ -151,10 +159,28 @@ export function ConnectionForm({ existing, onSaved, onCancel }: Props) {
             ))}
           </select>
           <p className="muted small">
-            Any service that offers an OpenAI-compatible chat completions API works.
+            Any service with an OpenAI-compatible chat completions API works, and Ollama has its own
+            type.
           </p>
         </div>
       )}
+      <div className="field">
+        <label htmlFor={`${id}-adapter`}>Type</label>
+        <select
+          id={`${id}-adapter`}
+          value={adapter}
+          onChange={(e) => setAdapter(e.target.value as AdapterKind)}
+        >
+          <option value="openai_compatible">OpenAI-compatible API</option>
+          <option value="ollama">Ollama</option>
+        </select>
+        {adapter === 'ollama' && (
+          <p className="muted small">
+            Uses Ollama&apos;s own API so each request asks for the context limit below. Install a
+            model first, for example with <code>ollama pull llama3.2</code>.
+          </p>
+        )}
+      </div>
       <div className="field">
         <label htmlFor={`${id}-label`}>Name</label>
         <input
@@ -171,7 +197,9 @@ export function ConnectionForm({ existing, onSaved, onCancel }: Props) {
           id={`${id}-url`}
           value={baseUrl}
           onChange={(e) => setBaseUrl(e.target.value)}
-          placeholder="https://api.example.com/v1"
+          placeholder={
+            adapter === 'ollama' ? 'http://localhost:11434' : 'https://api.example.com/v1'
+          }
           inputMode="url"
           spellCheck={false}
           required

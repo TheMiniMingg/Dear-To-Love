@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Ollama connections use Ollama's own API: each request asks for the connection's context
+  limit (so long prompts are not silently cut), token counts are reported, and the API-charge
+  estimate is $0. The Ollama preset now uses it; "Test connection" lists installed models.
 - Long stories: the storyteller keeps a rolling summary of earlier turns (written in the
   background every 8 turns; the offline storyteller summarizes without any API call), and each
   prompt is fitted to the connection's context limit, keeping recent turns word for word. A

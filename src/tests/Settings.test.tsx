@@ -85,6 +85,7 @@ describe('Settings: AI connections', () => {
         baseUrl: 'https://api.openai.com/v1',
         modelId: 'story-model',
         billing: 'paid',
+        adapter: 'openai_compatible',
         apiKey: 'sk-live-123',
       }),
     });
@@ -93,6 +94,25 @@ describe('Settings: AI connections', () => {
     expect(await screen.findByRole('radio', { name: /OpenAI/ })).toBeChecked();
     expect(screen.getByText(/key saved/)).toBeInTheDocument();
     expect(document.body.textContent).not.toContain('sk-live-123');
+  });
+
+  it('the Ollama preset uses the native type, no key and a local context', async () => {
+    render(<SettingsScreen />);
+    await userEvent.click(await screen.findByRole('button', { name: 'Add connection' }));
+    await userEvent.selectOptions(screen.getByLabelText('Service'), 'ollama');
+    expect(screen.getByLabelText('Type')).toHaveValue('ollama');
+    expect(screen.getByLabelText('Address')).toHaveValue('http://localhost:11434');
+    expect(screen.getByText(/ollama pull/)).toBeInTheDocument();
+    await userEvent.type(screen.getByLabelText('Model'), 'llama3.2');
+    await userEvent.click(screen.getByRole('button', { name: 'Save connection' }));
+    const input = invoke.mock.calls.find((c) => c[0] === 'save_connection')?.[1].input;
+    expect(input).toMatchObject({
+      adapter: 'ollama',
+      baseUrl: 'http://localhost:11434',
+      billing: 'local',
+      settings: { maxContextTokens: 8192 },
+    });
+    expect('apiKey' in input).toBe(false);
   });
 
   it('editing keeps the saved key unless a new one is typed', async () => {

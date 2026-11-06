@@ -4,6 +4,7 @@ use tokio_util::sync::CancellationToken;
 
 use super::*;
 use crate::domain::provider::{ModelMessage, Role};
+use crate::errors::ErrorCode;
 use crate::services::adapters::test_server::{serve, short_pause, Reply};
 use crate::services::adapters::Charge;
 
@@ -23,6 +24,7 @@ fn req() -> GenerateRequest {
         max_output_tokens: 300,
         temperature: Some(0.7),
         timeout_ms: 5_000,
+        context_tokens: Some(8192),
     }
 }
 

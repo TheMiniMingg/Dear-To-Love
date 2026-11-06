@@ -306,6 +306,7 @@ async fn write_summary(
                 max_output_tokens: SUMMARY_MAX_OUTPUT_TOKENS,
                 temperature: settings.temperature.map(|t| t.min(0.5)),
                 timeout_ms: settings.timeout_ms,
+                context_tokens: Some(settings.max_context_tokens),
             };
             let (c, ledger) = call_once(
                 env.db,
