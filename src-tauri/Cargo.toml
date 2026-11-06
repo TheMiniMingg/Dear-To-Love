@@ -1,0 +1,29 @@
+[package]
+name = "dear-to-love"
+version = "0.1.0"
+description = "Local-first AI story engine"
+authors = ["Dear to Love contributors"]
+license = "MIT"
+repository = "https://github.com/TheMiniMingg/Dear-To-Love"
+edition = "2021"
+rust-version = "1.90"
+
+[lib]
+# The `_lib` suffix avoids a name clash with the binary on Windows.
+name = "dear_to_love_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2.7", features = [] }
+
+[dependencies]
+tauri = { version = "2.12", features = [] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+thiserror = "2"
+semver = "1"
+ts-rs = "12"
+chrono = { version = "0.4", default-features = false, features = ["clock", "std"] }
+
+[dev-dependencies]
+tempfile = "3"
