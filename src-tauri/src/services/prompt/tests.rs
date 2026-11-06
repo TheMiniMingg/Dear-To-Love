@@ -12,6 +12,7 @@ fn state() -> EffectiveState {
             character_id: "starter:new-keeper".into(),
             perspective: None,
             detail: None,
+            story_type: None,
         })
         .unwrap();
     EffectiveState::new(input.base_state)
@@ -243,4 +244,49 @@ fn premise_chapter_plan_and_content_settings_reach_the_storyteller() {
     bare.state.narration.genres.clear();
     let p = system_prompt(&bare, &StoryFrame::default());
     assert!(!p.contains("STORY\n") && !p.contains("Chapter plan"), "{p}");
+}
+
+#[test]
+fn narration_style_thoughts_messages_and_language_reach_the_storyteller() {
+    let mut s = state();
+    assert!(s.state.narration.message_cards, "new stories show cards");
+    s.state.narration.message_cards = false;
+    let plain = system_prompt(&s, &frame());
+    assert!(plain.contains("- Narrate in second person"));
+    for absent in ["<thought", "MESSAGES\n", "- Write in "] {
+        assert!(!plain.contains(absent), "{absent} only when asked");
+    }
+
+    s.state.narration.inner_thoughts = true;
+    s.state.narration.message_cards = true;
+    s.state.narration.language = Some("Japanese".into());
+    let p = system_prompt(&s, &frame());
+    assert!(p.contains(
+        "- Show the inner thoughts of characters other than Sam Ashby as they react, in \
+         <thought who=\"Name\">…</thought> tags"
+    ));
+    assert!(p.contains("Never write Sam Ashby's thoughts."));
+    assert!(p.contains("- Write in Japanese, including dialogue and messages"));
+    assert!(p.contains("\nMESSAGES\n"));
+    assert!(p.contains("<text from=\"Name\" time=\"7:11 PM\">the message</text>"));
+    assert!(p.contains("<call with=\"Name\" status=\"ringing\"/>"));
+    assert!(p.contains("Sam Ashby may text and call the same way (<text to=\"Name\">)"));
+
+    s.state.narration.style = Some(NarrationStyle::Thoughts);
+    let p = system_prompt(&s, &frame());
+    assert!(p.contains("- Do not narrate. Write only what the characters say and think"));
+    assert!(!p.contains("- Narrate in"));
+    assert!(
+        !p.contains("- Show the inner thoughts"),
+        "the style already asks for thoughts"
+    );
+
+    s.state.narration.style = Some(NarrationStyle::Messages);
+    s.state.narration.message_cards = false;
+    let p = system_prompt(&s, &frame());
+    assert!(p.contains("- Tell the story mostly through messages"));
+    assert!(
+        p.contains("\nMESSAGES\n"),
+        "the messages style needs the tags"
+    );
 }

@@ -28,6 +28,7 @@ use crate::db::timeline::EventRow;
 use crate::db::{new_id, now, Database};
 use crate::domain::events::{EventBody, StateEdit};
 use crate::domain::story_state::{StoryStateV1, STORY_STATE_SCHEMA_VERSION};
+use crate::domain::text::plain_message_tags;
 use crate::domain::visuals::VisualSlot;
 use crate::errors::{AppError, AppResult, ErrorCode};
 use crate::services::assets::{decode, sha256_hex, AssetStore};
@@ -1246,11 +1247,13 @@ pub async fn route_text(
             }
             EventBody::Player(p) => {
                 turns += 1;
-                push_turn(&mut out, &label(&player, &e.created_at), &p.text, md);
+                let text = plain_message_tags(&p.text);
+                push_turn(&mut out, &label(&player, &e.created_at), &text, md);
             }
             EventBody::Assistant(p) => {
                 turns += 1;
-                push_turn(&mut out, &label("Storyteller", &e.created_at), &p.text, md);
+                let text = plain_message_tags(&p.text);
+                push_turn(&mut out, &label("Storyteller", &e.created_at), &text, md);
             }
             EventBody::Edit(p) => {
                 let what = if p

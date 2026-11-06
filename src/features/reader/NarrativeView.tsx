@@ -1,6 +1,7 @@
 import { Fragment, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { EventDto } from '../../types';
 import { picturesOnly } from './pictures';
+import { RichText } from './RichText';
 
 type Props = {
   events: EventDto[];
@@ -117,7 +118,7 @@ function EventBlock({
       return (
         <div className={cls('turn-player')} data-event-id={e.id} tabIndex={-1}>
           <span className="speaker">{playerName}</span>
-          <Paragraphs text={e.payload.text} />
+          <RichText text={e.payload.text} playerName={playerName} />
           {(change || bookmark) && (
             <div className="turn-actions">
               {change}
@@ -129,7 +130,7 @@ function EventBlock({
     case 'assistant':
       return (
         <div className={cls('turn-assistant')} data-event-id={e.id} tabIndex={-1}>
-          <Paragraphs text={e.payload.text} />
+          <RichText text={e.payload.text} playerName={playerName} />
           {(branch || regenerate || bookmark) && (
             <div className="turn-actions">
               {regenerate}
@@ -287,7 +288,11 @@ export function NarrativeView({
           })}
           {draft && (
             <div className="turn-assistant turn-draft" aria-busy="true" data-testid="reply-draft">
-              {draft.text ? <Paragraphs text={draft.text} /> : <p className="muted">Writing…</p>}
+              {draft.text ? (
+                <RichText text={draft.text} playerName={playerName} streaming />
+              ) : (
+                <p className="muted">Writing…</p>
+              )}
             </div>
           )}
         </div>

@@ -3,12 +3,14 @@ import { commands, errorMessage } from '../../api/commands';
 import { useUiStore } from '../../app/store';
 import { ArrowPicker } from '../../components/ArrowPicker';
 import type { Detail, Perspective, TemplateCatalog } from '../../types';
+import { STORY_TYPES, withStoryType, worldFits } from './ContentFields';
 import { DETAILS, PERSPECTIVES, fittingScenarios } from './WizardSteps';
 
 /** Quick Start: pick presets with arrows or menus. No typing required. */
 export function QuickStartScreen() {
   const navigate = useUiStore((s) => s.navigate);
   const [catalog, setCatalog] = useState<TemplateCatalog | null>(null);
+  const [storyType, setStoryType] = useState('');
   const [worldId, setWorldId] = useState('');
   const [scenarioId, setScenarioId] = useState('');
   const [characterId, setCharacterId] = useState('');
@@ -44,6 +46,13 @@ export function QuickStartScreen() {
       setScenarioId(fittingScenarios(catalog, id)[0]?.id ?? '');
     }
   };
+  const fitting = catalog?.worlds.filter((w) => worldFits(w.narration.genres, storyType)) ?? [];
+  const worlds = fitting.length > 0 ? fitting : (catalog?.worlds ?? []);
+  const chooseType = (t: string) => {
+    setStoryType(t);
+    const next = catalog?.worlds.filter((w) => worldFits(w.narration.genres, t)) ?? [];
+    if (next.length > 0 && !next.some((w) => w.id === worldId)) chooseWorld(next[0]!.id);
+  };
   const world = catalog?.worlds.find((w) => w.id === worldId);
   const scenario = catalog?.scenarios.find((s) => s.id === scenarioId);
   const character = catalog?.characters.find((c) => c.id === characterId);
@@ -60,6 +69,7 @@ export function QuickStartScreen() {
         characterId,
         perspective: effectivePerspective,
         detail: effectiveDetail,
+        storyType: storyType || undefined,
       });
       navigate({ name: 'reader', routeId: created.mainRouteId });
     } catch (e) {
@@ -85,8 +95,23 @@ export function QuickStartScreen() {
         <div className="quickstart-grid">
           <div className="picker-column">
             <ArrowPicker
+              label="Type of story"
+              options={[
+                { value: '', label: 'Any' },
+                ...STORY_TYPES.map((t) => ({ value: t, label: t })),
+              ]}
+              value={storyType}
+              onChange={chooseType}
+            />
+            {storyType && fitting.length === 0 && (
+              <p className="muted small">
+                No preset world is tagged {storyType} yet, so every world is listed. The story is
+                still a {storyType} story.
+              </p>
+            )}
+            <ArrowPicker
               label="World"
-              options={catalog.worlds.map((w) => ({
+              options={worlds.map((w) => ({
                 value: w.id,
                 label: w.label,
                 hint: w.summary,
@@ -142,10 +167,10 @@ export function QuickStartScreen() {
               <dd>{scenario?.firstChapterTitle}</dd>
               <dt>Tone</dt>
               <dd>{world?.narration.tone}</dd>
-              {world?.narration.genres && world.narration.genres.length > 0 && (
+              {(storyType || (world?.narration.genres?.length ?? 0) > 0) && (
                 <>
                   <dt>Genre</dt>
-                  <dd>{world.narration.genres.join(', ')}</dd>
+                  <dd>{withStoryType(world?.narration.genres, storyType).join(', ')}</dd>
                 </>
               )}
             </dl>

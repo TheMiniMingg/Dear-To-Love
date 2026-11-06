@@ -73,6 +73,22 @@ pub enum Pacing {
     Slow,
 }
 
+/// How the storyteller tells the story. Unset means `Narrated`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "lowercase")]
+#[ts(export)]
+pub enum NarrationStyle {
+    /// A narrator describes what happens, with dialogue.
+    Narrated,
+    /// No narrator: only what characters say and their inner thoughts, with
+    /// at most a brief line of action.
+    Thoughts,
+    /// Like a play: speaker names, dialogue and short stage directions.
+    Script,
+    /// Told mostly through texts, calls, letters and posts.
+    Messages,
+}
+
 /// How much the storyteller may show. Unset leaves it to the model.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, TS)]
 #[serde(rename_all = "lowercase")]
@@ -111,6 +127,27 @@ pub struct Narration {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[ts(as = "Option<Vec<String>>", optional)]
     pub limits: Vec<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub style: Option<NarrationStyle>,
+    /// Show the inner thoughts of characters other than the player's.
+    #[serde(default, skip_serializing_if = "is_false")]
+    #[ts(as = "Option<bool>", optional)]
+    pub inner_thoughts: bool,
+    /// Texts, calls and letters are written as tags the reader shows as
+    /// phone and paper cards.
+    #[serde(default, skip_serializing_if = "is_false")]
+    #[ts(as = "Option<bool>", optional)]
+    pub message_cards: bool,
+    /// The language the story is written in, e.g. "Japanese". Unset leaves
+    /// it to the model, which usually follows the player.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub language: Option<String>,
+}
+
+fn is_false(b: &bool) -> bool {
+    !*b
 }
 
 impl Default for Narration {
@@ -124,6 +161,10 @@ impl Default for Narration {
             rating: None,
             themes: Vec::new(),
             limits: Vec::new(),
+            style: None,
+            inner_thoughts: false,
+            message_cards: false,
+            language: None,
         }
     }
 }
@@ -302,6 +343,11 @@ impl StoryStateV1 {
         check_list("genres", &self.narration.genres)?;
         check_list("themes", &self.narration.themes)?;
         check_list("limits", &self.narration.limits)?;
+        if let Some(language) = &self.narration.language {
+            if language.chars().count() > 60 {
+                return bad("the story language is longer than 60 characters".into());
+            }
+        }
         if self.narration.rating == Some(ContentRating::Explicit) {
             if let Some(c) = self
                 .characters

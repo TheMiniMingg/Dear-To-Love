@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- **Type of story** comes first in Quick Start and the wizard and narrows the preset worlds.
+  New genres include School life, Action, Cyberpunk, Post-apocalyptic, Superhero, Western and
+  Dating sim.
+- **How the story is told**: a style (Narrated; Thoughts and dialogue with no narrator; Script;
+  Messages), other characters' **inner thoughts** after you act, and the **story language**.
+- **Texts, calls, letters and posts** appear as phone and letter cards (on for new stories),
+  and the action box can send a text, make a call or write your own thought. The offline
+  storyteller texts and calls back. Exports write them out as plain text.
 - **End chapter** replaces **Next chapter**. The storyteller writes a recap of the chapter
   (offline, from the chapter's own turns, when no AI is connected); you can edit it or write
   your own, and name the next chapter. Ending saves your place as "End of Chapter N: title",

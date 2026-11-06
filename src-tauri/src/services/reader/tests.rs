@@ -17,6 +17,7 @@ async fn story() -> (TestDb, StoryCreated) {
             character_id: "starter:new-keeper".into(),
             perspective: None,
             detail: None,
+            story_type: None,
         })
         .unwrap();
     let s = create_story(&t.db, draft).await.unwrap();

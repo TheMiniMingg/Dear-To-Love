@@ -249,14 +249,14 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
   const writing = stream !== null;
   const lastAction = view?.history[view.history.length - 1];
 
-  const send = () =>
+  const send = (text: string = draft) =>
     view &&
     run(async () => {
       const sub = await commands.submitAction({
         storyId: view.story.id,
         routeId: view.route.id,
         expectedHeadId: view.route.headEventId ?? '',
-        text: draft,
+        text,
       });
       clearDraft(routeId);
       setView(sub.view);
@@ -596,9 +596,13 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
           <Composer
             value={draft}
             onChange={(t) => setDraft(routeId, t)}
-            onSubmit={() => void send()}
+            onSubmit={(text) => void send(text)}
             disabled={busy || awaitingReply || writing}
             placeholder="What do you do? (Enter to send, Shift+Enter for a new line)"
+            playerName={player?.name ?? 'You'}
+            contacts={Object.values(view.state.state.characters)
+              .filter((c) => c.control !== 'player')
+              .map((c) => c.name)}
           />
           <div className="action-bar">
             <button type="button" onClick={quickSave} disabled={busy}>

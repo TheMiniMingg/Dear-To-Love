@@ -14,4 +14,8 @@ worldTemplateId: string | null, scenarioTemplateId: string | null, characterTemp
 /**
  * `@player` stands for the player character.
  */
-relationships: Array<Relationship>, scene: SceneTemplate, openThreads: Array<string>, firstChapterTitle: string, chapterOutlines: Array<ChapterOutlineInput>, };
+relationships: Array<Relationship>, scene: SceneTemplate, openThreads: Array<string>, firstChapterTitle: string, chapterOutlines: Array<ChapterOutlineInput>, 
+/**
+ * The type of story picked first ("Romance"); it leads the genres.
+ */
+storyType?: string, };

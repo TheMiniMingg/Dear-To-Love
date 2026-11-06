@@ -541,8 +541,26 @@ textarea:focus-visible,
 }
 .composer {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.5rem;
   align-items: flex-end;
+}
+.composer-mode {
+  flex-basis: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+}
+.composer-mode select,
+.composer-mode input {
+  font: inherit;
+  color: inherit;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.25rem 0.45rem;
 }
 .composer textarea {
   flex: 1;
@@ -1459,4 +1477,140 @@ details summary {
   -webkit-line-clamp: 2;
   line-clamp: 2;
   overflow: hidden;
+}
+
+/* Texts, calls, thoughts, letters and posts in the story (RichText). */
+.line-speaker {
+  font-weight: 700;
+}
+.msg-phone,
+.msg-call,
+.msg-post {
+  margin: 0.9em 0;
+  padding: 0.8rem 0.9rem;
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--fg) 7%, var(--bg));
+  max-width: 34rem;
+}
+.msg-head {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.6rem;
+}
+.msg-avatar {
+  display: inline-grid;
+  place-items: center;
+  width: 2.2rem;
+  height: 2.2rem;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--fg) 12%, var(--bg));
+  color: var(--muted);
+  font-weight: 600;
+  flex: none;
+}
+.msg-bubble-row {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  margin: 0.35rem 0;
+}
+.msg-bubble-row.sent {
+  align-items: flex-end;
+}
+.msg-bubble {
+  padding: 0.55rem 0.8rem;
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--fg) 12%, var(--bg));
+  max-width: 85%;
+  overflow-wrap: anywhere;
+}
+.msg-bubble-row.sent .msg-bubble {
+  background: var(--accent);
+  color: #fff;
+}
+.msg-line {
+  display: block;
+}
+.msg-time {
+  font-size: 0.75em;
+  color: var(--muted);
+  margin-top: 0.2rem;
+}
+.msg-head .msg-time {
+  margin: 0 0 0 auto;
+}
+.msg-call {
+  display: grid;
+  justify-items: center;
+  gap: 0.35rem;
+  text-align: center;
+}
+.msg-call .msg-avatar {
+  width: 3.4rem;
+  height: 3.4rem;
+  font-size: 1.3em;
+}
+.msg-call-status {
+  color: var(--muted);
+}
+.msg-call.missed .msg-call-status {
+  color: var(--fail);
+}
+.msg-call-icons {
+  display: flex;
+  gap: 1.1rem;
+  margin-top: 0.2rem;
+}
+.msg-call-icons svg {
+  width: 1.3rem;
+  height: 1.3rem;
+  fill: none;
+  stroke: var(--muted);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.msg-call-icons svg.hang-up {
+  stroke: var(--fail);
+}
+.msg-call-body {
+  text-align: start;
+  justify-self: stretch;
+  margin-top: 0.4rem;
+}
+.msg-thought {
+  margin: 0.9em 0;
+  padding: 0.5rem 0.9rem;
+  border-left: 3px dashed var(--muted);
+  font-style: italic;
+  color: color-mix(in srgb, var(--fg) 80%, var(--bg));
+}
+.msg-thought p {
+  margin: 0.2rem 0;
+}
+.msg-label {
+  display: block;
+  font-style: normal;
+  font-size: 0.8em;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.msg-letter {
+  margin: 0.9em 0;
+  padding: 1rem 1.2rem;
+  max-width: 34rem;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-family: Georgia, 'Times New Roman', serif;
+  background: color-mix(in srgb, #f4e9d0 35%, var(--bg));
+}
+.msg-letter figcaption {
+  text-align: end;
+  font-style: italic;
+}
+.msg-post p {
+  margin: 0.2rem 0;
 }

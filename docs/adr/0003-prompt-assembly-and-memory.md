@@ -24,7 +24,7 @@ Prompt Preview. Migration 0002 and the preview DTO are interface contracts
   exist; at most 16 turns are caught up per request.
 - **Prompt order** (`PROMPT_SCHEMA_VERSION` 2; 3 adds the `STORY` section
   and the chapter plan, see ADR 0012; 4 adds `EARLIER CHAPTERS`, see
-  ADR 0014): system message (narration
+  ADR 0014; 5 adds styles, thoughts, language and `MESSAGES`, see ADR 0015): system message (narration
   rules, world, characters, relationships, confirmed facts, scene, then
   `STORY SO FAR` when the summary fits), verbatim turns after the summary,
   then the latest player action exactly once. A window that starts with a

@@ -19,6 +19,10 @@ offline storyteller lets you try everything without either.
   no typing; _Custom_ starts from empty fields with no presets, so you write everything.
 - **Play** by typing what you do. Save anywhere, quick-save with Ctrl/Cmd+S, and five
   autosaves keep your place.
+- **Pick the type of story** first (romance, adventure, mystery, school life and more) and
+  how it is told: a narrator, characters' inner thoughts with no narrator, a script, or
+  mostly messages. Texts, calls and letters show up as phone and letter cards, and you can
+  text or call characters yourself. Set the story's language, such as Japanese or Korean.
 - **End a chapter** when it feels finished: the storyteller writes a recap of what happened,
   you edit it, and the chapter is saved. Every later chapter reads the recaps, so the story
   remembers.

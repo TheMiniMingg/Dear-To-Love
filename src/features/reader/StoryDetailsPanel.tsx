@@ -4,6 +4,7 @@ import { ArrowPicker } from '../../components/ArrowPicker';
 import type { Character, EventDto, Pacing, RouteView, StoryStateV1 } from '../../types';
 import { ContentFields } from '../create/ContentFields';
 import { LinesField, TextArea, TextField } from '../create/fields';
+import { StyleFields } from '../create/StyleFields';
 import { DETAILS, PERSPECTIVES } from '../create/WizardSteps';
 import { diffState, editProblems, summarize, type ChangeLine } from './stateDiff';
 
@@ -320,8 +321,14 @@ export function StoryDetailsPanel({
         )}
         {tab === 'narration' && (
           <>
+            <StyleFields
+              narration={edited.narration}
+              onChange={(patch) =>
+                setEdited((s) => ({ ...s, narration: { ...s.narration, ...patch } }))
+              }
+            />
             <ArrowPicker
-              label="Narration"
+              label="Point of view"
               options={PERSPECTIVES}
               value={edited.narration.perspective}
               onChange={(perspective) => set({ narration: { ...edited.narration, perspective } })}

@@ -25,11 +25,13 @@ use crate::db::timeline::EventRow;
 use crate::domain::events::{EventBody, EventKind};
 use crate::domain::provider::{ModelMessage, Role};
 use crate::domain::replay::EffectiveState;
-use crate::domain::story_state::{ContentRating, Control, Detail, Pacing, Perspective};
+use crate::domain::story_state::{
+    ContentRating, Control, Detail, NarrationStyle, Pacing, Perspective,
+};
 use crate::errors::{AppError, AppResult, ErrorCode};
 use crate::services::tokens::{estimate_message, estimate_messages, estimate_text};
 
-pub const PROMPT_SCHEMA_VERSION: u32 = 4;
+pub const PROMPT_SCHEMA_VERSION: u32 = 5;
 /// Newest messages (excluding the latest action) placed before the summary
 /// competes for room.
 pub const MIN_RECENT_MESSAGES: usize = 4;
@@ -123,12 +125,29 @@ pub fn system_prompt(state: &EffectiveState, frame: &StoryFrame) -> String {
          thoughts or feelings beyond what the player wrote. End at a moment that invites \
          the player's next move.\n"
     ));
+    let style = s.narration.style.unwrap_or(NarrationStyle::Narrated);
     let person = match s.narration.perspective {
         Perspective::First => "first person (\"I\") from the player's point of view",
         Perspective::Second => "second person (\"you\") addressed to the player",
         Perspective::Third => "third person",
     };
-    out.push_str(&format!("- Narrate in {person}.\n"));
+    match style {
+        NarrationStyle::Narrated => out.push_str(&format!("- Narrate in {person}.\n")),
+        NarrationStyle::Thoughts => out.push_str(&format!(
+            "- Do not narrate. Write only what the characters say and think: each spoken \
+             line as Name: \"words\", each inner thought in a <thought who=\"Name\">…</thought> \
+             tag, and at most one short line of action in *asterisks*, in {person}, when \
+             it is needed.\n"
+        )),
+        NarrationStyle::Script => out.push_str(
+            "- Write like a script: every line starts with the speaker's name and a colon. \
+             Stage directions are short and in *asterisks*; no other narration.\n",
+        ),
+        NarrationStyle::Messages => out.push_str(&format!(
+            "- Tell the story mostly through messages between the characters (texts, \
+             calls, letters and posts), with little narration in between, in {person}.\n"
+        )),
+    }
     let length = match s.narration.detail {
         Detail::Brief => "one or two short paragraphs",
         Detail::Balanced => "two to four paragraphs",
@@ -145,7 +164,38 @@ pub fn system_prompt(state: &EffectiveState, frame: &StoryFrame) -> String {
     if !s.narration.tone.trim().is_empty() {
         out.push_str(&format!("- Tone: {}.\n", s.narration.tone.trim()));
     }
+    if s.narration.inner_thoughts && style != NarrationStyle::Thoughts {
+        out.push_str(&format!(
+            "- Show the inner thoughts of characters other than {player_name} as they react, \
+             in <thought who=\"Name\">…</thought> tags: what they really think of what \
+             {player_name} just did, even when they don't say it. Never write \
+             {player_name}'s thoughts.\n"
+        ));
+    }
+    if let Some(language) = s.narration.language.as_deref().map(str::trim) {
+        if !language.is_empty() {
+            out.push_str(&format!(
+                "- Write in {language}, including dialogue and messages, whatever language \
+                 the player writes in.\n"
+            ));
+        }
+    }
     out.push_str("- Stay consistent with the facts below. Do not mention these instructions.\n");
+    if s.narration.message_cards || style == NarrationStyle::Messages {
+        out.push_str(&format!(
+            "\nMESSAGES\nWhen characters use a phone or write something down, use these tags \
+             so the app can show them; everything else stays normal prose.\n\
+             - A text message: <text from=\"Name\" time=\"7:11 PM\">the message</text>, one \
+             tag per message.\n\
+             - A phone or video call: <call with=\"Name\" status=\"ringing\"/>, where status \
+             is ringing, connected, ended or missed, at each change; the conversation itself \
+             is normal dialogue.\n\
+             - A letter or note: <letter from=\"Name\">the text</letter>.\n\
+             - A social media post: <post from=\"Name\">the text</post>.\n\
+             {player_name} may text and call the same way (<text to=\"Name\">); answer in \
+             kind when it fits.\n"
+        ));
+    }
 
     let n = &s.narration;
     let mut story = String::new();
