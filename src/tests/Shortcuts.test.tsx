@@ -15,7 +15,7 @@ vi.mock('@tauri-apps/api/core', () => ({
 }));
 
 import { App } from '../app/App';
-import { ariaKeys, isCombo, keyLabel } from '../app/shortcuts';
+import { ariaKeys, isCombo, keyLabel, useShortcutHelp } from '../app/shortcuts';
 import { useUiStore } from '../app/store';
 import { ReaderScreen } from '../features/reader/ReaderScreen';
 import { usePictureView } from '../features/reader/stage';
@@ -116,6 +116,12 @@ describe('story shortcuts', () => {
     await userEvent.keyboard('{Control>}={/Control}');
     expect(useUiStore.getState().textSize).toBeGreaterThan(1);
     expect(box).toHaveValue('half a thought');
+
+    // While the Keyboard shortcuts window is open, the story leaves keys alone.
+    useShortcutHelp.getState().setOpen(true);
+    await userEvent.keyboard('{Control>}l{/Control}');
+    expect(screen.queryByRole('dialog', { name: 'Save / Load' })).toBeNull();
+    useShortcutHelp.getState().setOpen(false);
 
     // Ctrl+J comes back to the action box from anywhere.
     (document.activeElement as HTMLElement).blur();

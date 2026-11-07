@@ -396,6 +396,8 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
   useEffect(() => {
     onKey.current = (e: KeyboardEvent) => {
       if (isComposing(e) || e.defaultPrevented || !view) return;
+      // The Keyboard shortcuts window is on top: leave the story alone.
+      if (useShortcutHelp.getState().open) return;
       const did = (fn?: () => void) => {
         e.preventDefault();
         fn?.();
