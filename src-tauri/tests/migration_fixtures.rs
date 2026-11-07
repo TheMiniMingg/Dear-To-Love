@@ -141,6 +141,43 @@ async fn v6_fixture_upgrades_to_current() {
 }
 
 #[tokio::test]
+async fn v7_fixture_upgrades_to_current() {
+    let (db, _dir) = upgrade_fixture(7, include_str!("fixtures/data_v7.sql")).await;
+    let links: Vec<(String, String)> = sqlx::query_as(
+        "SELECT owner_type, owner_id FROM asset_links WHERE story_id = 's7' ORDER BY owner_type",
+    )
+    .fetch_all(db.reader())
+    .await
+    .unwrap();
+    assert_eq!(
+        links,
+        [
+            ("item".to_string(), "brass lantern".to_string()),
+            ("story".to_string(), "s7".to_string())
+        ]
+    );
+}
+
+/// Pictures chosen before item pictures existed survive the rebuild of
+/// asset_links, and the rebuilt table still refuses unknown owners.
+#[tokio::test]
+async fn v6_pictures_survive_the_item_pictures_migration() {
+    let (db, _dir) = upgrade_fixture(6, include_str!("fixtures/data_v6.sql")).await;
+    let n: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM asset_links WHERE id = 'l6'")
+        .fetch_one(db.reader())
+        .await
+        .unwrap();
+    assert_eq!(n, 1);
+    let bad = sqlx::query(
+        "INSERT INTO asset_links VALUES ('x', 's6', '0190a1b2-0000-7000-8000-000000000006', \
+         'route', 'r6', 'cover', '2026-11-07T00:00:00.000Z')",
+    )
+    .execute(db.writer())
+    .await;
+    assert!(bad.is_err());
+}
+
+#[tokio::test]
 async fn deleting_a_story_removes_its_memory() {
     let (db, _dir) = upgrade_fixture(2, include_str!("fixtures/data_v2.sql")).await;
     let mut tx = db.write_txn().await.unwrap();

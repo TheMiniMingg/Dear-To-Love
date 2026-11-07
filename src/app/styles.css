@@ -171,8 +171,9 @@ a:focus-visible {
   border-radius: 6px;
   border: 1px solid var(--border);
 }
-.backdrop-veil {
-  margin-top: 0.75rem;
+/* After .field's margin: 0, so the label keeps clear of the picture above. */
+.field.backdrop-veil {
+  margin-top: 1rem;
   max-width: 24rem;
 }
 

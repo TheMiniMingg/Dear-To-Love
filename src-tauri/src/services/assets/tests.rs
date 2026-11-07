@@ -299,6 +299,40 @@ async fn story_defaults_block_delete_and_name_the_character() {
     assert_eq!(e.code, ErrorCode::AssetMissing);
 }
 
+/// An inventory item's picture is a story default like a portrait, and it
+/// keeps its image from being deleted.
+#[tokio::test]
+async fn an_item_picture_is_saved_for_the_story() {
+    let t = test_db().await;
+    let s = store(&t);
+    let img = import_bytes(&t.db, &s, png(30, 30, 90), "Potion", &ImportScope::Shared)
+        .await
+        .unwrap()
+        .asset;
+    let st = story(&t, "Lamp").await;
+    let slot = VisualSlot::parse("item:healing draught").unwrap();
+    rows::set_story_visual(&t.db, &st.story_id, &slot, Some(&img.id))
+        .await
+        .unwrap();
+    let visuals = rows::story_visuals(&t.db, &st.story_id).await.unwrap();
+    assert!(visuals
+        .iter()
+        .any(|v| v.slot == "item:healing draught" && v.asset_id == img.id));
+    let mut conn = t.db.reader().acquire().await.unwrap();
+    let used = rows::usages(&mut conn, &img.id).await.unwrap();
+    drop(conn);
+    assert_eq!(used.len(), 1);
+    assert!(delete(&t.db, &s, &img.id).await.is_err());
+    rows::set_story_visual(&t.db, &st.story_id, &slot, None)
+        .await
+        .unwrap();
+    assert!(rows::story_visuals(&t.db, &st.story_id)
+        .await
+        .unwrap()
+        .iter()
+        .all(|v| !v.slot.starts_with("item:")));
+}
+
 #[tokio::test]
 async fn files_over_the_limit_are_refused_before_reading() {
     let t = test_db().await;
