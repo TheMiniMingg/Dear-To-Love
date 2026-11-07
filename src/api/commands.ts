@@ -170,6 +170,8 @@ export const commands = {
   saveWizardDraft: (wizard: WizardDraft) => call<WizardDraft>('save_wizard_draft', { wizard }),
   clearWizardDraft: () => call<void>('clear_wizard_draft'),
   listStories: () => call<StorySummary[]>('list_stories'),
+  /** Returns the title as kept (trimmed, one line). */
+  renameStory: (storyId: string, title: string) => call<string>('rename_story', { storyId, title }),
   deleteStory: (storyId: string) => call<void>('delete_story', { storyId }),
 
   getRouteView: (routeId: string) => call<RouteView>('get_route_view', { routeId }),
@@ -221,6 +223,9 @@ export const commands = {
   /** Writes the whole story to a `.storypack` file at `path` (from the save dialog). */
   exportStorypack: (storyId: string, path: string) =>
     call<StorypackExport>('export_storypack', { storyId, path }),
+  /** A full copy of the story under `title`, with every route, save and picture. */
+  duplicateStory: (storyId: string, title: string) =>
+    call<StorypackImport>('duplicate_story', { storyId, title }),
   /** Adds the storypack at `path` as a new story. */
   importStorypack: (path: string) => call<StorypackImport>('import_storypack', { path }),
   exportRouteText: (routeId: string, path: string, format: TextFormat, timestamps: boolean) =>

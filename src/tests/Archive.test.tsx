@@ -36,6 +36,10 @@ const story = (id: string, title: string): StorySummary => ({
   lastRouteId: `${id}-main`,
   coverAssetId: null,
   writing: false,
+  genres: [],
+  chapter: 1,
+  turns: 0,
+  lastReply: null,
 });
 
 beforeEach(() => {

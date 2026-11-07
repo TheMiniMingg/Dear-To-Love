@@ -10,6 +10,11 @@ type Props = {
   initialFocusId?: string;
   /** Wider dialog for long read-only content. */
   wide?: boolean;
+  /**
+   * Slides in from the side and leaves the rest of the window in view (the
+   * reader's panels), instead of sitting in the middle.
+   */
+  sheet?: boolean;
 };
 
 const FOCUSABLE =
@@ -19,7 +24,14 @@ const FOCUSABLE =
  * Modal dialog: traps Tab focus, closes on Escape (only the top dialog),
  * and restores focus to whatever was focused before it opened.
  */
-export function Dialog({ title, onClose, children, initialFocusId, wide = false }: Props) {
+export function Dialog({
+  title,
+  onClose,
+  children,
+  initialFocusId,
+  wide = false,
+  sheet = false,
+}: Props) {
   const ref = useRef<HTMLDivElement>(null);
   const titleId = useId();
 
@@ -57,13 +69,17 @@ export function Dialog({ title, onClose, children, initialFocusId, wide = false 
   };
 
   return (
-    <div className="dialog-backdrop">
+    <div
+      className={sheet ? 'dialog-backdrop sheet-backdrop' : 'dialog-backdrop'}
+      // A side sheet closes with a click on the story beside it.
+      onMouseDown={sheet ? (e) => e.target === e.currentTarget && onClose() : undefined}
+    >
       <div
         ref={ref}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className={wide ? 'dialog wide' : 'dialog'}
+        className={['dialog', wide && 'wide', sheet && 'sheet'].filter(Boolean).join(' ')}
         tabIndex={-1}
         onKeyDown={onKeyDown}
       >

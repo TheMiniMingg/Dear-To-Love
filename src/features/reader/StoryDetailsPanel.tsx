@@ -1,4 +1,5 @@
 import { useId, useState } from 'react';
+import { BookOpenText, Globe, ListChecks, MapPin, Users, type LucideIcon } from 'lucide-react';
 import { commands, errorMessage } from '../../api/commands';
 import { ArrowPicker } from '../../components/ArrowPicker';
 import type { Character, EventDto, RouteView, StoryStateV1 } from '../../types';
@@ -11,14 +12,17 @@ import { msg, t, tr } from '../../i18n';
 import { chapterHasTitle, routeName } from '../../i18n/names';
 import { plainText } from './messages';
 import { castColors, NAME_COLORS, nameStyle } from './nameColors';
+import { Thumb } from '../images/ImageGrid';
+import { picture, portraitSlot } from './pictures';
 
-type Tab = 'characters' | 'world' | 'narration' | 'scene' | 'facts';
-const TABS: [Tab, string][] = [
-  ['characters', msg('Characters')],
-  ['world', msg('World')],
-  ['narration', msg('Narration')],
-  ['scene', msg('Scene')],
-  ['facts', msg('Facts')],
+export type DetailsTab = 'characters' | 'world' | 'narration' | 'scene' | 'facts';
+type Tab = DetailsTab;
+const TABS: [Tab, string, LucideIcon][] = [
+  ['characters', msg('Characters'), Users],
+  ['world', msg('World'), Globe],
+  ['narration', msg('Narration'), BookOpenText],
+  ['scene', msg('Scene'), MapPin],
+  ['facts', msg('Facts'), ListChecks],
 ];
 const copy = <T,>(v: T): T => JSON.parse(JSON.stringify(v)) as T;
 
@@ -204,6 +208,43 @@ function CharacterFields({
   );
 }
 
+/** The character being edited, as a card: portrait, name in their colour, a line about them. */
+function ProfileCard({
+  c,
+  you,
+  color,
+  portrait,
+}: {
+  c: Character;
+  you: boolean;
+  color: string | null;
+  portrait: string | null;
+}) {
+  const name = c.name.trim() || t('Unnamed');
+  const about = [c.role, c.pronouns, c.age, c.species]
+    .map((x) => x?.trim())
+    .filter(Boolean)
+    .join(' · ');
+  return (
+    <div className="profile-card" style={nameStyle(color)}>
+      {portrait ? (
+        <Thumb assetId={portrait} alt="" className="profile-portrait" />
+      ) : (
+        <span className="profile-portrait profile-initial" aria-hidden="true">
+          {[...name][0]?.toUpperCase()}
+        </span>
+      )}
+      <div className="profile-text">
+        <p className="profile-name">
+          {name}
+          {you && <span className="profile-you">{t('You')}</span>}
+        </p>
+        {about && <p className="muted small">{about}</p>}
+      </div>
+    </div>
+  );
+}
+
 /**
  * Change characters, world, narration, scene and facts from this point of
  * this route on. Shows exactly what changes, where, and for which route
@@ -211,11 +252,14 @@ function CharacterFields({
  */
 export function StoryDetailsPanel({
   view,
+  initialTab = 'characters',
   playerName,
   onApplied,
   onCancel,
 }: {
   view: RouteView;
+  /** The tab to open on. */
+  initialTab?: DetailsTab;
   playerName: string;
   onApplied: (v: RouteView) => void;
   onCancel: () => void;
@@ -223,7 +267,7 @@ export function StoryDetailsPanel({
   const id = useId();
   const original = view.state.state;
   const [edited, setEdited] = useState<StoryStateV1>(() => copy(original));
-  const [tab, setTab] = useState<Tab>('characters');
+  const [tab, setTab] = useState<Tab>(initialTab);
   const [who, setWho] = useState(original.playerCharacterId);
   const [review, setReview] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -342,7 +386,7 @@ export function StoryDetailsPanel({
   return (
     <div className="panel story-details">
       <div role="tablist" aria-label={t('Story details')} className="tabs">
-        {TABS.map(([k, label]) => (
+        {TABS.map(([k, label, Icon]) => (
           <button
             key={k}
             type="button"
@@ -352,6 +396,7 @@ export function StoryDetailsPanel({
             aria-controls={`${id}-panel`}
             onClick={() => setTab(k)}
           >
+            <Icon className="btn-icon" aria-hidden={true} />
             {t(label)}
           </button>
         ))}
@@ -375,6 +420,14 @@ export function StoryDetailsPanel({
               }))}
               value={current.id}
               onChange={setWho}
+            />
+            <ProfileCard
+              c={current}
+              you={current.id === edited.playerCharacterId}
+              color={
+                current.color ?? castColors(chars, edited.playerCharacterId).get(current.id) ?? null
+              }
+              portrait={picture(view, portraitSlot(current.id)).assetId}
             />
             <CharacterFields
               c={current}

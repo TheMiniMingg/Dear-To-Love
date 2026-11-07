@@ -555,6 +555,50 @@ pub async fn import_storypack(
     import_with(db, data_dir, src, &Limits::default(), None).await
 }
 
+/// A full copy of a story under `title`: every route, save, bookmark,
+/// note and picture, and the story's own storyteller. It is written to a
+/// storypack in the imports folder and read back in, so the copy passes the
+/// same checks as any import; the file is removed afterwards (and at the
+/// next start if the app stops first). The copy counts as just played.
+pub async fn duplicate_story(
+    db: &Database,
+    store: &AssetStore,
+    app_version: &str,
+    data_dir: &Path,
+    story_id: &str,
+    title: &str,
+) -> AppResult<StorypackImport> {
+    let title = crate::db::stories::clean_title(title)?;
+    let dir = data_dir.join(IMPORTS_DIR);
+    fs::create_dir_all(&dir)
+        .map_err(|e| AppError::new(ErrorCode::Io, format!("could not prepare the copy: {e}")))?;
+    let file = dir.join(format!("copy-{}.storypack", new_id()));
+    let copied = async {
+        export_storypack(db, store, app_version, story_id, &file).await?;
+        import_storypack(db, data_dir, &file).await
+    }
+    .await;
+    let _ = fs::remove_file(&file);
+    let mut done = copied?;
+
+    let mut tx = db.write_txn().await?;
+    let choice = crate::db::providers::story_choice(&mut tx, story_id).await?;
+    let ts = now();
+    sqlx::query("UPDATE stories SET title = ?, created_at = ?, updated_at = ? WHERE id = ?")
+        .bind(&title)
+        .bind(&ts)
+        .bind(&ts)
+        .bind(&done.story_id)
+        .execute(&mut *tx)
+        .await?;
+    if choice.is_some() {
+        crate::db::providers::set_story_choice_tx(&mut tx, &done.story_id, choice.as_ref()).await?;
+    }
+    tx.commit().await?;
+    done.title = title;
+    Ok(done)
+}
+
 fn interrupted() -> AppError {
     AppError::internal("import stopped (simulated interruption)")
 }

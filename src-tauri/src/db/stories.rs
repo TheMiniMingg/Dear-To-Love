@@ -1,4 +1,5 @@
-//! Story rows: create (with main route and first chapter), list, delete.
+//! Story rows: create (with main route and first chapter), list, rename,
+//! delete.
 
 use sqlx::{Row, SqliteConnection};
 
@@ -130,24 +131,131 @@ pub async fn create_story_with(
     })
 }
 
+#[derive(sqlx::FromRow)]
+struct SummaryRow {
+    id: String,
+    title: String,
+    description: String,
+    created_at: String,
+    updated_at: String,
+    route_count: i32,
+    main_route_id: String,
+    last_route_id: String,
+    cover_asset_id: Option<String>,
+    writing: bool,
+    genres_json: Option<String>,
+    last_head_id: Option<String>,
+}
+
 pub async fn list_stories(db: &Database) -> AppResult<Vec<StorySummary>> {
-    Ok(sqlx::query_as::<_, StorySummary>(
-        "SELECT s.id, s.title, s.description, s.created_at, s.updated_at, \
+    let mut conn = db.reader().acquire().await?;
+    let rows = sqlx::query_as::<_, SummaryRow>(
+        "WITH last AS ( \
+           SELECT s.id AS story_id, \
+                  (SELECT r.id FROM routes r WHERE r.story_id = s.id AND r.hidden = 0 \
+                     ORDER BY r.updated_at DESC, r.id DESC LIMIT 1) AS route_id \
+           FROM stories s) \
+         SELECT s.id, s.title, s.description, s.created_at, s.updated_at, \
                 (SELECT COUNT(*) FROM routes r WHERE r.story_id = s.id AND r.hidden = 0) AS route_count, \
                 (SELECT r.id FROM routes r WHERE r.story_id = s.id AND r.is_main = 1) AS main_route_id, \
-                (SELECT r.id FROM routes r WHERE r.story_id = s.id AND r.hidden = 0 \
-                   ORDER BY r.updated_at DESC, r.id DESC LIMIT 1) AS last_route_id, \
+                last.route_id AS last_route_id, \
                 (SELECT l.asset_id FROM asset_links l WHERE l.story_id = s.id \
                    AND l.owner_type = 'story' AND l.variant = 'cover') AS cover_asset_id, \
                 EXISTS (SELECT 1 FROM generation_runs g JOIN routes r ON r.id = g.route_id \
-                   WHERE r.story_id = s.id AND g.status = 'streaming') AS writing \
-         FROM stories s \
+                   WHERE r.story_id = s.id AND g.status = 'streaming') AS writing, \
+                json_extract(s.base_state_json, '$.narration.genres') AS genres_json, \
+                (SELECT r.head_event_id FROM routes r WHERE r.id = last.route_id) AS last_head_id \
+         FROM stories s JOIN last ON last.story_id = s.id \
          WHERE NOT EXISTS (SELECT 1 FROM archive_operations a \
                            WHERE a.story_id = s.id AND a.status = 'committed') \
          ORDER BY s.updated_at DESC, s.id DESC",
     )
-    .fetch_all(db.reader())
-    .await?)
+    .fetch_all(&mut *conn)
+    .await?;
+    let mut out = Vec::with_capacity(rows.len());
+    for r in rows {
+        let progress = match &r.last_head_id {
+            Some(head) => route_progress(&mut conn, head).await?,
+            None => Progress::default(),
+        };
+        out.push(StorySummary {
+            id: r.id,
+            title: r.title,
+            description: r.description,
+            created_at: r.created_at,
+            updated_at: r.updated_at,
+            route_count: r.route_count,
+            main_route_id: r.main_route_id,
+            last_route_id: r.last_route_id,
+            cover_asset_id: r.cover_asset_id,
+            writing: r.writing,
+            genres: r
+                .genres_json
+                .and_then(|j| serde_json::from_str(&j).ok())
+                .unwrap_or_default(),
+            chapter: progress.chapter,
+            turns: progress.turns,
+            last_reply: progress.last_reply,
+        });
+    }
+    Ok(out)
+}
+
+/// How far a route has got, read along its events from `head` back.
+#[derive(Debug, Default, PartialEq)]
+struct Progress {
+    chapter: Option<i32>,
+    turns: i32,
+    last_reply: Option<String>,
+}
+
+async fn route_progress(conn: &mut SqliteConnection, head: &str) -> AppResult<Progress> {
+    let (turns, chapter, last_reply): (i64, Option<i64>, Option<String>) = sqlx::query_as(
+        "WITH RECURSIVE chain(id, parent, depth) AS ( \
+           SELECT id, parent_event_id, 0 FROM events WHERE id = ? \
+           UNION ALL \
+           SELECT e.id, e.parent_event_id, c.depth + 1 FROM events e JOIN chain c ON e.id = c.parent) \
+         SELECT \
+           (SELECT COUNT(*) FROM chain c JOIN events e ON e.id = c.id WHERE e.kind = 'player'), \
+           (SELECT json_extract(e.payload_json, '$.ordinal') FROM chain c JOIN events e ON e.id = c.id \
+              WHERE e.kind = 'chapter_start' ORDER BY c.depth LIMIT 1), \
+           (SELECT json_extract(e.payload_json, '$.text') FROM chain c JOIN events e ON e.id = c.id \
+              WHERE e.kind = 'assistant' ORDER BY c.depth LIMIT 1)",
+    )
+    .bind(head)
+    .fetch_one(&mut *conn)
+    .await?;
+    Ok(Progress {
+        chapter: chapter.and_then(|n| i32::try_from(n).ok()),
+        turns: i32::try_from(turns).unwrap_or(i32::MAX),
+        last_reply,
+    })
+}
+
+/// A story title as it is kept: trimmed, one line, 1 to 200 characters.
+pub fn clean_title(title: &str) -> AppResult<String> {
+    let title = title.split_whitespace().collect::<Vec<_>>().join(" ");
+    if title.is_empty() || title.chars().count() > MAX_TITLE {
+        return Err(AppError::invalid_input(format!(
+            "story title must be 1 to {MAX_TITLE} characters"
+        )));
+    }
+    Ok(title)
+}
+
+/// Gives a story a new title. Its place in the library (last played)
+/// stays as it was.
+pub async fn rename_story(db: &Database, story_id: &str, title: &str) -> AppResult<String> {
+    let title = clean_title(title)?;
+    let done = sqlx::query("UPDATE stories SET title = ? WHERE id = ?")
+        .bind(&title)
+        .bind(story_id)
+        .execute(db.writer())
+        .await?;
+    if done.rows_affected() == 0 {
+        return Err(AppError::not_found(format!("story {story_id} not found")));
+    }
+    Ok(title)
 }
 
 pub async fn get_base_state(db: &Database, story_id: &str) -> AppResult<StoryStateV1> {
@@ -334,6 +442,100 @@ mod tests {
         assert_eq!(all.len(), 100);
         assert!(all.iter().all(|s| s.route_count == 1));
         assert!(contract::verify(&db).await.unwrap().is_empty());
+    }
+
+    /// The library shows how far the last played route got: its chapter,
+    /// the actions taken and the newest reply, plus the story's genres.
+    #[tokio::test]
+    async fn list_shows_progress_of_the_last_played_route() {
+        use crate::db::timeline::{append_event, AppendEvent};
+        use crate::domain::events::{AssistantPayload, EventBody, PlayerPayload};
+        let t = test_db().await;
+        let mut made = input("Lamp");
+        made.base_state.narration.genres = vec!["Mystery".into(), "Romance".into()];
+        let s = create_story(&t.db, made).await.unwrap();
+        let fresh = &list_stories(&t.db).await.unwrap()[0];
+        assert_eq!(
+            (fresh.chapter, fresh.turns, fresh.last_reply.as_deref()),
+            (Some(1), 0, None)
+        );
+        assert_eq!(fresh.genres, vec!["Mystery", "Romance"]);
+
+        let mut head = s.head_event_id.clone();
+        for (act, reply) in [
+            ("I knock.", "Nobody."),
+            ("I wait.", "The lamp <b>hums</b>."),
+        ] {
+            for body in [
+                EventBody::Player(PlayerPayload::new(act)),
+                EventBody::Assistant(AssistantPayload {
+                    text: reply.into(),
+                    finish_reason: None,
+                    provider_label: None,
+                    model_id: None,
+                }),
+            ] {
+                head = append_event(
+                    &t.db,
+                    AppendEvent {
+                        story_id: s.story_id.clone(),
+                        route_id: s.main_route_id.clone(),
+                        expected_head_id: head,
+                        body,
+                        generation_run_id: None,
+                    },
+                )
+                .await
+                .unwrap()
+                .event_id;
+            }
+        }
+        let played = &list_stories(&t.db).await.unwrap()[0];
+        assert_eq!(
+            (played.chapter, played.turns, played.last_reply.as_deref()),
+            (Some(1), 2, Some("The lamp <b>hums</b>."))
+        );
+    }
+
+    #[tokio::test]
+    async fn rename_keeps_one_line_and_the_library_order() {
+        let t = test_db().await;
+        let a = create_story(&t.db, input("First")).await.unwrap();
+        create_story(&t.db, input("Second")).await.unwrap();
+        let order = || async {
+            list_stories(&t.db)
+                .await
+                .unwrap()
+                .into_iter()
+                .map(|s| s.title)
+                .collect::<Vec<_>>()
+        };
+        let before = order().await;
+        assert_eq!(
+            rename_story(&t.db, &a.story_id, "  The \n First  Light ")
+                .await
+                .unwrap(),
+            "The First Light"
+        );
+        let after = order().await;
+        assert_eq!(after.len(), 2);
+        assert_eq!(
+            after.iter().position(|x| x == "The First Light"),
+            before.iter().position(|x| x == "First")
+        );
+        for bad in ["   ", &"x".repeat(201)] {
+            assert_eq!(
+                rename_story(&t.db, &a.story_id, bad)
+                    .await
+                    .unwrap_err()
+                    .code,
+                ErrorCode::InvalidInput
+            );
+        }
+        assert_eq!(
+            rename_story(&t.db, "nope", "Title").await.unwrap_err().code,
+            ErrorCode::NotFound
+        );
     }
 
     #[tokio::test]

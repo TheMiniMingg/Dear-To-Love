@@ -202,6 +202,38 @@ export function plainText(text: string): string {
   return plainStoryText(words);
 }
 
+/** Message cards whose words can stand for a reply on their own. */
+const SPOKEN: MessageTag[] = ['text', 'call', 'thought', 'letter', 'post'];
+
+/**
+ * The last line of a reply worth showing on its own, as plain words: its
+ * last paragraph of prose, or its last text, call, thought, letter or post
+ * as "Name: words". Empty when it has none.
+ */
+export function lastLine(text: string): string {
+  const blocks = parseBlocks(text);
+  const plain = (s: string) =>
+    s
+      .replace(/\*\*([^*\n]+)\*\*|\*([^*\n]+)\*/g, '$1$2')
+      .replace(/\s+/g, ' ')
+      .trim();
+  for (let i = blocks.length - 1; i >= 0; i--) {
+    const b = blocks[i]!;
+    if (b.kind === 'prose') {
+      const last = b.text
+        .split(/\n{2,}/)
+        .map(plain)
+        .filter(Boolean)
+        .pop();
+      if (last) return last;
+    } else if (SPOKEN.includes(b.kind) && b.body.trim()) {
+      const who = b.attrs.from || b.attrs.who || b.attrs.with || '';
+      return who ? `${who}: ${plain(b.body)}` : plain(b.body);
+    }
+  }
+  return '';
+}
+
 /** One memory note a reply writes (`<remember>`) or removes (`<forget>`). */
 export type NoteChange = { forget: boolean; kind: NoteKind; name: string; text: string };
 

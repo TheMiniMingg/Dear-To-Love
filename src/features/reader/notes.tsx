@@ -2,6 +2,7 @@
  * Memory notes in the reader: the "Memory updated" line under a reply, and
  * the names of the notebook's sections.
  */
+import { CalendarClock, Gem, Lightbulb, MapPin, UserRound, type LucideIcon } from 'lucide-react';
 import type { MemoryNote, NoteKind, StateEdit } from '../../types';
 import { noteChanges, type NoteChange } from './messages';
 import { msg, t } from '../../i18n';
@@ -39,6 +40,15 @@ export const NOTE_KINDS: { kind: NoteKind; heading: string; one: string; hint: s
     hint: msg('Anything else that must stay true.'),
   },
 ];
+
+/** Each kind of note's icon, in the notebook and on the Memory updated line. */
+export const NOTE_ICONS: Record<NoteKind, LucideIcon> = {
+  person: UserRound,
+  place: MapPin,
+  item: Gem,
+  event: CalendarClock,
+  fact: Lightbulb,
+};
 
 /** A note's key, as `notes::note_key` in Rust: lower case, single spaces. */
 export const noteKey = (name: string) => name.trim().split(/\s+/).join(' ').toLowerCase();
@@ -84,17 +94,27 @@ export function MemoryLine({
   return (
     <p className="memory-line">
       <span className="memory-label">{t('Memory updated')}</span>
-      {changes.map((c, i) =>
-        c.forget ? (
-          <span key={i} className="memory-chip forgot">
+      {changes.map((c, i) => {
+        const Icon = NOTE_ICONS[c.kind];
+        return c.forget ? (
+          <span key={i} className={`memory-chip kind-${c.kind} forgot`}>
+            <Icon className="memory-chip-icon" aria-hidden={true} size={13} />
             {t('Forgot {name}', { name: c.name })}
           </span>
         ) : (
-          <span key={i} className="memory-chip" title={c.text} aria-label={`${c.name}: ${c.text}`}>
+          <span
+            key={i}
+            className={`memory-chip kind-${c.kind}`}
+            aria-label={`${c.name}: ${c.text}`}
+          >
+            <Icon className="memory-chip-icon" aria-hidden={true} size={13} />
             {c.name}
+            <span className="memory-pop" role="tooltip">
+              {c.text}
+            </span>
           </span>
-        ),
-      )}
+        );
+      })}
       {onOpen && (
         <button type="button" className="memory-action" onClick={onOpen}>
           {t('See notes')}

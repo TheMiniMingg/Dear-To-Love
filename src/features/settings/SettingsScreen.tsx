@@ -8,6 +8,7 @@ import { ConnectionForm } from './ConnectionForm';
 import { BackdropSection } from './BackdropSection';
 import { LanguageSection } from './LanguageSection';
 import { LookSection } from './LookSection';
+import { SoundSection } from './SoundSection';
 import { ADAPTER_LABELS, makesPictures, pictureConnections, storyConnections } from './kinds';
 import { retiredPictureModel } from './presets';
 import { t, tr } from '../../i18n';
@@ -143,6 +144,7 @@ export function SettingsScreen() {
 
       <LanguageSection />
       <LookSection />
+      <SoundSection />
       <BackdropSection />
 
       <section className="settings-section" aria-labelledby="storyteller-title">

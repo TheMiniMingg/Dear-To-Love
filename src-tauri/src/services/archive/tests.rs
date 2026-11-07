@@ -499,6 +499,67 @@ async fn importing_twice_gives_independent_stories_sharing_images() {
     assert!(leftovers(t.dir.path()).is_empty());
 }
 
+/// Duplicate: an independent copy under a new title that keeps every
+/// route, the cover and the story's own storyteller, comes first in the
+/// library, and leaves no file behind.
+#[tokio::test]
+async fn duplicate_copies_the_whole_story_under_a_new_title() {
+    use crate::db::providers::{set_story_choice, story_choice};
+    use crate::domain::provider::StorytellerChoice;
+    let t = test_db().await;
+    let r = rich_story(&t).await;
+    let sid = r.story.story_id.clone();
+    set_story_choice(&t.db, &sid, Some(&StorytellerChoice::Offline))
+        .await
+        .unwrap();
+    let store = AssetStore::new(t.dir.path());
+    let copy = duplicate_story(
+        &t.db,
+        &store,
+        "0.1.0",
+        t.dir.path(),
+        &sid,
+        "  Copy of\nThe Lamp Room ",
+    )
+    .await
+    .unwrap();
+    assert_eq!(copy.title, "Copy of The Lamp Room");
+    assert_ne!(copy.story_id, sid);
+
+    let list = list_stories(&t.db).await.unwrap();
+    assert_eq!(list.len(), 2);
+    let (new, old) = (&list[0], &list[1]);
+    assert_eq!(new.id, copy.story_id, "the copy counts as just played");
+    assert_eq!(new.title, "Copy of The Lamp Room");
+    assert_eq!(old.title, "The Lamp Room");
+    assert_eq!(new.route_count, old.route_count);
+    assert_eq!(new.cover_asset_id, old.cover_asset_id);
+    assert_eq!(
+        route_shape(&t.db, &copy.main_route_id).await,
+        route_shape(&t.db, &r.story.main_route_id).await
+    );
+    let mut c = t.db.reader().acquire().await.unwrap();
+    assert_eq!(
+        story_choice(&mut c, &copy.story_id).await.unwrap(),
+        Some(StorytellerChoice::Offline)
+    );
+    drop(c);
+    assert!(leftovers(t.dir.path()).is_empty());
+    assert_eq!(contract::verify(&t.db).await.unwrap(), Vec::<String>::new());
+
+    for (story, title, code) in [
+        ("nope", "Copy", ErrorCode::NotFound),
+        (sid.as_str(), "  ", ErrorCode::InvalidInput),
+    ] {
+        let err = duplicate_story(&t.db, &store, "0.1.0", t.dir.path(), story, title)
+            .await
+            .unwrap_err();
+        assert_eq!(err.code, code);
+    }
+    assert_eq!(list_stories(&t.db).await.unwrap().len(), 2);
+    assert!(leftovers(t.dir.path()).is_empty());
+}
+
 /// A picture whose file is gone is left out of the pack, not a failure.
 #[tokio::test]
 async fn export_leaves_out_missing_image_files() {

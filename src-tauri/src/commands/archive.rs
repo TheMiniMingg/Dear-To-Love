@@ -65,6 +65,30 @@ pub async fn import_storypack(
     archive::import_storypack(state.db()?, dir, src).await
 }
 
+/// Copies a story under `title` (see `archive::duplicate_story`).
+#[tauri::command]
+pub async fn duplicate_story(
+    state: State<'_, AppState>,
+    story_id: String,
+    title: String,
+) -> AppResult<StorypackImport> {
+    let dir = state.data_dir.as_ref().map_err(|r| {
+        AppError::new(
+            crate::errors::ErrorCode::Io,
+            format!("app data folder unavailable: {r}"),
+        )
+    })?;
+    archive::duplicate_story(
+        state.db()?,
+        &state.assets()?,
+        &state.version,
+        dir,
+        &story_id,
+        &title,
+    )
+    .await
+}
+
 #[tauri::command]
 pub async fn export_route_text(
     state: State<'_, AppState>,

@@ -177,6 +177,23 @@ export function joinSentences(parts: string[]): string {
   return parts.join(current === 'zh-Hans' || current === 'zh-Hant' || current === 'ja' ? '' : ' ');
 }
 
+/** "just now", "3 hours ago", "yesterday"; after a week, the date. */
+export function formatAgo(iso: string, now = Date.now()): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return iso;
+  const ms = now - d.getTime();
+  const minutes = Math.floor(ms / 60_000);
+  if (minutes > 7 * 24 * 60 || minutes < -1) {
+    return d.toLocaleDateString(intlLocale(), { dateStyle: 'medium' });
+  }
+  if (ms < 60_000) return t('just now');
+  const rtf = new Intl.RelativeTimeFormat(intlLocale(), { numeric: 'auto' });
+  if (minutes < 60) return rtf.format(-Math.max(0, minutes), 'minute');
+  const hours = Math.round(minutes / 60);
+  if (hours < 24) return rtf.format(-hours, 'hour');
+  return rtf.format(-Math.round(hours / 24), 'day');
+}
+
 /** A date and time in the chosen language ("7 Nov 2026, 01:02"); `iso` when it is not a date. */
 export function formatWhen(iso: string): string {
   const d = new Date(iso);

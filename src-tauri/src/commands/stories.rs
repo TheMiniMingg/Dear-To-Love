@@ -73,6 +73,16 @@ pub async fn list_stories(state: State<'_, AppState>) -> AppResult<Vec<StorySumm
     stories::list_stories(state.db()?).await
 }
 
+/// Returns the title as kept (trimmed, one line).
+#[tauri::command]
+pub async fn rename_story(
+    state: State<'_, AppState>,
+    story_id: String,
+    title: String,
+) -> AppResult<String> {
+    stories::rename_story(state.db()?, &story_id, &title).await
+}
+
 #[tauri::command]
 pub async fn delete_story(state: State<'_, AppState>, story_id: String) -> AppResult<()> {
     stories::delete_story(state.db()?, &story_id).await
