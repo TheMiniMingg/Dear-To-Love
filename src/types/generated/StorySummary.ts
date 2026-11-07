@@ -8,4 +8,9 @@ lastRouteId: string,
 /**
  * The story's cover picture, when one is chosen.
  */
-coverAssetId: string | null, };
+coverAssetId: string | null, 
+/**
+ * A reply is being written on one of its routes right now (it keeps
+ * going while the player is in another story).
+ */
+writing: boolean, };

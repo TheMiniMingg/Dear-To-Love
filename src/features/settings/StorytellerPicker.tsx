@@ -63,7 +63,7 @@ export function StorytellerPicker({
       {option(
         { kind: 'offline' },
         t('Offline storyteller'),
-        t('Built in. Simple replies, works without internet, never costs anything.'),
+        t('Built in. Simple replies in English, works without internet, never costs anything.'),
       )}
       {writers.map((c) => option({ kind: 'connection', id: c.id }, c.label, connectionDetail(c)))}
       {missing && (

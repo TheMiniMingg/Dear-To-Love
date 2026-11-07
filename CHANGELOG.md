@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- **Play several stories at once.** A Stories button beside the story goes back to the library
+  in one click. A reply keeps writing when you leave and open another story; the library marks
+  the story with "Writing a reply…" until it is in. Each story still opens where you left it,
+  with your unsent text kept.
+- **Polish from a whole-app check.** Stories without a cover get a letter tile in the
+  library, so the list stays even. The labels beside the story (Picture view, Shortcuts) are
+  a little larger. Picture connections and the Setup guide now say they make item pictures
+  as well as portraits. The offline storyteller's description says it writes in English. The
+  "(required)" mark on fields is translated, and two of the guide's links point to the
+  services' new pages.
 - **Which model should I use?** The Setup guide has a folded-away section with suggestions
   for stories, pictures, low cost and privacy: OpenAI's GPT-6 models with GPT Image for
   stories and pictures on one key, Claude for long stories, cheap and quick picks, OpenRouter,

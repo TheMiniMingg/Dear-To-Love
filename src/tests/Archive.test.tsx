@@ -35,6 +35,7 @@ const story = (id: string, title: string): StorySummary => ({
   mainRouteId: `${id}-main`,
   lastRouteId: `${id}-main`,
   coverAssetId: null,
+  writing: false,
 });
 
 beforeEach(() => {

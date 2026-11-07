@@ -18,7 +18,7 @@ const SECTIONS = [
   { id: 'guide-choose', title: msg('Choose where replies come from') },
   { id: 'guide-connect', title: msg('Connect a service') },
   { id: 'guide-test', title: msg('Test it and start playing') },
-  { id: 'guide-pictures', title: msg('Character portraits (optional)') },
+  { id: 'guide-pictures', title: msg('Pictures (optional)') },
   { id: 'guide-costs', title: msg('Keep costs in check') },
   { id: 'guide-keys', title: msg('Your keys stay on this computer') },
   { id: 'guide-problems', title: msg('If something goes wrong') },
@@ -331,7 +331,7 @@ export function GuideScreen() {
       <Section id="guide-pictures">
         <p>
           {t(
-            "A picture connection draws a character's portrait from their description. Portraits are always asked for as safe-for-work pictures, and you can use your own pictures instead.",
+            'A picture connection draws portraits of characters and pictures of items from their descriptions. Pictures are always asked for as safe for work, and you can use your own pictures instead.',
           )}
         </p>
         {services(PICTURES)}

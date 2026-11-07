@@ -30,7 +30,7 @@ export const GROUP_LABELS: Record<PresetGroup, string> = {
   local: msg('On this computer (free and private)'),
   labs: msg('AI labs (API key, paid per use)'),
   hosted: msg('Open models, hosted (API key)'),
-  pictures: msg('Pictures (for character portraits)'),
+  pictures: msg('Pictures (portraits and items)'),
   other: msg('Anything else'),
 };
 
@@ -221,7 +221,7 @@ export const PRESETS: Preset[] = [
     model: 'gpt-image-2.6-flare',
     suggestions: ['gpt-image-2.6-flare', 'gpt-image-2.6-sunburst', 'gpt-image-2.5-flare'],
     note: msg(
-      "Makes character portraits. OpenAI charges for each picture; the app records every request but can't price pictures.",
+      "Makes portraits and item pictures. OpenAI charges for each picture; the app records every request but can't price pictures.",
     ),
   },
   {

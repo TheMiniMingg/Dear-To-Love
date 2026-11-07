@@ -71,7 +71,7 @@ export function TextField({
     <div className="field">
       <label htmlFor={id}>
         {label}
-        {required && <span className="muted small"> (required)</span>}
+        {required && <span className="muted small"> {t('(required)')}</span>}
       </label>
       <input
         id={id}

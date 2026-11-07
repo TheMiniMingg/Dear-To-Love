@@ -65,4 +65,7 @@ pub struct StorySummary {
     pub last_route_id: String,
     /// The story's cover picture, when one is chosen.
     pub cover_asset_id: Option<String>,
+    /// A reply is being written on one of its routes right now (it keeps
+    /// going while the player is in another story).
+    pub writing: bool,
 }

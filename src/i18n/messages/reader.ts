@@ -1293,4 +1293,11 @@ export const reader: Messages = {
   'Status and inventory': ['状态和物品栏', '狀態和物品欄', 'ステータスと持ち物', '상태와 인벤토리'],
   'Got {item}': ['获得{item}', '獲得{item}', '{item}を入手', '{item} 획득'],
   'Lost {item}': ['失去{item}', '失去{item}', '{item}を失った', '{item} 잃음'],
+  Stories: ['故事', '故事', '物語', '이야기'],
+  'Back to your stories. A reply being written here keeps going.': [
+    '返回你的故事列表。这里正在写的回复会继续写完。',
+    '返回你的故事列表。這裡正在寫的回覆會繼續寫完。',
+    '物語の一覧に戻ります。ここで執筆中の返信はそのまま続きます。',
+    '이야기 목록으로 돌아갑니다. 여기서 쓰던 답장은 계속 써집니다.',
+  ],
 };

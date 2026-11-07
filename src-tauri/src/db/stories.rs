@@ -138,7 +138,9 @@ pub async fn list_stories(db: &Database) -> AppResult<Vec<StorySummary>> {
                 (SELECT r.id FROM routes r WHERE r.story_id = s.id AND r.hidden = 0 \
                    ORDER BY r.updated_at DESC, r.id DESC LIMIT 1) AS last_route_id, \
                 (SELECT l.asset_id FROM asset_links l WHERE l.story_id = s.id \
-                   AND l.owner_type = 'story' AND l.variant = 'cover') AS cover_asset_id \
+                   AND l.owner_type = 'story' AND l.variant = 'cover') AS cover_asset_id, \
+                EXISTS (SELECT 1 FROM generation_runs g JOIN routes r ON r.id = g.route_id \
+                   WHERE r.story_id = s.id AND g.status = 'streaming') AS writing \
          FROM stories s \
          WHERE NOT EXISTS (SELECT 1 FROM archive_operations a \
                            WHERE a.story_id = s.id AND a.status = 'committed') \

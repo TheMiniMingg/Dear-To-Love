@@ -439,6 +439,10 @@ textarea:focus-visible,
   font-weight: 600;
   font-size: 1.1rem;
 }
+.story-writing {
+  color: var(--accent);
+  font-weight: 600;
+}
 .empty-state {
   margin-top: 2rem;
   padding: 1.5rem;
@@ -1297,6 +1301,18 @@ details.sub-options > summary {
   object-fit: cover;
   border-radius: 8px;
 }
+.story-letter {
+  width: 64px;
+  height: 64px;
+  flex: none;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  font-size: 1.6rem;
+  font-weight: 600;
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, var(--bg));
+}
 .images-layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(16rem, 22rem);
@@ -1562,7 +1578,7 @@ details.sub-options > summary {
   align-items: center;
   gap: 0.15rem;
   padding: 0.4rem 0.35rem;
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   color: var(--muted);
   min-width: 3.5rem;
 }

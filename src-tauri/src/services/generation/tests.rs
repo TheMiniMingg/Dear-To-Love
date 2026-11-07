@@ -341,6 +341,68 @@ async fn concurrent_sends_and_active_run_guard() {
     assert_eq!(e.code, ErrorCode::RunActive);
 }
 
+/// Whether the library shows this story as writing a reply.
+async fn is_writing(db: &Database, story_id: &str) -> bool {
+    list_stories(db)
+        .await
+        .unwrap()
+        .into_iter()
+        .find(|s| s.id == story_id)
+        .unwrap()
+        .writing
+}
+
+/// Several stories at once: a reply keeps writing in one story while
+/// another is played, and the library shows which one is writing.
+#[tokio::test]
+async fn another_story_plays_while_a_reply_is_being_written() {
+    let env = Env::new().await;
+    let server = serve(vec![
+        Reply::sse_text(&["one ", "two ", "three ", "four"], None)
+            .with_delay(Duration::from_millis(60)),
+        Reply::sse_text(&["Quick."], None),
+    ])
+    .await;
+    env.connect(&server, Billing::Paid).await;
+    let draft = TemplateCatalog::bundled()
+        .resolve_quick_start(&QuickStartInput {
+            world_id: "starter:greywatch".into(),
+            scenario_id: "starter:first-raid".into(),
+            character_id: "starter:hedge-mage".into(),
+            perspective: None,
+            detail: None,
+            story_type: None,
+            language: None,
+        })
+        .unwrap();
+    let other = create_story(env.db(), draft).await.unwrap();
+    assert!(!is_writing(env.db(), &env.story.story_id).await);
+
+    let slow = env.submit(env.route(), "Wait").await.unwrap();
+    let (first, _) = tokio::join!(env.gen(&slow.run_id), async {
+        short_pause().await;
+        assert!(is_writing(env.db(), &env.story.story_id).await);
+        assert!(!is_writing(env.db(), &other.story_id).await);
+        let sub = submit_action(
+            env.db(),
+            &other.story_id,
+            &other.main_route_id,
+            &other.head_event_id,
+            "Open the door",
+            None,
+        )
+        .await
+        .unwrap();
+        env.gen(&sub.run_id).await.0.unwrap();
+        assert_eq!(env.assistant_count(&other.main_route_id).await, 1);
+        // The first story is still writing.
+        assert!(is_writing(env.db(), &env.story.story_id).await);
+    });
+    first.0.unwrap();
+    assert_eq!(env.assistant_count(env.route()).await, 1);
+    assert!(!is_writing(env.db(), &env.story.story_id).await);
+}
+
 /// T12: cancel during streaming; no reply, one terminal state.
 #[tokio::test]
 async fn cancel_while_streaming() {
