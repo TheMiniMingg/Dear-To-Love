@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- **One continuing world.** The storyteller is now told outright that it plays everyone
+  except your character, from allies to villains, and that each acts from their own
+  personality and goals rather than a script. The world carries on across chapters, with
+  lasting consequences and returning characters. A chapter can cover one night or several
+  months, and the storyteller keeps track of secrets and who knows them.
 - **The app in Chinese, Japanese and Korean.** **Settings → Language → App language** shows
   every menu, button and message in Simplified Chinese (简体中文), Traditional Chinese
   (繁體中文), Japanese (日本語) or Korean (한국어), or follows the computer's language (the

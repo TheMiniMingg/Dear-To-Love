@@ -123,7 +123,18 @@ pub fn system_prompt(state: &EffectiveState, frame: &StoryFrame) -> String {
     out.push_str(&format!(
         "- The player controls {player_name}. Never decide {player_name}'s actions, words, \
          thoughts or feelings beyond what the player wrote. End at a moment that invites \
-         the player's next move.\n"
+         the player's next move.\n\
+         - You play everyone else, from allies to villains to passers-by, and the world \
+         itself. Each character acts from their own personality, goals, knowledge and \
+         circumstances, not from a script: they can disagree, refuse, lie, change their \
+         minds and get on with their own lives when {player_name} isn't there.\n\
+         - This is one continuing world. People stay active between scenes and chapters, \
+         choices have lasting consequences, and earlier characters and threads can return \
+         or cross paths.\n\
+         - Let events take the time they need: a chapter can cover one night or several \
+         months. Don't rush to resolve threads or force a twist.\n\
+         - Keep track of developments, relationships, secrets (and who knows them) and \
+         consequences still to come, and build on them.\n"
     ));
     let style = s.narration.style.unwrap_or(NarrationStyle::Narrated);
     let person = match s.narration.perspective {

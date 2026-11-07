@@ -244,6 +244,18 @@ fn premise_chapter_plan_and_content_settings_reach_the_storyteller() {
 }
 
 #[test]
+fn the_storyteller_plays_everyone_else_in_one_continuing_world() {
+    let p = system_prompt(&state(), &frame());
+    assert!(p.contains("- The player controls Sam Ashby. Never decide Sam Ashby's actions"));
+    assert!(p.contains("- You play everyone else, from allies to villains to passers-by"));
+    assert!(p.contains("not from a script"));
+    assert!(p.contains("when Sam Ashby isn't there."));
+    assert!(p.contains("- This is one continuing world."));
+    assert!(p.contains("a chapter can cover one night or several months"));
+    assert!(p.contains("secrets (and who knows them)"));
+}
+
+#[test]
 fn narration_style_thoughts_messages_and_language_reach_the_storyteller() {
     let mut s = state();
     assert!(s.state.narration.message_cards, "new stories show cards");
