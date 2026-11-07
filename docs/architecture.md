@@ -2,6 +2,8 @@
 
 ```text
 React screens -> src/api/commands.ts (typed invoke wrappers)
+  (text through src/i18n: English keys, catalogs for zh-Hans,
+   zh-Hant, ja and ko; see ADR 0021)
   -> Rust commands/      input validation, typed AppError
   -> Rust domain/draft   CreateStoryDraft: one validator for every way to
                          create a story (Quick Start, Guided, Custom)

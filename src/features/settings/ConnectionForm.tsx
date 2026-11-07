@@ -3,6 +3,7 @@ import { commands, errorMessage } from '../../api/commands';
 import type { AdapterKind, Billing, ProviderProfile, ProviderProfileInput } from '../../types';
 import { makesPictures } from './kinds';
 import { GROUP_LABELS, PRESETS, type Preset, type PresetGroup } from './presets';
+import { t, tr } from '../../i18n';
 
 const GROUPS = Object.keys(GROUP_LABELS) as PresetGroup[];
 
@@ -53,12 +54,12 @@ export function ConnectionForm({ existing, onSaved, onCancel }: Props) {
   };
 
   const submit = async () => {
-    const t = Number(temperature);
+    const temp = Number(temperature);
     const m = Number(maxTokens);
     const s = Number(timeoutS);
     const c = Number(contextTokens);
-    if (![t, m, s, c].every(Number.isFinite)) {
-      setError('Temperature, reply length, context limit and timeout must be numbers.');
+    if (![temp, m, s, c].every(Number.isFinite)) {
+      setError(t('Temperature, reply length, context limit and timeout must be numbers.'));
       return;
     }
     const input: ProviderProfileInput = {
@@ -70,7 +71,7 @@ export function ConnectionForm({ existing, onSaved, onCancel }: Props) {
       billing,
       ...(removeKey ? { apiKey: '' } : apiKey.trim() ? { apiKey: apiKey.trim() } : {}),
       settings: {
-        temperature: t,
+        temperature: temp,
         maxOutputTokens: Math.round(m),
         timeoutMs: Math.round(s * 1000),
         maxContextTokens: Math.round(c),
@@ -97,63 +98,69 @@ export function ConnectionForm({ existing, onSaved, onCancel }: Props) {
     >
       {!existing && (
         <div className="field">
-          <label htmlFor={`${id}-preset`}>Service</label>
+          <label htmlFor={`${id}-preset`}>{t('Service')}</label>
           <select
             id={`${id}-preset`}
             defaultValue="custom"
             onChange={(e) => applyPreset(e.target.value)}
           >
             {GROUPS.map((g) => (
-              <optgroup key={g} label={GROUP_LABELS[g]}>
+              <optgroup key={g} label={t(GROUP_LABELS[g])}>
                 {PRESETS.filter((p) => p.group === g).map((p) => (
                   <option key={p.id} value={p.id}>
-                    {p.label}
+                    {t(p.label)}
                   </option>
                 ))}
               </optgroup>
             ))}
           </select>
           <p className="muted small">
-            {preset?.note ??
-              'Big AI labs, hosted open models and models on your own computer all work. Anything with an OpenAI-compatible API works through Other.'}
+            {preset?.note
+              ? t(preset.note)
+              : t(
+                  'Big AI labs, hosted open models and models on your own computer all work. Anything with an OpenAI-compatible API works through Other.',
+                )}
           </p>
         </div>
       )}
       <div className="field">
-        <label htmlFor={`${id}-adapter`}>Type</label>
+        <label htmlFor={`${id}-adapter`}>{t('Type')}</label>
         <select
           id={`${id}-adapter`}
           value={adapter}
           onChange={(e) => setAdapter(e.target.value as AdapterKind)}
         >
-          <option value="openai_compatible">OpenAI-compatible API</option>
-          <option value="anthropic">Anthropic (Claude) API</option>
+          <option value="openai_compatible">{t('OpenAI-compatible API')}</option>
+          <option value="anthropic">{t('Anthropic (Claude) API')}</option>
           <option value="ollama">Ollama</option>
-          <option value="openai_images">Images API, OpenAI-style (pictures)</option>
-          <option value="stable_diffusion">Stable Diffusion WebUI (pictures)</option>
+          <option value="openai_images">{t('Images API, OpenAI-style (pictures)')}</option>
+          <option value="stable_diffusion">{t('Stable Diffusion WebUI (pictures)')}</option>
         </select>
         {pictures && (
           <p className="muted small">
-            Makes character portraits from their descriptions. It never writes story replies; choose
-            it under Pictures in Settings.
+            {t(
+              'Makes character portraits from their descriptions. It never writes story replies; choose it under Pictures in Settings.',
+            )}
           </p>
         )}
         {adapter === 'anthropic' && (
           <p className="muted small">
-            Uses Anthropic&apos;s own Messages API. Claude picks its own temperature, so that
-            setting is not sent. Some Claude models think before they write, so leave room in the
-            reply length.
+            {t(
+              "Uses Anthropic's own Messages API. Claude picks its own temperature, so that setting is not sent. Some Claude models think before they write, so leave room in the reply length.",
+            )}
           </p>
         )}
         {adapter === 'ollama' && (
           <p className="muted small">
-            Uses Ollama&apos;s own API so each request asks for the context limit below. Install a
-            model first, for example with <code>ollama pull llama3.2</code>.
+            {tr(
+              "Uses Ollama's own API so each request asks for the context limit below. Install a model first, for example with {command}.",
+              { command: <code>ollama pull llama3.2</code> },
+            )}
           </p>
         )}
       </div>
       <div className="field">
-        <label htmlFor={`${id}-label`}>Name</label>
+        <label htmlFor={`${id}-label`}>{t('Name')}</label>
         <input
           id={`${id}-label`}
           value={label}
@@ -163,7 +170,7 @@ export function ConnectionForm({ existing, onSaved, onCancel }: Props) {
         />
       </div>
       <div className="field">
-        <label htmlFor={`${id}-url`}>Address</label>
+        <label htmlFor={`${id}-url`}>{t('Address')}</label>
         <input
           id={`${id}-url`}
           value={baseUrl}
@@ -183,25 +190,29 @@ export function ConnectionForm({ existing, onSaved, onCancel }: Props) {
         />
       </div>
       <div className="field">
-        <label htmlFor={`${id}-model`}>Model</label>
+        <label htmlFor={`${id}-model`}>{t('Model')}</label>
         <input
           id={`${id}-model`}
           value={modelId}
           onChange={(e) => setModelId(e.target.value)}
           placeholder={
-            preset?.model ? `For example ${preset.model}` : 'Model name, as the service spells it'
+            preset?.model
+              ? t('For example {model}', { model: preset.model })
+              : t('Model name, as the service spells it')
           }
           spellCheck={false}
           required
           aria-describedby={`${id}-model-hint`}
         />
         <p id={`${id}-model-hint`} className="muted small">
-          After saving, <strong>Test connection</strong> checks the name against the service&apos;s
-          list of models, for free.
+          {tr(
+            "After saving, {test} checks the name against the service's list of models, for free.",
+            { test: <strong>{t('Test connection')}</strong> },
+          )}
         </p>
       </div>
       <div className="field">
-        <label htmlFor={`${id}-key`}>API key</label>
+        <label htmlFor={`${id}-key`}>{t('API key')}</label>
         <input
           id={`${id}-key`}
           type="password"
@@ -209,10 +220,10 @@ export function ConnectionForm({ existing, onSaved, onCancel }: Props) {
           onChange={(e) => setApiKey(e.target.value)}
           placeholder={
             existing?.hasKey
-              ? 'Saved. Leave empty to keep it.'
+              ? t('Saved. Leave empty to keep it.')
               : preset && !preset.needsKey
-                ? 'Not needed for local servers'
-                : 'Paste your API key (not needed for local servers)'
+                ? t('Not needed for local servers')
+                : t('Paste your API key (not needed for local servers)')
           }
           autoComplete="off"
           spellCheck={false}
@@ -225,15 +236,15 @@ export function ConnectionForm({ existing, onSaved, onCancel }: Props) {
               checked={removeKey}
               onChange={(e) => setRemoveKey(e.target.checked)}
             />
-            Remove the saved key
+            {t('Remove the saved key')}
           </label>
         )}
         <p className="muted small">
-          Stored in your system&apos;s credential store, never in the story database or exports.
+          {t("Stored in your system's credential store, never in the story database or exports.")}
         </p>
       </div>
       <fieldset className="field">
-        <legend>Charges</legend>
+        <legend>{t('Charges')}</legend>
         <label className="check">
           <input
             type="radio"
@@ -242,8 +253,8 @@ export function ConnectionForm({ existing, onSaved, onCancel }: Props) {
             onChange={() => setBilling('paid')}
           />
           {pictures
-            ? "Paid API (each picture is recorded; the app can't price pictures)"
-            : 'Paid API (usage is estimated from your rates)'}
+            ? t("Paid API (each picture is recorded; the app can't price pictures)")
+            : t('Paid API (usage is estimated from your rates)')}
         </label>
         <label className="check">
           <input
@@ -252,16 +263,16 @@ export function ConnectionForm({ existing, onSaved, onCancel }: Props) {
             checked={billing === 'local'}
             onChange={() => setBilling('local')}
           />
-          Local model (no API charges)
+          {t('Local model (no API charges)')}
         </label>
       </fieldset>
       <details>
-        <summary>Advanced</summary>
+        <summary>{t('Advanced')}</summary>
         <div className="field-row">
           {!pictures && (
             <>
               <div className="field">
-                <label htmlFor={`${id}-temp`}>Temperature</label>
+                <label htmlFor={`${id}-temp`}>{t('Temperature')}</label>
                 <input
                   id={`${id}-temp`}
                   type="number"
@@ -273,7 +284,7 @@ export function ConnectionForm({ existing, onSaved, onCancel }: Props) {
                 />
               </div>
               <div className="field">
-                <label htmlFor={`${id}-max`}>Longest reply (tokens)</label>
+                <label htmlFor={`${id}-max`}>{t('Longest reply (tokens)')}</label>
                 <input
                   id={`${id}-max`}
                   type="number"
@@ -284,7 +295,7 @@ export function ConnectionForm({ existing, onSaved, onCancel }: Props) {
                 />
               </div>
               <div className="field">
-                <label htmlFor={`${id}-context`}>Context limit (tokens)</label>
+                <label htmlFor={`${id}-context`}>{t('Context limit (tokens)')}</label>
                 <input
                   id={`${id}-context`}
                   type="number"
@@ -298,7 +309,7 @@ export function ConnectionForm({ existing, onSaved, onCancel }: Props) {
             </>
           )}
           <div className="field">
-            <label htmlFor={`${id}-timeout`}>Give up after (seconds of silence)</label>
+            <label htmlFor={`${id}-timeout`}>{t('Give up after (seconds of silence)')}</label>
             <input
               id={`${id}-timeout`}
               type="number"
@@ -311,9 +322,9 @@ export function ConnectionForm({ existing, onSaved, onCancel }: Props) {
         </div>
         {!pictures && (
           <p id={`${id}-context-hint`} className="muted small">
-            The context limit covers the prompt and the reply. Use the model&apos;s context length,
-            or the length your local server loads it with. Older story turns are summarized to fit;
-            a lower limit also keeps paid requests cheaper.
+            {t(
+              "The context limit covers the prompt and the reply. Use the model's context length, or the length your local server loads it with. Older story turns are summarized to fit; a lower limit also keeps paid requests cheaper.",
+            )}
           </p>
         )}
       </details>
@@ -324,10 +335,10 @@ export function ConnectionForm({ existing, onSaved, onCancel }: Props) {
       )}
       <div className="button-row">
         <button type="button" onClick={onCancel}>
-          Cancel
+          {t('Cancel')}
         </button>
         <button type="submit" className="primary" disabled={busy}>
-          {existing ? 'Save changes' : 'Save connection'}
+          {existing ? t('Save changes') : t('Save connection')}
         </button>
       </div>
     </form>

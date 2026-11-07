@@ -11,15 +11,19 @@ import { SettingsScreen } from '../features/settings/SettingsScreen';
 import { UsageScreen } from '../features/usage/UsageScreen';
 import { StatusFooter } from '../components/StatusFooter';
 import { useUiStore } from './store';
+import { useLanguage } from '../i18n';
 
 export function App() {
   const screen = useUiStore((s) => s.screen);
+  // Every screen reads the language as it renders, so a new choice redraws
+  // the app from here (screens keep their place in the store).
+  const language = useLanguage((s) => s.locale);
   // Tells the app the interface loaded (used by the installer smoke test).
   useEffect(() => {
     void commands.frontendReady().catch(() => undefined);
   }, []);
   return (
-    <div className="app-shell">
+    <div className="app-shell" key={language}>
       <main className="app-main">
         {screen.name === 'library' && <LibraryScreen />}
         {screen.name === 'quickstart' && <QuickStartScreen />}

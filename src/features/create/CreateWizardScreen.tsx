@@ -23,17 +23,19 @@ import {
   WorldStep,
 } from './WizardSteps';
 import { PicturesStep } from './PicturesStep';
+import { appStoryLanguage } from './StyleFields';
+import { intlLocale, msg, t, tKnown } from '../../i18n';
 
 const STEPS: DraftStep[] = ['world', 'character', 'story', 'narration', 'pictures', 'review'];
 const SAVE_DELAY_MS = 400;
 
 const STEP_TITLES: Record<DraftStep, string> = {
-  world: 'Where does it take place?',
-  character: 'Who do you play?',
-  story: 'How does it begin?',
-  narration: 'How is it told?',
-  pictures: 'Pictures and storyteller',
-  review: 'Ready to begin?',
+  world: msg('Where does it take place?'),
+  character: msg('Who do you play?'),
+  story: msg('How does it begin?'),
+  narration: msg('How is it told?'),
+  pictures: msg('Pictures and storyteller'),
+  review: msg('Ready to begin?'),
 };
 
 type Tellers = { connections: ProviderProfile[]; app: StorytellerInfo } | null;
@@ -41,14 +43,16 @@ type Tellers = { connections: ProviderProfile[]; app: StorytellerInfo } | null;
 /** Who will write the new story's replies, in words. */
 function storytellerLabel(draft: CreateStoryDraft, tellers: Tellers): string | undefined {
   const c = draft.storyteller;
-  if (!c) return tellers ? `Same as the app (${tellers.app.label})` : undefined;
-  if (c.kind === 'offline') return 'Offline storyteller';
-  return tellers?.connections.find((x) => x.id === c.id)?.label ?? 'A removed connection';
+  if (!c) {
+    return tellers ? t('Same as the app ({name})', { name: tKnown(tellers.app.label) }) : undefined;
+  }
+  if (c.kind === 'offline') return t('Offline storyteller');
+  return tellers?.connections.find((x) => x.id === c.id)?.label ?? t('A removed connection');
 }
 
 function savedLabel(iso: string): string {
   const d = new Date(iso);
-  return Number.isNaN(d.getTime()) ? '' : d.toLocaleString();
+  return Number.isNaN(d.getTime()) ? '' : d.toLocaleString(intlLocale());
 }
 
 async function freshDraft(catalog: TemplateCatalog): Promise<CreateStoryDraft> {
@@ -57,6 +61,7 @@ async function freshDraft(catalog: TemplateCatalog): Promise<CreateStoryDraft> {
     worldId,
     scenarioId: fittingScenarios(catalog, worldId)[0]?.id ?? '',
     characterId: catalog.characters[0]?.id ?? '',
+    language: appStoryLanguage(),
   });
 }
 
@@ -258,10 +263,10 @@ export function CreateWizardScreen() {
     <section className="screen wizard" aria-labelledby={`${id}-title`}>
       <div className="screen-header">
         <button type="button" onClick={() => navigate({ name: 'library' })}>
-          Back
+          {t('Back')}
         </button>
-        <h1 id={`${id}-title`}>Create a story</h1>
-        <div role="radiogroup" aria-label="How to fill it in" className="segmented">
+        <h1 id={`${id}-title`}>{t('Create a story')}</h1>
+        <div role="radiogroup" aria-label={t('How to fill it in')} className="segmented">
           {(['guided', 'custom'] as WizardMode[]).map((m) => (
             <label key={m}>
               <input
@@ -270,33 +275,36 @@ export function CreateWizardScreen() {
                 checked={mode === m}
                 onChange={() => changeMode(m)}
               />
-              <span>{m === 'guided' ? 'Guided' : 'Custom'}</span>
+              <span>{m === 'guided' ? t('Guided') : t('Custom')}</span>
             </label>
           ))}
         </div>
       </div>
       <p className="muted small">
         {guided
-          ? 'Choose everything with arrows, menus and checkboxes. Nothing to type.'
-          : 'Write everything yourself; no presets needed. To build on a preset instead, pick it in Guided first and it carries over.'}{' '}
+          ? t('Choose everything with arrows, menus and checkboxes. Nothing to type.')
+          : t(
+              'Write everything yourself; no presets needed. To build on a preset instead, pick it in Guided first and it carries over.',
+            )}{' '}
         {!guided && draft && (
           <button type="button" className="link-button" onClick={() => setConfirmClear(true)}>
-            Clear all fields
+            {t('Clear all fields')}
           </button>
         )}{' '}
         <span role="status">
-          {saveState === 'saving' && 'Saving draft…'}
-          {saveState === 'saved' && 'Draft saved.'}
-          {saveState === 'failed' && "Couldn't save the draft."}
+          {saveState === 'saving' && t('Saving draft…')}
+          {saveState === 'saved' && t('Draft saved.')}
+          {saveState === 'failed' && t("Couldn't save the draft.")}
         </span>
       </p>
 
       {restoredAt !== null && (
         <div className="notice" role="note">
-          Picked up your unfinished story
-          {savedLabel(restoredAt) ? ` from ${savedLabel(restoredAt)}` : ''}.{' '}
+          {savedLabel(restoredAt)
+            ? t('Picked up your unfinished story from {when}.', { when: savedLabel(restoredAt) })
+            : t('Picked up your unfinished story.')}{' '}
           <button type="button" className="link-button" onClick={() => setConfirmReset(true)}>
-            Start over
+            {t('Start over')}
           </button>
         </div>
       )}
@@ -308,7 +316,7 @@ export function CreateWizardScreen() {
 
       {props && (
         <>
-          <nav aria-label="Steps">
+          <nav aria-label={t('Steps')}>
             <ol className="wizard-steps">
               {STEPS.map((s, i) => (
                 <li key={s}>
@@ -317,7 +325,7 @@ export function CreateWizardScreen() {
                     aria-current={s === step ? 'step' : undefined}
                     onClick={() => goTo(s)}
                   >
-                    {i + 1}. {STEP_NAMES[s]}
+                    {i + 1}. {t(STEP_NAMES[s])}
                   </button>
                 </li>
               ))}
@@ -326,7 +334,7 @@ export function CreateWizardScreen() {
 
           <div className="wizard-body">
             <h2 ref={heading} tabIndex={-1}>
-              {STEP_TITLES[step]}
+              {t(STEP_TITLES[step])}
             </h2>
             {step === 'world' && <WorldStep {...props} />}
             {step === 'character' && <CharacterStep {...props} />}
@@ -349,7 +357,7 @@ export function CreateWizardScreen() {
               disabled={index === 0}
               onClick={() => goTo(STEPS[index - 1] ?? 'world')}
             >
-              Previous
+              {t('Previous')}
             </button>
             {step !== 'review' ? (
               <button
@@ -357,7 +365,7 @@ export function CreateWizardScreen() {
                 className="primary"
                 onClick={() => goTo(STEPS[index + 1] ?? 'review')}
               >
-                Next
+                {t('Next')}
               </button>
             ) : (
               <button
@@ -366,39 +374,40 @@ export function CreateWizardScreen() {
                 disabled={busy || problems === null || problems.length > 0}
                 onClick={() => void create()}
               >
-                {busy ? 'Creating…' : 'Create story'}
+                {busy ? t('Creating…') : t('Create story')}
               </button>
             )}
           </div>
         </>
       )}
-      {!props && !error && <p className="muted">Loading…</p>}
+      {!props && !error && <p className="muted">{t('Loading…')}</p>}
 
       {confirmClear && (
-        <Dialog title="Clear all fields?" onClose={() => setConfirmClear(false)}>
+        <Dialog title={t('Clear all fields?')} onClose={() => setConfirmClear(false)}>
           <p>
-            Every field in this story is emptied, and narration goes back to the defaults, so you
-            can write it all yourself.
+            {t(
+              'Every field in this story is emptied, and narration goes back to the defaults, so you can write it all yourself.',
+            )}
           </p>
           <div className="button-row">
             <button type="button" onClick={() => setConfirmClear(false)}>
-              Keep them
+              {t('Keep them')}
             </button>
             <button type="button" className="danger" onClick={clearAll}>
-              Clear all fields
+              {t('Clear all fields')}
             </button>
           </div>
         </Dialog>
       )}
       {confirmReset && (
-        <Dialog title="Start over?" onClose={() => setConfirmReset(false)}>
-          <p>Your unfinished story will be discarded.</p>
+        <Dialog title={t('Start over?')} onClose={() => setConfirmReset(false)}>
+          <p>{t('Your unfinished story will be discarded.')}</p>
           <div className="button-row">
             <button type="button" onClick={() => setConfirmReset(false)}>
-              Keep it
+              {t('Keep it')}
             </button>
             <button type="button" className="danger" onClick={() => void startOver()}>
-              Discard and start over
+              {t('Discard and start over')}
             </button>
           </div>
         </Dialog>

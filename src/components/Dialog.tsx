@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, type ReactNode, type KeyboardEvent } from 'react';
+import { t } from '../i18n';
 
 type Props = {
   title: string;
@@ -67,7 +68,7 @@ export function Dialog({ title, onClose, children, initialFocusId, wide = false 
       >
         <div className="dialog-header">
           <h2 id={titleId}>{title}</h2>
-          <button type="button" className="icon-button" aria-label="Close" onClick={onClose}>
+          <button type="button" className="icon-button" aria-label={t('Close')} onClick={onClose}>
             ×
           </button>
         </div>

@@ -11,6 +11,7 @@ fn starter() -> CreateStoryDraft {
             perspective: Some(Perspective::First),
             detail: None,
             story_type: None,
+            language: None,
         })
         .unwrap()
 }

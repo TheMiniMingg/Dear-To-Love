@@ -1,4 +1,5 @@
 import type { RouteView, StateEdit } from '../../types';
+import { t } from '../../i18n';
 
 export const COVER = 'cover';
 export const BACKGROUND = 'background';
@@ -24,8 +25,9 @@ export function picturesOnly(changes: StateEdit[]): boolean {
 
 /** Readable slot name: "Background", "Cover", "Portrait of Mara Quill". */
 export function slotName(view: RouteView, slot: string): string {
-  if (slot === COVER) return 'Cover';
-  if (slot === BACKGROUND) return 'Background';
+  if (slot === COVER) return t('Cover');
+  if (slot === BACKGROUND) return t('Background');
   const id = slot.startsWith('portrait:') ? slot.slice('portrait:'.length) : slot;
-  return `Portrait of ${view.state.state.characters?.[id]?.name ?? 'a character'}`;
+  const name = view.state.state.characters?.[id]?.name;
+  return name ? t('Portrait of {name}', { name }) : t('Portrait of a character');
 }

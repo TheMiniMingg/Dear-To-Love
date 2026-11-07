@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import {
-  KIND_LABELS,
   describeBackup,
   describePlan,
   formatWhen,
+  kindLabel,
   pickBackupFile,
   pickBackupTarget,
 } from '../../api/backups';
@@ -12,6 +12,7 @@ import { formatBytes } from '../../api/images';
 import { useUiStore } from '../../app/store';
 import { Dialog } from '../../components/Dialog';
 import type { BackupInfo, RestorePlan, RestoreSource } from '../../types';
+import { t, tn, tr } from '../../i18n';
 
 /** Settings -> Backups: back up everything, kept copies, and restore. */
 export function BackupsScreen() {
@@ -57,13 +58,13 @@ export function BackupsScreen() {
       return null;
     });
     if (!path) return;
-    await run('Saving the backup…', async () => {
+    await run(t('Saving the backup…'), async () => {
       setStatus(describeBackup(await commands.exportBackup(path)));
     });
   };
 
   const prepare = (source: RestoreSource) =>
-    run('Checking the backup…', async () => {
+    run(t('Checking the backup…'), async () => {
       setPlan(await commands.prepareRestore(source));
     });
 
@@ -82,7 +83,7 @@ export function BackupsScreen() {
   };
 
   const confirm = (p: RestorePlan) =>
-    run('Restarting to finish the restore…', async () => {
+    run(t('Restarting to finish the restore…'), async () => {
       await commands.confirmRestore(p.token);
       setPlan(null);
       await commands.restartApp();
@@ -92,9 +93,9 @@ export function BackupsScreen() {
     <section className="screen" aria-labelledby="backups-title">
       <div className="screen-header">
         <button type="button" onClick={goBack}>
-          Back
+          {t('Back')}
         </button>
-        <h1 id="backups-title">Backups</h1>
+        <h1 id="backups-title">{t('Backups')}</h1>
       </div>
       <div aria-live="polite">
         {busy && <p className="muted">{busy}</p>}
@@ -107,34 +108,38 @@ export function BackupsScreen() {
       )}
 
       <section className="settings-section" aria-labelledby="backup-all-title">
-        <h2 id="backup-all-title">Back up everything</h2>
+        <h2 id="backup-all-title">{t('Back up everything')}</h2>
         <p className="muted">
-          One file with all your stories, pictures, settings, AI connections and usage records. API
-          keys stay in your system&apos;s credential store and are never included. Keep the file
-          somewhere else, like a USB drive or a cloud folder.
+          {t(
+            "One file with all your stories, pictures, settings, AI connections and usage records. API keys stay in your system's credential store and are never included. Keep the file somewhere else, like a USB drive or a cloud folder.",
+          )}
         </p>
         <div className="button-row">
           <button type="button" className="primary" disabled={!!busy} onClick={() => void backUp()}>
-            Back up everything…
+            {t('Back up everything…')}
           </button>
         </div>
       </section>
 
       <section className="settings-section" aria-labelledby="kept-title">
-        <h2 id="kept-title">Kept on this computer</h2>
+        <h2 id="kept-title">{t('Kept on this computer')}</h2>
         <p className="muted">
-          Once a day when you play, a copy of your stories is kept automatically (the newest five).
-          Pictures stay in your image library and aren&apos;t copied again.
+          {t(
+            "Once a day when you play, a copy of your stories is kept automatically (the newest five). Pictures stay in your image library and aren't copied again.",
+          )}
         </p>
-        {backups && backups.length === 0 && <p>No backups yet.</p>}
+        {backups && backups.length === 0 && <p>{t('No backups yet.')}</p>}
         {backups && backups.length > 0 && (
           <ul className="connection-list" aria-labelledby="kept-title">
             {backups.map((b) => {
-              const what = `${KIND_LABELS[b.kind]} backup from ${formatWhen(b.createdAt)}`;
+              const what = t('{kind} backup from {when}', {
+                kind: kindLabel(b.kind),
+                when: formatWhen(b.createdAt),
+              });
               return (
                 <li key={b.id} className="connection-card backup-row">
                   <span>
-                    <strong>{KIND_LABELS[b.kind]}</strong>
+                    <strong>{kindLabel(b.kind)}</strong>
                     <span className="muted">
                       {' '}
                       · {formatWhen(b.createdAt)} · {formatBytes(b.bytes)}
@@ -143,10 +148,10 @@ export function BackupsScreen() {
                   <button
                     type="button"
                     disabled={!!busy}
-                    aria-label={`Restore ${what}`}
+                    aria-label={t('Restore {what}', { what })}
                     onClick={() => void prepare({ from: 'kept', id: b.id })}
                   >
-                    Restore…
+                    {t('Restore…')}
                   </button>
                 </li>
               );
@@ -156,40 +161,56 @@ export function BackupsScreen() {
       </section>
 
       <section className="settings-section" aria-labelledby="restore-file-title">
-        <h2 id="restore-file-title">Restore from a file</h2>
-        <p className="muted">A backup made with Back up everything, on this or another computer.</p>
+        <h2 id="restore-file-title">{t('Restore from a file')}</h2>
+        <p className="muted">
+          {t('A backup made with Back up everything, on this or another computer.')}
+        </p>
         <div className="button-row">
           <button type="button" disabled={!!busy} onClick={() => void restoreFile()}>
-            Restore from file…
+            {t('Restore from file…')}
           </button>
         </div>
       </section>
 
       {plan && (
-        <Dialog title="Restore this backup?" onClose={cancel}>
+        <Dialog title={t('Restore this backup?')} onClose={cancel}>
           <p>
-            <strong>{plan.source}</strong>, made {formatWhen(plan.createdAt)}
-            {plan.appVersion ? ` by Dear to Love ${plan.appVersion}` : ''}: {describePlan(plan)}
+            {plan.appVersion
+              ? tr('{source}, made {when} by Dear to Love {version}: {what}', {
+                  source: <strong>{plan.source}</strong>,
+                  when: formatWhen(plan.createdAt),
+                  version: plan.appVersion,
+                  what: describePlan(plan),
+                })
+              : tr('{source}, made {when}: {what}', {
+                  source: <strong>{plan.source}</strong>,
+                  when: formatWhen(plan.createdAt),
+                  what: describePlan(plan),
+                })}
           </p>
-          {plan.upgraded && <p>It comes from an earlier version and has been upgraded to open.</p>}
+          {plan.upgraded && (
+            <p>{t('It comes from an earlier version and has been upgraded to open.')}</p>
+          )}
           {plan.missingImages > 0 && (
             <p className="notice">
-              {plan.missingImages === 1
-                ? "1 picture isn't in the backup or your library and will show as missing."
-                : `${plan.missingImages} pictures aren't in the backup or your library and will show as missing.`}
+              {tn(
+                plan.missingImages,
+                "{n} picture isn't in the backup or your library and will show as missing.",
+                "{n} pictures aren't in the backup or your library and will show as missing.",
+              )}
             </p>
           )}
           <p>
-            This replaces all your stories, pictures, settings and connections on this computer.
-            Your current data is saved first, as &quot;Before a restore&quot; on this screen, so you
-            can go back. The app restarts to finish.
+            {t(
+              'This replaces all your stories, pictures, settings and connections on this computer. Your current data is saved first, as "Before a restore" on this screen, so you can go back. The app restarts to finish.',
+            )}
           </p>
           <p className="muted small">
-            API keys aren&apos;t in backups. On another computer, enter them again in Settings.
+            {t("API keys aren't in backups. On another computer, enter them again in Settings.")}
           </p>
           <div className="button-row">
             <button type="button" onClick={cancel}>
-              Keep my current data
+              {t('Keep my current data')}
             </button>
             <button
               type="button"
@@ -197,7 +218,7 @@ export function BackupsScreen() {
               disabled={!!busy}
               onClick={() => void confirm(plan)}
             >
-              Restore and restart
+              {t('Restore and restart')}
             </button>
           </div>
         </Dialog>

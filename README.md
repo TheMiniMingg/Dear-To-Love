@@ -46,6 +46,9 @@ offline storyteller lets you try everything without either.
   on another computer. Automatic daily backups, and a full backup file you can restore anywhere.
 - **Know the cost**: every AI request is logged with its token count and estimated price, with
   an optional monthly budget that warns or pauses paid replies.
+- **In your language**: the app itself is in English, Simplified Chinese, Traditional Chinese,
+  Japanese and Korean (Settings → Language), and new stories are written in the app's language
+  unless you pick another.
 
 ## Examples
 

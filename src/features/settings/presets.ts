@@ -1,3 +1,4 @@
+import { msg } from '../../i18n';
 import type { AdapterKind, Billing } from '../../types';
 
 export type PresetGroup = 'local' | 'labs' | 'hosted' | 'pictures' | 'other';
@@ -21,11 +22,11 @@ export type Preset = {
 };
 
 export const GROUP_LABELS: Record<PresetGroup, string> = {
-  local: 'On this computer (free and private)',
-  labs: 'AI labs (API key, paid per use)',
-  hosted: 'Open models, hosted (API key)',
-  pictures: 'Pictures (for character portraits)',
-  other: 'Anything else',
+  local: msg('On this computer (free and private)'),
+  labs: msg('AI labs (API key, paid per use)'),
+  hosted: msg('Open models, hosted (API key)'),
+  pictures: msg('Pictures (for character portraits)'),
+  other: msg('Anything else'),
 };
 
 const LOCAL = { group: 'local', billing: 'local', needsKey: false } as const;
@@ -51,7 +52,7 @@ export const PRESETS: Preset[] = [
     adapter: COMPATIBLE,
     baseUrl: 'http://localhost:1234/v1',
     contextTokens: 4096,
-    note: "Load a model and start the server in LM Studio's Developer tab.",
+    note: msg("Load a model and start the server in LM Studio's Developer tab."),
   },
   {
     ...LOCAL,
@@ -60,7 +61,7 @@ export const PRESETS: Preset[] = [
     adapter: COMPATIBLE,
     baseUrl: 'http://localhost:8080/v1',
     contextTokens: 4096,
-    note: 'Start it with llama-server -m your-model.gguf. Any model name works.',
+    note: msg('Start it with llama-server -m your-model.gguf. Any model name works.'),
   },
   {
     ...LOCAL,
@@ -69,7 +70,7 @@ export const PRESETS: Preset[] = [
     adapter: COMPATIBLE,
     baseUrl: 'http://localhost:5001/v1',
     contextTokens: 4096,
-    note: 'Start KoboldCpp with a model loaded. Any model name works.',
+    note: msg('Start KoboldCpp with a model loaded. Any model name works.'),
   },
   {
     ...LOCAL,
@@ -78,7 +79,7 @@ export const PRESETS: Preset[] = [
     adapter: COMPATIBLE,
     baseUrl: 'http://localhost:1337/v1',
     contextTokens: 4096,
-    note: "Turn on Jan's Local API Server first.",
+    note: msg("Turn on Jan's Local API Server first."),
   },
   {
     ...LOCAL,
@@ -87,7 +88,7 @@ export const PRESETS: Preset[] = [
     adapter: COMPATIBLE,
     baseUrl: 'http://localhost:5000/v1',
     contextTokens: 4096,
-    note: 'Start it with the --api flag and load a model.',
+    note: msg('Start it with the --api flag and load a model.'),
   },
   {
     ...LOCAL,
@@ -96,7 +97,7 @@ export const PRESETS: Preset[] = [
     adapter: COMPATIBLE,
     baseUrl: 'http://localhost:8000/v1',
     contextTokens: 8192,
-    note: 'Use the model name you served, as vllm serve was given it.',
+    note: msg('Use the model name you served, as vllm serve was given it.'),
   },
   {
     ...LAB,
@@ -105,7 +106,7 @@ export const PRESETS: Preset[] = [
     adapter: COMPATIBLE,
     baseUrl: 'https://api.openai.com/v1',
     contextTokens: 128_000,
-    note: 'Create a key at platform.openai.com.',
+    note: msg('Create a key at platform.openai.com.'),
   },
   {
     ...LAB,
@@ -115,7 +116,7 @@ export const PRESETS: Preset[] = [
     baseUrl: 'https://api.anthropic.com/v1',
     contextTokens: 128_000,
     model: 'claude-opus-5-5',
-    note: 'Create a key at platform.claude.com. Uses Anthropic’s own API.',
+    note: msg('Create a key at platform.claude.com. Uses Anthropic’s own API.'),
   },
   {
     ...LAB,
@@ -124,7 +125,7 @@ export const PRESETS: Preset[] = [
     adapter: COMPATIBLE,
     baseUrl: 'https://generativelanguage.googleapis.com/v1beta/openai',
     contextTokens: 128_000,
-    note: 'Create a key in Google AI Studio (aistudio.google.com).',
+    note: msg('Create a key in Google AI Studio (aistudio.google.com).'),
   },
   {
     ...LAB,
@@ -133,7 +134,7 @@ export const PRESETS: Preset[] = [
     adapter: COMPATIBLE,
     baseUrl: 'https://api.x.ai/v1',
     contextTokens: 128_000,
-    note: 'Create a key at console.x.ai.',
+    note: msg('Create a key at console.x.ai.'),
   },
   {
     ...LAB,
@@ -142,7 +143,7 @@ export const PRESETS: Preset[] = [
     adapter: COMPATIBLE,
     baseUrl: 'https://api.mistral.ai/v1',
     contextTokens: 32_000,
-    note: 'Create a key at console.mistral.ai.',
+    note: msg('Create a key at console.mistral.ai.'),
   },
   {
     ...LAB,
@@ -151,7 +152,7 @@ export const PRESETS: Preset[] = [
     adapter: COMPATIBLE,
     baseUrl: 'https://api.deepseek.com/v1',
     contextTokens: 64_000,
-    note: 'Create a key at platform.deepseek.com.',
+    note: msg('Create a key at platform.deepseek.com.'),
   },
   {
     ...HOSTED,
@@ -159,7 +160,7 @@ export const PRESETS: Preset[] = [
     label: 'OpenRouter',
     adapter: COMPATIBLE,
     baseUrl: 'https://openrouter.ai/api/v1',
-    note: 'One key reaches hundreds of models, open and closed, with different content rules.',
+    note: msg('One key reaches hundreds of models, open and closed, with different content rules.'),
   },
   {
     ...HOSTED,
@@ -195,7 +196,7 @@ export const PRESETS: Preset[] = [
     label: 'Hugging Face',
     adapter: COMPATIBLE,
     baseUrl: 'https://router.huggingface.co/v1',
-    note: 'Use a Hugging Face access token as the key.',
+    note: msg('Use a Hugging Face access token as the key.'),
   },
   {
     id: 'openai-images',
@@ -207,7 +208,9 @@ export const PRESETS: Preset[] = [
     needsKey: true,
     contextTokens: 16_000,
     model: 'gpt-image-1',
-    note: "Makes character portraits. OpenAI charges for each picture; the app records every request but can't price pictures.",
+    note: msg(
+      "Makes character portraits. OpenAI charges for each picture; the app records every request but can't price pictures.",
+    ),
   },
   {
     id: 'sd-webui',
@@ -219,17 +222,19 @@ export const PRESETS: Preset[] = [
     needsKey: false,
     contextTokens: 16_000,
     model: 'default',
-    note: 'Makes portraits on this computer, for free. Start the WebUI with --api. The model "default" uses whichever one it has loaded.',
+    note: msg(
+      'Makes portraits on this computer, for free. Start the WebUI with --api. The model "default" uses whichever one it has loaded.',
+    ),
   },
   {
     id: 'custom',
-    label: 'Other (enter the address)',
+    label: msg('Other (enter the address)'),
     group: 'other',
     adapter: COMPATIBLE,
     baseUrl: '',
     billing: 'paid',
     needsKey: true,
     contextTokens: 16_000,
-    note: 'Any service or server with an OpenAI-compatible chat completions API works.',
+    note: msg('Any service or server with an OpenAI-compatible chat completions API works.'),
   },
 ];

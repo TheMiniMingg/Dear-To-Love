@@ -1,5 +1,6 @@
 import type { Placed } from './routeLayout';
-import { plural } from './routeLayout';
+import { turnCount } from './routeLayout';
+import { joinList, t } from '../../i18n';
 
 type Props = {
   placed: Placed[];
@@ -20,24 +21,24 @@ export function RouteTimeline({ placed, currentRouteId, selectedId, onSelect }: 
   const rows = Math.max(1, placed.length);
   return (
     <div className="route-timeline">
-      <ul className="timeline-rows" aria-label="Route timeline">
+      <ul className="timeline-rows" aria-label={t('Route timeline')}>
         {placed.map((p) => {
           const r = p.node.route;
           const start = p.node.forkTurn ?? 0;
           const current = r.id === currentRouteId;
           const span =
             p.node.forkTurn == null
-              ? `turns 1 to ${p.node.turns}`
+              ? t('turns {from} to {to}', { from: 1, to: p.node.turns })
               : p.node.turns > start
-                ? `turns ${start + 1} to ${p.node.turns}`
-                : `branched after turn ${start}, nothing new yet`;
+                ? t('turns {from} to {to}', { from: start + 1, to: p.node.turns })
+                : t('branched after turn {n}, nothing new yet', { n: start });
           return (
             <li key={r.id} className="timeline-row">
               <button
                 type="button"
                 className={`timeline-label${current ? ' current' : ''}`}
                 aria-pressed={r.id === selectedId}
-                aria-label={`${r.label}${current ? ', current' : ''}, ${span}`}
+                aria-label={joinList([r.label, current ? t('current') : '', span].filter(Boolean))}
                 title={r.label}
                 onClick={() => onSelect(r.id)}
               >
@@ -83,8 +84,8 @@ export function RouteTimeline({ placed, currentRouteId, selectedId, onSelect }: 
         </svg>
       </div>
       <div className="timeline-axis" aria-hidden="true">
-        <span>Start</span>
-        <span>{plural(max, 'turn')}</span>
+        <span>{t('Start')}</span>
+        <span>{turnCount(max)}</span>
       </div>
     </div>
   );

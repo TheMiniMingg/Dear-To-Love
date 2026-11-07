@@ -33,6 +33,7 @@ import { ScenePictures } from './ScenePictures';
 import { StoryDetailsPanel } from './StoryDetailsPanel';
 import { StoryMemoryPanel } from './StoryMemoryPanel';
 import { StorytellerPanel } from './StorytellerPanel';
+import { intlLocale, joinSentences, msg, t, tKnown, tr } from '../../i18n';
 
 type Panel =
   | null
@@ -52,20 +53,20 @@ type Panel =
   | 'end';
 
 const PANEL_TITLES: Record<Exclude<Panel, null>, string> = {
-  menu: 'Paused',
-  saves: 'Save / Load',
-  routes: 'Routes',
-  chapters: 'Chapters',
-  edit: 'Change your action',
-  regenerate: 'Another reply',
-  details: 'Story details',
-  pictures: 'Pictures',
-  context: 'Preview context',
-  export: 'Export',
-  search: 'Story search',
-  storyteller: 'Storyteller',
-  memory: 'Story memory',
-  end: 'End chapter',
+  menu: msg('Paused'),
+  saves: msg('Save / Load'),
+  routes: msg('Routes'),
+  chapters: msg('Chapters'),
+  edit: msg('Change your action'),
+  regenerate: msg('Another reply'),
+  details: msg('Story details'),
+  pictures: msg('Pictures'),
+  context: msg('Preview context'),
+  export: msg('Export'),
+  search: msg('Story search'),
+  storyteller: msg('Storyteller'),
+  memory: msg('Story memory'),
+  end: msg('End chapter'),
 };
 
 type Stream = { runId: string; text: string };
@@ -73,7 +74,7 @@ type Stream = { runId: string; text: string };
 const POLL_MS = 1500;
 
 function timeNow(): string {
-  return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  return new Date().toLocaleTimeString(intlLocale(), { hour: '2-digit', minute: '2-digit' });
 }
 
 export function ReaderScreen({ routeId }: { routeId: string }) {
@@ -89,7 +90,7 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
   const [panel, setPanel] = useState<Panel>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [saveStatus, setSaveStatus] = useState<string>('All changes saved');
+  const [saveStatus, setSaveStatus] = useState<string>(() => t('All changes saved'));
   const [reload, setReload] = useState(0);
   const [stream, setStream] = useState<Stream | null>(null);
   const [replyError, setReplyError] = useState<{ text: string; code: ErrorCode | null } | null>(
@@ -172,7 +173,7 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
         if (!mounted.current) return;
         setView(v);
         setStream(null);
-        setSaveStatus(`Autosaved ${timeNow()}`);
+        setSaveStatus(t('Autosaved {time}', { time: timeNow() }));
         refreshBudget();
       } catch (e) {
         if (!mounted.current) return;
@@ -344,7 +345,7 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
     if (!view) return;
     void run(async () => {
       await commands.quickSave({ storyId: view.story.id, routeId: view.route.id });
-      setSaveStatus(`Quick-saved ${timeNow()}`);
+      setSaveStatus(t('Quick-saved {time}', { time: timeNow() }));
     });
   }, [run, view]);
 
@@ -355,10 +356,10 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
       const existing = bookmarks.find((b) => b.eventId === eventId);
       if (existing) {
         await commands.deleteBookmark(view.story.id, existing.id);
-        setSaveStatus(`Bookmark removed ${timeNow()}`);
+        setSaveStatus(t('Bookmark removed {time}', { time: timeNow() }));
       } else {
         await commands.addBookmark({ storyId: view.story.id, routeId: view.route.id, eventId });
-        setSaveStatus(`Bookmarked ${timeNow()}`);
+        setSaveStatus(t('Bookmarked {time}', { time: timeNow() }));
       }
       setBookmarksReload((n) => n + 1);
     } catch (e) {
@@ -425,11 +426,11 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
               {error}
             </p>
             <button type="button" onClick={() => navigate({ name: 'library' })}>
-              Back to library
+              {t('Back to library')}
             </button>
           </>
         ) : (
-          <p className="muted">Loading story…</p>
+          <p className="muted">{t('Loading story…')}</p>
         )}
       </section>
     );
@@ -446,7 +447,7 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
   return (
     <section
       className="reader"
-      aria-label={`Reading ${view.story.title}`}
+      aria-label={t('Reading {title}', { title: view.story.title })}
       style={{ fontSize: `${textSize}rem` }}
     >
       <header className="reader-status">
@@ -454,11 +455,16 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
           <h1 className="reader-title">{view.story.title}</h1>
           <div className="reader-meta">
             <span>
-              Route: <strong data-testid="route-label">{view.route.label}</strong>
+              {tr('Route: {label}', {
+                label: <strong data-testid="route-label">{view.route.label}</strong>,
+              })}
             </span>
             {chapter && (
               <span>
-                Chapter {chapter.ordinal}: <strong>{chapter.title}</strong>
+                {tr('Chapter {n}: {title}', {
+                  n: chapter.ordinal,
+                  title: <strong>{chapter.title}</strong>,
+                })}
               </span>
             )}
           </div>
@@ -470,46 +476,70 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
             onClick={() => setPanel('storyteller')}
             title={
               view.storyteller.profileId
-                ? `Replies come from ${view.storyteller.label} (${view.storyteller.modelId ?? ''}). Click to change it for this story.`
-                : 'Replies come from the built-in offline storyteller. Click to choose another for this story.'
+                ? t('Replies come from {name} ({model}). Click to change it for this story.', {
+                    name: view.storyteller.label,
+                    model: view.storyteller.modelId ?? '',
+                  })
+                : t(
+                    'Replies come from the built-in offline storyteller. Click to choose another for this story.',
+                  )
             }
           >
-            {view.storyteller.label}
+            {tKnown(view.storyteller.label)}
           </button>
           <span className="chip" role="status" aria-live="polite">
-            {writing ? 'Writing…' : busy ? 'Working…' : saveStatus}
+            {writing ? t('Writing…') : busy ? t('Working…') : saveStatus}
           </span>
-          <button type="button" onClick={() => setPanel('menu')} aria-label="Open menu (Escape)">
-            Menu
+          <button
+            type="button"
+            onClick={() => setPanel('menu')}
+            aria-label={t('Open menu (Escape)')}
+          >
+            {t('Menu')}
           </button>
         </div>
       </header>
 
       {showBudget && (
-        <div className={`budget-banner ${budget.level}`} role="region" aria-label="Monthly budget">
+        <div
+          className={`budget-banner ${budget.level}`}
+          role="region"
+          aria-label={t('Monthly budget')}
+        >
           <p>
-            {budget.level === 'reached'
-              ? `You've reached your monthly budget: about ${formatUsd(budget.spentMicroUsd)} of ${formatUsd(budget.limitMicroUsd ?? 0)}.`
-              : `You've used ${budget.percent ?? 0}% of your monthly budget: about ${formatUsd(budget.spentMicroUsd)} of ${formatUsd(budget.limitMicroUsd ?? 0)}.`}
-            {budget.paused
-              ? ' New paid replies are paused; local and offline storytellers still work.'
-              : ''}
+            {joinSentences([
+              budget.level === 'reached'
+                ? t("You've reached your monthly budget: about {spent} of {limit}.", {
+                    spent: formatUsd(budget.spentMicroUsd),
+                    limit: formatUsd(budget.limitMicroUsd ?? 0),
+                  })
+                : t("You've used {percent}% of your monthly budget: about {spent} of {limit}.", {
+                    percent: budget.percent ?? 0,
+                    spent: formatUsd(budget.spentMicroUsd),
+                    limit: formatUsd(budget.limitMicroUsd ?? 0),
+                  }),
+              budget.paused
+                ? t('New paid replies are paused; local and offline storytellers still work.')
+                : '',
+            ])}
           </p>
           <div className="button-row">
             <button type="button" onClick={() => navigate({ name: 'usage' })}>
-              Usage &amp; budget
+              {t('Usage & budget')}
             </button>
             <button type="button" onClick={dismissBudget}>
-              Dismiss for this month
+              {t('Dismiss for this month')}
             </button>
           </div>
         </div>
       )}
 
       {viewing && (
-        <div className="view-banner" role="region" aria-label="Viewing a save">
+        <div className="view-banner" role="region" aria-label={t('Viewing a save')}>
           <span>
-            Viewing save <strong>{viewing.save.label}</strong> (read-only).
+            {tr('Viewing save {label} (read-only).', {
+              label: <strong>{viewing.save.label}</strong>,
+            })}
           </span>
           <div className="button-row">
             <button
@@ -519,10 +549,10 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
                 void run(async () => goToRoute(await commands.resumeSave(viewing.save.id)))
               }
             >
-              {viewing.save.isRouteHead ? 'Continue' : 'Continue as new branch'}
+              {viewing.save.isRouteHead ? t('Continue') : t('Continue as new branch')}
             </button>
             <button type="button" onClick={() => setViewing(null)}>
-              Back to current
+              {t('Back to current')}
             </button>
           </div>
         </div>
@@ -534,7 +564,7 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
         <NarrativeView
           events={events}
           draft={viewing ? null : stream}
-          playerName={player?.name ?? 'You'}
+          playerName={player?.name ?? t('You')}
           onBranch={viewing ? undefined : (id) => void branchFrom(id)}
           onRegenerate={viewing || writing || busy ? undefined : openRegenerate}
           onEditAction={
@@ -571,49 +601,55 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
       {!viewing && (
         <div className="reader-bottom">
           {writing && (
-            <div className="reply-bar" role="region" aria-label="Reply in progress">
-              <span className="muted small">{view.storyteller.label} is writing…</span>
+            <div className="reply-bar" role="region" aria-label={t('Reply in progress')}>
+              <span className="muted small">
+                {t('{name} is writing…', { name: tKnown(view.storyteller.label) })}
+              </span>
               <button type="button" onClick={cancelReply}>
-                Stop
+                {t('Stop')}
               </button>
             </div>
           )}
           {awaitingReply && !writing && (
-            <div className="reply-bar" role="region" aria-label="Reply needed">
+            <div className="reply-bar" role="region" aria-label={t('Reply needed')}>
               <p className={replyError || lastRun ? 'error small' : 'small'}>
-                {replyError?.text ??
-                  (lastRun ? runErrorMessage(lastRun.errorCode) : 'This action has no reply yet.')}
-                {lastRun?.status === 'interrupted' &&
-                  !replyError &&
-                  ' If it had reached the AI service, it may still have cost a little.'}
+                {joinSentences([
+                  replyError?.text ??
+                    (lastRun
+                      ? runErrorMessage(lastRun.errorCode)
+                      : t('This action has no reply yet.')),
+                  lastRun?.status === 'interrupted' && !replyError
+                    ? t('If it had reached the AI service, it may still have cost a little.')
+                    : '',
+                ])}
               </p>
               <div className="button-row">
                 <button type="button" className="primary" onClick={() => void retry()}>
-                  {lastRun ? 'Retry' : 'Write a reply'}
+                  {lastRun ? t('Retry') : t('Write a reply')}
                 </button>
                 {failCode === 'BUDGET_OVERRIDE_REQUIRED' && (
                   <button type="button" onClick={() => void retry(true)}>
-                    Send once without a price
+                    {t('Send once without a price')}
                   </button>
                 )}
                 {(failCode === 'BUDGET_PAUSED' || failCode === 'BUDGET_OVERRIDE_REQUIRED') && (
                   <button type="button" onClick={() => navigate({ name: 'usage' })}>
-                    Usage &amp; budget
+                    {t('Usage & budget')}
                   </button>
                 )}
                 <button type="button" onClick={() => openEdit()}>
-                  Change action
+                  {t('Change action')}
                 </button>
               </div>
             </div>
           )}
           <Composer
             value={draft}
-            onChange={(t) => setDraft(routeId, t)}
+            onChange={(text) => setDraft(routeId, text)}
             onSubmit={(text, roll) => void send(text, roll)}
             disabled={busy || awaitingReply || writing}
-            placeholder="What do you do? (Enter to send, Shift+Enter for a new line)"
-            playerName={player?.name ?? 'You'}
+            placeholder={t('What do you do? (Enter to send, Shift+Enter for a new line)')}
+            playerName={player?.name ?? t('You')}
             dice={!!view.state.state.narration?.dice}
             stats={player?.stats}
             contacts={Object.values(view.state.state.characters)
@@ -622,29 +658,29 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
           />
           <div className="action-bar">
             <button type="button" onClick={quickSave} disabled={busy}>
-              Quick save
+              {t('Quick save')}
             </button>
             <button type="button" onClick={() => setPanel('saves')}>
-              Save / Load
+              {t('Save / Load')}
             </button>
             <button
               type="button"
               onClick={() => setPanel('end')}
               disabled={busy || awaitingReply || writing}
-              title="Recap this chapter, save, and start the next one"
+              title={t('Recap this chapter, save, and start the next one')}
             >
-              End chapter
+              {t('End chapter')}
             </button>
             <button type="button" onClick={() => setPanel('routes')}>
-              Routes ({view.routes.filter((r) => !r.hidden).length})
+              {t('Routes ({n})', { n: view.routes.filter((r) => !r.hidden).length })}
             </button>
             <button
               type="button"
               onClick={() => setPanel('search')}
-              aria-label="Search (Ctrl+F)"
-              title="Search this route and its bookmarks"
+              aria-label={t('Search (Ctrl+F)')}
+              title={t('Search this route and its bookmarks')}
             >
-              Search
+              {t('Search')}
             </button>
           </div>
         </div>
@@ -653,7 +689,7 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
       {panel && (
         <Dialog
           key={panel}
-          title={PANEL_TITLES[panel]}
+          title={t(PANEL_TITLES[panel])}
           wide={
             panel === 'context' ||
             panel === 'details' ||
@@ -681,25 +717,29 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
           }
         >
           {panel === 'menu' && (
-            <nav className="menu-list" aria-label="Pause menu">
+            <nav className="menu-list" aria-label={t('Pause menu')}>
               <button id="pause-resume" type="button" onClick={() => setPanel(null)}>
-                Resume
+                {t('Resume')}
               </button>
               <button type="button" onClick={() => setPanel('saves')}>
-                Save / Load
+                {t('Save / Load')}
               </button>
               <button type="button" onClick={() => setPanel('chapters')}>
-                Chapters
+                {t('Chapters')}
               </button>
               <button type="button" onClick={() => setPanel('routes')}>
-                Routes
+                {t('Routes')}
               </button>
               <div className="button-row">
-                <span>Text size</span>
-                <button type="button" aria-label="Smaller text" onClick={() => stepTextSize(-1)}>
+                <span>{t('Text size')}</span>
+                <button
+                  type="button"
+                  aria-label={t('Smaller text')}
+                  onClick={() => stepTextSize(-1)}
+                >
                   A−
                 </button>
-                <button type="button" aria-label="Larger text" onClick={() => stepTextSize(1)}>
+                <button type="button" aria-label={t('Larger text')} onClick={() => stepTextSize(1)}>
                   A+
                 </button>
               </div>
@@ -709,39 +749,39 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
                 disabled={awaitingReply || writing}
                 aria-describedby={awaitingReply || writing ? 'details-hint' : undefined}
               >
-                Story details
+                {t('Story details')}
               </button>
               {(awaitingReply || writing) && (
                 <p id="details-hint" className="muted small">
-                  Story details can change once the waiting action has its reply.
+                  {t('Story details can change once the waiting action has its reply.')}
                 </p>
               )}
               <button type="button" onClick={() => setPanel('pictures')}>
-                Pictures
+                {t('Pictures')}
               </button>
               <button type="button" onClick={() => setPanel('storyteller')}>
-                Storyteller
+                {t('Storyteller')}
               </button>
               <button type="button" onClick={() => setPanel('memory')}>
-                Story memory
+                {t('Story memory')}
               </button>
               <button type="button" onClick={() => setPanel('search')}>
-                Story search
+                {t('Story search')}
               </button>
               <button type="button" onClick={() => setPanel('context')}>
-                Preview context
+                {t('Preview context')}
               </button>
               <button type="button" onClick={() => setPanel('export')}>
-                Export…
+                {t('Export…')}
               </button>
               <button type="button" onClick={() => navigate({ name: 'settings' })}>
-                Settings
+                {t('Settings')}
               </button>
               <button type="button" onClick={() => navigate({ name: 'diagnostics' })}>
-                Diagnostics
+                {t('Diagnostics')}
               </button>
               <button type="button" onClick={() => navigate({ name: 'library' })}>
-                Back to library
+                {t('Back to library')}
               </button>
             </nav>
           )}
@@ -749,7 +789,9 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
             <SavesPanel
               storyId={view.story.id}
               routeId={view.route.id}
-              onSaved={(s) => setSaveStatus(`Saved "${s.label}" ${timeNow()}`)}
+              onSaved={(s) =>
+                setSaveStatus(t('Saved "{label}" {time}', { label: s.label, time: timeNow() }))
+              }
               onView={(saveId) =>
                 void run(async () => {
                   setViewing(await commands.viewSave(saveId));
@@ -798,7 +840,7 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
               onEnded={(v, saveLabel) => {
                 setView(v);
                 setPanel(null);
-                setSaveStatus(`Saved "${saveLabel}" ${timeNow()}`);
+                setSaveStatus(t('Saved "{label}" {time}', { label: saveLabel, time: timeNow() }));
               }}
             />
           )}
@@ -808,7 +850,7 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
               storyId={view.story.id}
               routeId={view.route.id}
               routeLabel={view.route.label}
-              playerName={player?.name ?? 'You'}
+              playerName={player?.name ?? t('You')}
               last={lastSearch}
               onSearched={setLastSearch}
               bookmarks={bookmarks}
@@ -822,7 +864,7 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
               awaitingReply={awaitingReply || writing}
               onChanged={(v, status) => {
                 setView(v);
-                setSaveStatus(`${status} ${timeNow()}`);
+                setSaveStatus(t('{status} {time}', { status, time: timeNow() }));
               }}
             />
           )}
@@ -832,7 +874,9 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
               current={view.storyteller}
               onChanged={(info) => {
                 setView((v) => (v ? { ...v, storyteller: info } : v));
-                setSaveStatus(`Storyteller: ${info.label} ${timeNow()}`);
+                setSaveStatus(
+                  t('Storyteller: {name} {time}', { name: tKnown(info.label), time: timeNow() }),
+                );
               }}
               onOpenSettings={() => navigate({ name: 'settings' })}
               onOpenMemory={() => setPanel('memory')}
@@ -841,7 +885,7 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
           {panel === 'memory' && (
             <StoryMemoryPanel
               view={view}
-              playerName={player?.name ?? 'You'}
+              playerName={player?.name ?? t('You')}
               detailsDisabled={awaitingReply || writing}
               onOpenDetails={() => setPanel('details')}
               onOpenStoryteller={() => setPanel('storyteller')}
@@ -850,29 +894,33 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
           {panel === 'details' && (
             <StoryDetailsPanel
               view={view}
-              playerName={player?.name ?? 'You'}
+              playerName={player?.name ?? t('You')}
               onCancel={() => setPanel(null)}
               onApplied={(v) => {
                 setView(v);
                 setPanel(null);
-                setSaveStatus(`Story details changed ${timeNow()}`);
+                setSaveStatus(t('Story details changed {time}', { time: timeNow() }));
               }}
             />
           )}
           {panel === 'regenerate' && target?.kind === 'assistant' && (
             <div className="panel">
               <p>
-                The storyteller writes a different reply to{' '}
-                {(() => {
-                  const a = answered(target);
-                  return a?.kind === 'player' ? <q>{a.payload.text}</q> : 'your action';
-                })()}{' '}
-                on a <strong>new route</strong>. <strong>{view.route.label}</strong> keeps this
-                reply and everything after it.
+                {tr(
+                  'The storyteller writes a different reply to {action} on a {newRoute}. {route} keeps this reply and everything after it.',
+                  {
+                    action: (() => {
+                      const a = answered(target);
+                      return a?.kind === 'player' ? <q>{a.payload.text}</q> : t('your action');
+                    })(),
+                    newRoute: <strong>{t('new route')}</strong>,
+                    route: <strong>{view.route.label}</strong>,
+                  },
+                )}
               </p>
               <div className="button-row">
                 <button type="button" onClick={() => setPanel(null)}>
-                  Cancel
+                  {t('Cancel')}
                 </button>
                 <button
                   id="regenerate-confirm"
@@ -881,7 +929,7 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
                   disabled={busy}
                   onClick={() => void submitRegenerate()}
                 >
-                  Write another reply
+                  {t('Write another reply')}
                 </button>
               </div>
             </div>
@@ -895,9 +943,15 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
               }}
             >
               <label htmlFor="edit-action-input">
-                Your action. The story continues from here on a new route; {view.route.label} keeps
-                the original
-                {target && target.id !== lastAction?.id ? ' and everything after it' : ''}.
+                {target && target.id !== lastAction?.id
+                  ? t(
+                      'Your action. The story continues from here on a new route; {route} keeps the original and everything after it.',
+                      { route: view.route.label },
+                    )
+                  : t(
+                      'Your action. The story continues from here on a new route; {route} keeps the original.',
+                      { route: view.route.label },
+                    )}
               </label>
               <textarea
                 id="edit-action-input"
@@ -907,10 +961,10 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
               />
               <div className="button-row">
                 <button type="button" onClick={() => setPanel(null)}>
-                  Cancel
+                  {t('Cancel')}
                 </button>
                 <button type="submit" className="primary" disabled={!editText.trim() || busy}>
-                  Send changed action
+                  {t('Send changed action')}
                 </button>
               </div>
             </form>

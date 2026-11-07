@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { commands, errorMessage } from '../../api/commands';
 import type { ProviderProfile, StorytellerInfo } from '../../types';
 import { StorytellerPicker } from '../settings/StorytellerPicker';
+import { t, tKnown, tr } from '../../i18n';
 
 /**
  * Reader -> Storyteller: who writes this story's new replies. Earlier
@@ -44,13 +45,13 @@ export function StorytellerPanel({
   return (
     <div className="panel storyteller-panel">
       <p className="muted">
-        Only this story changes, and only new replies: what is already written stays as it is.
-        Everything the story remembers (summaries, recaps and facts) carries over to the new
-        storyteller.
+        {t(
+          'Only this story changes, and only new replies: what is already written stays as it is. Everything the story remembers (summaries, recaps and facts) carries over to the new storyteller.',
+        )}
       </p>
       {connections && app ? (
         <StorytellerPicker
-          legend="Who writes this story's replies"
+          legend={t("Who writes this story's replies")}
           value={current.storyChoice ?? null}
           connections={connections}
           appLabel={app.label}
@@ -66,10 +67,10 @@ export function StorytellerPanel({
           }}
         />
       ) : (
-        !error && <p className="muted small">Loading…</p>
+        !error && <p className="muted small">{t('Loading…')}</p>
       )}
       <p className="muted small" role="status" aria-live="polite">
-        Now: <strong>{current.label}</strong>
+        {tr('Now: {name}', { name: <strong>{tKnown(current.label)}</strong> })}
         {current.modelId ? ` (${current.modelId})` : ''}
       </p>
       {error && (
@@ -80,11 +81,11 @@ export function StorytellerPanel({
       <div className="button-row">
         {onOpenMemory && (
           <button type="button" onClick={onOpenMemory}>
-            See what the story remembers
+            {t('See what the story remembers')}
           </button>
         )}
         <button type="button" onClick={onOpenSettings}>
-          Add or change connections in Settings
+          {t('Add or change connections in Settings')}
         </button>
       </div>
     </div>

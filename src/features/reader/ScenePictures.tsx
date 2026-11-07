@@ -1,6 +1,7 @@
 import { Thumb } from '../images/ImageGrid';
 import type { RouteView } from '../../types';
 import { BACKGROUND, picture, portraitSlot } from './pictures';
+import { t } from '../../i18n';
 
 /** The current scene's background and the portraits of who is there. */
 export function ScenePictures({ view }: { view: RouteView }) {
@@ -16,14 +17,18 @@ export function ScenePictures({ view }: { view: RouteView }) {
     <div
       className={`scene-pictures${bg ? ' has-bg' : ''}`}
       role="group"
-      aria-label="Scene pictures"
+      aria-label={t('Scene pictures')}
       data-testid="scene-pictures"
     >
       {bg && (
         <Thumb
           assetId={bg}
           size="full"
-          alt={`Scene: ${s.scene?.location || 'background'}`}
+          alt={
+            s.scene?.location
+              ? t('Scene: {place}', { place: s.scene.location })
+              : t('Scene background')
+          }
           className="scene-bg"
         />
       )}
@@ -31,7 +36,7 @@ export function ScenePictures({ view }: { view: RouteView }) {
         <ul className="scene-portraits">
           {people.map(({ c, a }) => (
             <li key={c.id}>
-              <Thumb assetId={a} alt={`Portrait of ${c.name}`} />
+              <Thumb assetId={a} alt={t('Portrait of {name}', { name: c.name })} />
               <span>{c.name}</span>
             </li>
           ))}

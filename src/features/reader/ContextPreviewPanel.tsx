@@ -1,20 +1,21 @@
 import { useEffect, useState } from 'react';
 import { commands, errorMessage, formatUsd } from '../../api/commands';
 import type { ContextPreview, Role } from '../../types';
+import { intlLocale, msg, t, tKnown } from '../../i18n';
 
 const ROLE_LABELS: Record<Role, string> = {
-  system: 'Instructions and story facts',
-  user: 'Player',
-  assistant: 'Story',
+  system: msg('Instructions and story facts'),
+  user: msg('Player'),
+  assistant: msg('Story'),
 };
 
 function generatorLabel(generator: string): string {
-  if (generator.startsWith('offline:')) return 'the offline summarizer';
+  if (generator.startsWith('offline:')) return t('the offline summarizer');
   if (generator.startsWith('model:')) return generator.slice('model:'.length).replace('/', ' · ');
   return generator;
 }
 
-const fmt = (n: number) => n.toLocaleString();
+const fmt = (n: number) => n.toLocaleString(intlLocale());
 
 /**
  * Read-only view of the exact prompt the next reply on this route would
@@ -46,76 +47,89 @@ export function ContextPreviewPanel({ routeId }: { routeId: string }) {
       </p>
     );
   }
-  if (!preview) return <p className="muted">Assembling…</p>;
+  if (!preview) return <p className="muted">{t('Assembling…')}</p>;
 
   const room = preview.maxContextTokens - preview.reservedOutputTokens;
   const s = preview.summary;
   return (
     <div className="panel context-preview">
       <p className="muted small">
-        This stays on your computer. Nothing is sent until you play. Token counts are approximate
-        and err on the high side.
+        {t(
+          'This stays on your computer. Nothing is sent until you play. Token counts are approximate and err on the high side.',
+        )}
       </p>
       <dl className="facts">
-        <dt>Storyteller</dt>
+        <dt>{t('Storyteller')}</dt>
         <dd>
-          {preview.storytellerLabel}
+          {tKnown(preview.storytellerLabel)}
           {preview.live ? ` · ${preview.modelId}` : ''}
           {!preview.live && (
             <span className="muted small">
               {' '}
-              (writes offline and doesn&apos;t read this prompt; a connected AI would receive it)
+              {t("(writes offline and doesn't read this prompt; a connected AI would receive it)")}
             </span>
           )}
         </dd>
-        <dt>Size</dt>
+        <dt>{t('Size')}</dt>
         <dd>
-          About {fmt(preview.estimatedInputTokens)} of {fmt(room)} prompt tokens, with{' '}
-          {fmt(preview.reservedOutputTokens)} kept for the reply
+          {t('About {used} of {room} prompt tokens, with {reserved} kept for the reply', {
+            used: fmt(preview.estimatedInputTokens),
+            room: fmt(room),
+            reserved: fmt(preview.reservedOutputTokens),
+          })}
         </dd>
-        <dt>Cost</dt>
+        <dt>{t('Cost')}</dt>
         <dd>
           {!preview.live
-            ? '$0 (offline)'
+            ? t('$0 (offline)')
             : preview.maxCostMicroUsd === null
-              ? 'Unknown: this model has no prices. Add them in Usage & budget.'
+              ? t('Unknown: this model has no prices. Add them in Usage & budget.')
               : preview.maxCostMicroUsd === 0
-                ? '$0 (local model)'
-                : `Up to about ${formatUsd(preview.maxCostMicroUsd)} for this reply`}
+                ? t('$0 (local model)')
+                : t('Up to about {cost} for this reply', {
+                    cost: formatUsd(preview.maxCostMicroUsd),
+                  })}
           {preview.live && preview.maxCostMicroUsd !== null && preview.maxCostMicroUsd > 0 && (
-            <span className="muted small"> (if the reply uses its full length)</span>
+            <span className="muted small"> {t('(if the reply uses its full length)')}</span>
           )}
         </dd>
-        <dt>Memory</dt>
+        <dt>{t('Memory')}</dt>
         <dd>
           {s
-            ? `Summary of turns 1–${s.coveredTurns}`
+            ? t('Summary of turns 1–{to}', { to: s.coveredTurns })
             : preview.summaryDropped
-              ? 'A summary exists but did not fit; only recent turns are sent.'
-              : 'No summary yet. Summaries begin after 16 turns.'}
+              ? t('A summary exists but did not fit; only recent turns are sent.')
+              : t('No summary yet. Summaries begin after 16 turns.')}
           {s && (
             <span className="muted small">
               {' '}
-              (last updated from turns {s.chunkFromTurn}–{s.coveredTurns} by{' '}
-              {generatorLabel(s.generator)})
+              {t('(last updated from turns {from}–{to} by {by})', {
+                from: s.chunkFromTurn,
+                to: s.coveredTurns,
+                by: generatorLabel(s.generator),
+              })}
             </span>
           )}
         </dd>
-        <dt>Recent turns</dt>
+        <dt>{t('Recent turns')}</dt>
         <dd>
-          {preview.verbatimMessages} messages word for word
-          {preview.omittedMessages > 0 && `, ${preview.omittedMessages} older left out to fit`}
+          {preview.omittedMessages > 0
+            ? t('{n} messages word for word, {older} older left out to fit', {
+                n: preview.verbatimMessages,
+                older: preview.omittedMessages,
+              })
+            : t('{n} messages word for word', { n: preview.verbatimMessages })}
         </dd>
       </dl>
       {!preview.forWaitingAction && (
-        <p className="muted small">Your next action takes the place of the last message.</p>
+        <p className="muted small">{t('Your next action takes the place of the last message.')}</p>
       )}
-      <ol className="prompt-messages" aria-label="Prompt messages">
+      <ol className="prompt-messages" aria-label={t('Prompt messages')}>
         {preview.messages.map((m, i) => (
           <li key={i}>
             <div className="prompt-message-head">
-              <strong>{ROLE_LABELS[m.role]}</strong>
-              <span className="muted small">~{fmt(m.estimatedTokens)} tokens</span>
+              <strong>{t(ROLE_LABELS[m.role])}</strong>
+              <span className="muted small">{t('~{n} tokens', { n: fmt(m.estimatedTokens) })}</span>
             </div>
             <pre tabIndex={0}>{m.content}</pre>
           </li>

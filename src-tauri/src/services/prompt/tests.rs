@@ -13,6 +13,7 @@ fn state() -> EffectiveState {
             perspective: None,
             detail: None,
             story_type: None,
+            language: None,
         })
         .unwrap();
     EffectiveState::new(input.base_state)

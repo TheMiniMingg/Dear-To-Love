@@ -2,61 +2,88 @@
 import { open, save } from '@tauri-apps/plugin-dialog';
 import type { BackupExport, BackupKind, RestorePlan, RestoreResult } from '../types';
 import { formatBytes } from './images';
+import { intlLocale, joinSentences, msg, t, tn } from '../i18n';
 
-export const BACKUP_FILTER = { name: 'Dear to Love backup', extensions: ['dtlbackup'] };
+const backupFilter = () => ({ name: t('Dear to Love backup'), extensions: ['dtlbackup'] });
 
-export const KIND_LABELS: Record<BackupKind, string> = {
-  automatic: 'Automatic',
-  beforeUpgrade: 'Before an app upgrade',
-  beforeRestore: 'Before a restore',
+const KINDS: Record<BackupKind, string> = {
+  automatic: msg('Automatic'),
+  beforeUpgrade: msg('Before an app upgrade'),
+  beforeRestore: msg('Before a restore'),
 };
+
+export const kindLabel = (kind: BackupKind) => t(KINDS[kind]);
 
 export function formatWhen(iso: string): string {
   const d = new Date(iso);
   return Number.isNaN(d.getTime())
     ? iso
-    : d.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' });
-}
-
-function plural(n: number, one: string, many = `${one}s`): string {
-  return `${n} ${n === 1 ? one : many}`;
+    : d.toLocaleString(intlLocale(), { dateStyle: 'medium', timeStyle: 'short' });
 }
 
 /** Where to save a full backup. `null` when the dialog is closed. */
 export async function pickBackupTarget(today = new Date()): Promise<string | null> {
   const day = today.toISOString().slice(0, 10);
   return save({
-    title: 'Back up everything',
+    title: t('Back up everything'),
     defaultPath: `Dear to Love backup ${day}.dtlbackup`,
-    filters: [BACKUP_FILTER],
+    filters: [backupFilter()],
   });
 }
 
 /** A backup file to restore. `null` when the dialog is closed. */
 export async function pickBackupFile(): Promise<string | null> {
   const picked = await open({
-    title: 'Restore from a backup file',
+    title: t('Restore from a backup file'),
     multiple: false,
     directory: false,
-    filters: [BACKUP_FILTER],
+    filters: [backupFilter()],
   });
   return Array.isArray(picked) ? (picked[0] ?? null) : picked;
 }
 
 export function describeBackup(r: BackupExport): string {
-  let text = `Saved ${r.fileName} (${formatBytes(r.bytes)}): ${plural(r.stories, 'story', 'stories')}, ${plural(r.images, 'image')}.`;
+  const parts = [
+    t('Saved {file} ({size}): {stories}, {images}.', {
+      file: r.fileName,
+      size: formatBytes(r.bytes),
+      stories: tn(r.stories, '{n} story', '{n} stories'),
+      images: tn(r.images, '{n} image', '{n} images'),
+    }),
+  ];
   if (r.missingImages)
-    text += ` ${plural(r.missingImages, 'image file')} ${r.missingImages === 1 ? 'was' : 'were'} missing and left out.`;
-  return text;
+    parts.push(
+      tn(
+        r.missingImages,
+        '{n} image file was missing and left out.',
+        '{n} image files were missing and left out.',
+      ),
+    );
+  return joinSentences(parts);
 }
 
 export function describePlan(p: RestorePlan): string {
-  return `${plural(p.stories, 'story', 'stories')} with ${plural(p.routes, 'route')}, and ${plural(p.images, 'image')}.`;
+  return t('{stories} with {routes}, and {images}.', {
+    stories: tn(p.stories, '{n} story', '{n} stories'),
+    routes: tn(p.routes, '{n} route', '{n} routes'),
+    images: tn(p.images, '{n} image', '{n} images'),
+  });
 }
 
 export function describeRestoreResult(r: RestoreResult): string {
-  const when = r.backupCreatedAt ? ` from ${formatWhen(r.backupCreatedAt)}` : '';
-  return r.ok
-    ? `Restored the backup${when}. Your earlier data is kept under Settings → Backups as "Before a restore".`
-    : `The backup${when} could not be restored: ${r.message ?? 'unknown problem'}.`;
+  const when = r.backupCreatedAt ? formatWhen(r.backupCreatedAt) : null;
+  const problem = r.message ?? t('unknown problem');
+  if (r.ok) {
+    return when
+      ? t(
+          'Restored the backup from {when}. Your earlier data is kept under Settings → Backups as "Before a restore".',
+          { when },
+        )
+      : t(
+          'Restored the backup. Your earlier data is kept under Settings → Backups as "Before a restore".',
+        );
+  }
+  return when
+    ? t('The backup from {when} could not be restored: {problem}.', { when, problem })
+    : t('The backup could not be restored: {problem}.', { problem });
 }

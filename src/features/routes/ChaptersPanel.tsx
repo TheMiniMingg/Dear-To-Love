@@ -1,4 +1,5 @@
 import type { ChapterDto } from '../../types';
+import { t } from '../../i18n';
 
 type Props = {
   chapters: ChapterDto[];
@@ -11,19 +12,19 @@ export function ChaptersPanel({ chapters, activeEventId, onRestart }: Props) {
   return (
     <div className="panel">
       <p className="muted small">
-        Replaying a chapter starts a new branch at its beginning. This route keeps its outcome.
+        {t(
+          'Replaying a chapter starts a new branch at its beginning. This route keeps its outcome.',
+        )}
       </p>
-      <ul className="item-list" aria-label="Chapters">
+      <ul className="item-list" aria-label={t('Chapters')}>
         {chapters.map((c) => (
           <li key={c.eventId} className="item-row">
             <div>
-              <strong>
-                Chapter {c.ordinal}: {c.title}
-              </strong>
-              {c.eventId === activeEventId && <span className="badge">Current</span>}
+              <strong>{t('Chapter {n}: {title}', { n: c.ordinal, title: c.title })}</strong>
+              {c.eventId === activeEventId && <span className="badge">{t('Current')}</span>}
             </div>
             <button type="button" onClick={() => onRestart(c.eventId)}>
-              Replay as new branch
+              {t('Replay as new branch')}
             </button>
           </li>
         ))}

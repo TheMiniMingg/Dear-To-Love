@@ -493,7 +493,7 @@ describe('Create a story', () => {
     await userEvent.click(screen.getByRole('button', { name: '6. Review' }));
     const summary = await screen.findByLabelText('Story summary');
     expect(summary).toHaveTextContent('Thoughts and dialogue, no narrator');
-    expect(summary).toHaveTextContent('in Japanese');
+    expect(summary).toHaveTextContent('in 日本語 (Japanese)');
     expect(summary).toHaveTextContent('School life, Science fiction');
     await userEvent.click(await screen.findByRole('button', { name: 'Create story' }));
     const draft = lastCall('create_story')?.draft as CreateStoryDraft;

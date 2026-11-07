@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { commands } from '../api/commands';
 import { useUiStore } from '../app/store';
 import type { AppInfo } from '../types';
+import { t, tr } from '../i18n';
 
 /** How often an open app repeats the daily update check (it reuses a recent result). */
 const RECHECK_MS = 6 * 60 * 60 * 1000;
@@ -54,44 +55,46 @@ export function StatusFooter() {
 
   return (
     <footer className="status-footer">
-      <span data-testid="app-version">{info ? `v${info.version}` : 'version unknown'}</span>
+      <span data-testid="app-version">{info ? `v${info.version}` : t('version unknown')}</span>
       <button
         type="button"
         className="link-button"
         onClick={() => navigate({ name: 'diagnostics' })}
       >
-        Diagnostics
+        {t('Diagnostics')}
       </button>
       {info?.supportUrl && (
         <button
           type="button"
           className="link-button"
-          title="Opens in your browser"
+          title={t('Opens in your browser')}
           onClick={() => void commands.openSupportPage().catch(() => undefined)}
         >
-          Support development
+          {t('Support development')}
         </button>
       )}
       {latest && (
-        <span className="update-notice" role="status" aria-label="Update available">
+        <span className="update-notice" role="status" aria-label={t('Update available')}>
           <span>
-            Dear to Love <strong>v{latest.version}</strong> is available.
+            {tr('Dear to Love {version} is available.', {
+              version: <strong>v{latest.version}</strong>,
+            })}
           </span>
           <button
             type="button"
             className="link-button"
-            title="Opens the release page on GitHub in your browser"
+            title={t('Opens the release page on GitHub in your browser')}
             onClick={() => void commands.openReleasePage().catch(() => undefined)}
           >
-            View release
+            {t('View release')}
           </button>
           <button
             type="button"
             className="link-button"
-            aria-label={`Hide the notice for v${latest.version}`}
+            aria-label={t('Hide the notice for v{version}', { version: latest.version })}
             onClick={() => acknowledge(latest.version)}
           >
-            ✓ Got it
+            ✓ {t('Got it')}
           </button>
         </span>
       )}

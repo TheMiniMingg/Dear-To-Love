@@ -1,14 +1,15 @@
 import type { Character, KnownFact, Narration, StateEdit, StoryStateV1 } from '../../types';
 import { cleanOptionalList, minorsIn, RATING_LABELS } from '../create/ContentFields';
 import { STYLES } from '../create/StyleFields';
+import { joinList, msg, t } from '../../i18n';
 
 /** One line of the "what changes" preview. */
 export type ChangeLine = { what: string; before?: string; after?: string };
 
-const cleanList = (l: string[]) => l.map((t) => t.trim()).filter(Boolean);
+const cleanList = (l: string[]) => l.map((x) => x.trim()).filter(Boolean);
 const cleanOpt = (s: string | undefined) => {
-  const t = s?.trim();
-  return t ? t : undefined;
+  const x = s?.trim();
+  return x ? x : undefined;
 };
 
 export function cleanCharacter(c: Character): Character {
@@ -66,28 +67,28 @@ function cleanNarration(n: Narration): Narration {
 const show = (v: unknown) =>
   Array.isArray(v)
     ? v.length
-      ? v.map((x: unknown) => (isStat(x) ? `${x.name} ${x.value}` : String(x))).join(', ')
-      : '(none)'
+      ? joinList(v.map((x: unknown) => (isStat(x) ? `${x.name} ${x.value}` : String(x))))
+      : t('(none)')
     : v
       ? String(v)
-      : '(empty)';
+      : t('(empty)');
 
 function isStat(x: unknown): x is { name: string; value: number } {
   return typeof x === 'object' && x !== null && 'name' in x && 'value' in x;
 }
 
 const CHARACTER_FIELDS: [keyof Character, string][] = [
-  ['name', 'Name'],
-  ['pronouns', 'Pronouns'],
-  ['age', 'Age'],
-  ['role', 'Role'],
-  ['species', 'Race or species'],
-  ['description', 'Description'],
-  ['appearance', 'Appearance'],
-  ['personality', 'Personality'],
-  ['goals', 'Goals'],
-  ['abilities', 'Abilities'],
-  ['stats', 'Stats'],
+  ['name', msg('Name')],
+  ['pronouns', msg('Pronouns')],
+  ['age', msg('Age')],
+  ['role', msg('Role')],
+  ['species', msg('Race or species')],
+  ['description', msg('Description')],
+  ['appearance', msg('Appearance')],
+  ['personality', msg('Personality')],
+  ['goals', msg('Goals')],
+  ['abilities', msg('Abilities')],
+  ['stats', msg('Stats')],
 ];
 
 function fieldLines<T>(
@@ -99,7 +100,7 @@ function fieldLines<T>(
   return fields
     .filter(([k]) => !same(before[k], after[k]))
     .map(([k, label]) => ({
-      what: `${prefix}${label}`,
+      what: `${prefix}${t(label)}`,
       before: show(before[k]),
       after: show(after[k]),
     }));
@@ -123,11 +124,11 @@ export function diffState(
   if (!same(world, before.world)) {
     changes.push({ op: 'setWorld', world });
     lines.push(
-      ...fieldLines('World · ', before.world, world, [
-        ['era', 'Era'],
-        ['setting', 'Setting'],
-        ['description', 'Description'],
-        ['rules', 'Rules'],
+      ...fieldLines(`${t('World')} · `, before.world, world, [
+        ['era', msg('Era')],
+        ['setting', msg('Setting')],
+        ['description', msg('Description')],
+        ['rules', msg('Rules')],
       ]),
     );
   }
@@ -137,31 +138,31 @@ export function diffState(
     changes.push({ op: 'setNarration', narration });
     const shown = (n: Narration) => ({
       ...n,
-      rating: n.rating ? RATING_LABELS[n.rating] : 'Not set',
+      rating: n.rating ? t(RATING_LABELS[n.rating]) : t('Not set'),
       genres: n.genres ?? [],
       themes: n.themes ?? [],
       limits: n.limits ?? [],
-      style: STYLES.find((s) => s.value === (n.style ?? 'narrated'))?.label ?? n.style,
-      innerThoughts: n.innerThoughts ? 'On' : 'Off',
-      messageCards: n.messageCards ? 'On' : 'Off',
-      language: n.language ?? 'Not set',
-      dice: n.dice ? 'On' : 'Off',
+      style: t(STYLES.find((s) => s.value === (n.style ?? 'narrated'))?.label ?? n.style ?? ''),
+      innerThoughts: n.innerThoughts ? t('On') : t('Off'),
+      messageCards: n.messageCards ? t('On') : t('Off'),
+      language: n.language ?? t('Not set'),
+      dice: n.dice ? t('On') : t('Off'),
     });
     lines.push(
-      ...fieldLines('Narration · ', shown(before.narration), shown(narration), [
-        ['perspective', 'Point of view'],
-        ['detail', 'Detail'],
-        ['pacing', 'Pacing'],
-        ['tone', 'Tone'],
-        ['genres', 'Genre'],
-        ['rating', 'Content rating'],
-        ['themes', 'Themes'],
-        ['limits', 'Hard limits'],
-        ['style', 'Style'],
-        ['innerThoughts', 'Inner thoughts'],
-        ['messageCards', 'Texts and calls as cards'],
-        ['language', 'Story language'],
-        ['dice', 'Dice'],
+      ...fieldLines(`${t('Narration')} · `, shown(before.narration), shown(narration), [
+        ['perspective', msg('Point of view')],
+        ['detail', msg('Detail')],
+        ['pacing', msg('Pacing')],
+        ['tone', msg('Tone')],
+        ['genres', msg('Genre')],
+        ['rating', msg('Content rating')],
+        ['themes', msg('Themes')],
+        ['limits', msg('Hard limits')],
+        ['style', msg('Style')],
+        ['innerThoughts', msg('Inner thoughts')],
+        ['messageCards', msg('Texts and calls as cards')],
+        ['language', msg('Story language')],
+        ['dice', msg('Dice')],
       ]),
     );
   }
@@ -171,7 +172,7 @@ export function diffState(
     const prev = before.characters[c.id];
     if (!prev) {
       changes.push({ op: 'upsertCharacter', character: next });
-      lines.push({ what: `New character: ${next.name || 'Unnamed'}` });
+      lines.push({ what: t('New character: {name}', { name: next.name || t('Unnamed') }) });
     } else if (!same(cleanCharacter(prev), next)) {
       changes.push({ op: 'upsertCharacter', character: next });
       lines.push(...fieldLines(`${prev.name} · `, cleanCharacter(prev), next, CHARACTER_FIELDS));
@@ -180,7 +181,7 @@ export function diffState(
   for (const c of Object.values(before.characters)) {
     if (!after.characters[c.id]) {
       changes.push({ op: 'removeCharacter', characterId: c.id });
-      lines.push({ what: `Removed from the story: ${c.name}` });
+      lines.push({ what: t('Removed from the story: {name}', { name: c.name }) });
     }
   }
 
@@ -192,9 +193,9 @@ export function diffState(
   if (!same(scene, before.scene)) {
     changes.push({ op: 'setScene', scene });
     lines.push(
-      ...fieldLines('Scene · ', before.scene, scene, [
-        ['location', 'Where'],
-        ['summary', 'What is happening'],
+      ...fieldLines(`${t('Scene')} · `, before.scene, scene, [
+        ['location', msg('Where')],
+        ['summary', msg('What is happening')],
       ]),
     );
   }
@@ -202,7 +203,7 @@ export function diffState(
   if (!same(threads, before.openThreads)) {
     changes.push({ op: 'setOpenThreads', openThreads: threads });
     lines.push({
-      what: 'Open questions',
+      what: t('Open questions'),
       before: show(before.openThreads),
       after: show(threads),
     });
@@ -214,17 +215,17 @@ export function diffState(
     const prev = priorFacts.get(f.id);
     if (!prev) {
       changes.push({ op: 'upsertFact', fact });
-      lines.push({ what: 'New fact', after: fact.text });
+      lines.push({ what: t('New fact'), after: fact.text });
     } else if (!same({ ...prev, confirmed: true }, fact)) {
       changes.push({ op: 'upsertFact', fact });
-      lines.push({ what: 'Fact', before: prev.text, after: fact.text });
+      lines.push({ what: t('Fact'), before: prev.text, after: fact.text });
     }
   }
   const kept = new Set(after.knownFacts.map((f) => f.id));
   for (const f of before.knownFacts) {
     if (!kept.has(f.id)) {
       changes.push({ op: 'removeFact', factId: f.id });
-      lines.push({ what: 'Removed fact', before: f.text });
+      lines.push({ what: t('Removed fact'), before: f.text });
     }
   }
   return { changes, lines };
@@ -233,23 +234,26 @@ export function diffState(
 /** Short note stored with the edit and shown in the story. */
 export function summarize(lines: ChangeLine[]): string {
   const parts = lines.map((l) => l.what);
-  const text = parts.slice(0, 4).join('; ');
-  return parts.length > 4 ? `${text}; and ${parts.length - 4} more` : text;
+  const text = parts.slice(0, 4).join(t('; '));
+  return parts.length > 4 ? t('{list}; and {n} more', { list: text, n: parts.length - 4 }) : text;
 }
 
 /** Problems that would make the edit fail, said plainly. */
 export function editProblems(after: StoryStateV1): string[] {
   const out: string[] = [];
   for (const c of Object.values(after.characters)) {
-    if (!c.name.trim()) out.push('Every character needs a name.');
+    if (!c.name.trim()) out.push(t('Every character needs a name.'));
   }
   for (const f of after.knownFacts) {
-    if (!f.text.trim()) out.push('A fact is empty. Write it or remove it.');
+    if (!f.text.trim()) out.push(t('A fact is empty. Write it or remove it.'));
   }
   if (after.narration.rating === 'explicit') {
     for (const name of minorsIn(Object.values(after.characters))) {
       out.push(
-        `${name} is under 18. Everyone in an adults-only story must be an adult: change their age or the content rating.`,
+        t(
+          '{name} is under 18. Everyone in an adults-only story must be an adult: change their age or the content rating.',
+          { name },
+        ),
       );
     }
   }

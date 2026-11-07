@@ -5,6 +5,7 @@ import { ImportResult, useAddImages } from '../images/ImagesScreen';
 import { MakePortrait } from '../images/MakePortrait';
 import type { AssetDto, RouteView } from '../../types';
 import { BACKGROUND, COVER, picture, portraitSlot, slotName, type Picture } from './pictures';
+import { t, tr } from '../../i18n';
 
 type Props = {
   view: RouteView;
@@ -90,14 +91,21 @@ export function PicturesPanel({ view, awaitingReply, onChanged }: Props) {
           routeId: view.route.id,
           expectedHeadId: view.state.headEventId,
           changes: [{ op: 'setVisualRef', slot, assetId }],
-          note: assetId ? name : `${name} removed`,
+          note: assetId ? name : t('{name} removed', { name }),
         });
-        onChanged(next, assetId ? `${name} changed on ${route}` : `${name} removed on ${route}`);
+        onChanged(
+          next,
+          assetId
+            ? t('{name} changed on {route}', { name, route })
+            : t('{name} removed on {route}', { name, route }),
+        );
       } else {
         const visuals = await commands.setStoryPicture(view.story.id, slot, assetId);
         onChanged(
           { ...view, visuals },
-          assetId ? `${name} set for the story` : `${name} cleared for the story`,
+          assetId
+            ? t('{name} set for the story', { name })
+            : t('{name} cleared for the story', { name }),
         );
       }
       setChoosing(null);
@@ -121,7 +129,7 @@ export function PicturesPanel({ view, awaitingReply, onChanged }: Props) {
     panelRef.current?.querySelector<HTMLElement>(`[data-slot="${CSS.escape(slot)}"]`)?.focus();
     if (p.source === 'route') {
       if (awaitingReply) {
-        setError('This route can change its pictures once the waiting action has its reply.');
+        setError(t('This route can change its pictures once the waiting action has its reply.'));
         return;
       }
       void apply(slot, null, 'route');
@@ -139,24 +147,24 @@ export function PicturesPanel({ view, awaitingReply, onChanged }: Props) {
     return (
       <div className="picture-chooser" ref={panelRef}>
         <h3 className="small-heading" tabIndex={-1}>
-          Choose: {name}
+          {t('Choose: {name}', { name })}
         </h3>
         <div className="button-row">
           <button
             type="button"
             disabled={adding}
             onClick={() => void add({ storyId })}
-            title="Only this story can use them"
+            title={t('Only this story can use them')}
           >
-            {adding ? 'Adding…' : 'Add for this story'}
+            {adding ? t('Adding…') : t('Add for this story')}
           </button>
           <button
             type="button"
             disabled={adding}
             onClick={() => void add()}
-            title="Every story can use them"
+            title={t('Every story can use them')}
           >
-            Add for all stories
+            {t('Add for all stories')}
           </button>
         </div>
         <ImportResult result={result} />
@@ -172,33 +180,33 @@ export function PicturesPanel({ view, awaitingReply, onChanged }: Props) {
           />
         )}
         {ownImages && sharedImages && ownImages.length + sharedImages.length === 0 && (
-          <p className="muted">No images yet. Add some from this computer first.</p>
+          <p className="muted">{t('No images yet. Add some from this computer first.')}</p>
         )}
         {ownImages && ownImages.length > 0 && (
-          <section className="image-group" aria-label="This story's pictures">
-            <h4 className="small-heading">This story&apos;s pictures</h4>
+          <section className="image-group" aria-label={t("This story's pictures")}>
+            <h4 className="small-heading">{t("This story's pictures")}</h4>
             <ImageGrid
               images={ownImages}
               selectedId={pick}
               onSelect={(a) => setPick(a.id)}
-              label="This story's pictures"
+              label={t("This story's pictures")}
             />
           </section>
         )}
         {sharedImages && sharedImages.length > 0 && (
-          <section className="image-group" aria-label="Pictures for all stories">
-            <h4 className="small-heading">For all stories</h4>
+          <section className="image-group" aria-label={t('Pictures for all stories')}>
+            <h4 className="small-heading">{t('For all stories')}</h4>
             <ImageGrid
               images={sharedImages}
               selectedId={pick}
               onSelect={(a) => setPick(a.id)}
-              label="Pictures for all stories"
+              label={t('Pictures for all stories')}
             />
           </section>
         )}
         {routeScoped && (
           <fieldset className="choice-list">
-            <legend>Use it</legend>
+            <legend>{t('Use it')}</legend>
             <label>
               <input
                 type="radio"
@@ -207,8 +215,11 @@ export function PicturesPanel({ view, awaitingReply, onChanged }: Props) {
                 disabled={awaitingReply}
                 onChange={() => setScope('route')}
               />{' '}
-              From now on, on <strong>{route}</strong> only
-              <span className="muted small"> Earlier turns and other routes keep theirs.</span>
+              {tr('From now on, on {route} only', { route: <strong>{route}</strong> })}
+              <span className="muted small">
+                {' '}
+                {t('Earlier turns and other routes keep theirs.')}
+              </span>
             </label>
             <label>
               <input
@@ -217,14 +228,17 @@ export function PicturesPanel({ view, awaitingReply, onChanged }: Props) {
                 checked={scope === 'default'}
                 onChange={() => setScope('default')}
               />{' '}
-              As the story default
-              <span className="muted small"> On every route that hasn&apos;t chosen its own.</span>
+              {t('As the story default')}
+              <span className="muted small">
+                {' '}
+                {t("On every route that hasn't chosen its own.")}
+              </span>
             </label>
           </fieldset>
         )}
         {routeScoped && awaitingReply && (
           <p className="muted small">
-            This route can choose its own picture once the waiting action has its reply.
+            {t('This route can choose its own picture once the waiting action has its reply.')}
           </p>
         )}
         {error && (
@@ -234,7 +248,7 @@ export function PicturesPanel({ view, awaitingReply, onChanged }: Props) {
         )}
         <div className="button-row">
           <button type="button" onClick={() => setChoosing(null)}>
-            Back
+            {t('Back')}
           </button>
           <button
             type="button"
@@ -242,7 +256,7 @@ export function PicturesPanel({ view, awaitingReply, onChanged }: Props) {
             disabled={!pick || busy}
             onClick={() => pick && void apply(choosing, pick, routeScoped ? scope : 'default')}
           >
-            Use this picture
+            {t('Use this picture')}
           </button>
         </div>
       </div>
@@ -251,7 +265,7 @@ export function PicturesPanel({ view, awaitingReply, onChanged }: Props) {
 
   return (
     <div className="pictures-panel" ref={panelRef}>
-      <ul className="picture-list" aria-label="Pictures">
+      <ul className="picture-list" aria-label={t('Pictures')}>
         {slots.map((slot) => {
           const p = picture(view, slot);
           const name = slotName(view, slot);
@@ -262,7 +276,7 @@ export function PicturesPanel({ view, awaitingReply, onChanged }: Props) {
                   <Thumb assetId={p.assetId} alt={name} />
                 ) : (
                   <span className="thumb-empty" aria-hidden="true">
-                    None
+                    {t('None')}
                   </span>
                 )}
               </div>
@@ -274,19 +288,19 @@ export function PicturesPanel({ view, awaitingReply, onChanged }: Props) {
                 <button
                   type="button"
                   data-slot={slot}
-                  aria-label={`Choose ${name}`}
+                  aria-label={t('Choose {name}', { name })}
                   onClick={() => open(slot, p)}
                 >
-                  Choose…
+                  {t('Choose…')}
                 </button>
                 {p.source !== 'none' && (
                   <button
                     type="button"
-                    aria-label={`Remove ${name}`}
+                    aria-label={t('Remove {name}', { name })}
                     disabled={busy}
                     onClick={() => remove(slot, p)}
                   >
-                    Remove
+                    {t('Remove')}
                   </button>
                 )}
               </div>
@@ -304,15 +318,15 @@ export function PicturesPanel({ view, awaitingReply, onChanged }: Props) {
 }
 
 function sourceText(slot: string, p: Picture, route: string): string {
-  if (slot === COVER) return p.assetId ? 'Shown in your library.' : 'No cover yet.';
+  if (slot === COVER) return p.assetId ? t('Shown in your library.') : t('No cover yet.');
   switch (p.source) {
     case 'route':
       return p.defaultId
-        ? `Chosen on ${route}. Other routes show the story default.`
-        : `Chosen on ${route}.`;
+        ? t('Chosen on {route}. Other routes show the story default.', { route })
+        : t('Chosen on {route}.', { route });
     case 'default':
-      return 'Story default.';
+      return t('Story default.');
     case 'none':
-      return 'No picture.';
+      return t('No picture.');
   }
 }

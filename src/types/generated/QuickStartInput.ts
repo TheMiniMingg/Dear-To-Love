@@ -6,4 +6,9 @@ export type QuickStartInput = { worldId: string, scenarioId: string, characterId
 /**
  * The type of story chosen first, e.g. "Romance"; it leads the genres.
  */
-storyType?: string, };
+storyType?: string, 
+/**
+ * The language to write the story in, e.g. "Japanese". The app sends
+ * its own language; unset keeps the world's (usually none).
+ */
+language?: string, };

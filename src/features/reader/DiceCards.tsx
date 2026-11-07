@@ -1,4 +1,5 @@
 import type { DiceRoll, RollRequest } from '../../types';
+import { t } from '../../i18n';
 
 /** A die outline, for a roll that is still to be made. */
 function DieIcon() {
@@ -25,7 +26,7 @@ function rollDetail(r: {
   let out = r.dice;
   if (r.faces && r.faces.length > 1) out += ` (${r.faces.join(' + ')})`;
   if (r.stat) out += ` + ${r.stat} ${signed(r.bonus ?? 0)}`;
-  if (r.target !== undefined) out += ` · needs ${r.target}`;
+  if (r.target !== undefined) out += ` · ${t('needs {n}', { n: r.target })}`;
   return out;
 }
 
@@ -42,18 +43,27 @@ export function RollResult({
 }) {
   const outcome =
     roll.target === undefined ? null : roll.total >= roll.target ? 'success' : 'failure';
-  const outcomeText = outcome === 'success' ? 'Success' : outcome === 'failure' ? 'Failed' : '';
+  const outcomeText =
+    outcome === 'success' ? t('Success') : outcome === 'failure' ? t('Failed') : '';
   return (
     <div
       className={['msg-roll', 'rolled', outcome, fresh && 'fresh'].filter(Boolean).join(' ')}
       role="group"
-      aria-label={`Roll for ${roll.label}: ${roll.total}${outcomeText ? `, ${outcomeText}` : ''}`}
+      aria-label={
+        outcomeText
+          ? t('Roll for {label}: {total}, {outcome}', {
+              label: roll.label,
+              total: roll.total,
+              outcome: outcomeText,
+            })
+          : t('Roll for {label}: {total}', { label: roll.label, total: roll.total })
+      }
     >
       <span className="roll-die" aria-hidden="true">
         {roll.total}
       </span>
       <div className="roll-body">
-        <span className="msg-label">{roll.asked ? 'You rolled for' : 'Roll for'}</span>{' '}
+        <span className="msg-label">{roll.asked ? t('You rolled for') : t('Roll for')}</span>{' '}
         <strong>{roll.label}</strong>
         <span className="roll-detail">{rollDetail(roll)}</span>
       </div>
@@ -71,23 +81,29 @@ export function RollAsk({
   onRoll?: (request: RollRequest) => void;
 }) {
   const detail = [
-    request.stat ? `${request.dice} + your ${request.stat}` : request.dice,
-    request.target !== undefined && `needs ${request.target}`,
+    request.stat
+      ? t('{dice} + your {stat}', { dice: request.dice, stat: request.stat })
+      : request.dice,
+    request.target !== undefined && t('needs {n}', { n: request.target }),
   ]
     .filter(Boolean)
     .join(' · ');
   return (
-    <div className="msg-roll ask" role="group" aria-label={`Roll for ${request.label}`}>
+    <div
+      className="msg-roll ask"
+      role="group"
+      aria-label={t('Roll for {label}', { label: request.label })}
+    >
       <span className="roll-die" aria-hidden="true">
         <DieIcon />
       </span>
       <div className="roll-body">
-        <span className="msg-label">Roll for</span> <strong>{request.label}</strong>
+        <span className="msg-label">{t('Roll for')}</span> <strong>{request.label}</strong>
         <span className="roll-detail">{detail}</span>
       </div>
       {onRoll && (
         <button type="button" className="primary" onClick={() => onRoll(request)}>
-          Roll {request.dice}
+          {t('Roll {dice}', { dice: request.dice })}
         </button>
       )}
     </div>

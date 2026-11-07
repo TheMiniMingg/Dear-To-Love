@@ -1,5 +1,6 @@
 import { formatWhen } from '../../api/backups';
 import type { RouteNode } from '../../types';
+import { t, tn } from '../../i18n';
 
 /** A route placed in the tree: its shown parent, generation and row. */
 export type Placed = {
@@ -56,40 +57,43 @@ export function layoutRoutes(nodes: RouteNode[], shown: (n: RouteNode) => boolea
   return out;
 }
 
-export const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
+/** "1 turn", "12 turns", in the chosen language. */
+export const turnCount = (n: number) => tn(n, '{n} turn', '{n} turns');
 
 /** "Branched from Main after turn 3", or where the story began. */
 export function originText(n: RouteNode, labelOf: (id: string) => string | undefined): string {
-  if (n.forkTurn == null || !n.route.parentRouteId) return 'Where the story began.';
-  const from = labelOf(n.route.parentRouteId) ?? 'another route';
+  if (n.forkTurn == null || !n.route.parentRouteId) return t('Where the story began.');
+  const from = labelOf(n.route.parentRouteId) ?? t('another route');
   return n.forkTurn === 0
-    ? `Branched from ${from} before the first turn.`
-    : `Branched from ${from} after turn ${n.forkTurn}.`;
+    ? t('Branched from {route} before the first turn.', { route: from })
+    : t('Branched from {route} after turn {n}.', { route: from, n: n.forkTurn });
 }
 
 /** What the route did differently first, e.g. "Another reply: “The door…”". */
 export function branchText(n: RouteNode): string | null {
   const b = n.branch;
-  if (!b) return n.forkTurn == null ? null : 'Nothing different yet.';
+  if (!b) return n.forkTurn == null ? null : t('Nothing different yet.');
   switch (b.kind) {
     case 'action':
-      return `A different action: “${b.text}”`;
+      return t('A different action: “{text}”', { text: b.text });
     case 'reply':
-      return `Another reply: “${b.text}”`;
+      return t('Another reply: “{text}”', { text: b.text });
     case 'chapter':
-      return `A new chapter: ${b.text}`;
+      return t('A new chapter: {title}', { title: b.text });
     case 'edit':
-      return b.text ? `Changed: ${b.text}` : 'Changed the story details.';
+      return b.text ? t('Changed: {what}', { what: b.text }) : t('Changed the story details.');
   }
 }
 
 /** "12 turns (9 since it branched) · Chapter 2: The Storm · Played 6 Nov 2026, 21:40". */
 export function statsText(n: RouteNode): string {
-  const parts = [plural(n.turns, 'turn')];
+  const parts = [turnCount(n.turns)];
   if (n.forkTurn != null && n.turns > n.forkTurn) {
-    parts[0] += ` (${n.turns - n.forkTurn} since it branched)`;
+    parts[0] += ` ${t('({n} since it branched)', { n: n.turns - n.forkTurn })}`;
   }
-  if (n.chapter) parts.push(`Chapter ${n.chapter.ordinal}: ${n.chapter.title}`);
-  parts.push(`Played ${formatWhen(n.route.updatedAt)}`);
+  if (n.chapter) {
+    parts.push(t('Chapter {n}: {title}', { n: n.chapter.ordinal, title: n.chapter.title }));
+  }
+  parts.push(t('Played {when}', { when: formatWhen(n.route.updatedAt) }));
   return parts.join(' · ');
 }

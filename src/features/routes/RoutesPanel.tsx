@@ -4,6 +4,7 @@ import type { RouteDto, RouteNode } from '../../types';
 import { RouteMap } from './RouteMap';
 import { RouteTimeline } from './RouteTimeline';
 import { branchText, layoutRoutes, originText, statsText } from './routeLayout';
+import { msg, t, tn } from '../../i18n';
 
 type Props = {
   storyId: string;
@@ -16,9 +17,9 @@ type Props = {
 type View = 'list' | 'map' | 'timeline';
 
 const VIEWS: { id: View; label: string }[] = [
-  { id: 'list', label: 'List' },
-  { id: 'map', label: 'Map' },
-  { id: 'timeline', label: 'Timeline' },
+  { id: 'list', label: msg('List') },
+  { id: 'map', label: msg('Map') },
+  { id: 'timeline', label: msg('Timeline') },
 ];
 
 const VIEW_KEY = 'dtl.routesView';
@@ -114,7 +115,7 @@ export function RoutesPanel({ storyId, currentRouteId, routes, onSwitch, onChang
 
   return (
     <div className="panel routes-panel">
-      <div role="radiogroup" aria-label="Show routes as" className="segmented">
+      <div role="radiogroup" aria-label={t('Show routes as')} className="segmented">
         {VIEWS.map((v) => (
           <label key={v.id}>
             <input
@@ -123,7 +124,7 @@ export function RoutesPanel({ storyId, currentRouteId, routes, onSwitch, onChang
               checked={view === v.id}
               onChange={() => setView(v.id)}
             />
-            <span>{v.label}</span>
+            <span>{t(v.label)}</span>
           </label>
         ))}
       </div>
@@ -133,7 +134,7 @@ export function RoutesPanel({ storyId, currentRouteId, routes, onSwitch, onChang
         </p>
       )}
       {view === 'list' && (
-        <ul className="item-list route-list" aria-label="Routes">
+        <ul className="item-list route-list" aria-label={t('Routes')}>
           {placed.map((p) => (
             <li
               key={p.node.route.id}
@@ -163,7 +164,7 @@ export function RoutesPanel({ storyId, currentRouteId, routes, onSwitch, onChang
             />
           )}
           {chosen && (
-            <section className="route-chosen" aria-label="Chosen route">
+            <section className="route-chosen" aria-label={t('Chosen route')}>
               {details(chosen.node)}
             </section>
           )}
@@ -176,7 +177,7 @@ export function RoutesPanel({ storyId, currentRouteId, routes, onSwitch, onChang
             checked={showHidden}
             onChange={(e) => setShowHidden(e.target.checked)}
           />
-          Show {hiddenCount} hidden {hiddenCount === 1 ? 'route' : 'routes'}
+          {tn(hiddenCount, 'Show {n} hidden route', 'Show {n} hidden routes')}
         </label>
       )}
     </div>
@@ -215,7 +216,7 @@ function RouteDetails({
           }}
         >
           <label htmlFor={`rename-${r.id}`} className="visually-hidden">
-            Route name
+            {t('Route name')}
           </label>
           <input
             id={`rename-${r.id}`}
@@ -224,29 +225,33 @@ function RouteDetails({
             onChange={(e) => setLabel(e.target.value)}
             autoFocus
           />
-          <button type="submit">Rename</button>
+          <button type="submit">{t('Rename')}</button>
           <button type="button" onClick={() => setRenaming(false)}>
-            Cancel
+            {t('Cancel')}
           </button>
         </form>
       ) : (
         <div className="route-details">
           <div>
             <strong>{r.label}</strong>
-            {current && <span className="badge">Current</span>}
+            {current && <span className="badge">{t('Current')}</span>}
             {r.isMain && (
-              <span className="badge" title="The route the story started on">
-                Original
+              <span className="badge" title={t('The route the story started on')}>
+                {t('Original')}
               </span>
             )}
-            {r.hidden && <span className="badge">Hidden</span>}
+            {r.hidden && <span className="badge">{t('Hidden')}</span>}
           </div>
           {detailed && (
             <>
               <span className="muted small">{origin}</span>
               {branch && <span className="small">{branch}</span>}
               <span className="muted small">{statsText(node)}</span>
-              {node.latest && <span className="muted small route-latest">Now: {node.latest}</span>}
+              {node.latest && (
+                <span className="muted small route-latest">
+                  {t('Now: {text}', { text: node.latest })}
+                </span>
+              )}
             </>
           )}
         </div>
@@ -254,7 +259,7 @@ function RouteDetails({
       <div className="button-row">
         {!current && (
           <button type="button" onClick={onSwitch}>
-            Switch
+            {t('Switch')}
           </button>
         )}
         <button
@@ -264,11 +269,11 @@ function RouteDetails({
             setLabel(r.label);
           }}
         >
-          Rename
+          {t('Rename')}
         </button>
         {!r.isMain && (
           <button type="button" onClick={onHide}>
-            {r.hidden ? 'Show' : 'Hide'}
+            {r.hidden ? t('Show') : t('Hide')}
           </button>
         )}
       </div>

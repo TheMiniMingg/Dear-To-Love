@@ -28,6 +28,7 @@ impl Env {
                 perspective: None,
                 detail: None,
                 story_type: None,
+                language: None,
             })
             .unwrap();
         let story = create_story(&t.db, draft).await.unwrap();

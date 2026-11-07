@@ -5,6 +5,7 @@
  * in Rust.
  */
 import type { RollRequest } from '../../types';
+import { t } from '../../i18n';
 
 export type MessageTag = 'text' | 'call' | 'thought' | 'letter' | 'post' | 'roll';
 
@@ -133,7 +134,7 @@ export function wrapAction(
 export function rollRequestOf(attrs: Record<string, string>): RollRequest | null {
   const dice = attrs.dice?.trim();
   if (!dice || attrs.result) return null;
-  const req: RollRequest = { label: attrs.for?.trim() || 'A roll', dice, asked: true };
+  const req: RollRequest = { label: attrs.for?.trim() || t('A roll'), dice, asked: true };
   const target = Number.parseInt(attrs.target ?? '', 10);
   if (Number.isFinite(target)) req.target = target;
   if (attrs.stat?.trim()) req.stat = attrs.stat.trim();
@@ -165,7 +166,7 @@ export function rollFromComposer(
   const oneLine = !words.includes('\n') && [...words].length <= 120;
   const first = words.split('\n')[0]!.trim();
   const label = !words
-    ? 'A roll'
+    ? t('A roll')
     : oneLine
       ? words
       : [...first].length > 80
@@ -173,7 +174,7 @@ export function rollFromComposer(
         : first;
   const roll: RollRequest = { label, dice: dice.trim() };
   if (stat.trim()) roll.stat = stat.trim();
-  const t = Number.parseInt(target, 10);
-  if (Number.isFinite(t)) roll.target = t;
+  const need = Number.parseInt(target, 10);
+  if (Number.isFinite(need)) roll.target = need;
   return { text: oneLine ? '' : words, roll };
 }

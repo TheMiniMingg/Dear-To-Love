@@ -3,22 +3,36 @@ import { commands, errorMessage } from '../../api/commands';
 import { formatWhen } from '../../api/backups';
 import { useUiStore } from '../../app/store';
 import type { AppInfo, UpdateStatus } from '../../types';
+import { joinSentences, t } from '../../i18n';
 
 /** One sentence on what the last check found. */
 export function describeUpdates(u: UpdateStatus): string {
-  const when = u.checkedAt ? ` (checked ${formatWhen(u.checkedAt)})` : '';
+  const when = u.checkedAt ? t(' (checked {when})', { when: formatWhen(u.checkedAt) }) : '';
   switch (u.state) {
     case 'off':
-      return 'Update checks are off. Check now asks GitHub once.';
+      return t('Update checks are off. Check now asks GitHub once.');
     case 'notChecked':
-      return 'Not checked yet. The first check runs shortly.';
+      return t('Not checked yet. The first check runs shortly.');
     case 'upToDate':
-      return `v${u.installed} is the newest release${when}.`;
+      return t('v{version} is the newest release{when}.', { version: u.installed, when });
     case 'available':
-      return `v${u.latest?.version ?? '?'} is available; you have v${u.installed}${when}.`;
+      return t('v{latest} is available; you have v{version}{when}.', {
+        latest: u.latest?.version ?? '?',
+        version: u.installed,
+        when,
+      });
     case 'unavailable': {
-      const known = u.latest ? ` The newest release seen before was v${u.latest.version}.` : '';
-      return `The last check did not work: ${u.message ?? 'unknown problem'}${when}. Nothing else is affected.${known}`;
+      const parts = [
+        t('The last check did not work: {problem}{when}. Nothing else is affected.', {
+          problem: u.message ?? t('unknown problem'),
+          when,
+        }),
+      ];
+      if (u.latest)
+        parts.push(
+          t('The newest release seen before was v{version}.', { version: u.latest.version }),
+        );
+      return joinSentences(parts);
     }
   }
 }
@@ -78,7 +92,7 @@ export function UpdatesSection() {
 
   return (
     <section className="settings-section" aria-labelledby="updates-title">
-      <h2 id="updates-title">Updates</h2>
+      <h2 id="updates-title">{t('Updates')}</h2>
       <label className="check">
         <input
           type="checkbox"
@@ -86,12 +100,12 @@ export function UpdatesSection() {
           disabled={!updates || busy}
           onChange={(e) => toggle(e.target.checked)}
         />
-        Check GitHub for a new release once a day
+        {t('Check GitHub for a new release once a day')}
       </label>
       <p className="muted small">
-        Reads the public release list of the Dear to Love repository. Nothing about you or your
-        stories is sent, and nothing is downloaded or installed: a newer release only shows a notice
-        with a link to its page.
+        {t(
+          'Reads the public release list of the Dear to Love repository. Nothing about you or your stories is sent, and nothing is downloaded or installed: a newer release only shows a notice with a link to its page.',
+        )}
       </p>
       <div className="button-row">
         <button
@@ -99,15 +113,15 @@ export function UpdatesSection() {
           disabled={!updates || busy}
           onClick={() => void run(() => commands.checkForUpdates(true))}
         >
-          {busy ? 'Checking…' : 'Check now'}
+          {busy ? t('Checking…') : t('Check now')}
         </button>
         {updates?.state === 'available' && updates.latest && (
           <button
             type="button"
-            title="Opens the release page on GitHub in your browser"
+            title={t('Opens the release page on GitHub in your browser')}
             onClick={() => void openRelease()}
           >
-            View release v{updates.latest.version}
+            {t('View release v{version}', { version: updates.latest.version })}
           </button>
         )}
       </div>
@@ -163,33 +177,33 @@ export function AboutSection() {
 
   return (
     <section className="settings-section" aria-labelledby="about-title">
-      <h2 id="about-title">About</h2>
+      <h2 id="about-title">{t('About')}</h2>
       <p>
         {info ? (
           <>
             {info.name} <strong>v{info.version}</strong> ({info.os} {info.arch}
-            {info.buildProfile === 'debug' ? ', development build' : ''}).
+            {info.buildProfile === 'debug' ? t(', development build') : ''}).
           </>
         ) : (
           'Dear to Love.'
         )}{' '}
-        Free and open source under the MIT License.
+        {t('Free and open source under the MIT License.')}
       </p>
       <div className="button-row">
         <button
           type="button"
-          title={info ? `Opens ${info.repositoryUrl} in your browser` : undefined}
+          title={info ? t('Opens {url} in your browser', { url: info.repositoryUrl }) : undefined}
           onClick={() => void open(commands.openRepositoryPage)}
         >
-          Source code
+          {t('Source code')}
         </button>
         {info?.supportUrl && (
           <button
             type="button"
-            title="Opens in your browser"
+            title={t('Opens in your browser')}
             onClick={() => void open(commands.openSupportPage)}
           >
-            Support development
+            {t('Support development')}
           </button>
         )}
       </div>

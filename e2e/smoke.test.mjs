@@ -1,4 +1,4 @@
-// T01 + T25 + T27 (+ preview, save/load/fork/reopen): keyboard-only, offline, real app.
+// T01 + T25 + T27 (+ preview, save/load/fork/reopen, app language): keyboard-only, offline, real app.
 import { after, test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
@@ -105,4 +105,15 @@ test('keyboard-only: quick start, play, save, load as branch, reopen', async () 
   const b2 = session.browser;
   await waitForText(b2, 'main', 'The Unsigned Letter');
   await waitForText(b2, 'main', '2 routes');
+
+  // Settings → Language: the app in Japanese, still Japanese after a restart.
+  await (await b2.$('button=Settings')).click();
+  await (await b2.$('select[lang="mul"]')).selectByVisibleText('日本語');
+  await waitForText(b2, 'h1', '設定');
+  assert.equal(await b2.execute(() => document.documentElement.lang), 'ja');
+  await session.stop();
+  session = await launch(dataDir);
+  const b3 = session.browser;
+  await waitForText(b3, 'main', 'ルート 2 本');
+  await waitForText(b3, 'body', '新しいストーリー');
 });
