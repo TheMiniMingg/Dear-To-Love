@@ -1,10 +1,10 @@
 // Portraits in the real app: a picture connection (to a local fake images
 // API) makes a character's portrait from their description, kept for this
-// story only, and the reader shows it.
+// story only, and the reader puts it on stage once she appears.
 import { after, test } from 'node:test';
 import assert from 'node:assert/strict';
 import { startFakeOpenAI } from './fake-openai.mjs';
-import { launch, makeDataDir, png, waitForText } from './harness.mjs';
+import { launch, makeDataDir, png, typeInto, waitForReply, waitForText } from './harness.mjs';
 
 let session;
 let fake;
@@ -50,9 +50,11 @@ test('make a portrait from a description and show it', async () => {
   await waitForText(b, '[role="dialog"]', 'Paused');
   await click('button=Pictures');
   await waitForText(b, '[role="dialog"]', 'Portrait of');
-  // The first portrait row is the player's.
+  // The first portrait row is the player's. The stage shows everyone else,
+  // so make one for Mara.
   const rows = await b.$$('[aria-label^="Choose Portrait of"]');
-  await rows[0].click();
+  assert.equal(await rows[1].getAttribute('aria-label'), 'Choose Portrait of Mara Quill');
+  await rows[1].click();
   await waitForText(b, '[role="dialog"]', 'Uses Fake pictures (gpt-image-1)');
   await click('button=Make portrait');
   await waitForText(b, '[role="dialog"]', 'It is selected below', 20000);
@@ -67,12 +69,20 @@ test('make a portrait from a description and show it', async () => {
   assert.match(body.prompt, /Head-and-shoulders portrait/);
   assert.match(body.prompt, /safe for work/);
 
-  // The portrait loads through the app's image protocol.
+  // Mara is not in the opening scene, so she takes the stage when a reply
+  // brings her in.
+  await b.keys(['Escape']);
+  await waitForText(b, '[role="dialog"]', 'Paused');
+  await b.keys(['Escape']);
+  await typeInto(b, '#composer-input', 'Talk to Mara about the letter');
+  await b.keys(['Enter']);
+  await waitForReply(b);
+  // The portrait loads through the app's image protocol, on the stage.
   await b.waitUntil(
     async () =>
       b.execute(() =>
         [...document.querySelectorAll('[data-testid="scene-pictures"] img')].some(
-          (img) => img.complete && img.naturalWidth === 256,
+          (img) => img.alt === 'Portrait of Mara Quill' && img.complete && img.naturalWidth === 256,
         ),
       ),
     { timeout: 10000, timeoutMsg: 'the portrait did not load' },
