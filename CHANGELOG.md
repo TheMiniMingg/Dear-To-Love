@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- **Eight more worlds**, each with a scenario: Northgate University (school life, with dice
+  for exams), The Underhalls (a dungeon delve with orcs, goblins and lizardfolk), Neon Harbor
+  (cyberpunk), The Dry Country (post-apocalyptic), Lumen City (superheroes), Dust Creek
+  (western), The Lantern Palace (court intrigue) and Maple & Fern (a cozy dating story). Seven
+  more characters, including an orc delver, a goblin tinkerer and a lizardfolk scout, with
+  stats.
+- **Race or species** for every character, with more than 40 to pick from (orc, goblin,
+  lizardfolk, catfolk, merfolk, android and more) or your own. Guided creation also offers
+  many more roles, personality traits, eras, settings and world rules. **Rules** and
+  **personality** are now a compact menu instead of a long list of checkboxes.
 - **Dice rolls.** With **Roll dice for uncertain moments** on (the default for Adventure,
   Fantasy and School life), the storyteller stops at risky moments and asks for a roll. It
   sets the odds from the story, such as a test scored 40 to 100 after studying twice. You

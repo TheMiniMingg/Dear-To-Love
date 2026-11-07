@@ -73,6 +73,11 @@ function CharacterFields({
         />
         <TextField label="Age" value={c.age ?? ''} onChange={(age) => onChange({ age })} />
         <TextField label="Role" value={c.role ?? ''} onChange={(role) => onChange({ role })} />
+        <TextField
+          label="Race or species"
+          value={c.species ?? ''}
+          onChange={(species) => onChange({ species })}
+        />
       </div>
       <TextArea
         label="Description"

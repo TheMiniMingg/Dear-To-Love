@@ -338,3 +338,15 @@ fn dice_stats_and_rolls_reach_the_storyteller() {
          outcome=\"success\"/>\n\nI turn the paper over."
     );
 }
+
+#[test]
+fn a_characters_race_reaches_the_storyteller() {
+    let mut s = state();
+    let pc = s.state.player_character_id.clone();
+    s.state.characters.get_mut(&pc).unwrap().species = Some("Lizardfolk".into());
+    let p = system_prompt(&s, &frame());
+    assert!(
+        p.contains("- Sam Ashby (player character): pronouns: they/them; species: Lizardfolk;"),
+        "{p}"
+    );
+}

@@ -1,0 +1,25 @@
+{
+  "templateSchemaVersion": 1,
+  "type": "world",
+  "id": "starter:dry-country",
+  "label": "The Dry Country",
+  "summary": "A dust-blown wasteland of dead highways and walled settlements, forty years after the Collapse.",
+  "world": {
+    "era": "Forty years after the Collapse",
+    "setting": "The Dry Country, a wasteland of dead highways and walled settlements",
+    "description": "Water is money, fuel is power, and the old cities are ruins full of useful junk and worse things. Settlements trade, raid and make uneasy truces along the last working highway.",
+    "rules": [
+      "No magic: the dangers are people, weather and scarcity",
+      "Water, fuel and ammunition are scarce and always counted",
+      "Trust is earned slowly and lost in a moment"
+    ]
+  },
+  "narration": {
+    "perspective": "second",
+    "detail": "balanced",
+    "tone": "Harsh, hopeful and human",
+    "pacing": "normal",
+    "genres": ["Post-apocalyptic", "Adventure", "Drama"],
+    "dice": true
+  }
+}

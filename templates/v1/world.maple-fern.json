@@ -1,0 +1,26 @@
+{
+  "templateSchemaVersion": 1,
+  "type": "world",
+  "id": "starter:maple-fern",
+  "label": "Maple & Fern",
+  "summary": "A cozy café and bookshop in a small mountain town, with a cat who owns both and regulars who like to linger.",
+  "world": {
+    "era": "Present day",
+    "setting": "Maple & Fern, a café and bookshop in a small mountain town",
+    "description": "Mismatched chairs, a bookshop upstairs, a cat named Biscuit who owns both, and regulars who all seem to have a reason to linger. The town festival is a month away.",
+    "rules": [
+      "Grounded and cozy: low stakes, big feelings",
+      "Romance grows through choices, attention and consent",
+      "Everyone has a story worth hearing if you ask"
+    ]
+  },
+  "narration": {
+    "perspective": "second",
+    "detail": "balanced",
+    "tone": "Cozy, flirty and heartfelt",
+    "pacing": "slow",
+    "genres": ["Dating sim", "Romance", "Slice of life"],
+    "innerThoughts": true,
+    "messageCards": true
+  }
+}

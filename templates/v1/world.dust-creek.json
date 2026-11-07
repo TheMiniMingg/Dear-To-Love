@@ -1,0 +1,25 @@
+{
+  "templateSchemaVersion": 1,
+  "type": "world",
+  "id": "starter:dust-creek",
+  "label": "Dust Creek",
+  "summary": "A frontier town on the edge of the desert, two days from the railroad, where silver was found last spring.",
+  "world": {
+    "era": "1879",
+    "setting": "Dust Creek, a frontier town on the edge of the desert, two days from the railroad",
+    "description": "One saloon, two churches, a bank robbed twice this year, and a sheriff who is new, unwanted and very good with a rifle. Silver was found in the hills last spring, and everyone wants a piece.",
+    "rules": [
+      "Grounded: no magic, but legends grow fast",
+      "Guns are deadly, and gunfights are rare, quick and final",
+      "Reputation is everything; people remember what you did"
+    ]
+  },
+  "narration": {
+    "perspective": "second",
+    "detail": "balanced",
+    "tone": "Dusty and laconic, with a dry wit",
+    "pacing": "normal",
+    "genres": ["Western", "Adventure", "Drama"],
+    "dice": true
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "templateSchemaVersion": 1,
+  "type": "character",
+  "id": "starter:goblin-tinkerer",
+  "label": "The Goblin Tinkerer",
+  "summary": "Builds things that mostly work, talks fast and runs faster.",
+  "character": {
+    "id": "starter:goblin-tinkerer",
+    "name": "Nix Sparkwhistle",
+    "control": "player",
+    "pronouns": "he/him",
+    "role": "Tinkerer",
+    "species": "Goblin",
+    "description": "A goblin who builds things that mostly work. Talks fast, runs faster.",
+    "personality": ["clever", "nervous", "endlessly curious"],
+    "goals": ["Build something that changes the world", "Get rich doing it"],
+    "abilities": ["Can fix or break almost any mechanism"],
+    "stats": [
+      {
+        "name": "Smarts",
+        "value": 3
+      },
+      {
+        "name": "Agility",
+        "value": 2
+      },
+      {
+        "name": "Strength",
+        "value": -1
+      }
+    ]
+  }
+}

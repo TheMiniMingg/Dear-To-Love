@@ -1,0 +1,68 @@
+{
+  "templateSchemaVersion": 1,
+  "type": "scenario",
+  "id": "starter:water-run",
+  "label": "The Water Run",
+  "summary": "The settlement's well is failing. Someone has to drive the old tanker to the reservoir and back, through raider country.",
+  "worlds": ["starter:dry-country"],
+  "title": "The Water Run",
+  "description": "The settlement's well is failing. Someone has to drive the old tanker to the reservoir at Glass Lake and back, through raider country, before the summer heat arrives.",
+  "firstChapterTitle": "Leaving Haven",
+  "chapterOutlines": [
+    {
+      "title": "Leaving Haven",
+      "outline": "Ready the tanker and choose who comes along."
+    },
+    {
+      "title": "The Dead Highway",
+      "outline": "Raiders, storms and strangers who need help."
+    },
+    {
+      "title": "Glass Lake",
+      "outline": "Find out why the reservoir went quiet."
+    }
+  ],
+  "scene": {
+    "location": "The motor yard of Haven settlement, before dawn",
+    "summary": "The tanker coughs awake. Half the settlement has come to watch, and nobody is saying what everyone is thinking."
+  },
+  "openThreads": ["Why did Glass Lake stop trading?", "Who broke the well pump?"],
+  "npcs": [
+    {
+      "id": "starter:npc-tobias",
+      "name": "Tobias Grell",
+      "control": "npc",
+      "pronouns": "he/him",
+      "role": "Mechanic",
+      "description": "Keeps the tanker alive with wire, prayer and spare parts from three different decades.",
+      "personality": ["gruff", "superstitious", "secretly sentimental"],
+      "goals": ["Bring the tanker home in one piece"],
+      "abilities": ["Can fix any engine with what is lying around"]
+    },
+    {
+      "id": "starter:npc-ruth",
+      "name": "Ruth Calloway",
+      "control": "npc",
+      "pronouns": "she/her",
+      "role": "Settlement elder",
+      "description": "Remembers the world before the Collapse and refuses to romanticize it.",
+      "personality": ["stern", "wise", "funny when it counts"],
+      "goals": ["Keep Haven alive another year"],
+      "abilities": ["Knows every old road and who controls it now"]
+    }
+  ],
+  "relationships": [
+    {
+      "fromId": "starter:npc-tobias",
+      "toId": "@player",
+      "label": "Co-driver",
+      "status": "Hopes you can shoot"
+    },
+    {
+      "fromId": "starter:npc-ruth",
+      "toId": "@player",
+      "label": "Elder",
+      "status": "Trusts you with everyone's lives"
+    }
+  ]
+}

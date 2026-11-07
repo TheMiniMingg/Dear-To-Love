@@ -22,13 +22,14 @@ import {
 } from './ContentFields';
 import {
   LinesField,
+  MultiPicker,
   PresetPicker,
   StatsField,
   TextArea,
   TextField,
-  ToggleList,
   uniq,
 } from './fields';
+import { ERAS, PERSONALITIES, RACES, ROLES, RULES, SETTINGS } from './presets';
 import { DICE_STORY_TYPES, STYLES, StyleFields, tellingOf } from './StyleFields';
 
 export type StepProps = {
@@ -200,20 +201,20 @@ export function WorldStep({ draft, update, catalog, guided }: StepProps) {
           />
           <PresetPicker
             label="Era"
-            presets={uniq(catalog.worlds.map((x) => x.world.era))}
+            presets={uniq([...catalog.worlds.map((x) => x.world.era), ...ERAS])}
             value={w.era}
             onChange={(era) => set({ era })}
           />
           <PresetPicker
             label="Setting"
-            presets={uniq(catalog.worlds.map((x) => x.world.setting))}
+            presets={uniq([...catalog.worlds.map((x) => x.world.setting), ...SETTINGS])}
             value={w.setting}
             onChange={(setting) => set({ setting })}
           />
           {w.description && <p className="muted">{w.description}</p>}
-          <ToggleList
-            legend="Rules the storyteller follows"
-            presets={uniq(catalog.worlds.flatMap((x) => x.world.rules))}
+          <MultiPicker
+            label="Rules the storyteller follows"
+            presets={uniq([...catalog.worlds.flatMap((x) => x.world.rules), ...RULES])}
             value={w.rules}
             onChange={(rules) => set({ rules })}
           />
@@ -244,6 +245,17 @@ export function WorldStep({ draft, update, catalog, guided }: StepProps) {
     </>
   );
 }
+
+const allCharacters = (catalog: TemplateCatalog) => [
+  ...catalog.characters.map((c) => c.character),
+  ...catalog.scenarios.flatMap((s) => s.npcs),
+];
+const raceOptions = (catalog: TemplateCatalog) =>
+  uniq([...RACES, ...allCharacters(catalog).map((c) => c.species)]);
+const roleOptions = (catalog: TemplateCatalog) =>
+  uniq([...allCharacters(catalog).map((c) => c.role), ...ROLES]);
+const personalityOptions = (catalog: TemplateCatalog) =>
+  uniq([...allCharacters(catalog).flatMap((c) => c.personality), ...PERSONALITIES]);
 
 export function CharacterStep({ draft, update, catalog, guided }: StepProps) {
   const p = draft.player;
@@ -277,16 +289,23 @@ export function CharacterStep({ draft, update, catalog, guided }: StepProps) {
             onChange={(pronouns) => set({ pronouns })}
           />
           <PresetPicker
+            label="Race or species"
+            presets={raceOptions(catalog)}
+            value={p.species ?? ''}
+            noneLabel="Not specified"
+            onChange={(species) => set({ species: species || undefined })}
+          />
+          <PresetPicker
             label="Role"
-            presets={uniq(chars.map((c) => c.role))}
+            presets={roleOptions(catalog)}
             value={p.role ?? ''}
             noneLabel="No particular role"
             onChange={(role) => set({ role })}
           />
           {p.description && <p className="muted">{p.description}</p>}
-          <ToggleList
-            legend="Personality"
-            presets={uniq(chars.flatMap((c) => c.personality))}
+          <MultiPicker
+            label="Personality"
+            presets={personalityOptions(catalog)}
             value={p.personality}
             onChange={(personality) => set({ personality })}
           />
@@ -305,6 +324,12 @@ export function CharacterStep({ draft, update, catalog, guided }: StepProps) {
             />
             <TextField label="Age" value={p.age ?? ''} onChange={(age) => set({ age })} />
             <TextField label="Role" value={p.role ?? ''} onChange={(role) => set({ role })} />
+            <TextField
+              label="Race or species"
+              value={p.species ?? ''}
+              placeholder="Human, Orc, Lizardfolk…"
+              onChange={(species) => set({ species })}
+            />
           </div>
           <TextArea
             label="Description"
@@ -362,7 +387,9 @@ function OthersEditor({ draft, update, catalog, guided }: StepProps) {
               {guided ? (
                 <span>
                   <strong>{c.name || 'Unnamed'}</strong>
-                  {c.role && <span className="muted">, {c.role}</span>}
+                  {(c.species || c.role) && (
+                    <span className="muted">, {[c.species, c.role].filter(Boolean).join(' ')}</span>
+                  )}
                 </span>
               ) : (
                 <div className="field-row">
@@ -386,6 +413,11 @@ function OthersEditor({ draft, update, catalog, guided }: StepProps) {
                     label="Role"
                     value={c.role ?? ''}
                     onChange={(role) => setNpc(i, { role })}
+                  />
+                  <TextField
+                    label="Race or species"
+                    value={c.species ?? ''}
+                    onChange={(species) => setNpc(i, { species })}
                   />
                 </div>
               )}
@@ -452,7 +484,11 @@ function OthersEditor({ draft, update, catalog, guided }: StepProps) {
                 />
                 <span>
                   {t.character.name}
-                  {t.character.role && <span className="muted">, {t.character.role}</span>}
+                  {(t.character.species || t.character.role) && (
+                    <span className="muted">
+                      , {[t.character.species, t.character.role].filter(Boolean).join(' ')}
+                    </span>
+                  )}
                 </span>
               </label>
             );
@@ -707,7 +743,8 @@ export function ReviewStep({
         <dt>You play</dt>
         <dd>
           {draft.player.name || '(not set)'}
-          {draft.player.role && `, ${draft.player.role}`}
+          {(draft.player.species || draft.player.role) &&
+            `, ${[draft.player.species, draft.player.role].filter(Boolean).join(' ')}`}
           {draft.player.pronouns && <span className="muted"> ({draft.player.pronouns})</span>}
           {(draft.player.stats ?? []).some((st) => st.name.trim()) && (
             <span className="muted">

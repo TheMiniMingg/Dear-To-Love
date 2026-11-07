@@ -1,0 +1,26 @@
+{
+  "templateSchemaVersion": 1,
+  "type": "world",
+  "id": "starter:lumen-city",
+  "label": "Lumen City",
+  "summary": "A coastal metropolis with more superheroes per block than anywhere on Earth, and a six-month wait to register.",
+  "world": {
+    "era": "Present day, twelve years after the first powers appeared",
+    "setting": "Lumen City, a coastal metropolis full of heroes",
+    "description": "One person in ten thousand woke up with powers. Lumen City got more than its share, a hero registration office with a six-month wait, and a tabloid ranking of everyone in a mask.",
+    "rules": [
+      "Superpowers are real, varied and come with limits",
+      "Fights cause damage that someone has to pay for",
+      "Secret identities matter, and the press is always watching"
+    ]
+  },
+  "narration": {
+    "perspective": "second",
+    "detail": "balanced",
+    "tone": "Big, bright and heartfelt",
+    "pacing": "fast",
+    "genres": ["Superhero", "Action", "Comedy"],
+    "dice": true,
+    "messageCards": true
+  }
+}

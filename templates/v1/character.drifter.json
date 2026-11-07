@@ -1,0 +1,32 @@
+{
+  "templateSchemaVersion": 1,
+  "type": "character",
+  "id": "starter:drifter",
+  "label": "The Drifter",
+  "summary": "Rides into every town alone and leaves the same way.",
+  "character": {
+    "id": "starter:drifter",
+    "name": "Hollis Grey",
+    "control": "player",
+    "pronouns": "he/him",
+    "role": "Drifter",
+    "description": "Rides into every town alone and leaves the same way. Fast with a gun, slower with a story.",
+    "personality": ["quiet", "observant", "stubbornly decent"],
+    "goals": ["Outrun his past", "Find somewhere worth staying"],
+    "abilities": ["Fast and accurate with a revolver"],
+    "stats": [
+      {
+        "name": "Aim",
+        "value": 2
+      },
+      {
+        "name": "Nerve",
+        "value": 2
+      },
+      {
+        "name": "Charm",
+        "value": 0
+      }
+    ]
+  }
+}

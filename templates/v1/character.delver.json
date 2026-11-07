@@ -1,0 +1,33 @@
+{
+  "templateSchemaVersion": 1,
+  "type": "character",
+  "id": "starter:delver",
+  "label": "The Orc Delver",
+  "summary": "A young orc with a borrowed pick and a debt to the delvers' guild.",
+  "character": {
+    "id": "starter:delver",
+    "name": "Torva Ironroot",
+    "control": "player",
+    "pronouns": "she/her",
+    "role": "Delver",
+    "species": "Orc",
+    "description": "A half-trained orc delver with a borrowed pick, a debt to the guild and a missing brother somewhere below.",
+    "personality": ["brave", "always hungry", "loyal"],
+    "goals": ["Pay off the guild debt", "Find her brother"],
+    "abilities": ["Strong enough to hold up a collapsing doorway"],
+    "stats": [
+      {
+        "name": "Strength",
+        "value": 3
+      },
+      {
+        "name": "Agility",
+        "value": 0
+      },
+      {
+        "name": "Smarts",
+        "value": 1
+      }
+    ]
+  }
+}

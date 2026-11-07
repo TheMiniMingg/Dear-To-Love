@@ -1,0 +1,25 @@
+{
+  "templateSchemaVersion": 1,
+  "type": "world",
+  "id": "starter:lantern-palace",
+  "label": "The Lantern Palace",
+  "summary": "The imperial palace of an invented empire, where ministers scheme, consorts compete and one wrong word can end a family.",
+  "world": {
+    "era": "The golden age of the Lian Empire, an invented dynasty",
+    "setting": "The Lantern Palace in Lianjing, capital of the Lian Empire",
+    "description": "Vermilion halls and lotus ponds where ministers scheme, consorts compete, servants carry every rumor and a single misplaced word can end a family. The Emperor is young; the Dowager Empress is not.",
+    "rules": [
+      "No magic: palace intrigue, poison and politics",
+      "Rank and etiquette decide who may speak, sit or look up",
+      "Every favor creates a debt, and every debt is collected"
+    ]
+  },
+  "narration": {
+    "perspective": "second",
+    "detail": "balanced",
+    "tone": "Elegant, tense and quietly romantic",
+    "pacing": "slow",
+    "genres": ["Historical", "Drama", "Romance"],
+    "innerThoughts": true
+  }
+}

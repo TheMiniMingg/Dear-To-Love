@@ -1,0 +1,85 @@
+{
+  "templateSchemaVersion": 1,
+  "type": "scenario",
+  "id": "starter:lantern-job",
+  "label": "The Lantern Job",
+  "summary": "A guild of delvers needs one more pair of hands to fetch a lantern that never goes out. The last crew never came back.",
+  "worlds": ["starter:underhalls"],
+  "title": "The Lantern Job",
+  "description": "A guild of delvers needs one more pair of hands to recover a lantern that never goes out from the third level of the Underhalls. The last crew to try did not come back.",
+  "firstChapterTitle": "The Rope Gate",
+  "chapterOutlines": [
+    {
+      "title": "The Rope Gate",
+      "outline": "Meet the crew and make the first descent."
+    },
+    {
+      "title": "The Fungus Market",
+      "outline": "Trade, bargain or fight with the goblin clans and the lizardfolk traders."
+    },
+    {
+      "title": "The Third Level",
+      "outline": "Find the lantern, and whatever guards it."
+    }
+  ],
+  "scene": {
+    "location": "The Rope Gate, the guarded shaft into the Underhalls, at the end of a long night",
+    "summary": "Torches gutter in the wind rising from below. Your new crew is checking ropes and arguing about who carries the rations."
+  },
+  "openThreads": [
+    "What happened to the last crew?",
+    "Why does the guild want the lantern so badly?"
+  ],
+  "npcs": [
+    {
+      "id": "starter:npc-brakka",
+      "name": "Brakka Two-Tusk",
+      "control": "npc",
+      "pronouns": "she/her",
+      "role": "Crew leader",
+      "species": "Orc",
+      "description": "An orc delver with a broken tusk, a perfect memory for maps and no patience for heroics.",
+      "personality": ["blunt", "fair", "fearless"],
+      "goals": ["Bring everyone back up"],
+      "abilities": ["Fights like a storm in close quarters"]
+    },
+    {
+      "id": "starter:npc-skritch",
+      "name": "Skritch",
+      "control": "npc",
+      "pronouns": "he/him",
+      "role": "Guide",
+      "species": "Goblin",
+      "description": "A goblin who grew up in the Underhalls and charges by the hour. Claims to know a shortcut to everywhere.",
+      "personality": ["jittery", "greedy", "braver than he admits"],
+      "goals": ["Get paid in full"],
+      "abilities": ["Sees in the dark", "Knows every goblin clan's password, or says so"]
+    },
+    {
+      "id": "starter:npc-seshka",
+      "name": "Sesh-ka",
+      "control": "npc",
+      "pronouns": "they/them",
+      "role": "Trader",
+      "species": "Lizardfolk",
+      "description": "A lizardfolk trader who sells maps, salt and opinions, and watches the crew with unblinking interest.",
+      "personality": ["patient", "dry", "curious about warm-blooded habits"],
+      "goals": ["Find out what the lantern really does"],
+      "abilities": ["Holds their breath for an hour"]
+    }
+  ],
+  "relationships": [
+    {
+      "fromId": "starter:npc-brakka",
+      "toId": "@player",
+      "label": "Crew leader",
+      "status": "Willing to give you a chance"
+    },
+    {
+      "fromId": "starter:npc-skritch",
+      "toId": "@player",
+      "label": "Hired guide",
+      "status": "Hoping you are rich"
+    }
+  ]
+}

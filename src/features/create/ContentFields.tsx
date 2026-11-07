@@ -44,6 +44,12 @@ export const STORY_TYPES = [
   'School life',
   'Thriller',
   'Historical',
+  'Action',
+  'Cyberpunk',
+  'Post-apocalyptic',
+  'Superhero',
+  'Western',
+  'Dating sim',
 ];
 
 /** True when a world template is tagged with this story type. */

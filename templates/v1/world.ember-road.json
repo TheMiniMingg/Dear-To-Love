@@ -19,6 +19,7 @@
     "detail": "balanced",
     "tone": "Bold and adventurous, with room for wonder",
     "pacing": "fast",
-    "genres": ["Fantasy", "Adventure"]
+    "genres": ["Fantasy", "Adventure"],
+    "dice": true
   }
 }

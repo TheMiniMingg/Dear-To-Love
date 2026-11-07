@@ -1,0 +1,26 @@
+{
+  "templateSchemaVersion": 1,
+  "type": "world",
+  "id": "starter:northgate",
+  "label": "Northgate University",
+  "summary": "A hillside campus of lecture halls, rival clubs and a library open until 2 a.m., two weeks before midterms.",
+  "world": {
+    "era": "Present day",
+    "setting": "Northgate University, a hillside campus in a small college town",
+    "description": "Ivy-covered lecture halls, a library open until 2 a.m., rival student clubs, and a campus café where half of all confessions happen. Midterms are in two weeks.",
+    "rules": [
+      "Grounded and realistic: no magic",
+      "Grades, clubs and friendships all matter, and time runs out",
+      "Every student here is an adult with plans of their own"
+    ]
+  },
+  "narration": {
+    "perspective": "second",
+    "detail": "balanced",
+    "tone": "Bright, funny and a little dramatic",
+    "pacing": "normal",
+    "genres": ["School life", "Romance", "Comedy", "Slice of life"],
+    "dice": true,
+    "messageCards": true
+  }
+}

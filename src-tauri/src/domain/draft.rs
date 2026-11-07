@@ -129,6 +129,7 @@ fn clean_character(c: &Character, control: Control) -> Character {
         pronouns: clean_opt(&c.pronouns),
         age: clean_opt(&c.age),
         role: clean_opt(&c.role),
+        species: clean_opt(&c.species),
         description: clean_opt(&c.description),
         appearance: clean_opt(&c.appearance),
         personality: clean_list(&c.personality),

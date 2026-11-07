@@ -213,7 +213,10 @@ describe('Create a story', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Next' }));
     const who = await screen.findByRole('combobox', { name: 'Start from a character' });
     await userEvent.selectOptions(who, 'starter:detective');
-    await userEvent.click(screen.getByRole('checkbox', { name: 'kind' }));
+    await userEvent.selectOptions(
+      screen.getByRole('combobox', { name: 'Add to personality from the list' }),
+      'kind',
+    );
 
     await userEvent.click(screen.getByRole('button', { name: 'Next' }));
     const scenario = await screen.findByRole('combobox', { name: 'Start from a scenario' });
@@ -444,6 +447,10 @@ describe('Create a story', () => {
     const type = await screen.findByRole('combobox', { name: 'Type of story' });
     await userEvent.selectOptions(type, 'Adventure');
     await userEvent.click(screen.getByRole('button', { name: '2. You' }));
+    await userEvent.selectOptions(
+      await screen.findByRole('combobox', { name: 'Race or species' }),
+      'Lizardfolk',
+    );
     const stats = await screen.findByRole('group', { name: 'Stats' });
     await userEvent.click(within(stats).getByRole('button', { name: 'Add a stat' }));
     await userEvent.type(within(stats).getByLabelText('Stat 1 name'), 'Nerve');
@@ -462,6 +469,7 @@ describe('Create a story', () => {
     const draft = lastCall('create_story')?.draft as CreateStoryDraft;
     expect(draft.narration.dice).toBe(true);
     expect(draft.player.stats).toEqual([{ name: 'Nerve', value: 3 }]);
+    expect(draft.player.species).toBe('Lizardfolk');
 
     // Another type turns dice off again.
     await userEvent.click(screen.getByRole('button', { name: '1. World' }));

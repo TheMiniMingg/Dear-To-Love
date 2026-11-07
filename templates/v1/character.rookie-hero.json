@@ -1,0 +1,32 @@
+{
+  "templateSchemaVersion": 1,
+  "type": "character",
+  "id": "starter:rookie-hero",
+  "label": "The Rookie Hero",
+  "summary": "Got powers three weeks ago and has told nobody.",
+  "character": {
+    "id": "starter:rookie-hero",
+    "name": "Max Rivera",
+    "control": "player",
+    "pronouns": "he/him",
+    "role": "Rookie hero",
+    "description": "Got powers three weeks ago: he can stop time for three seconds, but only for himself. Has told nobody.",
+    "personality": ["eager", "funny", "in over his head"],
+    "goals": ["Do some good", "Keep his identity secret"],
+    "abilities": ["Can freeze time for three seconds"],
+    "stats": [
+      {
+        "name": "Agility",
+        "value": 2
+      },
+      {
+        "name": "Nerve",
+        "value": 1
+      },
+      {
+        "name": "Luck",
+        "value": 1
+      }
+    ]
+  }
+}

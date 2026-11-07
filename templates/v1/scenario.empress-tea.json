@@ -1,0 +1,68 @@
+{
+  "templateSchemaVersion": 1,
+  "type": "scenario",
+  "id": "starter:empress-tea",
+  "label": "The Empress's Tea",
+  "summary": "You are summoned to the Dowager Empress's tea, an honor that comes before a promotion or a funeral. Someone at the table means to poison her.",
+  "worlds": ["starter:lantern-palace"],
+  "title": "The Empress's Tea",
+  "description": "You have been summoned to the Dowager Empress's tea ceremony, an honor that usually comes before a promotion or a funeral. Someone at the table plans to poison her.",
+  "firstChapterTitle": "The Tea Ceremony",
+  "chapterOutlines": [
+    {
+      "title": "The Tea Ceremony",
+      "outline": "Survive the ceremony and notice who is nervous."
+    },
+    {
+      "title": "Whispers in the Inner Court",
+      "outline": "Find allies and enemies among the court."
+    },
+    {
+      "title": "The Lantern Festival",
+      "outline": "Expose the plot, or use it."
+    }
+  ],
+  "scene": {
+    "location": "The Pavilion of Listening Rain, in the Dowager Empress's garden, at dusk",
+    "summary": "Seven guests kneel at a low table. The tea has been poured. The Dowager Empress has not yet raised her cup."
+  },
+  "openThreads": ["Who plans to poison the Dowager Empress?", "Why were you invited?"],
+  "npcs": [
+    {
+      "id": "starter:npc-wen",
+      "name": "Dowager Empress Wen",
+      "control": "npc",
+      "pronouns": "she/her",
+      "role": "Dowager Empress",
+      "description": "Has outlived two emperors and four conspiracies. Smiles rarely, and never by accident.",
+      "personality": ["imperious", "shrewd", "lonely"],
+      "goals": ["Keep the young Emperor on the throne"],
+      "abilities": ["Reads a lie in a single breath"]
+    },
+    {
+      "id": "starter:npc-shen",
+      "name": "Lord Shen Yao",
+      "control": "npc",
+      "pronouns": "he/him",
+      "role": "Minister of Rites",
+      "description": "Handsome, courteous and watching you over the rim of his cup.",
+      "personality": ["charming", "guarded", "ambitious"],
+      "goals": ["Rise at court without making enemies"],
+      "abilities": ["Knows every rule of etiquette, and how to bend it"]
+    }
+  ],
+  "relationships": [
+    {
+      "fromId": "starter:npc-wen",
+      "toId": "@player",
+      "label": "Patron",
+      "status": "Testing you"
+    },
+    {
+      "fromId": "starter:npc-shen",
+      "toId": "@player",
+      "label": "Courtier",
+      "status": "Intrigued"
+    }
+  ]
+}

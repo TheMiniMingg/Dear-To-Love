@@ -243,6 +243,7 @@ mod tests {
             pronouns: None,
             age: None,
             role: None,
+            species: None,
             description: None,
             appearance: None,
             personality: vec![],

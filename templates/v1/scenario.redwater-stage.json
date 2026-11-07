@@ -1,0 +1,68 @@
+{
+  "templateSchemaVersion": 1,
+  "type": "scenario",
+  "id": "starter:redwater-stage",
+  "label": "The Stage from Redwater",
+  "summary": "The stagecoach bringing the mine's payroll arrived on time, with no driver, no payroll and one very calm passenger.",
+  "worlds": ["starter:dust-creek"],
+  "title": "The Stage from Redwater",
+  "description": "The stagecoach from Redwater was supposed to bring the payroll for the silver mine. It arrived on time, with no driver, no payroll and one passenger who says she slept through the whole thing.",
+  "firstChapterTitle": "An Empty Coach",
+  "chapterOutlines": [
+    {
+      "title": "An Empty Coach",
+      "outline": "Question the passenger and look over the coach."
+    },
+    {
+      "title": "The Silver Hills",
+      "outline": "Follow the trail into the hills."
+    },
+    {
+      "title": "Noon at the Bank",
+      "outline": "Settle it, one way or another."
+    }
+  ],
+  "scene": {
+    "location": "Main Street, Dust Creek, at noon, as the stagecoach rolls in",
+    "summary": "The horses are lathered and the strongbox is gone. A woman in a travel-stained blue dress climbs down and asks where she can get a coffee."
+  },
+  "openThreads": ["Where is the payroll?", "Who is the passenger, really?"],
+  "npcs": [
+    {
+      "id": "starter:npc-evangeline",
+      "name": "Evangeline Price",
+      "control": "npc",
+      "pronouns": "she/her",
+      "role": "Passenger",
+      "description": "Calm, polite and carrying a small pistol in her glove.",
+      "personality": ["composed", "clever", "hard to read"],
+      "goals": ["Get to the bank before anyone else does"],
+      "abilities": ["Lies beautifully"]
+    },
+    {
+      "id": "starter:npc-amos",
+      "name": "Amos Whitlock",
+      "control": "npc",
+      "pronouns": "he/him",
+      "role": "Sheriff",
+      "description": "Six weeks in the job and already tired of it. Fair, slow to anger, quick to act.",
+      "personality": ["patient", "stubborn", "honest"],
+      "goals": ["Find the payroll before the miners riot"],
+      "abilities": ["Never misses with a rifle"]
+    }
+  ],
+  "relationships": [
+    {
+      "fromId": "starter:npc-amos",
+      "toId": "@player",
+      "label": "Sheriff",
+      "status": "Might deputize you"
+    },
+    {
+      "fromId": "starter:npc-evangeline",
+      "toId": "@player",
+      "label": "Stranger",
+      "status": "Curious about you"
+    }
+  ]
+}

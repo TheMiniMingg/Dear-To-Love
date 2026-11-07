@@ -1728,3 +1728,54 @@ details summary {
 .stats-field .stat-row input[type='number'] {
   width: 5.5rem;
 }
+
+/* Chosen entries in a MultiPicker. */
+.chip-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  list-style: none;
+  margin: 0.3rem 0 0.5rem;
+  padding: 0;
+}
+.pick-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.2rem 0.3rem 0.2rem 0.65rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 12%, var(--bg));
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--border));
+  max-width: 100%;
+}
+.pick-chip span {
+  overflow-wrap: anywhere;
+}
+.chip-remove {
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font-size: 1.05rem;
+  line-height: 1;
+  padding: 0.1rem 0.35rem;
+  border-radius: 999px;
+  cursor: pointer;
+}
+.chip-remove:hover,
+.chip-remove:focus-visible {
+  color: var(--fg);
+  background: color-mix(in srgb, var(--fg) 10%, transparent);
+}
+.multi-add {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+.multi-add select {
+  max-width: 100%;
+  flex: 1 1 14rem;
+}
+.multi-add input {
+  flex: 1 1 10rem;
+}
