@@ -5,8 +5,9 @@ import http from 'node:http';
 /**
  * @param {Array<{status?: number, pieces?: string[], delayMs?: number}>} script
  *   One entry per chat request, in order.
+ * @param {{picture?: Buffer}} [options] `picture` answers image requests.
  */
-export async function startFakeOpenAI(script) {
+export async function startFakeOpenAI(script, options = {}) {
   const requests = [];
   const queue = [...script];
   const server = http.createServer((req, res) => {
@@ -17,6 +18,16 @@ export async function startFakeOpenAI(script) {
       if (req.url === '/api/tags') {
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ models: [{ name: 'story-model' }] }));
+        return;
+      }
+      if (req.url.endsWith('/images/generations')) {
+        if (!options.picture) {
+          res.writeHead(500, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: { message: 'no picture scripted' } }));
+          return;
+        }
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ data: [{ b64_json: options.picture.toString('base64') }] }));
         return;
       }
       if (req.url.endsWith('/models')) {

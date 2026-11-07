@@ -36,7 +36,8 @@ offline storyteller lets you try everything without either.
 - **Long stories just work.** Older turns are summarized automatically, so a story can run for
   thousands of turns. **Preview context** shows exactly what the AI will read.
 - **Pictures**: portraits, backgrounds and covers from your own images. Keep a picture for one
-  story, or share it with all of them.
+  story, or share it with all of them. With a picture connection, **Make portrait** draws a
+  character from their description.
 - **Search and bookmarks** within a route.
 - **Share and keep**: export a route as text, or a whole story as a `.storypack` file to import
   on another computer. Automatic daily backups, and a full backup file you can restore anywhere.
@@ -174,6 +175,17 @@ the story. Switching keeps everything the story remembers.
 Set the **context limit** to what your model can read: a bigger limit lets the storyteller see
 more of the story at once. Costs are estimates from prices you enter under **Usage & budget**;
 set a spending limit in your provider's dashboard too.
+
+### Portraits from a description
+
+A **picture connection** makes character portraits: add **OpenAI images** (an API key, paid
+per picture) or **Stable Diffusion WebUI** running on your computer (started with `--api`,
+free), then choose it under **Settings → Pictures**. When you choose a character's portrait,
+while creating a story or from a story's **Pictures**, **Make portrait** asks it for one in
+the style you pick. **Show what is sent** shows the exact description first. It uses the
+character's looks, species, age, role and a few traits, and the world's era and setting, but
+never names or story text. Portraits are always asked for as safe-for-work pictures, and each
+one is kept for its story only. Picture connections never write story replies.
 
 ## Your data, and what happens when it fills up
 

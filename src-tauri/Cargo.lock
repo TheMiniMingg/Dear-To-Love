@@ -867,6 +867,7 @@ dependencies = [
 name = "dear-to-love"
 version = "0.1.0"
 dependencies = [
+ "base64 0.22.1",
  "chrono",
  "fs4",
  "getrandom 0.4.3",

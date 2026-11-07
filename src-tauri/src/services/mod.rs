@@ -9,6 +9,7 @@ pub mod disk;
 pub mod generation;
 pub mod memory;
 pub mod mock_storyteller;
+pub mod pictures;
 pub mod prompt;
 pub mod reader;
 pub mod search;

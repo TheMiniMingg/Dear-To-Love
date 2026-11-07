@@ -303,4 +303,26 @@ kinks and fetishes you list as themes. How it works:
   policies. Check your provider's terms. When a service's content filter blocks a reply, the
   app says so; your action stays, and you can ask for another reply or switch the storyteller.
 - Stories stay on your computer. The only thing that leaves it is what **Preview context**
-  shows, sent to the connection you chose.
+  shows, sent to the connection you chose, and, when you make a portrait, the description
+  **Show what is sent** shows, sent to your picture connection.
+
+## Portraits
+
+A picture connection (Settings → Pictures) makes a character's portrait from their
+description. It is a separate kind of connection: OpenAI's images API (and servers that copy
+it) or Stable Diffusion WebUI's API. It never writes story replies, and a story connection
+never makes pictures.
+
+- **What is sent**: one description, built from the character's species, gender or pronouns,
+  age, role, looks and up to three personality traits, plus the world's era and setting for
+  the clothes and background. Names, story text and hidden details are never sent. **Show
+  what is sent** in the portrait panel shows it exactly.
+- **Always safe for work.** Every description ends with "One person, fully clothed, safe for
+  work, no text", and asks the service to avoid nudity, sexual content and gore, whatever the
+  story's rating.
+- **Where it goes**: the picture joins the library like any picture you add, labelled
+  "Portrait of …" and tagged Portrait, and is kept for that story only (for a story still
+  being created, for the story once it is made).
+- **Cost**: each picture is one request, recorded in Usage as "Character picture". The app
+  can't price pictures, so paid ones show no estimate; when the budget pauses paid requests,
+  the app asks before sending one.

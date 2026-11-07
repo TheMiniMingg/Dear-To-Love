@@ -12,6 +12,7 @@ use crate::db::assets::{self, AssetDto, AssetUsage, ImportScope, StoryVisual};
 use crate::domain::visuals::VisualSlot;
 use crate::errors::{AppError, AppResult};
 use crate::services::assets::{self as library, Size};
+use crate::services::pictures::{self, PortraitInput, Prompt};
 use crate::state::AppState;
 
 /// Most files added in one go.
@@ -136,6 +137,30 @@ pub async fn image_usages(
 #[tauri::command]
 pub async fn delete_image(state: State<'_, AppState>, asset_id: String) -> AppResult<()> {
     library::delete(state.db()?, &state.assets()?, &asset_id).await
+}
+
+/// The description a portrait would be made from. Sends nothing.
+#[tauri::command]
+pub fn preview_portrait(input: PortraitInput) -> Prompt {
+    pictures::portrait_prompt(&input.character, &input.world, input.style)
+}
+
+/// Makes a portrait with the picture connection (one request, which may be
+/// paid) and adds it to the library for the story it is for.
+#[tauri::command]
+pub async fn make_portrait(
+    state: State<'_, AppState>,
+    input: PortraitInput,
+) -> AppResult<AssetDto> {
+    let made = pictures::make_portrait(
+        state.db()?,
+        &state.assets()?,
+        state.secrets.as_ref(),
+        &state.session_id,
+        &input,
+    )
+    .await?;
+    Ok(made.asset)
 }
 
 /// Story-default picture for a slot (`cover`, `background`,

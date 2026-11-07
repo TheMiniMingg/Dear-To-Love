@@ -16,7 +16,8 @@ React screens -> src/api/commands.ts (typed invoke wrappers)
                          reference scan for safe deletion
   -> Rust db/bookmarks   named places in a route's history
   -> Rust services/      generation, prompt, adapters (OpenAI-compatible,
-                         Anthropic, Ollama, offline), reader view,
+                         Anthropic, Ollama, offline), pictures (portraits),
+                         reader view,
                          diagnostics, secrets,
                          assets (image validation, thumbnails, files),
                          storypack (format, checks, id remapping),
@@ -161,6 +162,11 @@ delete    refused while a default, a starting state or any edit event on
 - Slots: `cover` (story only), `background`, `portrait:<character id>`.
   See ADR 0006, and ADR 0017 for story-only pictures and a storyteller per
   story.
+- Portraits (`services/pictures.rs`, ADR 0018): the picture connection
+  (`picture_maker` preference, `openai_images` or `stable_diffusion`) gets
+  a safe-for-work description built from the character, one ledger row per
+  attempt (`character_suggestion`), and the bytes go through the import
+  above with the story's scope.
 
 ## Storypacks and text export
 

@@ -18,6 +18,12 @@ pub enum AdapterKind {
     Ollama,
     /// Anthropic's Messages API, `POST {baseUrl}/messages`, for Claude.
     Anthropic,
+    /// Pictures: OpenAI's `POST {baseUrl}/images/generations` (and servers
+    /// that offer the same API).
+    OpenaiImages,
+    /// Pictures: Stable Diffusion WebUI (AUTOMATIC1111, Forge, SD.Next),
+    /// `POST {baseUrl}/sdapi/v1/txt2img`.
+    StableDiffusion,
 }
 
 impl AdapterKind {
@@ -26,6 +32,8 @@ impl AdapterKind {
             Self::OpenaiCompatible => "openai_compatible",
             Self::Ollama => "ollama",
             Self::Anthropic => "anthropic",
+            Self::OpenaiImages => "openai_images",
+            Self::StableDiffusion => "stable_diffusion",
         }
     }
 
@@ -34,8 +42,15 @@ impl AdapterKind {
             "openai_compatible" => Some(Self::OpenaiCompatible),
             "ollama" => Some(Self::Ollama),
             "anthropic" => Some(Self::Anthropic),
+            "openai_images" => Some(Self::OpenaiImages),
+            "stable_diffusion" => Some(Self::StableDiffusion),
             _ => None,
         }
+    }
+
+    /// Makes pictures rather than story replies.
+    pub fn makes_pictures(self) -> bool {
+        matches!(self, Self::OpenaiImages | Self::StableDiffusion)
     }
 }
 

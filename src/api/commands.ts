@@ -20,6 +20,8 @@ import type {
   ErrorCode,
   ImageImport,
   ImageScope,
+  PortraitInput,
+  Prompt,
   StorypackExport,
   StorypackImport,
   TextExport,
@@ -184,6 +186,10 @@ export const commands = {
   deleteImage: (assetId: string) => call<void>('delete_image', { assetId }),
   setStoryPicture: (storyId: string, slot: string, assetId: string | null) =>
     call<StoryVisual[]>('set_story_picture', { storyId, slot, assetId }),
+  /** What a portrait would be made from. Sends nothing. */
+  previewPortrait: (input: PortraitInput) => call<Prompt>('preview_portrait', { input }),
+  /** One request to the picture connection; the picture joins the library. */
+  makePortrait: (input: PortraitInput) => call<AssetDto>('make_portrait', { input }),
   /** Writes the whole story to a `.storypack` file at `path` (from the save dialog). */
   exportStorypack: (storyId: string, path: string) =>
     call<StorypackExport>('export_storypack', { storyId, path }),
@@ -246,6 +252,10 @@ export const commands = {
   /** One story's own storyteller; `null` follows the app's again. */
   setStoryStoryteller: (storyId: string, choice: StorytellerChoice | null) =>
     call<StorytellerInfo>('set_story_storyteller', { storyId, choice }),
+  /** The connection portraits are made with, or `null`. */
+  getPictureMaker: () => call<string | null>('get_picture_maker'),
+  setPictureMaker: (profileId: string | null) =>
+    call<string | null>('set_picture_maker', { profileId }),
   testConnection: (id: string) => call<ConnectionCheck>('test_connection', { id }),
   sendTestMessage: (id: string) => call<string>('send_test_message', { id }),
 
