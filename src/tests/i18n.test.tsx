@@ -4,6 +4,15 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { extract, sourceFiles } from '../../scripts/i18n-keys.mjs';
 import { systemLocale, t, tn, tr, TRANSLATED, useLanguage } from '../i18n';
+import {
+  bookmarkName,
+  chapterHeading,
+  pictureName,
+  plainStoryText,
+  routeName,
+  saveName,
+} from '../i18n/names';
+import { plainText } from '../features/reader/messages';
 import { AREAS, MESSAGES } from '../i18n/messages';
 
 const invoke = vi.fn();
@@ -117,6 +126,34 @@ describe('the app language', () => {
     expect(appStoryLanguage()).toBe('Korean');
     useLanguage.getState().setChoice('zh-Hans');
     expect(appStoryLanguage()).toBe('Simplified Chinese');
+  });
+
+  it("shows the app's own names and message labels in the chosen language", () => {
+    const raw = '<text from="Mara">Are you up?</text> <thought who="Eri">Late again.</thought>';
+    expect(routeName('Main')).toBe('Main');
+    expect(chapterHeading(2, 'Chapter 2')).toBe('Chapter 2');
+    expect(chapterHeading(2, 'The Storm')).toBe('Chapter 2: The Storm');
+    expect(plainText(raw)).toBe('[Text from Mara] Are you up? (Eri thinks: Late again.)');
+    expect(plainStoryText('[Text from Mara] Hi')).toBe('[Text from Mara] Hi');
+    useLanguage.getState().setChoice('ja');
+    expect(routeName('Main')).toBe('メイン');
+    expect(routeName('Alt 2')).toBe('分岐 2');
+    expect(routeName('Late night')).toBe('Late night');
+    expect(saveName('Autosave (Alt 1)')).toBe('オートセーブ（分岐 1）');
+    expect(saveName('Quick save (Main)')).toBe('クイックセーブ（メイン）');
+    expect(saveName('Before the dance')).toBe('Before the dance');
+    expect(chapterHeading(2, 'Chapter 2')).toBe('第2章');
+    expect(chapterHeading(1, '第1章')).toBe('第1章');
+    expect(chapterHeading(2, 'The Storm')).toBe('第2章：The Storm');
+    expect(pictureName('Portrait of Mara')).toBe('Maraの肖像画');
+    expect(bookmarkName('Bookmark')).toBe('ブックマーク');
+    expect(plainText(raw)).toBe('[Maraからのメッセージ] Are you up? (Eriは思う: Late again.)');
+    expect(plainStoryText('[Roll for Climb: 14 on 1d20, needs 12] I climb')).toBe(
+      '[「Climb」の判定：14] I climb',
+    );
+    expect(plainStoryText('[Not a label] (Someone thinks: hm)')).toBe(
+      '[Not a label] (誰かは思う: hm)',
+    );
   });
 
   it('is chosen in Settings, redraws the app and is remembered', async () => {

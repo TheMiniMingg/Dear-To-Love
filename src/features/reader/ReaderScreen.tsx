@@ -33,7 +33,9 @@ import { ScenePictures } from './ScenePictures';
 import { StoryDetailsPanel } from './StoryDetailsPanel';
 import { StoryMemoryPanel } from './StoryMemoryPanel';
 import { StorytellerPanel } from './StorytellerPanel';
+import { plainText } from './messages';
 import { intlLocale, joinSentences, msg, t, tKnown, tr } from '../../i18n';
+import { chapterHasTitle, routeName, saveName } from '../../i18n/names';
 
 type Panel =
   | null
@@ -456,15 +458,19 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
           <div className="reader-meta">
             <span>
               {tr('Route: {label}', {
-                label: <strong data-testid="route-label">{view.route.label}</strong>,
+                label: <strong data-testid="route-label">{routeName(view.route.label)}</strong>,
               })}
             </span>
             {chapter && (
               <span>
-                {tr('Chapter {n}: {title}', {
-                  n: chapter.ordinal,
-                  title: <strong>{chapter.title}</strong>,
-                })}
+                {chapterHasTitle(chapter.ordinal, chapter.title) ? (
+                  tr('Chapter {n}: {title}', {
+                    n: chapter.ordinal,
+                    title: <strong>{chapter.title}</strong>,
+                  })
+                ) : (
+                  <strong>{t('Chapter {n}', { n: chapter.ordinal })}</strong>
+                )}
               </span>
             )}
           </div>
@@ -538,7 +544,7 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
         <div className="view-banner" role="region" aria-label={t('Viewing a save')}>
           <span>
             {tr('Viewing save {label} (read-only).', {
-              label: <strong>{viewing.save.label}</strong>,
+              label: <strong>{saveName(viewing.save.label)}</strong>,
             })}
           </span>
           <div className="button-row">
@@ -790,7 +796,9 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
               storyId={view.story.id}
               routeId={view.route.id}
               onSaved={(s) =>
-                setSaveStatus(t('Saved "{label}" {time}', { label: s.label, time: timeNow() }))
+                setSaveStatus(
+                  t('Saved "{label}" {time}', { label: saveName(s.label), time: timeNow() }),
+                )
               }
               onView={(saveId) =>
                 void run(async () => {
@@ -849,7 +857,7 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
             <SearchPanel
               storyId={view.story.id}
               routeId={view.route.id}
-              routeLabel={view.route.label}
+              routeLabel={routeName(view.route.label)}
               playerName={player?.name ?? t('You')}
               last={lastSearch}
               onSearched={setLastSearch}
@@ -911,10 +919,14 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
                   {
                     action: (() => {
                       const a = answered(target);
-                      return a?.kind === 'player' ? <q>{a.payload.text}</q> : t('your action');
+                      return a?.kind === 'player' ? (
+                        <q>{plainText(a.payload.text)}</q>
+                      ) : (
+                        t('your action')
+                      );
                     })(),
                     newRoute: <strong>{t('new route')}</strong>,
-                    route: <strong>{view.route.label}</strong>,
+                    route: <strong>{routeName(view.route.label)}</strong>,
                   },
                 )}
               </p>
@@ -946,11 +958,11 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
                 {target && target.id !== lastAction?.id
                   ? t(
                       'Your action. The story continues from here on a new route; {route} keeps the original and everything after it.',
-                      { route: view.route.label },
+                      { route: routeName(view.route.label) },
                     )
                   : t(
                       'Your action. The story continues from here on a new route; {route} keeps the original.',
-                      { route: view.route.label },
+                      { route: routeName(view.route.label) },
                     )}
               </label>
               <textarea

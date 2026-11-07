@@ -270,6 +270,10 @@ impl DiceRoll {
         if self.stat.as_ref().is_some_and(|s| s.chars().count() > 60) {
             return bad("a stat name is at most 60 characters");
         }
+        // A bonus comes only from a stat, and a stat is at most 1000 either way.
+        if (self.stat.is_none() && self.bonus != 0) || self.bonus.abs() > 1000 {
+            return bad("the roll's bonus does not match its stat");
+        }
         Ok(())
     }
 }
@@ -448,6 +452,13 @@ mod tests {
         assert!(r.validate().is_err());
         r.faces = vec![3];
         assert!(r.validate().is_err());
+        // A bonus only comes from a stat.
+        r.faces = vec![3, 3];
+        r.bonus = 12;
+        r.total = 18;
+        assert!(r.validate().is_err(), "a bonus with no stat");
+        r.stat = Some("Smarts".into());
+        r.validate().unwrap();
     }
 
     #[test]

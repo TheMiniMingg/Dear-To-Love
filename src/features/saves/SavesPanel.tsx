@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { commands, errorMessage } from '../../api/commands';
 import type { SaveDto } from '../../types';
-import { intlLocale, msg, t } from '../../i18n';
+import { formatWhen, msg, t } from '../../i18n';
+import { routeName, saveName } from '../../i18n/names';
 
 type Props = {
   storyId: string;
@@ -85,10 +86,10 @@ export function SavesPanel({ storyId, routeId, onView, onResume, onSaved }: Prop
         {saves?.map((s) => (
           <li key={s.id} className="item-row">
             <div>
-              <strong>{s.label}</strong>
+              <strong>{saveName(s.label)}</strong>
               <div className="muted small">
-                {t(TYPE_LABEL[s.saveType] ?? s.saveType)} · {s.routeLabel} ·{' '}
-                {new Date(s.updatedAt).toLocaleString(intlLocale())}
+                {t(TYPE_LABEL[s.saveType] ?? s.saveType)} · {routeName(s.routeLabel)} ·{' '}
+                {formatWhen(s.updatedAt)}
                 {s.isRouteHead ? ` · ${t('latest on its route')}` : ''}
               </div>
             </div>

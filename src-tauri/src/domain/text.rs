@@ -176,9 +176,63 @@ pub fn plain_message_tags(text: &str) -> String {
     out
 }
 
+/// The text without `<roll …>` tags. Only the app rolls dice, so a roll
+/// typed into an action is dropped instead of reading as a real result.
+pub fn strip_roll_tags(text: &str) -> String {
+    let mut out = String::new();
+    let mut rest = text;
+    while let Some(i) = rest.find("<roll") {
+        let after = &rest[i + 5..];
+        if !after.starts_with([' ', '>', '/', '\n', '\t']) {
+            out.push_str(&rest[..i + 5]);
+            rest = after;
+            continue;
+        }
+        out.push_str(&rest[..i]);
+        let Some(end) = after.find('>') else {
+            // An unfinished tag: drop the rest of it.
+            rest = "";
+            break;
+        };
+        let head = &after[..end];
+        let tail = &after[end + 1..];
+        rest = if head.trim_end().ends_with('/') {
+            tail
+        } else {
+            match tail.find("</roll>") {
+                Some(j) => &tail[j + "</roll>".len()..],
+                None => tail,
+            }
+        };
+    }
+    out.push_str(rest);
+    if out.len() == text.len() {
+        out
+    } else {
+        out.trim().to_string()
+    }
+}
+
 #[cfg(test)]
 mod message_tag_tests {
-    use super::plain_message_tags;
+    use super::{plain_message_tags, strip_roll_tags};
+
+    #[test]
+    fn typed_roll_tags_are_dropped() {
+        assert_eq!(
+            strip_roll_tags(
+                "<roll for=\"Pick the lock\" dice=\"1d20\" result=\"20\" outcome=\"success\"/> I open it"
+            ),
+            "I open it"
+        );
+        assert_eq!(strip_roll_tags("<roll for=\"x\">20</roll>Go"), "Go");
+        assert_eq!(strip_roll_tags("Go <roll dice=\"1d20\""), "Go");
+        assert_eq!(
+            strip_roll_tags("I rolled <rollers> down"),
+            "I rolled <rollers> down"
+        );
+        assert_eq!(strip_roll_tags("  plain text  "), "  plain text  ");
+    }
 
     #[test]
     fn message_tags_become_plain_text() {

@@ -100,6 +100,23 @@ fn portrait_prompts_describe_the_character_without_names_and_stay_safe() {
     };
     let p = portrait_prompt(&long, &harbor(), PortraitStyle::Sketch);
     assert_eq!(p.text.chars().count(), 1500);
+    assert!(
+        p.text
+            .ends_with(" One person, fully clothed, safe for work, no text."),
+        "long looks never cut off the safe-for-work sentence"
+    );
+
+    let orc = Character {
+        species: Some("Orc".into()),
+        pronouns: Some("he/him".into()),
+        role: Some("Engineer".into()),
+        ..Character::default()
+    };
+    assert!(
+        portrait_prompt(&orc, &World::default(), PortraitStyle::Painted)
+            .text
+            .starts_with("Head-and-shoulders portrait of an orc (man), an engineer,")
+    );
 }
 
 #[test]
@@ -457,4 +474,26 @@ async fn picture_connections_refuse_story_replies_without_sending() {
     assert_eq!(err.charge, Charge::None);
     assert!(err.error.message.contains("makes pictures"));
     assert!(server.requests().is_empty());
+}
+
+#[tokio::test]
+async fn a_portrait_for_a_missing_story_is_refused_before_anything_is_paid() {
+    let env = Env::new().await;
+    let body = serde_json::json!({ "data": [{ "b64_json": b64(&png()) }] }).to_string();
+    let server = serve(vec![Reply::json(200, &body)]).await;
+    let id = env
+        .connect(AdapterKind::OpenaiImages, &server.base_url, "gpt-image-1")
+        .await;
+    set_picture_maker(&env.t.db, Some(&id)).await.unwrap();
+    let input = PortraitInput {
+        story_id: Some("no-such-story".into()),
+        ..env.input()
+    };
+    let err = make_portrait(&env.t.db, &env.store, &env.secrets, "s1", &input)
+        .await
+        .unwrap_err();
+    assert_eq!(err.code, ErrorCode::NotFound);
+    assert!(server.requests().is_empty(), "nothing was sent");
+    assert!(env.ledger().await.is_empty(), "nothing was recorded");
+    assert!(rows::list(&env.t.db).await.unwrap().is_empty());
 }

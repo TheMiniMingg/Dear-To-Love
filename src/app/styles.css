@@ -674,6 +674,8 @@ textarea:focus-visible,
   border: none;
   padding: 0;
   margin: 0;
+  /* A fieldset is otherwise as wide as its widest option. */
+  min-width: 0;
 }
 .field > label,
 .field > legend {
@@ -723,6 +725,9 @@ details summary {
 .settings-section h2 {
   font-size: 1.15rem;
   margin: 0;
+}
+.language-field select {
+  max-width: 24rem;
 }
 .settings-section > .check {
   display: flex;
@@ -1828,6 +1833,7 @@ details summary {
 }
 .multi-add select {
   max-width: 100%;
+  min-width: 0;
   flex: 1 1 14rem;
 }
 .multi-add input {

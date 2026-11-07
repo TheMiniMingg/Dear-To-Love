@@ -204,6 +204,20 @@ pub enum ImportScope {
 }
 
 /// Applies `scope` to an image that was just added or found again.
+/// Refuses a scope for a story that doesn't exist, before anything is added.
+pub async fn check_import_scope(db: &Database, scope: &ImportScope) -> AppResult<()> {
+    if let ImportScope::Story(story_id) = scope {
+        let exists: Option<i64> = sqlx::query_scalar("SELECT 1 FROM stories WHERE id = ?")
+            .bind(story_id)
+            .fetch_optional(db.reader())
+            .await?;
+        if exists.is_none() {
+            return Err(AppError::not_found(format!("story {story_id} not found")));
+        }
+    }
+    Ok(())
+}
+
 pub async fn apply_import_scope(
     db: &Database,
     row: &AssetRow,

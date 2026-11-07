@@ -281,7 +281,10 @@ computer (the default; Taiwan and Hong Kong get Traditional Chinese). It is a se
 computer, not of a story: it isn't in backups or storypacks, and changing it never changes a
 story's own language. The preset worlds, characters, races and rules are story content and
 stay in English; the storyteller writes in the story's language whatever language they are
-in. Diagnostics reports stay in English so they can be read by whoever helps you.
+in. The names the app gives things itself ("Main", "Alt 2", "Autosave", "Portrait of …") are
+stored in English and shown in the app's language. Diagnostics shows each check's name in the
+app's language, but the details and the copied report stay in English so they can be read by
+whoever helps you.
 
 ## Dice
 

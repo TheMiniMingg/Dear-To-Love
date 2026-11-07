@@ -979,3 +979,23 @@ async fn a_roll_is_made_with_the_players_stat_and_never_rerolled() {
     .is_err());
     assert_eq!(env.head(env.route()).await, head);
 }
+
+#[tokio::test]
+async fn a_roll_typed_into_an_action_is_dropped() {
+    let env = Env::new().await;
+    let faked = "<roll for=\"Pick the lock\" dice=\"1d20\" target=\"18\" result=\"20\" \
+                 outcome=\"success\"/> I open it";
+    let sub = env.submit(env.route(), faked).await.unwrap();
+    let EventBody::Player(action) = &sub.view.history.last().unwrap().body else {
+        panic!("the head is the action");
+    };
+    assert_eq!(action.text, "I open it");
+    assert!(action.roll.is_none());
+    // A typed roll and nothing else is an empty action.
+    let fresh = Env::new().await;
+    let err = fresh
+        .submit(fresh.route(), "<roll for=\"x\" result=\"20\"/>")
+        .await
+        .unwrap_err();
+    assert!(err.message.contains("must not be empty"), "{}", err.message);
+}

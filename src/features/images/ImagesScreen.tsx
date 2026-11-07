@@ -6,6 +6,7 @@ import { Dialog } from '../../components/Dialog';
 import type { AssetDto, AssetUsage, ImageImport, ImageScope, StorySummary } from '../../types';
 import { ImageGrid, Thumb } from './ImageGrid';
 import { joinList, msg, t } from '../../i18n';
+import { pictureName } from '../../i18n/names';
 
 /** Kinds offered as tags. Other tags an image already has are kept. */
 export const IMAGE_KINDS = [
@@ -255,7 +256,9 @@ function ImageDetails({
   onDeleted: () => void;
 }) {
   const id = useId();
-  const [label, setLabel] = useState(image.label);
+  // A portrait the app named is shown, and saved, in the chosen language.
+  const shownLabel = pictureName(image.label);
+  const [label, setLabel] = useState(shownLabel);
   const [tags, setTags] = useState<string[]>(image.tags);
   const [usages, setUsages] = useState<AssetUsage[] | null>(null);
   const [status, setStatus] = useState<string | null>(null);
@@ -277,7 +280,7 @@ function ImageDetails({
     };
   }, [image.id]);
 
-  const dirty = label !== image.label || tags.join('\n') !== image.tags.join('\n');
+  const dirty = label !== shownLabel || tags.join('\n') !== image.tags.join('\n');
   const toggle = (kind: string) =>
     setTags((t) => (t.includes(kind) ? t.filter((x) => x !== kind) : [...t, kind]));
 
@@ -322,7 +325,7 @@ function ImageDetails({
   };
 
   const inHistory = usages?.some((u) => u.inHistory) ?? false;
-  const name = image.label || t('Untitled');
+  const name = shownLabel || t('Untitled');
 
   return (
     <div className="image-details" aria-label={t('Image: {name}', { name })} role="region">

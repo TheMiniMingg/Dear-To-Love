@@ -1,6 +1,6 @@
-import { formatWhen } from '../../api/backups';
 import type { RouteNode } from '../../types';
-import { t, tn } from '../../i18n';
+import { formatWhen, t, tn } from '../../i18n';
+import { chapterHeading, plainStoryText } from '../../i18n/names';
 
 /** A route placed in the tree: its shown parent, generation and row. */
 export type Placed = {
@@ -75,9 +75,9 @@ export function branchText(n: RouteNode): string | null {
   if (!b) return n.forkTurn == null ? null : t('Nothing different yet.');
   switch (b.kind) {
     case 'action':
-      return t('A different action: “{text}”', { text: b.text });
+      return t('A different action: “{text}”', { text: plainStoryText(b.text) });
     case 'reply':
-      return t('Another reply: “{text}”', { text: b.text });
+      return t('Another reply: “{text}”', { text: plainStoryText(b.text) });
     case 'chapter':
       return t('A new chapter: {title}', { title: b.text });
     case 'edit':
@@ -92,7 +92,7 @@ export function statsText(n: RouteNode): string {
     parts[0] += ` ${t('({n} since it branched)', { n: n.turns - n.forkTurn })}`;
   }
   if (n.chapter) {
-    parts.push(t('Chapter {n}: {title}', { n: n.chapter.ordinal, title: n.chapter.title }));
+    parts.push(chapterHeading(n.chapter.ordinal, n.chapter.title));
   }
   parts.push(t('Played {when}', { when: formatWhen(n.route.updatedAt) }));
   return parts.join(' · ');

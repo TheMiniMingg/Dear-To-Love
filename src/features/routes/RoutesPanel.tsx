@@ -5,6 +5,7 @@ import { RouteMap } from './RouteMap';
 import { RouteTimeline } from './RouteTimeline';
 import { branchText, layoutRoutes, originText, statsText } from './routeLayout';
 import { msg, t, tn } from '../../i18n';
+import { plainStoryText, routeName } from '../../i18n/names';
 
 type Props = {
   storyId: string;
@@ -81,7 +82,10 @@ export function RoutesPanel({ storyId, currentRouteId, routes, onSwitch, onChang
   const shown = (n: RouteNode) => showHidden || !n.route.hidden || n.route.id === currentRouteId;
   const placed = layoutRoutes(all, shown);
   const hiddenCount = routes.filter((r) => r.hidden).length;
-  const labelOf = (rid: string) => routes.find((r) => r.id === rid)?.label;
+  const labelOf = (rid: string) => {
+    const label = routes.find((r) => r.id === rid)?.label;
+    return label === undefined ? undefined : routeName(label);
+  };
   const detailed = nodes !== null;
 
   const act = async (f: () => Promise<unknown>) => {
@@ -203,7 +207,7 @@ function RouteDetails({
 }) {
   const r = node.route;
   const [renaming, setRenaming] = useState(false);
-  const [label, setLabel] = useState(r.label);
+  const [label, setLabel] = useState(routeName(r.label));
   const branch = branchText(node);
   return (
     <>
@@ -233,7 +237,7 @@ function RouteDetails({
       ) : (
         <div className="route-details">
           <div>
-            <strong>{r.label}</strong>
+            <strong>{routeName(r.label)}</strong>
             {current && <span className="badge">{t('Current')}</span>}
             {r.isMain && (
               <span className="badge" title={t('The route the story started on')}>
@@ -249,7 +253,7 @@ function RouteDetails({
               <span className="muted small">{statsText(node)}</span>
               {node.latest && (
                 <span className="muted small route-latest">
-                  {t('Now: {text}', { text: node.latest })}
+                  {t('Now: {text}', { text: plainStoryText(node.latest) })}
                 </span>
               )}
             </>

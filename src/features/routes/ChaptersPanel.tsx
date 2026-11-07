@@ -1,5 +1,6 @@
 import type { ChapterDto } from '../../types';
 import { t } from '../../i18n';
+import { chapterHeading } from '../../i18n/names';
 
 type Props = {
   chapters: ChapterDto[];
@@ -20,7 +21,7 @@ export function ChaptersPanel({ chapters, activeEventId, onRestart }: Props) {
         {chapters.map((c) => (
           <li key={c.eventId} className="item-row">
             <div>
-              <strong>{t('Chapter {n}: {title}', { n: c.ordinal, title: c.title })}</strong>
+              <strong>{chapterHeading(c.ordinal, c.title)}</strong>
               {c.eventId === activeEventId && <span className="badge">{t('Current')}</span>}
             </div>
             <button type="button" onClick={() => onRestart(c.eventId)}>

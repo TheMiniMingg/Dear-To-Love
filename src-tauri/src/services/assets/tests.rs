@@ -601,3 +601,21 @@ async fn a_new_story_keeps_the_pictures_picked_while_creating_it() {
         "nothing is saved when a picture is refused"
     );
 }
+
+/// An image for a story that doesn't exist is refused and never stored.
+#[tokio::test]
+async fn images_for_a_missing_story_are_not_added() {
+    let t = test_db().await;
+    let s = store(&t);
+    let err = import_bytes(
+        &t.db,
+        &s,
+        png(12, 12, 7),
+        "Lost",
+        &ImportScope::Story("no-such-story".into()),
+    )
+    .await
+    .unwrap_err();
+    assert_eq!(err.code, crate::errors::ErrorCode::NotFound);
+    assert!(rows::list(&t.db).await.unwrap().is_empty());
+}

@@ -6,6 +6,7 @@ import { MakePortrait } from '../images/MakePortrait';
 import type { AssetDto, RouteView } from '../../types';
 import { BACKGROUND, COVER, picture, portraitSlot, slotName, type Picture } from './pictures';
 import { t, tr } from '../../i18n';
+import { routeName } from '../../i18n/names';
 
 type Props = {
   view: RouteView;
@@ -77,8 +78,9 @@ export function PicturesPanel({ view, awaitingReply, onChanged }: Props) {
         ? 1
         : a.name.localeCompare(b.name),
   );
-  const slots = [BACKGROUND, ...characters.map((c) => portraitSlot(c.id)), COVER];
-  const route = view.route.label;
+  // The same order as the Pictures step when a story is made.
+  const slots = [COVER, BACKGROUND, ...characters.map((c) => portraitSlot(c.id))];
+  const route = routeName(view.route.label);
 
   const apply = async (slot: string, assetId: string | null, where: Scope) => {
     const name = slotName(view, slot);

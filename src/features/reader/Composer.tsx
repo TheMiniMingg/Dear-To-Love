@@ -1,7 +1,7 @@
 import { useId, useRef, useState, type KeyboardEvent } from 'react';
 import { isComposing } from '../../app/keyboard';
 import type { RollRequest, Stat } from '../../types';
-import { DICE_PATTERN, rollFromComposer, wrapAction, type ComposeMode } from './messages';
+import { isDice, rollFromComposer, wrapAction, type ComposeMode } from './messages';
 import { msg, t } from '../../i18n';
 
 /** The longest action the app accepts. */
@@ -70,7 +70,7 @@ export function Composer({
   const ready =
     !disabled &&
     (mode === 'roll'
-      ? DICE_PATTERN.test(roll.dice)
+      ? isDice(roll.dice)
       : (!needsTo || to.trim() !== '') && (mode === 'call' || value.trim() !== ''));
 
   const submit = () => {
@@ -134,7 +134,7 @@ export function Composer({
               value={roll.dice}
               list={`${id}-dice-list`}
               maxLength={24}
-              aria-invalid={!DICE_PATTERN.test(roll.dice)}
+              aria-invalid={!isDice(roll.dice)}
               title={t('Dice such as 1d20 or 2d6+1, or a range such as 40-100')}
               onChange={(e) => setRoll({ ...roll, dice: e.target.value })}
             />

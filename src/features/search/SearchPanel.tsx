@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { commands, errorMessage } from '../../api/commands';
 import type { BookmarkDto, EventKind, SearchHit, SearchResults } from '../../types';
 import { joinSentences, t, tn } from '../../i18n';
+import { bookmarkName, chapterHeading, plainStoryText } from '../../i18n/names';
 
 /** Who or what a place in the story is, for the result lines. */
 export function placeLabel(
@@ -18,11 +19,7 @@ export function placeLabel(
   };
   const chapter =
     p.chapterOrdinal !== null && p.kind !== 'chapter_start'
-      ? `${
-          p.chapterTitle
-            ? t('Chapter {n}: {title}', { n: p.chapterOrdinal, title: p.chapterTitle })
-            : t('Chapter {n}', { n: p.chapterOrdinal })
-        } · `
+      ? `${chapterHeading(p.chapterOrdinal, p.chapterTitle)} · `
       : '';
   return `${chapter}${what[p.kind]}`;
 }
@@ -109,7 +106,7 @@ export function SearchPanel({
           void search();
         }}
       >
-        <label htmlFor="search-input">Search {routeLabel}</label>
+        <label htmlFor="search-input">{t('Search {route}', { route: routeLabel })}</label>
         <input
           id="search-input"
           type="search"
@@ -142,7 +139,11 @@ export function SearchPanel({
                 <span className="muted small">{placeLabel(h, playerName)}</span>
                 <span className="search-snippet">
                   {h.snippet.map((part, i) =>
-                    part.mark ? <mark key={i}>{part.text}</mark> : <span key={i}>{part.text}</span>,
+                    part.mark ? (
+                      <mark key={i}>{part.text}</mark>
+                    ) : (
+                      <span key={i}>{plainStoryText(part.text)}</span>
+                    ),
                   )}
                 </span>
               </button>
@@ -152,78 +153,81 @@ export function SearchPanel({
       )}
 
       <section aria-labelledby="bookmarks-title" className="bookmarks">
-        <h3 id="bookmarks-title">Bookmarks on {routeLabel}</h3>
+        <h3 id="bookmarks-title">{t('Bookmarks on {route}', { route: routeLabel })}</h3>
         {bookmarks.length === 0 ? (
           <p className="muted">
             {t('No bookmarks yet. Choose Bookmark under any part of the story to mark it.')}
           </p>
         ) : (
           <ul className="item-list" aria-labelledby="bookmarks-title">
-            {bookmarks.map((b) => (
-              <li key={b.id} className="item-row">
-                {renaming?.id === b.id ? (
-                  <form
-                    className="inline-form bookmark-rename"
-                    onSubmit={(e) => {
-                      e.preventDefault();
-                      void change(() => commands.renameBookmark(storyId, b.id, renaming.label));
-                    }}
-                  >
-                    <label htmlFor={`bookmark-name-${b.id}`} className="visually-hidden">
-                      {t('Bookmark name')}
-                    </label>
-                    <input
-                      id={`bookmark-name-${b.id}`}
-                      value={renaming.label}
-                      maxLength={120}
-                      autoFocus
-                      onChange={(e) => setRenaming({ id: b.id, label: e.target.value })}
-                    />
-                    <button type="submit" className="primary" disabled={!renaming.label.trim()}>
-                      {t('Save name')}
-                    </button>
-                    <button type="button" onClick={() => setRenaming(null)}>
-                      {t('Cancel')}
-                    </button>
-                  </form>
-                ) : (
-                  <>
-                    <div className="bookmark-text">
-                      <strong>{b.label}</strong>
-                      <div className="muted small">{placeLabel(b, playerName)}</div>
-                      {/* An automatic name is already the start of the text. */}
-                      {!b.excerpt.startsWith(b.label.replace(/…$/, '')) && (
-                        <div className="small bookmark-excerpt">{b.excerpt}</div>
-                      )}
-                    </div>
-                    <div className="button-row">
-                      <button
-                        type="button"
-                        aria-label={t('Go to bookmark {name}', { name: b.label })}
-                        onClick={() => onGo(b.eventId)}
-                      >
-                        {t('Go to')}
+            {bookmarks.map((b) => {
+              const name = plainStoryText(bookmarkName(b.label));
+              return (
+                <li key={b.id} className="item-row">
+                  {renaming?.id === b.id ? (
+                    <form
+                      className="inline-form bookmark-rename"
+                      onSubmit={(e) => {
+                        e.preventDefault();
+                        void change(() => commands.renameBookmark(storyId, b.id, renaming.label));
+                      }}
+                    >
+                      <label htmlFor={`bookmark-name-${b.id}`} className="visually-hidden">
+                        {t('Bookmark name')}
+                      </label>
+                      <input
+                        id={`bookmark-name-${b.id}`}
+                        value={renaming.label}
+                        maxLength={120}
+                        autoFocus
+                        onChange={(e) => setRenaming({ id: b.id, label: e.target.value })}
+                      />
+                      <button type="submit" className="primary" disabled={!renaming.label.trim()}>
+                        {t('Save name')}
                       </button>
-                      <button
-                        type="button"
-                        aria-label={t('Rename bookmark {name}', { name: b.label })}
-                        onClick={() => setRenaming({ id: b.id, label: b.label })}
-                      >
-                        {t('Rename')}
+                      <button type="button" onClick={() => setRenaming(null)}>
+                        {t('Cancel')}
                       </button>
-                      <button
-                        type="button"
-                        className="danger-link"
-                        aria-label={t('Remove bookmark {name}', { name: b.label })}
-                        onClick={() => void change(() => commands.deleteBookmark(storyId, b.id))}
-                      >
-                        {t('Remove')}
-                      </button>
-                    </div>
-                  </>
-                )}
-              </li>
-            ))}
+                    </form>
+                  ) : (
+                    <>
+                      <div className="bookmark-text">
+                        <strong>{name}</strong>
+                        <div className="muted small">{placeLabel(b, playerName)}</div>
+                        {/* An automatic name is already the start of the text. */}
+                        {!b.excerpt.startsWith(b.label.replace(/…$/, '')) && (
+                          <div className="small bookmark-excerpt">{plainStoryText(b.excerpt)}</div>
+                        )}
+                      </div>
+                      <div className="button-row">
+                        <button
+                          type="button"
+                          aria-label={t('Go to bookmark {name}', { name })}
+                          onClick={() => onGo(b.eventId)}
+                        >
+                          {t('Go to')}
+                        </button>
+                        <button
+                          type="button"
+                          aria-label={t('Rename bookmark {name}', { name })}
+                          onClick={() => setRenaming({ id: b.id, label: name })}
+                        >
+                          {t('Rename')}
+                        </button>
+                        <button
+                          type="button"
+                          className="danger-link"
+                          aria-label={t('Remove bookmark {name}', { name })}
+                          onClick={() => void change(() => commands.deleteBookmark(storyId, b.id))}
+                        >
+                          {t('Remove')}
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </li>
+              );
+            })}
           </ul>
         )}
       </section>

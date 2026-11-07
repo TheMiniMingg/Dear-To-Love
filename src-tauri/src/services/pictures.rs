@@ -298,6 +298,17 @@ fn person(c: &Character) -> &'static str {
     }
 }
 
+/// "a" or "an" before a word, by its first letter.
+fn article(word: &str) -> &'static str {
+    match word.chars().next().map(|c| c.to_ascii_lowercase()) {
+        Some('a' | 'e' | 'i' | 'o' | 'u') => "an",
+        _ => "a",
+    }
+}
+
+/// Always the last sentence of a portrait description, never cut off.
+const SAFE_FOR_WORK: &str = "One person, fully clothed, safe for work, no text.";
+
 /// The description sent for a character's portrait. Names are left out
 /// (picture models draw words, not people); the world's era and setting
 /// set the clothes and the background.
@@ -305,7 +316,8 @@ pub fn portrait_prompt(c: &Character, world: &World, style: PortraitStyle) -> Pr
     let mut who = String::new();
     match clean(&c.species) {
         Some(sp) if !sp.eq_ignore_ascii_case("human") => {
-            who.push_str(&format!("a {} ({})", sp.to_lowercase(), &person(c)[2..]));
+            let sp = sp.to_lowercase();
+            who.push_str(&format!("{} {sp} ({})", article(&sp), &person(c)[2..]));
         }
         _ => who.push_str(person(c)),
     }
@@ -317,7 +329,8 @@ pub fn portrait_prompt(c: &Character, world: &World, style: PortraitStyle) -> Pr
         }
     }
     if let Some(role) = clean(&c.role) {
-        who.push_str(&format!(", a {}", role.to_lowercase()));
+        let role = role.to_lowercase();
+        who.push_str(&format!(", {} {role}", article(&role)));
     }
     let mut parts = vec![format!(
         "Head-and-shoulders portrait of {who}, {}.",
@@ -349,11 +362,14 @@ pub fn portrait_prompt(c: &Character, world: &World, style: PortraitStyle) -> Pr
         (true, false) => parts.push(format!("A softly blurred background of {setting}.")),
         (true, true) => {}
     }
-    parts.push("One person, fully clothed, safe for work, no text.".into());
+    // Long looks are cut, never the closing safe-for-work sentence.
+    let room = MAX_PROMPT_CHARS - SAFE_FOR_WORK.chars().count() - 1;
     let mut text = parts.join(" ");
-    if text.chars().count() > MAX_PROMPT_CHARS {
-        text = text.chars().take(MAX_PROMPT_CHARS).collect();
+    if text.chars().count() > room {
+        text = text.chars().take(room).collect();
     }
+    text.push(' ');
+    text.push_str(SAFE_FOR_WORK);
     Prompt {
         text,
         avoid: "nudity, sexual content, gore, text, watermark, extra people".into(),
@@ -427,6 +443,8 @@ pub async fn make_portrait(
         (None, true) => ImportScope::NewStory,
         (None, false) => ImportScope::Shared,
     };
+    // Before anything is paid for: the story the portrait is for must exist.
+    asset_rows::check_import_scope(db, &scope).await?;
     let request = usage::open_request(
         db,
         NewRequest {

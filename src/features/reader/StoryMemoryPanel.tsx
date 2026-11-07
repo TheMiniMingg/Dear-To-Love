@@ -3,6 +3,7 @@ import { formatWhen } from '../../api/backups';
 import { commands, errorMessage } from '../../api/commands';
 import type { RouteView, StoryMemory, SummaryWriter } from '../../types';
 import { joinList, joinSentences, t, tKnown, tn, tr } from '../../i18n';
+import { chapterHeading } from '../../i18n/names';
 
 /** Who wrote a summary: "Cloud model (story-model)", or the offline storyteller. */
 function writerName(w: SummaryWriter | undefined): string {
@@ -110,7 +111,7 @@ export function StoryMemoryPanel({
             {memory.turns < memory.firstSummaryAfter
               ? tn(
                   memory.turns,
-                  'Not needed yet: the storyteller still reads the {n} turn word for word. After {after} turns, the earlier ones are summarized here.',
+                  'Not needed yet: the story has {n} turn so far, and the storyteller reads it word for word. After {after} turns, the earlier ones are summarized here.',
                   'Not needed yet: the storyteller still reads all {n} turns word for word. After {after} turns, the earlier ones are summarized here.',
                   { after: memory.firstSummaryAfter },
                 )
@@ -133,7 +134,7 @@ export function StoryMemoryPanel({
             <ol className="memory-recaps">
               {memory.recaps.map((r) => (
                 <li key={r.ordinal}>
-                  <strong>{t('Chapter {n}: {title}', { n: r.ordinal, title: r.title })}</strong>
+                  <strong>{chapterHeading(r.ordinal, r.title)}</strong>
                   <p>{r.text}</p>
                 </li>
               ))}

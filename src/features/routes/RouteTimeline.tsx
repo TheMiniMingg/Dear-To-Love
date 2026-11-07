@@ -1,6 +1,7 @@
 import type { Placed } from './routeLayout';
 import { turnCount } from './routeLayout';
 import { joinList, t } from '../../i18n';
+import { routeName } from '../../i18n/names';
 
 type Props = {
   placed: Placed[];
@@ -38,11 +39,13 @@ export function RouteTimeline({ placed, currentRouteId, selectedId, onSelect }: 
                 type="button"
                 className={`timeline-label${current ? ' current' : ''}`}
                 aria-pressed={r.id === selectedId}
-                aria-label={joinList([r.label, current ? t('current') : '', span].filter(Boolean))}
-                title={r.label}
+                aria-label={joinList(
+                  [routeName(r.label), current ? t('current') : '', span].filter(Boolean),
+                )}
+                title={routeName(r.label)}
                 onClick={() => onSelect(r.id)}
               >
-                {r.label}
+                {routeName(r.label)}
               </button>
               <div className="timeline-track">
                 <span
@@ -51,7 +54,7 @@ export function RouteTimeline({ placed, currentRouteId, selectedId, onSelect }: 
                     left: `${at(start)}%`,
                     width: `max(0.5rem, ${at(p.node.turns) - at(start)}%)`,
                   }}
-                  title={`${r.label}: ${span}`}
+                  title={`${routeName(r.label)}: ${span}`}
                   aria-hidden="true"
                   onClick={() => onSelect(r.id)}
                 />

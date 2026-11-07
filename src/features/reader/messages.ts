@@ -6,6 +6,7 @@
  */
 import type { RollRequest } from '../../types';
 import { t } from '../../i18n';
+import { plainStoryText } from '../../i18n/names';
 
 export type MessageTag = 'text' | 'call' | 'thought' | 'letter' | 'post' | 'roll';
 
@@ -85,6 +86,56 @@ export function parseBlocks(text: string, streaming = false): Block[] {
   return out;
 }
 
+/** The label `plain_message_tags` in Rust gives a tag, in English. */
+function plainLabel(kind: MessageTag, a: Record<string, string>): string {
+  let label: string;
+  switch (kind) {
+    case 'text':
+      label = a.from ? `Text from ${a.from}` : a.to ? `Text to ${a.to}` : 'Text';
+      break;
+    case 'call':
+      label = a.with
+        ? a.status
+          ? `Call with ${a.with}: ${a.status}`
+          : `Call with ${a.with}`
+        : a.status
+          ? `Call: ${a.status}`
+          : 'Call';
+      break;
+    case 'thought':
+      label = `${a.who || 'Someone'} thinks`;
+      break;
+    case 'letter':
+      label = a.from ? `Letter from ${a.from}` : 'Letter';
+      break;
+    case 'roll': {
+      const dice = a.dice || 'dice';
+      label = `${a.for ? `Roll for ${a.for}: ` : 'Roll: '}${a.result ? `${a.result} on ${dice}` : dice}`;
+      break;
+    }
+    case 'post':
+      label = a.from ? `Post by ${a.from}` : 'Post';
+      break;
+  }
+  return a.time ? `${label}, ${a.time}` : label;
+}
+
+/**
+ * Story text as plain words, each message tag a short label in the chosen
+ * language ("[Text from Mara] Are you up?"), as the app's core writes it.
+ */
+export function plainText(text: string): string {
+  const words = parseBlocks(text)
+    .map((b) => {
+      if (b.kind === 'prose') return b.text;
+      const label = plainLabel(b.kind, b.attrs);
+      if (b.kind === 'thought') return `(${label}: ${b.body})`;
+      return b.body ? `[${label}] ${b.body}` : `[${label}]`;
+    })
+    .join('');
+  return plainStoryText(words);
+}
+
 /** True when `text` contains at least one message tag. */
 export function hasMessageTags(text: string): boolean {
   return parseBlocks(text).some((b) => b.kind !== 'prose');
@@ -150,9 +201,47 @@ export function lastRollRequest(text: string): RollRequest | null {
   return found;
 }
 
-/** Dice the app can roll: `1d20`, `2d6+1`, `d100` or a range such as `40-100`. */
-export const DICE_PATTERN =
-  /^\s*(\d{0,2}\s*d\s*\d{1,4}(\s*[+-]\s*\d{1,7})?|-?\d{1,7}\s*(-|–|to)\s*-?\d{1,7})\s*$/i;
+const MAX_DICE = 20;
+const MAX_SIDES = 1000;
+const MAX_NUMBER = 1_000_000;
+
+function diceNumber(s: string): number | null {
+  const t = s.trim();
+  if (!/^[+-]?\d{1,7}$/.test(t)) return null;
+  const n = Number(t);
+  return Math.abs(n) <= MAX_NUMBER ? n : null;
+}
+
+/**
+ * Dice the app can roll: `1d20`, `2d6+1`, `d100` or a range such as
+ * `40-100` or `-5 to 5`. The same rules as `DiceSpec::parse` in Rust.
+ */
+export function isDice(spec: string): boolean {
+  const s = spec.trim().toLowerCase().replace(/[–—]/g, '-');
+  const d = s.indexOf('d');
+  if (d >= 0) {
+    const c = s.slice(0, d).trim();
+    const count = c === '' ? 1 : /^\d{1,3}$/.test(c) ? Number(c) : NaN;
+    const rest = s.slice(d + 1);
+    const sign = rest.search(/[+-]/);
+    if (sign >= 0 && diceNumber(rest.slice(sign + 1)) === null) return false;
+    const sides = (sign >= 0 ? rest.slice(0, sign) : rest).trim();
+    if (!/^\d{1,5}$/.test(sides)) return false;
+    return count >= 1 && count <= MAX_DICE && Number(sides) >= 2 && Number(sides) <= MAX_SIDES;
+  }
+  let at = s.indexOf(' to ');
+  let len = 4;
+  if (at < 0) {
+    // The dash between the two numbers, not a minus sign before the first.
+    const first = s.search(/\d/);
+    at = first < 0 ? -1 : s.indexOf('-', first);
+    len = 1;
+  }
+  if (at < 0) return false;
+  const low = diceNumber(s.slice(0, at));
+  const high = diceNumber(s.slice(at + len));
+  return low !== null && high !== null && low < high;
+}
 
 /**
  * A roll from the composer: one short line is what the roll is for; longer

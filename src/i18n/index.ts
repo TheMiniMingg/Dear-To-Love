@@ -177,6 +177,14 @@ export function joinSentences(parts: string[]): string {
   return parts.join(current === 'zh-Hans' || current === 'zh-Hant' || current === 'ja' ? '' : ' ');
 }
 
+/** A date and time in the chosen language ("7 Nov 2026, 01:02"); `iso` when it is not a date. */
+export function formatWhen(iso: string): string {
+  const d = new Date(iso);
+  return Number.isNaN(d.getTime())
+    ? iso
+    : d.toLocaleString(intlLocale(), { dateStyle: 'medium', timeStyle: 'short' });
+}
+
 /** A list joined the way the chosen language lists things ("a, b" / "a、b"). */
 export function joinList(parts: string[]): string {
   return parts.join(t(', '));

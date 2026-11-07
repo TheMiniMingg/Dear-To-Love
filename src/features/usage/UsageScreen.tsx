@@ -1,7 +1,7 @@
 import { useEffect, useId, useState } from 'react';
 import { commands, errorMessage, formatUsd } from '../../api/commands';
 import { useUiStore } from '../../app/store';
-import { intlLocale, msg, t, tn, tr } from '../../i18n';
+import { formatWhen, intlLocale, msg, t, tn, tr } from '../../i18n';
 import type { ApiRequestRow, ProviderProfile, UsageScope, UsageSummary } from '../../types';
 import { BudgetSection } from './BudgetSection';
 import { RatesSection } from './RatesSection';
@@ -246,7 +246,7 @@ export function UsageScreen() {
               <tbody>
                 {rows.map((r) => (
                   <tr key={r.id}>
-                    <td>{new Date(r.startedAt).toLocaleString(intlLocale())}</td>
+                    <td>{formatWhen(r.startedAt)}</td>
                     <td>
                       {r.providerLabel} · {r.modelId}
                     </td>
