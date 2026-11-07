@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- **Story memory.** A new **Story memory** panel in the pause menu shows what the storyteller
+  remembers beyond the newest turns: the summary of earlier turns (which turns it covers and
+  which connection wrote it), the recaps of ended chapters, and the facts, relationships and
+  open threads. It is all kept in the story, so switching to another storyteller, or to the
+  offline one, carries it over. **Storyteller** links to it.
 - **Routes as a list, a map or a timeline.** **Routes** now says where each route branched
   ("after turn 4"), what it did differently first (another reply, a different action or a
   change), how many turns it has, its chapter and its latest words. Switch between a **List**,

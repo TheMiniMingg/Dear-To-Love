@@ -12,11 +12,13 @@ export function StorytellerPanel({
   current,
   onChanged,
   onOpenSettings,
+  onOpenMemory,
 }: {
   storyId: string;
   current: StorytellerInfo;
   onChanged: (info: StorytellerInfo) => void;
   onOpenSettings: () => void;
+  onOpenMemory?: () => void;
 }) {
   const [connections, setConnections] = useState<ProviderProfile[] | null>(null);
   const [app, setApp] = useState<StorytellerInfo | null>(null);
@@ -76,6 +78,11 @@ export function StorytellerPanel({
         </p>
       )}
       <div className="button-row">
+        {onOpenMemory && (
+          <button type="button" onClick={onOpenMemory}>
+            See what the story remembers
+          </button>
+        )}
         <button type="button" onClick={onOpenSettings}>
           Add or change connections in Settings
         </button>

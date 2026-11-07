@@ -185,6 +185,7 @@ pub fn run() {
             commands::reader::fork_route,
             commands::reader::restart_chapter,
             commands::reader::get_route_map,
+            commands::reader::get_story_memory,
             commands::reader::rename_route,
             commands::reader::set_route_hidden,
             commands::ai::list_connections,
