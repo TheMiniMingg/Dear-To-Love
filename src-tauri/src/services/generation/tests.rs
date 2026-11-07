@@ -352,6 +352,18 @@ async fn is_writing(db: &Database, story_id: &str) -> bool {
         .writing
 }
 
+/// Waits (up to 5 s) for a story's reply to start streaming: a fixed pause
+/// is not always long enough on a busy test machine.
+async fn until_writing(db: &Database, story_id: &str) {
+    for _ in 0..500 {
+        if is_writing(db, story_id).await {
+            return;
+        }
+        tokio::time::sleep(Duration::from_millis(10)).await;
+    }
+    panic!("the reply never started streaming");
+}
+
 /// Several stories at once: a reply keeps writing in one story while
 /// another is played, and the library shows which one is writing.
 #[tokio::test]
@@ -380,8 +392,7 @@ async fn another_story_plays_while_a_reply_is_being_written() {
 
     let slow = env.submit(env.route(), "Wait").await.unwrap();
     let (first, _) = tokio::join!(env.gen(&slow.run_id), async {
-        short_pause().await;
-        assert!(is_writing(env.db(), &env.story.story_id).await);
+        until_writing(env.db(), &env.story.story_id).await;
         assert!(!is_writing(env.db(), &other.story_id).await);
         let sub = submit_action(
             env.db(),
