@@ -5,6 +5,7 @@ import { Dialog } from '../../components/Dialog';
 import type { ProviderProfile, StorytellerInfo } from '../../types';
 import { AboutSection, UpdatesSection } from '../updates/UpdatesSection';
 import { ConnectionForm } from './ConnectionForm';
+import { BackdropSection } from './BackdropSection';
 import { LanguageSection } from './LanguageSection';
 import { ADAPTER_LABELS, makesPictures, pictureConnections, storyConnections } from './kinds';
 import { t, tr } from '../../i18n';
@@ -127,6 +128,7 @@ export function SettingsScreen() {
       )}
 
       <LanguageSection />
+      <BackdropSection />
 
       <section className="settings-section" aria-labelledby="storyteller-title">
         <h2 id="storyteller-title">{t('Storyteller')}</h2>
