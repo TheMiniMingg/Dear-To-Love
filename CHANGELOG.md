@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- **A background picture.** **Settings → Background picture** puts a picture from your image
+  library (or a new one from your computer) behind every screen, softened so the text stays
+  easy to read; choose how much of it shows. It is a setting of this computer, and **Images**
+  says which picture it is.
 - **One continuing world.** The storyteller is now told outright that it plays everyone
   except your character, from allies to villains, and that each acts from their own
   personality and goals rather than a script. The world carries on across chapters, with

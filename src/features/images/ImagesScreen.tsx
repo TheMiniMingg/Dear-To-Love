@@ -1,6 +1,7 @@
 import { useEffect, useId, useState } from 'react';
 import { commands, errorMessage } from '../../api/commands';
 import { describeImports, formatBytes, pickImageFiles } from '../../api/images';
+import { useBackdrop } from '../../app/backdropStore';
 import { useUiStore } from '../../app/store';
 import { Dialog } from '../../components/Dialog';
 import type { AssetDto, AssetUsage, ImageImport, ImageScope, StorySummary } from '../../types';
@@ -297,6 +298,9 @@ function ImageDetails({
   const remove = async () => {
     try {
       await commands.deleteImage(image.id);
+      if (useBackdrop.getState().assetId === image.id) {
+        useBackdrop.getState().update({ assetId: null });
+      }
       setConfirm(false);
       onDeleted();
     } catch (e) {
@@ -325,6 +329,7 @@ function ImageDetails({
   };
 
   const inHistory = usages?.some((u) => u.inHistory) ?? false;
+  const isBackdrop = useBackdrop((s) => s.assetId === image.id);
   const name = shownLabel || t('Untitled');
 
   return (
@@ -422,6 +427,11 @@ function ImageDetails({
       )}
 
       <h2 className="small-heading">{t('Used in')}</h2>
+      {isBackdrop && (
+        <p className="small">
+          {t('The app background (Settings → Background picture). Deleting it removes it there.')}
+        </p>
+      )}
       {usages === null && !error && <p className="muted small">{t('Checking…')}</p>}
       {usages?.length === 0 && <p className="muted small">{t('Not used in any story.')}</p>}
       {usages && usages.length > 0 && (

@@ -1,6 +1,6 @@
 // AI connections: add one (key goes to the backend, never shown again),
 // choose the storyteller, and test the connection.
-import { render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ProviderProfile, StorytellerInfo } from '../types';
@@ -11,6 +11,9 @@ vi.mock('@tauri-apps/api/core', () => ({
   Channel: class {},
 }));
 
+import { App } from '../app/App';
+import { useBackdrop } from '../app/backdropStore';
+import { useUiStore } from '../app/store';
 import { SettingsScreen } from '../features/settings/SettingsScreen';
 
 const offline: StorytellerInfo = {
@@ -71,6 +74,21 @@ describe('Settings: AI connections', () => {
         case 'set_picture_maker':
           pictureMaker = (args.profileId as string | null) ?? null;
           return pictureMaker;
+        case 'list_images':
+          return [
+            {
+              id: 'img-sea',
+              mime: 'image/png',
+              width: 1600,
+              height: 900,
+              byteSize: 1000,
+              label: 'Sea at dawn',
+              tags: [],
+              createdAt: '',
+              shared: true,
+              stories: [],
+            },
+          ];
         case 'set_storyteller':
           storyteller = args.profileId
             ? { profileId: 'p1', label: 'OpenAI', modelId: 'story-model', billing: 'paid' }
@@ -232,5 +250,38 @@ describe('Settings: AI connections', () => {
     expect(card).toBeDefined();
     expect(within(card!).getByRole('button', { name: 'Test connection' })).toBeInTheDocument();
     expect(within(card!).queryByRole('button', { name: 'Send test message' })).toBeNull();
+  });
+
+  it('sets a background picture behind every screen, and how much of it shows', async () => {
+    localStorage.clear();
+    useBackdrop.getState().update({ assetId: null, veil: 'soft' });
+    useUiStore.setState({ screen: { name: 'settings' }, history: [] });
+    render(<App />);
+    const section = await screen.findByRole('region', { name: 'Background picture' });
+    expect(within(section).getByText('No background picture.')).toBeInTheDocument();
+    expect(screen.queryByTestId('app-backdrop')).toBeNull();
+
+    await userEvent.click(within(section).getByRole('button', { name: 'Choose a picture…' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Choose a background picture' });
+    await userEvent.click(await within(dialog).findByRole('button', { name: 'Sea at dawn' }));
+    expect(screen.queryByRole('dialog')).toBeNull();
+    const backdrop = screen.getByTestId('app-backdrop');
+    expect(backdrop).toHaveClass('veil-soft');
+    expect(backdrop.querySelector('img')?.getAttribute('src')).toContain('full/img-sea');
+    expect(JSON.parse(localStorage.getItem('dtl.backdrop')!)).toEqual({
+      assetId: 'img-sea',
+      veil: 'soft',
+    });
+
+    await userEvent.selectOptions(
+      within(section).getByLabelText('How much of the picture shows'),
+      'A lot',
+    );
+    expect(screen.getByTestId('app-backdrop')).toHaveClass('veil-clear');
+
+    // A picture that no longer loads (deleted from the library) is forgotten.
+    fireEvent.error(screen.getByTestId('app-backdrop').querySelector('img')!);
+    expect(screen.queryByTestId('app-backdrop')).toBeNull();
+    expect(within(section).getByText('No background picture.')).toBeInTheDocument();
   });
 });

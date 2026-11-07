@@ -290,6 +290,14 @@ stored in English and shown in the app's language. Diagnostics shows each check'
 app's language, but the details and the copied report stay in English so they can be read by
 whoever helps you.
 
+### The app's background picture
+
+**Settings → Background picture** shows a picture from the image library behind every screen,
+under a veil in the page colour so text stays readable (**How much of the picture shows**: a
+little, some or a lot). Like the app language it is a setting of this computer, kept outside
+the database, so it isn't in backups or storypacks. Deleting the picture in **Images** removes
+it as the background too.
+
 ## Dice
 
 Turn on **Roll dice for uncertain moments** in **Narration** (on by default for Adventure,
