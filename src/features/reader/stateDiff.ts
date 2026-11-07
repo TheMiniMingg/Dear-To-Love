@@ -1,5 +1,6 @@
 import type { Character, KnownFact, Narration, StateEdit, StoryStateV1 } from '../../types';
 import { cleanOptionalList, minorsIn, RATING_LABELS } from '../create/ContentFields';
+import { STYLES } from '../create/StyleFields';
 
 /** One line of the "what changes" preview. */
 export type ChangeLine = { what: string; before?: string; after?: string };
@@ -44,6 +45,11 @@ function cleanNarration(n: Narration): Narration {
   if (themes) out.themes = themes;
   const limits = cleanOptionalList(n.limits);
   if (limits) out.limits = limits;
+  if (n.style && n.style !== 'narrated') out.style = n.style;
+  if (n.innerThoughts) out.innerThoughts = true;
+  if (n.messageCards) out.messageCards = true;
+  const language = n.language?.trim();
+  if (language) out.language = language;
   return out;
 }
 const show = (v: unknown) =>
@@ -112,6 +118,10 @@ export function diffState(
       genres: n.genres ?? [],
       themes: n.themes ?? [],
       limits: n.limits ?? [],
+      style: STYLES.find((s) => s.value === (n.style ?? 'narrated'))?.label ?? n.style,
+      innerThoughts: n.innerThoughts ? 'On' : 'Off',
+      messageCards: n.messageCards ? 'On' : 'Off',
+      language: n.language ?? 'Not set',
     });
     lines.push(
       ...fieldLines('Narration · ', shown(before.narration), shown(narration), [
@@ -123,6 +133,10 @@ export function diffState(
         ['rating', 'Content rating'],
         ['themes', 'Themes'],
         ['limits', 'Hard limits'],
+        ['style', 'Style'],
+        ['innerThoughts', 'Inner thoughts'],
+        ['messageCards', 'Texts and calls as cards'],
+        ['language', 'Story language'],
       ]),
     );
   }

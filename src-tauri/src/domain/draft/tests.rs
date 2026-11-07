@@ -10,6 +10,7 @@ fn starter() -> CreateStoryDraft {
             character_id: "starter:botanist".into(),
             perspective: Some(Perspective::First),
             detail: None,
+            story_type: None,
         })
         .unwrap()
 }

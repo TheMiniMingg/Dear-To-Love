@@ -9,7 +9,7 @@
 use sha2::{Digest, Sha256};
 
 use crate::domain::replay::EffectiveState;
-use crate::domain::story_state::{Character, Control};
+use crate::domain::story_state::{Character, Control, NarrationStyle};
 
 pub const MOCK_PROVIDER_LABEL: &str = "Offline storyteller";
 
@@ -66,6 +66,35 @@ const CLOSERS: &[&str] = &[
     "The next move is yours.",
     "Something here still does not add up.",
     "It feels like a small step closer to an answer.",
+];
+
+const TEXT_REPLIES: &[&str] = &[
+    "Wait. Is this really you?",
+    "Can't talk long. Meet me later?",
+    "I was just thinking about you.",
+    "Okay. Tell me everything.",
+    "Ha. You haven't changed at all.",
+];
+
+const AFTER_TEXT: &[&str] = &[
+    "The typing dots appear, vanish, and appear again.",
+    "Your phone stays quiet for a long moment after that.",
+    "Another message seems to be on its way.",
+];
+
+const CALL_LINES: &[&str] = &[
+    "Hello? You actually called. I didn't think you would.",
+    "Hey. Give me a second, it's loud here. Okay. What's going on?",
+    "You have perfect timing. Or terrible timing. I haven't decided.",
+];
+
+/// First-person thoughts of a character reacting to the player.
+const THOUGHTS: &[&str] = &[
+    "I wasn't expecting that. Why does it make me want to smile?",
+    "Careful. Don't let it show.",
+    "There's more to this than they're telling me.",
+    "I could get used to this, and that's the problem.",
+    "Brave or reckless? I can't tell yet.",
 ];
 
 const LOOK_WORDS: &[&str] = &[
@@ -171,6 +200,22 @@ fn present_npc(state: &EffectiveState) -> Option<&Character> {
         .or_else(|| s.characters.values().find(|c| c.control == Control::Npc))
 }
 
+/// The value of `attr` on the first `<tag …>` in `text`, if any.
+fn first_tag_attr(text: &str, tag: &str, attr: &str) -> Option<String> {
+    let start = text.find(&format!("<{tag} "))?;
+    let rest = &text[start..];
+    let head = &rest[..rest.find('>')?];
+    let key = format!("{attr}=\"");
+    let value = &head[head.find(&key)? + key.len()..];
+    let value = value[..value.find('"')?].trim();
+    (!value.is_empty()).then(|| value.to_string())
+}
+
+/// A name safe to put inside an attribute.
+fn attr(name: &str) -> String {
+    name.trim().replace(['"', '<', '>'], "'")
+}
+
 /// A short reply to `action`. `turn` is the number of the player's action
 /// on the route; `opens_chapter` is true for the first reply after a
 /// chapter starts, which also sets the scene.
@@ -178,6 +223,24 @@ pub fn reply(state: &EffectiveState, action: &str, turn: usize, opens_chapter: b
     let seed = format!("{turn}:{action}");
     let seed = seed.as_bytes();
     let npc = present_npc(state);
+    // A text or call from the player is answered in kind.
+    if let Some(to) = first_tag_attr(action, "text", "to") {
+        return format!(
+            "<text from=\"{}\">{}</text>\n\n{}",
+            attr(&to),
+            pick(TEXT_REPLIES, seed, 5),
+            pick(AFTER_TEXT, seed, 6)
+        );
+    }
+    if let Some(with) = first_tag_attr(action, "call", "with") {
+        let with = attr(&with);
+        return format!(
+            "<call with=\"{with}\" status=\"connected\"/>\n\n{with}: \"{}\"",
+            pick(CALL_LINES, seed, 5)
+        );
+    }
+    let narration = &state.state.narration;
+    let thoughts = narration.inner_thoughts || narration.style == Some(NarrationStyle::Thoughts);
     let fill = |line: &str| match npc {
         Some(c) => line
             .replace("{npc_short}", short_pronoun(c))
@@ -205,6 +268,13 @@ pub fn reply(state: &EffectiveState, action: &str, turn: usize, opens_chapter: b
         ActionKind::Other => pick(OTHER, seed, 2),
     };
     parts.push(format!("{} {}", pick(BEATS, seed, 1), fill(response)));
+    if let (true, Some(c)) = (thoughts, npc) {
+        parts.push(format!(
+            "<thought who=\"{}\">{}</thought>",
+            attr(&c.name),
+            pick(THOUGHTS, seed, 7)
+        ));
+    }
 
     let closer = if npc.is_some() && pick(&["npc", "plain"], seed, 4) == "npc" {
         fill(pick(CLOSERS_NPC, seed, 3))
@@ -280,5 +350,28 @@ mod tests {
         assert_eq!(classify("Walk to the door"), ActionKind::Move);
         assert_eq!(classify("Picks up the lamp"), ActionKind::Handle);
         assert_eq!(classify("Sigh"), ActionKind::Other);
+    }
+
+    #[test]
+    fn answers_texts_and_calls_in_kind_and_shows_thoughts_when_asked() {
+        let mut state = sample_lighthouse();
+        let s = EffectiveState::new(state.clone());
+        let r = reply(
+            &s,
+            "<text to=\"Mara Quill\">Are you awake?</text>",
+            2,
+            false,
+        );
+        assert!(r.starts_with("<text from=\"Mara Quill\">"), "{r}");
+        let r = reply(&s, "<call with=\"Mara\" status=\"ringing\"/>", 2, false);
+        assert!(
+            r.starts_with("<call with=\"Mara\" status=\"connected\"/>\n\nMara: \""),
+            "{r}"
+        );
+        assert!(!reply(&s, "Wave", 3, false).contains("<thought"));
+        state.narration.inner_thoughts = true;
+        let r = reply(&EffectiveState::new(state), "Wave", 3, false);
+        assert!(r.contains("<thought who=\"Mara\">"), "{r}");
+        assert_eq!(first_tag_attr("<text to=\"\">x</text>", "text", "to"), None);
     }
 }

@@ -51,7 +51,7 @@ const catalog = {
         description: 'A ring.',
         rules: ['No aliens'],
       },
-      narration: { ...narration, tone: 'Wistful' },
+      narration: { ...narration, tone: 'Wistful', genres: ['Science fiction'] },
     },
   ],
   scenarios: [
@@ -394,6 +394,49 @@ describe('Create a story', () => {
     expect(draft.narration.rating).toBe('explicit');
     expect(draft.narration.themes?.filter(Boolean)).toEqual(['slow burn', 'rivals']);
     expect(draft.narration.limits).toEqual(['gore']);
+  });
+
+  it('type of story, style, thoughts, cards and language reach the new story', async () => {
+    render(<CreateWizardScreen />);
+    const type = await screen.findByRole('combobox', { name: 'Type of story' });
+    await userEvent.selectOptions(type, 'Science fiction');
+    // Only the science fiction world is offered, and it is chosen.
+    const world = screen.getByRole('combobox', { name: 'Start from a world' });
+    expect(world).toHaveDisplayValue('Meridian Station');
+    expect(within(world).queryByRole('option', { name: 'Harbor Town' })).toBeNull();
+    await userEvent.selectOptions(type, 'School life');
+    expect(screen.getByText(/No preset world is tagged School life yet/)).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('button', { name: '4. Narration' }));
+    const cards = await screen.findByRole('checkbox', {
+      name: 'Show texts, calls and letters as cards',
+    });
+    expect(cards).toBeChecked();
+    const thoughts = screen.getByRole('checkbox', {
+      name: "Show other characters' inner thoughts",
+    });
+    expect(thoughts).not.toBeChecked();
+    await userEvent.selectOptions(screen.getByRole('combobox', { name: 'Style' }), 'thoughts');
+    expect(thoughts).toBeChecked();
+    expect(thoughts).toBeDisabled();
+    await userEvent.selectOptions(
+      screen.getByRole('combobox', { name: 'Story language' }),
+      'Japanese',
+    );
+
+    await userEvent.click(screen.getByRole('button', { name: '5. Review' }));
+    const summary = await screen.findByLabelText('Story summary');
+    expect(summary).toHaveTextContent('Thoughts and dialogue, no narrator');
+    expect(summary).toHaveTextContent('in Japanese');
+    expect(summary).toHaveTextContent('School life, Science fiction');
+    await userEvent.click(await screen.findByRole('button', { name: 'Create story' }));
+    const draft = lastCall('create_story')?.draft as CreateStoryDraft;
+    expect(draft.storyType).toBe('School life');
+    expect(draft.narration).toMatchObject({
+      style: 'thoughts',
+      messageCards: true,
+      language: 'Japanese',
+    });
   });
 
   it('Review lists problems and links to the step that fixes them', async () => {

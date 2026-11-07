@@ -7,13 +7,21 @@ import type {
   Detail,
   DraftProblem,
   DraftStep,
+  Narration,
   Pacing,
   Perspective,
   TemplateCatalog,
   World,
 } from '../../types';
-import { ContentFields, RATING_LABELS } from './ContentFields';
+import {
+  ContentFields,
+  RATING_LABELS,
+  STORY_TYPES,
+  withStoryType,
+  worldFits,
+} from './ContentFields';
 import { LinesField, PresetPicker, TextArea, TextField, ToggleList, uniq } from './fields';
+import { STYLES, StyleFields, tellingOf } from './StyleFields';
 
 export type StepProps = {
   draft: CreateStoryDraft;
@@ -44,11 +52,25 @@ const PRONOUNS = ['she/her', 'he/him', 'they/them'];
 
 const copy = <T,>(v: T): T => JSON.parse(JSON.stringify(v)) as T;
 
-/** Fill the world section (and its narration defaults) from a template. */
-export function applyWorld(catalog: TemplateCatalog, id: string): Partial<CreateStoryDraft> {
+/**
+ * Fill the world section (and its narration defaults) from a template.
+ * How the story is told (style, thoughts, cards, language) stays as chosen.
+ */
+export function applyWorld(
+  catalog: TemplateCatalog,
+  id: string,
+  current?: Narration,
+): Partial<CreateStoryDraft> {
   const t = catalog.worlds.find((w) => w.id === id);
   return t
-    ? { worldTemplateId: t.id, world: copy(t.world), narration: copy(t.narration) }
+    ? {
+        worldTemplateId: t.id,
+        world: copy(t.world),
+        narration: {
+          ...copy(t.narration),
+          ...(current ? tellingOf(current) : { messageCards: true }),
+        },
+      }
     : { worldTemplateId: null };
 }
 
@@ -90,7 +112,13 @@ export function blankDraft(d: CreateStoryDraft): CreateStoryDraft {
     title: '',
     description: '',
     world: { era: '', setting: '', description: '', rules: [] },
-    narration: { perspective: 'second', detail: 'balanced', tone: '', pacing: 'normal' },
+    narration: {
+      perspective: 'second',
+      detail: 'balanced',
+      tone: '',
+      pacing: 'normal',
+      messageCards: true,
+    },
     player: { id: '', name: '', control: 'player', personality: [], goals: [], abilities: [] },
     npcs: [],
     relationships: [],
@@ -122,15 +150,40 @@ function templateOptions<T extends { id: string; label: string; summary: string 
 export function WorldStep({ draft, update, catalog, guided }: StepProps) {
   const w = draft.world;
   const set = (patch: Partial<World>) => update({ world: { ...w, ...patch } });
+  const storyType = draft.storyType ?? '';
+  const fitting = catalog.worlds.filter((x) => worldFits(x.narration.genres, storyType));
+  const worlds = fitting.length > 0 ? fitting : catalog.worlds;
   return (
     <>
+      <PresetPicker
+        label="Type of story"
+        presets={STORY_TYPES}
+        value={storyType}
+        noneLabel="Any"
+        onChange={(t) => {
+          const patch: Partial<CreateStoryDraft> = { storyType: t || undefined };
+          // Move to a world of that type when the current one isn't.
+          const next = catalog.worlds.filter((x) => worldFits(x.narration.genres, t));
+          const current = catalog.worlds.find((x) => x.id === draft.worldTemplateId);
+          if (guided && current && next.length > 0 && !next.includes(current)) {
+            Object.assign(patch, applyWorld(catalog, next[0]!.id, draft.narration));
+          }
+          update(patch);
+        }}
+      />
+      {guided && storyType && fitting.length === 0 && (
+        <p className="muted small">
+          No preset world is tagged {storyType} yet, so every world is listed. The story is still a{' '}
+          {storyType} story.
+        </p>
+      )}
       {guided ? (
         <>
           <ArrowPicker
             label="Start from a world"
-            options={templateOptions(catalog.worlds, draft.worldTemplateId, 'Your own world')}
+            options={templateOptions(worlds, draft.worldTemplateId, 'Your own world')}
             value={draft.worldTemplateId ?? ''}
-            onChange={(id) => update(applyWorld(catalog, id))}
+            onChange={(id) => update(applyWorld(catalog, id, draft.narration))}
           />
           <PresetPicker
             label="Era"
@@ -537,8 +590,9 @@ export function NarrationStep({ draft, update, catalog, guided }: StepProps) {
   const set = (patch: Partial<typeof n>) => update({ narration: { ...n, ...patch } });
   return (
     <>
+      <StyleFields narration={n} onChange={set} typeLanguage={!guided} />
       <ArrowPicker
-        label="Narration"
+        label="Point of view"
         options={PERSPECTIVES}
         value={n.perspective}
         onChange={(perspective) => set({ perspective })}
@@ -647,12 +701,19 @@ export function ReviewStep({
         <dd>{draft.firstChapterTitle || '(not set)'}</dd>
         <dt>Narration</dt>
         <dd>
+          {STYLES.find((st) => st.value === (draft.narration.style ?? 'narrated'))?.label} ·{' '}
           {PERSPECTIVES.find((p) => p.value === draft.narration.perspective)?.label} ·{' '}
           {DETAILS.find((d) => d.value === draft.narration.detail)?.label}
           {draft.narration.tone && ` · ${draft.narration.tone}`}
+          {draft.narration.language && ` · in ${draft.narration.language}`}
         </dd>
         <dt>Kind of story</dt>
-        <dd>{storyKind(draft.narration.genres, draft.narration.rating) || 'Not set'}</dd>
+        <dd>
+          {storyKind(
+            withStoryType(draft.narration.genres, draft.storyType ?? ''),
+            draft.narration.rating,
+          ) || 'Not set'}
+        </dd>
         {(draft.narration.themes ?? []).some((t) => t.trim()) && (
           <>
             <dt>Themes</dt>

@@ -155,6 +155,7 @@ mod tests {
                 character_id: "starter:new-keeper".into(),
                 perspective: None,
                 detail: None,
+                story_type: None,
             })
             .unwrap();
         create_story(db, draft).await.unwrap()

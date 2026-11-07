@@ -83,6 +83,22 @@ test('keyboard-only: quick start, play, save, load as branch, reopen', async () 
   const branchText = await textOf(b, '[data-testid="narrative"]');
   assert.ok(!branchText.includes('Climb down to the harbor'), 'branch starts at the save');
 
+  // On the new branch, texting a character shows a phone card, and the offline
+  // storyteller texts back.
+  const mode = await b.$('.composer-mode select');
+  await mode.selectByVisibleText('Send a text');
+  await typeInto(b, '.composer-mode input', 'Mara Quill');
+  await typeInto(b, '#composer-input', 'Are you awake?');
+  await b.keys(['Enter']);
+  await waitForText(b, '[aria-label="Text messages with Mara Quill"]', 'Are you awake?');
+  await waitForReply(b);
+  assert.equal(
+    await b.execute(() => document.querySelectorAll('.turn-assistant .msg-phone').length),
+    1,
+    'the reply is a text from Mara',
+  );
+  await mode.selectByVisibleText('Do or say');
+
   // Reopen the app: the story and its routes are still there (T02 at UI level).
   await session.stop();
   session = await launch(dataDir);

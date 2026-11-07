@@ -25,6 +25,7 @@ use crate::db::usage::RequestPurpose;
 use crate::db::Database;
 use crate::domain::events::{EventBody, EventKind};
 use crate::domain::provider::{GenerateRequest, ModelMessage, Role};
+use crate::domain::text::plain_message_tags;
 use crate::errors::{AppError, AppResult, ErrorCode};
 use crate::services::generation::{call_once, CallPurpose};
 use crate::services::secrets::SecretStore;
@@ -146,9 +147,11 @@ pub fn extractive(prev: Option<&str>, chunk: &[EventRow], player_name: &str) -> 
     let mut action: Option<String> = None;
     for e in chunk {
         match EventBody::from_parts(&e.kind, &e.payload_json)? {
-            EventBody::Player(p) => action = Some(first_sentence(&p.text, 120)),
+            EventBody::Player(p) => {
+                action = Some(first_sentence(&plain_message_tags(&p.text), 120))
+            }
             EventBody::Assistant(a) => {
-                let reply = first_sentence(&a.text, 160);
+                let reply = first_sentence(&plain_message_tags(&a.text), 160);
                 lines.push(match action.take() {
                     Some(act) => format!("- {player_name}: {act} → {reply}"),
                     None => format!("- {reply}"),
@@ -182,11 +185,20 @@ pub fn transcript(chunk: &[EventRow], player_name: &str, max_chars: usize) -> Ap
     Ok(out.join("\n\n"))
 }
 
+/// " Write it in Japanese." for a story with a set language, else "".
+pub fn written_in(language: Option<&str>) -> String {
+    match language.map(str::trim).filter(|l| !l.is_empty()) {
+        Some(l) => format!(" Write it in {l}."),
+        None => String::new(),
+    }
+}
+
 /// Messages asking a model to roll the previous summary forward.
 pub fn summary_messages(
     prev: Option<&str>,
     chunk: &[EventRow],
     player_name: &str,
+    language: Option<&str>,
     max_chars: usize,
 ) -> AppResult<Vec<ModelMessage>> {
     Ok(vec![
@@ -198,7 +210,8 @@ pub fn summary_messages(
                  and the new events. The player character is {player_name}. Use past tense and \
                  the third person. Keep names, places, decisions, promises, injuries, items, \
                  secrets and unresolved threads; leave out atmosphere and exact wording. At most \
-                 250 words. Reply with the summary only."
+                 250 words.{} Reply with the summary only.",
+                written_in(language)
             ),
         },
         ModelMessage {
@@ -226,7 +239,7 @@ pub async fn maybe_summarize(
     route_id: &str,
     profile_id: Option<&str>,
 ) -> AppResult<Option<String>> {
-    let (story_id, chain, prev, player_name) = {
+    let (story_id, chain, prev, player_name, language) = {
         let mut conn = env.db.reader().acquire().await?;
         let route = get_route(&mut conn, route_id).await?;
         let Some(head) = route.head_event_id else {
@@ -241,7 +254,13 @@ pub async fn maybe_summarize(
             .get(&s.player_character_id)
             .map(|c| c.name.clone())
             .unwrap_or_else(|| "the player".into());
-        (route.story_id, chain, prev, player_name)
+        (
+            route.story_id,
+            chain,
+            prev,
+            player_name,
+            s.narration.language.clone(),
+        )
     };
     let Some(plan) = plan(&chain, prev.as_ref()) else {
         return Ok(None);
@@ -259,6 +278,7 @@ pub async fn maybe_summarize(
         &plan,
         profile_id,
         &player_name,
+        language.as_deref(),
     )
     .await;
     env.jobs.finish(&end_id, result.is_ok());
@@ -275,6 +295,7 @@ async fn write_summary(
     plan: &Plan,
     profile_id: Option<&str>,
     player_name: &str,
+    language: Option<&str>,
 ) -> AppResult<()> {
     let chunk = &chain[plan.prev_end_index.map(|i| i + 1).unwrap_or(0)..=plan.end_index];
     let prev_text = prev.map(|p| p.row.summary_text.as_str());
@@ -292,9 +313,16 @@ async fn write_summary(
             let fits = |m: &[ModelMessage]| {
                 estimate_messages(m).saturating_add(max_output) <= settings.max_context_tokens
             };
-            let mut messages = summary_messages(prev_text, chunk, player_name, usize::MAX)?;
+            let mut messages =
+                summary_messages(prev_text, chunk, player_name, language, usize::MAX)?;
             if !fits(&messages) {
-                messages = summary_messages(prev_text, chunk, player_name, SHORTENED_EVENT_CHARS)?;
+                messages = summary_messages(
+                    prev_text,
+                    chunk,
+                    player_name,
+                    language,
+                    SHORTENED_EVENT_CHARS,
+                )?;
             }
             if !fits(&messages) {
                 return Err(AppError::new(

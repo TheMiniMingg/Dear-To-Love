@@ -136,6 +136,10 @@ pub struct QuickStartInput {
     #[serde(default)]
     #[ts(optional)]
     pub detail: Option<Detail>,
+    /// The type of story chosen first, e.g. "Romance"; it leads the genres.
+    #[serde(default)]
+    #[ts(optional)]
+    pub story_type: Option<String>,
 }
 
 pub(crate) fn check_id(id: &str) -> AppResult<()> {
@@ -259,6 +263,8 @@ impl TemplateCatalog {
             })?;
 
         let mut narration = world.narration.clone();
+        // New stories show texts, calls and letters as cards.
+        narration.message_cards = true;
         if let Some(p) = input.perspective {
             narration.perspective = p;
         }
@@ -284,6 +290,7 @@ impl TemplateCatalog {
             open_threads: scenario.open_threads.clone(),
             first_chapter_title: scenario.first_chapter_title.clone(),
             chapter_outlines: scenario.chapter_outlines.clone(),
+            story_type: input.story_type.clone(),
         })
     }
 
@@ -312,6 +319,7 @@ mod tests {
             character_id: "starter:new-keeper".into(),
             perspective: None,
             detail: None,
+            story_type: None,
         }
     }
 
@@ -331,6 +339,33 @@ mod tests {
             "placeholder replaced"
         );
         assert_eq!(draft.chapter_outlines.len(), 3);
+    }
+
+    #[test]
+    fn the_story_type_leads_the_genres_and_new_stories_show_message_cards() {
+        let cat = TemplateCatalog::bundled();
+        let mut input = starter();
+        let plain = cat
+            .resolve_quick_start(&input)
+            .unwrap()
+            .base_state
+            .narration;
+        assert!(plain.message_cards);
+        assert_eq!(plain.genres, ["Mystery", "Romance", "Slice of life"]);
+        input.story_type = Some("Romance".into());
+        let n = cat
+            .resolve_quick_start(&input)
+            .unwrap()
+            .base_state
+            .narration;
+        assert_eq!(n.genres, ["Romance", "Mystery", "Slice of life"]);
+        input.story_type = Some(" School life ".into());
+        let n = cat
+            .resolve_quick_start(&input)
+            .unwrap()
+            .base_state
+            .narration;
+        assert_eq!(n.genres[0], "School life");
     }
 
     #[test]
@@ -382,6 +417,7 @@ mod tests {
                         character_id: c.id.clone(),
                         perspective: None,
                         detail: None,
+                        story_type: None,
                     };
                     let story = cat.resolve_quick_start(&input).unwrap_or_else(|e| {
                         panic!("{} + {} + {}: {}", w.id, s.id, c.id, e.message)

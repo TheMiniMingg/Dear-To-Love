@@ -240,4 +240,38 @@ describe('diffState', () => {
       'New fact',
     ]);
   });
+
+  it('keeps the style, thoughts, cards and language when narration changes', () => {
+    const after = structuredClone(state);
+    after.narration = {
+      ...after.narration,
+      style: 'messages',
+      innerThoughts: true,
+      messageCards: true,
+      language: ' Korean ',
+    };
+    const { changes, lines } = diffState(state, after);
+    expect(changes).toEqual([
+      {
+        op: 'setNarration',
+        narration: {
+          ...state.narration,
+          style: 'messages',
+          innerThoughts: true,
+          messageCards: true,
+          language: 'Korean',
+        },
+      },
+    ]);
+    expect(lines).toContainEqual({
+      what: 'Narration · Style',
+      before: 'Narrated',
+      after: 'Messages',
+    });
+    expect(lines).toContainEqual({
+      what: 'Narration · Story language',
+      before: 'Not set',
+      after: 'Korean',
+    });
+  });
 });

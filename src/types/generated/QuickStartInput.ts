@@ -2,4 +2,8 @@
 import type { Detail } from "./Detail";
 import type { Perspective } from "./Perspective";
 
-export type QuickStartInput = { worldId: string, scenarioId: string, characterId: string, perspective?: Perspective, detail?: Detail, };
+export type QuickStartInput = { worldId: string, scenarioId: string, characterId: string, perspective?: Perspective, detail?: Detail, 
+/**
+ * The type of story chosen first, e.g. "Romance"; it leads the genres.
+ */
+storyType?: string, };

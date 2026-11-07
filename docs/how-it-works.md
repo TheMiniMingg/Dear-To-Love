@@ -60,17 +60,20 @@ They never appear in the database, logs, exports, backups or support reports.
 Models do not remember anything between requests. For every reply the app builds the request
 again, in this order:
 
-1. **The narration contract**: who the player controls, point of view, length, pacing, tone.
-2. **STORY**: title, premise, genre, content rating, themes you want and hard limits.
-3. **WORLD**: setting, era, description and the world's rules.
-4. **CHARACTERS** and **RELATIONSHIPS**: everyone in the story as of this point on the route.
-5. **ESTABLISHED FACTS**: facts the storyteller must keep to, and who knows them.
-6. **EARLIER CHAPTERS**: the recap of each chapter you ended with **End chapter** on this
+1. **The narration contract**: who the player controls, the style, point of view, length,
+   pacing, tone, other characters' inner thoughts and the story language.
+2. **MESSAGES**: how to write texts, calls, letters and posts so the reader can show them as
+   cards, when that is switched on.
+3. **STORY**: title, premise, genre, content rating, themes you want and hard limits.
+4. **WORLD**: setting, era, description and the world's rules.
+5. **CHARACTERS** and **RELATIONSHIPS**: everyone in the story as of this point on the route.
+6. **ESTABLISHED FACTS**: facts the storyteller must keep to, and who knows them.
+7. **EARLIER CHAPTERS**: the recap of each chapter you ended with **End chapter** on this
    route (the 10 most recent), so later chapters remember what happened.
-7. **NOW**: the chapter and its plan, where you are, what is happening, who is present and
+8. **NOW**: the chapter and its plan, where you are, what is happening, who is present and
    the open questions.
-8. **STORY SO FAR**: a summary of older turns, when there is one.
-9. **Recent turns**, word for word, then **your action** last.
+9. **STORY SO FAR**: a summary of older turns, when there is one.
+10. **Recent turns**, word for word, then **your action** last.
 
 Every 8 replies, the older part of the story is summarized (by the same AI connection, or by
 the offline storyteller without any API call), and at least the 8 most recent turns are always
@@ -228,6 +231,33 @@ You set these in the wizard's **Narration** step, or later in **Story details â†
 - **Hard limits**: things that must never be written.
 
 The world's rules, the tone and the chapter plan steer the story too.
+
+**Type of story** is the first choice in Quick Start and in the wizard. It narrows the preset
+worlds to ones made for that type and leads the story's genres. A type with no preset world
+yet (such as _School life_) still makes that kind of story from any world.
+
+## How the story is told
+
+Also in **Narration** (wizard and Story details):
+
+- **Style**: _Narrated_ (a narrator and dialogue), _Thoughts and dialogue, no narrator_ (only
+  what the characters say and think, with at most a short line of action), _Script_ (names,
+  lines and short stage directions) or _Messages_ (told mostly through texts, calls, letters
+  and posts).
+- **Show other characters' inner thoughts**: after you act, the characters can show what they
+  really think of it, even when they don't say it. Your own character's thoughts are always
+  yours to write.
+- **Show texts, calls and letters as cards** (on for new stories): the storyteller writes
+  messages as tags and the reader shows them as a phone screen, a call, a letter or a post.
+  For example `<text from="Erika K." time="7:11 PM">Is that really you?</text>` becomes a text
+  bubble from Erika K. Any model that follows instructions can do this; the offline storyteller
+  answers your own texts and calls.
+- **Story language**: the language the story is written in, whatever language you type in.
+  Summaries and chapter recaps follow it too. Not set, most models answer in your language.
+
+The menu next to the action box sends what you write as a **text** to someone, a **call**, or
+a **thought** of your own instead of an action. They are saved in the story as the same tags,
+so exports write them out as plain text, such as `[Text to Mara] Are you awake?`.
 
 ## Adult and explicit stories
 

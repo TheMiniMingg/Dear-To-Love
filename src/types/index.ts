@@ -51,6 +51,7 @@ export type { KnownFact } from './generated/KnownFact';
 export type { ModelMessage } from './generated/ModelMessage';
 export type { ModelUsage } from './generated/ModelUsage';
 export type { Narration } from './generated/Narration';
+export type { NarrationStyle } from './generated/NarrationStyle';
 export type { NormalizedUsage } from './generated/NormalizedUsage';
 export type { Pacing } from './generated/Pacing';
 export type { Perspective } from './generated/Perspective';

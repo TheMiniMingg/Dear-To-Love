@@ -104,6 +104,7 @@ async fn seed(db: &Database) -> AppResult<String> {
         character_id: character.id.clone(),
         perspective: None,
         detail: None,
+        story_type: None,
     })?;
     let created = stories::create_story(db, input).await?;
     saves::create_save(db, &created.story_id, &created.main_route_id, SEED_SAVE).await?;

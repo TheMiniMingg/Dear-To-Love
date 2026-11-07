@@ -42,6 +42,10 @@ pub struct CreateStoryDraft {
     pub open_threads: Vec<String>,
     pub first_chapter_title: String,
     pub chapter_outlines: Vec<ChapterOutlineInput>,
+    /// The type of story picked first ("Romance"); it leads the genres.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub story_type: Option<String>,
 }
 
 impl Default for CreateStoryDraft {
@@ -66,6 +70,7 @@ impl Default for CreateStoryDraft {
             open_threads: vec![],
             first_chapter_title: String::new(),
             chapter_outlines: vec![],
+            story_type: None,
         }
     }
 }
@@ -323,9 +328,24 @@ impl CreateStoryDraft {
             },
             narration: Narration {
                 tone: clean_text(&self.narration.tone),
-                genres: clean_list(&self.narration.genres),
+                genres: {
+                    let mut genres = clean_list(&self.narration.genres);
+                    if let Some(t) = self.story_type.as_deref().map(clean_text) {
+                        if !t.is_empty() {
+                            genres.retain(|g| !g.eq_ignore_ascii_case(&t));
+                            genres.insert(0, t);
+                        }
+                    }
+                    genres
+                },
                 themes: clean_list(&self.narration.themes),
                 limits: clean_list(&self.narration.limits),
+                language: self
+                    .narration
+                    .language
+                    .as_deref()
+                    .map(clean_text)
+                    .filter(|l| !l.is_empty()),
                 ..self.narration.clone()
             },
             characters,

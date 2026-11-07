@@ -20,7 +20,9 @@ use crate::domain::events::{EventBody, EventKind};
 use crate::domain::provider::{GenerateRequest, ModelMessage, Role};
 use crate::errors::{AppError, AppResult, ErrorCode};
 use crate::services::generation::{call_once, CallPurpose};
-use crate::services::memory::{extractive, transcript, SummaryEnv, SUMMARY_MAX_OUTPUT_TOKENS};
+use crate::services::memory::{
+    extractive, transcript, written_in, SummaryEnv, SUMMARY_MAX_OUTPUT_TOKENS,
+};
 use crate::services::tokens::estimate_messages;
 
 /// Per-turn cap used when the whole chapter does not fit the connection.
@@ -80,6 +82,7 @@ pub fn recap_messages(
     title: &str,
     events: &[EventRow],
     player_name: &str,
+    language: Option<&str>,
     max_chars: usize,
 ) -> AppResult<Vec<ModelMessage>> {
     Ok(vec![
@@ -91,8 +94,9 @@ pub fn recap_messages(
                  character is {player_name}. In past tense and the third person, say what \
                  happened, what {player_name} decided and did, what changed between the \
                  characters, and what is still unresolved. Keep names, places, promises, \
-                 items and secrets. Plain prose, no headings, at most 200 words. Reply with \
-                 the recap only."
+                 items and secrets. Plain prose, no headings, at most 200 words.{} Reply \
+                 with the recap only.",
+                written_in(language)
             ),
         },
         ModelMessage {
@@ -108,7 +112,7 @@ pub fn recap_messages(
 /// Write a recap of the chapter being played on `route_id`. Nothing is
 /// stored; `end_chapter` keeps the version the player approves.
 pub async fn draft_recap(env: &SummaryEnv<'_>, route_id: &str) -> AppResult<ChapterRecapDraft> {
-    let (chain, player_name, next, head) = {
+    let (chain, player_name, language, next, head) = {
         let mut conn = env.db.reader().acquire().await?;
         let route = get_route(&mut conn, route_id).await?;
         let head = route
@@ -123,7 +127,8 @@ pub async fn draft_recap(env: &SummaryEnv<'_>, route_id: &str) -> AppResult<Chap
             .map(|c| c.name.clone())
             .unwrap_or_else(|| "the player".into());
         let next = next_chapter_title(&mut conn, &route.story_id, &chain).await?;
-        (chain, player_name, next, head)
+        let language = s.narration.language.clone();
+        (chain, player_name, language, next, head)
     };
     let (ordinal, title, events) = current_chapter(&chain)?;
     check_endable(&chain, events)?;
@@ -141,7 +146,9 @@ pub async fn draft_recap(env: &SummaryEnv<'_>, route_id: &str) -> AppResult<Chap
             let fits = |m: &[ModelMessage]| {
                 estimate_messages(m).saturating_add(max_output) <= settings.max_context_tokens
             };
-            let mut messages = recap_messages(ordinal, &title, events, &player_name, usize::MAX)?;
+            let language = language.as_deref();
+            let mut messages =
+                recap_messages(ordinal, &title, events, &player_name, language, usize::MAX)?;
             let mut from = 0;
             while !fits(&messages) {
                 // Shorten every turn first, then leave out the oldest turns.
@@ -150,6 +157,7 @@ pub async fn draft_recap(env: &SummaryEnv<'_>, route_id: &str) -> AppResult<Chap
                     &title,
                     &events[from..],
                     &player_name,
+                    language,
                     SHORTENED_TURN_CHARS,
                 )?;
                 if fits(&messages) {

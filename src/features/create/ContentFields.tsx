@@ -21,7 +21,43 @@ export const GENRES = [
   'Supernatural',
   'Dark romance',
   'Erotica',
+  'School life',
+  'Action',
+  'Cyberpunk',
+  'Post-apocalyptic',
+  'Superhero',
+  'Western',
+  'Dating sim',
 ];
+
+/** The first choice when making a story; it leads the story's genres. */
+export const STORY_TYPES = [
+  'Romance',
+  'Adventure',
+  'Fantasy',
+  'Mystery',
+  'Horror',
+  'Science fiction',
+  'Comedy',
+  'Drama',
+  'Slice of life',
+  'School life',
+  'Thriller',
+  'Historical',
+];
+
+/** True when a world template is tagged with this story type. */
+export function worldFits(genres: string[] | undefined, storyType: string): boolean {
+  const t = storyType.trim().toLowerCase();
+  return !t || (genres ?? []).some((g) => g.trim().toLowerCase() === t);
+}
+
+/** Genres led by `storyType` (moved to the front, not duplicated). */
+export function withStoryType(genres: string[] | undefined, storyType: string): string[] {
+  const t = storyType.trim();
+  const rest = (genres ?? []).filter((g) => g.trim().toLowerCase() !== t.toLowerCase());
+  return t ? [t, ...rest] : rest;
+}
 
 type RatingChoice = ContentRating | '';
 
