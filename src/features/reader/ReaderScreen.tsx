@@ -67,7 +67,7 @@ import { StoryDetailsPanel, type DetailsTab } from './StoryDetailsPanel';
 import { StoryMemoryPanel } from './StoryMemoryPanel';
 import { StorytellerPanel } from './StorytellerPanel';
 import { standingNotes, standingThreads } from './notes';
-import { nextMoves, parseBlocks, plainText, type NewCharacter } from './messages';
+import { nextMoves, openingIdeas, parseBlocks, plainText, type NewCharacter } from './messages';
 import { NameColorsContext, nameColorFinder } from './nameColors';
 import { PortraitsContext, portraitFinder } from './portraits';
 import { DiceRulesContext } from './DiceCards';
@@ -209,6 +209,14 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
   const [view, setView] = useState<RouteView | null>(null);
   const [viewing, setViewing] = useState<SaveView | null>(null);
   const [panel, setPanel] = useState<Panel>(null);
+  // A window opened from the pause menu goes back to it when closed; one
+  // opened with a key or a button beside the story goes back to the story.
+  const lastPanel = useRef<Panel>(null);
+  const fromMenu = useRef(false);
+  useEffect(() => {
+    if (panel && panel !== 'menu') fromMenu.current = lastPanel.current === 'menu';
+    lastPanel.current = panel;
+  }, [panel]);
   /** The Story details tab to open on (the scene chip opens Scene). */
   const [detailsTab, setDetailsTab] = useState<DetailsTab>('characters');
   const [busy, setBusy] = useState(false);
@@ -390,18 +398,35 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
     }
   }, []);
 
+  // Opening a story or a route (from the library, a save or a branch)
+  // leaves the focus on the page: put it in the action box, ready to play.
+  const placedFocus = useRef(false);
+  useEffect(() => {
+    if (placedFocus.current || !view || busy || panel || viewing) return;
+    const box = document.getElementById('composer-input') as HTMLTextAreaElement | null;
+    if (!box || box.disabled) return;
+    placedFocus.current = true;
+    const active = document.activeElement;
+    if (!active || active === document.body) box.focus({ preventScroll: true });
+  });
+
   const awaitingReply = !!view?.awaitingReply;
   const writing = stream !== null;
   const lastAction = view?.history[view.history.length - 1];
   // The storyteller's ideas for the next move, from the reply the story
-  // stands at: none once the player acts or a chapter begins.
+  // stands at, or a few ways in when a chapter begins: none once the
+  // player acts.
   const lastTurn = view?.history.findLast((e) =>
     ['player', 'assistant', 'chapter_start'].includes(e.kind),
   );
   const ideas =
-    lastTurn?.kind === 'assistant' && !view?.state.state.narration?.noSuggestions
-      ? nextMoves(lastTurn.payload.text)
-      : [];
+    !view || view.state.state.narration?.noSuggestions
+      ? []
+      : lastTurn?.kind === 'assistant'
+        ? nextMoves(lastTurn.payload.text)
+        : lastTurn?.kind === 'chapter_start'
+          ? openingIdeas(view.state.state)
+          : [];
 
   /** Send an action. A roll from a dice card leaves the typed draft alone. */
   const send = (text: string = draft, roll?: RollRequest, fromComposer = true) =>
@@ -718,11 +743,12 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
                 className="scene-chip"
                 disabled={awaitingReply || writing || !!viewing}
                 onClick={() => openDetails('scene')}
-                title={
+                // The whole place and time, which the chip may cut short.
+                title={`${joinList([scene.place, scene.time].filter(Boolean))}\n${
                   awaitingReply || writing
                     ? t('Story details can change once the waiting action has its reply.')
                     : t('Where and when the story is. Click to correct it.')
-                }
+                }`}
               >
                 <MapPin className="scene-chip-icon" aria-hidden={true} size={15} />
                 <span className="scene-place">{scene.place}</span>
@@ -748,7 +774,12 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
               >
                 {tKnown(view.storyteller.label)}
               </button>
-              <span className="chip save-chip" role="status" aria-live="polite">
+              <span
+                className="chip save-chip"
+                role="status"
+                aria-live="polite"
+                title={writing || busy ? undefined : saveStatus}
+              >
                 {writing ? t('Writing…') : busy ? t('Working…') : saveStatus}
               </span>
               <button
@@ -854,6 +885,7 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
                   done: view.state.state.doneThreads ?? [],
                 }}
                 sceneHeadings={!!view.state.state.narration?.sceneHeadings}
+                ideasShown={ideas.length > 0}
                 newcomers={
                   viewing || writing || busy || awaitingReply
                     ? undefined
@@ -1029,7 +1061,8 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
                     panel === 'edit' ||
                     panel === 'end' ||
                     panel === 'storyteller' ||
-                    panel === 'inventory'
+                    panel === 'inventory' ||
+                    !fromMenu.current
                     ? null
                     : 'menu',
                 )
@@ -1047,8 +1080,13 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
               }
             >
               {panel === 'menu' && (
-                <nav className="menu-list" aria-label={t('Pause menu')}>
-                  <button id="pause-resume" type="button" onClick={() => setPanel(null)}>
+                <nav className="menu-list pause-grid" aria-label={t('Pause menu')}>
+                  <button
+                    id="pause-resume"
+                    type="button"
+                    data-wide=""
+                    onClick={() => setPanel(null)}
+                  >
                     <Play {...MENU_ICON} />
                     {t('Resume')}
                   </button>
@@ -1074,30 +1112,15 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
                     {t('Routes')}
                     <KeyHint id="routes" />
                   </button>
-                  <div className="button-row">
-                    <span>
-                      <Type {...MENU_ICON} />
-                      {t('Text size')}
-                    </span>
-                    <button
-                      type="button"
-                      aria-label={t('Smaller text')}
-                      title={withKeys(t('Smaller text'), 'smaller')}
-                      aria-keyshortcuts={ariaKeys('smaller')}
-                      onClick={() => stepTextSize(-1)}
-                    >
-                      A−
-                    </button>
-                    <button
-                      type="button"
-                      aria-label={t('Larger text')}
-                      title={withKeys(t('Larger text'), 'larger')}
-                      aria-keyshortcuts={ariaKeys('larger')}
-                      onClick={() => stepTextSize(1)}
-                    >
-                      A+
-                    </button>
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setPanel('search')}
+                    aria-keyshortcuts={ariaKeys('search')}
+                  >
+                    <Search {...MENU_ICON} />
+                    {t('Story search')}
+                    <KeyHint id="search" />
+                  </button>
                   <button
                     type="button"
                     onClick={() => openDetails()}
@@ -1110,7 +1133,7 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
                     <KeyHint id="details" />
                   </button>
                   {(awaitingReply || writing) && (
-                    <p id="details-hint" className="muted small">
+                    <p id="details-hint" className="muted small" data-wide="">
                       {t('Story details can change once the waiting action has its reply.')}
                     </p>
                   )}
@@ -1136,15 +1159,6 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
                     <Brain {...MENU_ICON} />
                     {t('Story memory')}
                     <KeyHint id="memory" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setPanel('search')}
-                    aria-keyshortcuts={ariaKeys('search')}
-                  >
-                    <Search {...MENU_ICON} />
-                    {t('Story search')}
-                    <KeyHint id="search" />
                   </button>
                   <button type="button" onClick={() => setPanel('context')}>
                     <ScanText {...MENU_ICON} />
@@ -1176,7 +1190,31 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
                     <Stethoscope {...MENU_ICON} />
                     {t('Diagnostics')}
                   </button>
-                  <button type="button" onClick={() => navigate({ name: 'library' })}>
+                  <div className="button-row" data-wide="">
+                    <span>
+                      <Type {...MENU_ICON} />
+                      {t('Text size')}
+                    </span>
+                    <button
+                      type="button"
+                      aria-label={t('Smaller text')}
+                      title={withKeys(t('Smaller text'), 'smaller')}
+                      aria-keyshortcuts={ariaKeys('smaller')}
+                      onClick={() => stepTextSize(-1)}
+                    >
+                      A−
+                    </button>
+                    <button
+                      type="button"
+                      aria-label={t('Larger text')}
+                      title={withKeys(t('Larger text'), 'larger')}
+                      aria-keyshortcuts={ariaKeys('larger')}
+                      onClick={() => stepTextSize(1)}
+                    >
+                      A+
+                    </button>
+                  </div>
+                  <button type="button" data-wide="" onClick={() => navigate({ name: 'library' })}>
                     <LibraryBig {...MENU_ICON} />
                     {t('Back to library')}
                   </button>

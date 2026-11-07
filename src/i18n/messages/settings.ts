@@ -813,13 +813,6 @@ export const settings: Messages = {
     '‘여기서 설정’을 누르세요. 모델 ‘default’는 WebUI가 불러온 모델을 씁니다.',
   ],
   'Forge version': ['Forge 版本', 'Forge 版本', 'Forge 版', 'Forge 버전'],
-  'The setup guide shows how to connect an AI model, with links to get a key from each service or to run one on this computer.':
-    [
-      '设置指南会说明如何连接 AI 模型，并附有从各服务获取密钥、或在这台电脑上运行模型的链接。',
-      '設定指南會說明如何連線 AI 模型，並附有從各服務取得金鑰、或在這台電腦上執行模型的連結。',
-      'セットアップガイドでは、AI モデルの接続方法を、各サービスでキーを取得するリンクや、このコンピューターでモデルを動かすリンクとともに説明しています。',
-      '설정 가이드에서 AI 모델을 연결하는 방법을, 서비스별 키 받기 링크와 이 컴퓨터에서 모델을 실행하는 링크와 함께 안내합니다.',
-    ],
   'Open the setup guide': [
     '打开设置指南',
     '開啟設定指南',
@@ -1010,4 +1003,5 @@ export const settings: Messages = {
     'このパソコンでアプリが鳴らす音。',
     '이 컴퓨터에서 앱이 내는 소리.',
   ],
+  'Settings sections': ['设置分区', '設定分區', '設定のセクション', '설정 섹션'],
 };

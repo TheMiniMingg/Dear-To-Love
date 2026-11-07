@@ -53,6 +53,8 @@ type Props = {
   sceneHeadings?: boolean;
   /** Offer to add the people a reply brings in to the cast. */
   newcomers?: Newcomers;
+  /** Ideas for the first move show above the box. */
+  ideasShown?: boolean;
 };
 
 export type Newcomers = {
@@ -312,6 +314,7 @@ export function NarrativeView({
   onUndoNotes,
   sceneHeadings,
   newcomers,
+  ideasShown = false,
 }: Props) {
   const opening = events[0]?.kind === 'chapter_start' && events[0].payload.ordinal === 1;
   const notStarted = !draft && !events.some((e) => e.kind === 'player');
@@ -331,9 +334,11 @@ export function NarrativeView({
             </div>
           )}
           <p className="intro-hint">
-            {t(
-              'Write what you do in the box below to begin, for example “Look around” or “Ask who is there”.',
-            )}
+            {ideasShown
+              ? t('Write what you do in the box below to begin, or pick an idea just above it.')
+              : t(
+                  'Write what you do in the box below to begin, for example “Look around” or “Ask who is there”.',
+                )}
           </p>
         </>
       )}

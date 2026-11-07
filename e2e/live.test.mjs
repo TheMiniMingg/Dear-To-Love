@@ -43,10 +43,17 @@ test('live storyteller: stream a reply, retry a failure', async () => {
   await (await b.$('//label[contains(., "Local model")]/input')).click();
   await (await b.$('button=Save connection')).click();
   await waitForText(b, 'main', 'Fake cloud');
-  const checked = await b.execute(
-    () => document.querySelector('input[name="storyteller"]:checked')?.parentElement?.textContent,
-  );
-  assert.match(checked ?? '', /Fake cloud/);
+  // The first connection becomes the storyteller once it is saved.
+  const checked = () =>
+    b.execute(
+      () =>
+        document.querySelector('input[name="storyteller"]:checked')?.parentElement?.textContent ??
+        '',
+    );
+  await b.waitUntil(async () => /Fake cloud/.test(await checked()), {
+    timeout: 5000,
+    timeoutMsg: 'the new connection did not become the storyteller',
+  });
 
   // Free connection test lists models.
   await (await b.$('button=Test connection')).click();

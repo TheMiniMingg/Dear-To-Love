@@ -11,9 +11,42 @@ import { LookSection } from './LookSection';
 import { SoundSection } from './SoundSection';
 import { ADAPTER_LABELS, makesPictures, pictureConnections, storyConnections } from './kinds';
 import { retiredPictureModel } from './presets';
-import { t, tr } from '../../i18n';
+import { msg, t, tr } from '../../i18n';
 
 type Note = { tone: 'ok' | 'warn' | 'error'; text: string };
+
+/** Settings' sections in page order, for the jump links at the top. */
+const SECTIONS: [id: string, label: string][] = [
+  ['settings-language', msg('Language')],
+  ['settings-look', msg('Look')],
+  ['settings-sound', msg('Sound')],
+  ['settings-backdrop', msg('Background')],
+  ['settings-storyteller', msg('Storyteller')],
+  ['settings-pictures', msg('Pictures')],
+  ['settings-connections', msg('AI connections')],
+  ['settings-updates', msg('Updates')],
+  ['settings-about', msg('About')],
+];
+
+/** A row of links to each section of the long Settings page; it stays at the top. */
+function SettingsJump() {
+  const go = (id: string) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const still = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    el.scrollIntoView?.({ block: 'start', behavior: still ? 'auto' : 'smooth' });
+    el.focus({ preventScroll: true });
+  };
+  return (
+    <nav className="settings-jump" aria-label={t('Settings sections')}>
+      {SECTIONS.map(([id, label]) => (
+        <button key={id} type="button" className="jump-link" onClick={() => go(id)}>
+          {t(label)}
+        </button>
+      ))}
+    </nav>
+  );
+}
 
 export function SettingsScreen() {
   const goBack = useUiStore((s) => s.goBack);
@@ -136,6 +169,7 @@ export function SettingsScreen() {
           </button>
         </div>
       </div>
+      <SettingsJump />
       {error && (
         <p role="alert" className="error">
           {error}
@@ -147,7 +181,12 @@ export function SettingsScreen() {
       <SoundSection />
       <BackdropSection />
 
-      <section className="settings-section" aria-labelledby="storyteller-title">
+      <section
+        id="settings-storyteller"
+        className="settings-section"
+        tabIndex={-1}
+        aria-labelledby="storyteller-title"
+      >
         <h2 id="storyteller-title">{t('Storyteller')}</h2>
         <p className="muted">
           {t(
@@ -190,7 +229,12 @@ export function SettingsScreen() {
         </div>
       </section>
 
-      <section className="settings-section" aria-labelledby="pictures-title">
+      <section
+        id="settings-pictures"
+        className="settings-section"
+        tabIndex={-1}
+        aria-labelledby="pictures-title"
+      >
         <h2 id="pictures-title">{t('Pictures')}</h2>
         <p className="muted">
           {t(
@@ -237,7 +281,12 @@ export function SettingsScreen() {
         )}
       </section>
 
-      <section className="settings-section" aria-labelledby="connections-title">
+      <section
+        id="settings-connections"
+        className="settings-section"
+        tabIndex={-1}
+        aria-labelledby="connections-title"
+      >
         <div className="screen-header">
           <h2 id="connections-title">{t('AI connections')}</h2>
           <button type="button" className="primary" onClick={() => setEditing('new')}>
@@ -358,13 +407,16 @@ export function SettingsScreen() {
             onCancel={() => setEditing(null)}
             onSaved={(p) => {
               setEditing(null);
-              setReload((n) => n + 1);
-              // Only once the current choices are known.
-              if (editing !== 'new' || !connections) return;
-              // The first connection of each kind is put to use.
-              if (makesPictures(p)) {
-                if (pictureMaker === null) void choosePictures(p.id);
-              } else if (active === null) void choose(p.id);
+              // The first connection of each kind is put to use (only once the
+              // current choices are known), and the lists reload after that, so
+              // a reload that started first can't bring back the old choice.
+              const first =
+                editing === 'new' && connections
+                  ? makesPictures(p)
+                    ? pictureMaker === null && (() => choosePictures(p.id))
+                    : active === null && (() => choose(p.id))
+                  : false;
+              void (first ? first() : Promise.resolve()).then(() => setReload((n) => n + 1));
             }}
           />
         </Dialog>

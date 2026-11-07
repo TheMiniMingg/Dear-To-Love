@@ -4,6 +4,20 @@
   "id": "starter:sellsword",
   "label": "The Sellsword",
   "summary": "Fights for pay, and pretends that is the only reason.",
+  "suits": [
+    "starter:ashen-throne",
+    "starter:ember-road",
+    "starter:glass-orchard",
+    "starter:greywatch",
+    "starter:underhalls",
+    "starter:tumbledown-isles",
+    "starter:saltmarsh-lyceum",
+    "starter:rosaline-court",
+    "starter:shattered-main",
+    "starter:velvet-court",
+    "starter:lantern-palace",
+    "starter:nine-rivers"
+  ],
   "character": {
     "id": "starter:sellsword",
     "name": "Cass Thorne",

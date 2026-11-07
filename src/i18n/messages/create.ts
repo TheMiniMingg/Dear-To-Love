@@ -1346,7 +1346,7 @@ export const create: Messages = {
     '下で自分のキャラクターを作ってください。',
     '아래에서 나만의 캐릭터를 만드세요.',
   ],
-  'What you are called': ['别人怎么称呼你', '別人怎麼稱呼你', 'あなたの呼び名', '불리는 이름'],
+  'Your name': ['你的名字', '你的名字', 'あなたの名前', '당신의 이름'],
   'How you look, if it matters. Leave it empty and it stays open.': [
     '你的长相，如果重要的话。留空就不作设定。',
     '你的長相，如果重要的話。留空就不作設定。',
@@ -1539,5 +1539,73 @@ export const create: Messages = {
     '每次回覆後，在輸入框上方給出兩三個點子。選一個就會填進輸入框。',
     '返信のたびに、入力欄の上に 2〜3 個のアイデアを表示します。選ぶと入力欄に入ります。',
     '답장마다 입력란 위에 아이디어를 두세 개 보여 줍니다. 하나를 고르면 입력란에 들어갑니다.',
+  ],
+  'Surprise me': ['随机挑一个', '隨機挑一個', 'おまかせ', '랜덤으로 고르기'],
+  'Pick a world, story and character at random': [
+    '随机挑选世界、故事和角色',
+    '隨機挑選世界、故事和角色',
+    '世界・ストーリー・キャラクターをランダムに選びます',
+    '세계, 스토리, 캐릭터를 무작위로 고릅니다',
+  ],
+  'Give your character a name.': [
+    '给你的角色起个名字。',
+    '幫你的角色取個名字。',
+    'キャラクターに名前を付けてください。',
+    '캐릭터의 이름을 정해 주세요.',
+  ],
+  'Every other character needs a name.': [
+    '其他每个角色也都需要名字。',
+    '其他每個角色也都需要名字。',
+    'ほかのキャラクターにも全員名前が必要です。',
+    '다른 캐릭터에게도 모두 이름이 필요합니다.',
+  ],
+  'Your character must be 18 or older in an adults-only story.': [
+    '在仅限成人的故事中，你的角色必须年满 18 岁。',
+    '在僅限成人的故事中，你的角色必須年滿 18 歲。',
+    '成人限定のストーリーでは、あなたのキャラクターは 18 歳以上でなければなりません。',
+    '성인 전용 스토리에서는 내 캐릭터가 18세 이상이어야 합니다.',
+  ],
+  'This draft was made by a different version of the app. Start over.': [
+    '这份草稿是用另一个版本的应用创建的，请重新开始。',
+    '這份草稿是用另一個版本的應用程式建立的，請重新開始。',
+    'この下書きは別のバージョンのアプリで作られました。最初からやり直してください。',
+    '이 초안은 다른 버전의 앱에서 만들어졌습니다. 처음부터 다시 시작하세요.',
+  ],
+  '{name} is in the story twice. Remove one.': [
+    '{name} 在故事中出现了两次，请删除一个。',
+    '{name} 在故事中出現了兩次，請刪除一個。',
+    '{name} がストーリーに 2 回登場しています。片方を削除してください。',
+    '스토리에 {name}이(가) 두 번 있습니다. 하나를 삭제하세요.',
+  ],
+  '{name} is also your character. Remove them from the story or choose a different character to play.':
+    [
+      '{name} 也是你扮演的角色。请把其从故事中移除，或选择另一个角色来扮演。',
+      '{name} 也是你扮演的角色。請把其從故事中移除，或選擇另一個角色來扮演。',
+      '{name} はあなたが演じるキャラクターでもあります。ストーリーから外すか、演じるキャラクターを変えてください。',
+      '{name}은(는) 내가 플레이하는 캐릭터이기도 합니다. 스토리에서 빼거나 플레이할 다른 캐릭터를 고르세요.',
+    ],
+  '{name} must be 18 or older in an adults-only story. Change their age or remove them.': [
+    '在仅限成人的故事中，{name} 必须年满 18 岁。请修改其年龄或将其移除。',
+    '在僅限成人的故事中，{name} 必須年滿 18 歲。請修改其年齡或將其移除。',
+    '成人限定のストーリーでは、{name} は 18 歳以上でなければなりません。年齢を変えるか、外してください。',
+    '성인 전용 스토리에서는 {name}이(가) 18세 이상이어야 합니다. 나이를 바꾸거나 빼세요.',
+  ],
+  'The relationship "{label}" refers to a character who is no longer in the story.': [
+    '关系“{label}”指向一个已不在故事中的角色。',
+    '關係「{label}」指向一個已不在故事中的角色。',
+    '関係「{label}」は、もうストーリーにいないキャラクターを指しています。',
+    '관계 "{label}"이(가) 더 이상 스토리에 없는 캐릭터를 가리킵니다.',
+  ],
+  'Your character\'s id "{id}" must look like namespace:name.': [
+    '你的角色的 ID“{id}”必须是 namespace:name 的形式。',
+    '你的角色的 ID「{id}」必須是 namespace:name 的形式。',
+    'あなたのキャラクターの ID「{id}」は namespace:name の形にしてください。',
+    '내 캐릭터의 ID "{id}"은(는) namespace:name 형식이어야 합니다.',
+  ],
+  '{name}\'s id "{id}" must look like namespace:name.': [
+    '{name} 的 ID“{id}”必须是 namespace:name 的形式。',
+    '{name} 的 ID「{id}」必須是 namespace:name 的形式。',
+    '{name} の ID「{id}」は namespace:name の形にしてください。',
+    '{name}의 ID "{id}"은(는) namespace:name 형식이어야 합니다.',
   ],
 };

@@ -68,6 +68,86 @@
 .screen.library {
   max-width: 1120px;
 }
+/* The empty library: a welcome with the two ways to start. */
+.welcome {
+  margin: 2.5rem auto 0;
+  max-width: 44rem;
+  text-align: center;
+  animation: rise-in 0.35s var(--ease) both;
+}
+.welcome-eyebrow {
+  margin: 0;
+  color: var(--accent);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+.welcome h2 {
+  margin: 0.3rem 0 0.5rem;
+  font-family: var(--font-story);
+  font-size: 2rem;
+  font-weight: 600;
+}
+.welcome > .muted {
+  margin: 0 auto;
+  max-width: 34rem;
+}
+.welcome-choices {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  gap: 1rem;
+  margin-top: 1.6rem;
+}
+.welcome-choice {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.35rem;
+  padding: 1.25rem 1.3rem 1.3rem;
+  text-align: start;
+  font-weight: 400;
+  white-space: normal;
+  color: var(--fg);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  transition:
+    box-shadow 0.22s var(--ease),
+    transform 0.22s var(--ease),
+    border-color 0.22s var(--ease);
+}
+.welcome-choice:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-lg);
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
+}
+.welcome-choice svg {
+  color: var(--accent);
+  margin-bottom: 0.35rem;
+}
+.welcome-choice strong {
+  font-family: var(--font-story);
+  font-size: 1.3rem;
+  font-weight: 600;
+}
+.welcome-choice span {
+  color: var(--muted);
+}
+.welcome-choice.main-choice {
+  background: linear-gradient(
+    150deg,
+    var(--accent-soft),
+    color-mix(in srgb, var(--accent) 4%, var(--surface))
+  );
+  border-color: color-mix(in srgb, var(--accent) 40%, var(--border));
+}
+.welcome > .welcome-more {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.4rem 1.5rem;
+  margin-top: 1.4rem;
+}
 .library-filter {
   display: flex;
   flex-wrap: wrap;
@@ -137,7 +217,8 @@
 }
 .story-cover-wrap {
   position: relative;
-  aspect-ratio: 4 / 5;
+  /* Wide enough that a whole card, Continue and all, fits a small window. */
+  aspect-ratio: 5 / 4;
   overflow: hidden;
   border-radius: calc(var(--radius-lg) - 1px) calc(var(--radius-lg) - 1px) 0 0;
   cursor: pointer;
@@ -148,6 +229,8 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+  /* Portraits keep their faces in a wide cover. */
+  object-position: center 25%;
   display: block;
   transition: transform 0.6s var(--ease);
 }
@@ -160,9 +243,9 @@
   inset: 0;
   display: grid;
   place-items: center;
-  padding-bottom: 18%;
+  padding-bottom: 16%;
   font-family: var(--font-story);
-  font-size: 5.5rem;
+  font-size: 4.5rem;
   font-weight: 600;
   color: color-mix(in srgb, var(--on-accent) 85%, transparent);
   background:
@@ -357,8 +440,13 @@
   justify-content: flex-end;
   gap: 0.5rem;
 }
-.save-chip {
+/* A save's or a model's name can be long: the two chips share one line beside the
+   scene, cut short (their tooltips have it all). */
+.reader-controls .chip {
   white-space: nowrap;
+  max-width: 9rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .scene-chip {
   justify-self: center;
@@ -730,6 +818,18 @@ img.line-avatar {
 .menu-list > button {
   display: flex;
   align-items: center;
+}
+/* Two columns when there is room, so the whole menu fits without scrolling. */
+.menu-list.pause-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  gap: 0.5rem;
+}
+.pause-grid > [data-wide] {
+  grid-column: 1 / -1;
+}
+.pause-grid > p[data-wide] {
+  margin: -0.2rem 0 0;
 }
 .menu-list .btn-icon,
 .menu-list > .button-row > span .btn-icon {
@@ -1126,10 +1226,17 @@ details.more-options > summary {
 }
 
 /* Threads to follow: a short quest log in Story memory. */
+/* Story memory's section headings, each with its icon. */
+.memory-heading,
 .thread-log h3 {
   display: flex;
   align-items: center;
   gap: 0.4rem;
+}
+.memory-heading svg,
+.thread-log h3 svg {
+  color: var(--accent);
+  flex: none;
 }
 .thread-log h3:focus {
   outline: none;

@@ -3,6 +3,7 @@ import { Swords } from 'lucide-react';
 import { ArrowPicker, type PickerOption } from '../../components/ArrowPicker';
 import type {
   Character,
+  CharacterTemplate,
   ChapterOutlineInput,
   ContentRating,
   CreateStoryDraft,
@@ -197,6 +198,22 @@ export function fittingScenarios(catalog: TemplateCatalog, worldId: string | nul
   return catalog.scenarios.filter(
     (s) => !worldId || s.worlds.length === 0 || s.worlds.includes(worldId),
   );
+}
+
+/**
+ * The preset characters for a world: the ones made for it first, then the
+ * ones who fit anywhere, then the rest. Any character can still go anywhere.
+ */
+export function charactersFor(catalog: TemplateCatalog, worldId: string | null) {
+  if (!worldId) return catalog.characters;
+  const rank = (c: CharacterTemplate) =>
+    c.suits.includes(worldId) ? 0 : c.suits.length === 0 ? 1 : 2;
+  return [...catalog.characters].sort((a, b) => rank(a) - rank(b));
+}
+
+/** Whether a preset character suits a world (or every world). */
+export function suits(c: CharacterTemplate, worldId: string) {
+  return c.suits.length === 0 || c.suits.includes(worldId);
 }
 
 /** The presets, with "None" first so a preset can always be taken back. */
@@ -451,7 +468,7 @@ export function CharacterStep({ draft, update, catalog, guided }: StepProps) {
         <ArrowPicker
           label={t('Start from a character')}
           options={templateOptions(
-            catalog.characters,
+            charactersFor(catalog, draft.worldTemplateId),
             draft.characterTemplateId,
             t('Make your own character below.'),
           )}
@@ -465,7 +482,7 @@ export function CharacterStep({ draft, update, catalog, guided }: StepProps) {
           required
           options={guided ? uniq(catalog.characters.map((c) => c.character.name)) : []}
           value={p.name}
-          placeholder={t('What you are called')}
+          placeholder={t('Your name')}
           onChange={(name) => set({ name })}
         />
         <ComboField
@@ -794,7 +811,7 @@ export function StoryStep(props: StepProps) {
           onChange={(firstChapterTitle) => update({ firstChapterTitle })}
         />
         <LinesField
-          label={t('Open threads')}
+          label={t('Threads to follow')}
           value={draft.openThreads}
           rows={3}
           hint={t('Mysteries, promises and goals to follow up. One per line.')}
@@ -883,6 +900,59 @@ export function picturesText(draft: CreateStoryDraft): string {
   return text.charAt(0).toUpperCase() + text.slice(1);
 }
 
+/**
+ * Why a draft can't become a story yet. The app's core sends these in
+ * English; the ones with a name in them are matched here.
+ */
+const PROBLEMS: (string | [RegExp, string])[] = [
+  msg('Give your character a name.'),
+  msg('Every other character needs a name.'),
+  msg('Your character must be 18 or older in an adults-only story.'),
+  [
+    /^this draft was made by a different version of the app; start over$/,
+    msg('This draft was made by a different version of the app. Start over.'),
+  ],
+  [
+    /^(?<name>.+) is in the story twice\. Remove one\.$/,
+    msg('{name} is in the story twice. Remove one.'),
+  ],
+  [
+    /^(?<name>.+) is also your character\. Remove them from the story or choose a different character to play\.$/,
+    msg(
+      '{name} is also your character. Remove them from the story or choose a different character to play.',
+    ),
+  ],
+  [
+    /^(?<name>.+) must be 18 or older in an adults-only story\. Change their age or remove them\.$/,
+    msg('{name} must be 18 or older in an adults-only story. Change their age or remove them.'),
+  ],
+  [
+    /^The relationship "(?<label>.*)" refers to a character who is no longer in the story\.$/,
+    msg('The relationship "{label}" refers to a character who is no longer in the story.'),
+  ],
+  [
+    /^Your character's id "(?<id>.*)" must look like namespace:name\.$/,
+    msg('Your character\'s id "{id}" must look like namespace:name.'),
+  ],
+  [
+    /^(?<name>.*)'s id "(?<id>.*)" must look like namespace:name\.$/,
+    msg('{name}\'s id "{id}" must look like namespace:name.'),
+  ],
+];
+
+/** A draft problem in the chosen language. */
+export function problemText(message: string): string {
+  for (const p of PROBLEMS) {
+    if (typeof p === 'string') {
+      if (p === message) return t(p);
+      continue;
+    }
+    const m = p[0].exec(message);
+    if (m) return t(p[1], m.groups);
+  }
+  return tKnown(message);
+}
+
 export function ReviewStep({
   draft,
   problems,
@@ -904,7 +974,7 @@ export function ReviewStep({
           <ul>
             {problems.map((p, i) => (
               <li key={i}>
-                {p.message}{' '}
+                {problemText(p.message)}{' '}
                 {p.step !== 'review' && (
                   <button type="button" className="link-button" onClick={() => onGoTo(p.step)}>
                     {t('Go to {step}', { step: t(STEP_NAMES[p.step]) })}

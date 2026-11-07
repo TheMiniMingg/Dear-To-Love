@@ -4,6 +4,13 @@
   "id": "starter:netrunner",
   "label": "The Netrunner",
   "summary": "A hacker who can talk to any machine and has just made a very powerful one angry.",
+  "suits": [
+    "starter:arclight",
+    "starter:neon-harbor",
+    "starter:vesper-city",
+    "starter:meridian-station",
+    "starter:tallow-drift"
+  ],
   "character": {
     "id": "starter:netrunner",
     "name": "Zee Navarro",

@@ -10,7 +10,12 @@ export function LookSection() {
   const fitGenre = useLook((s) => s.fitGenre);
   const update = useLook((s) => s.update);
   return (
-    <section className="settings-section" aria-labelledby={`${id}-title`}>
+    <section
+      id="settings-look"
+      className="settings-section"
+      tabIndex={-1}
+      aria-labelledby={`${id}-title`}
+    >
       <h2 id={`${id}-title`}>{t('Look')}</h2>
       <p className="muted">{t('How the app looks on this computer.')}</p>
       <ThemePicker

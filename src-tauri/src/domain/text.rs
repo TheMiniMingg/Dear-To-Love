@@ -35,9 +35,86 @@ pub fn excerpt(text: &str, max: usize) -> String {
     out
 }
 
+/// Words that come before a name: "Lord Shen Yao" is not called "Lord".
+const TITLES: &[&str] = &[
+    "aunt",
+    "auntie",
+    "baron",
+    "baroness",
+    "brother",
+    "capt",
+    "captain",
+    "count",
+    "countess",
+    "dame",
+    "det",
+    "detective",
+    "doctor",
+    "dr",
+    "duchess",
+    "duke",
+    "emperor",
+    "empress",
+    "father",
+    "general",
+    "grandma",
+    "grandpa",
+    "king",
+    "lady",
+    "lieutenant",
+    "lord",
+    "lt",
+    "madam",
+    "madame",
+    "master",
+    "miss",
+    "mistress",
+    "mother",
+    "mr",
+    "mrs",
+    "ms",
+    "mx",
+    "officer",
+    "prince",
+    "princess",
+    "prof",
+    "professor",
+    "queen",
+    "saint",
+    "sergeant",
+    "sgt",
+    "sir",
+    "sister",
+    "st",
+    "uncle",
+];
+
+/// What people call someone in passing: the first name ("Mara" for Mara
+/// Quill), or the title and the next word ("Lord Shen" for Lord Shen Yao).
+pub fn short_name(name: &str) -> String {
+    let mut words = name.split_whitespace();
+    let Some(first) = words.next() else {
+        return String::new();
+    };
+    let bare = first.trim_end_matches('.').to_lowercase();
+    match words.next() {
+        Some(next) if TITLES.contains(&bare.as_str()) => format!("{first} {next}"),
+        _ => first.to_string(),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn short_names_keep_a_title_with_the_name() {
+        assert_eq!(short_name("Mara Quill"), "Mara");
+        assert_eq!(short_name("  Lord Shen Yao "), "Lord Shen");
+        assert_eq!(short_name("Dr. Ines Alvarez"), "Dr. Ines");
+        assert_eq!(short_name("Captain"), "Captain");
+        assert_eq!(short_name(""), "");
+    }
 
     #[test]
     fn folds_case_without_moving_positions() {

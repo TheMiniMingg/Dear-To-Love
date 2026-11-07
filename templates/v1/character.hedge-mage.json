@@ -4,6 +4,18 @@
   "id": "starter:hedge-mage",
   "label": "The Hedge Mage",
   "summary": "A self-taught elf mage with a borrowed spellbook and more power than control.",
+  "suits": [
+    "starter:ashen-throne",
+    "starter:ember-road",
+    "starter:glass-orchard",
+    "starter:greywatch",
+    "starter:underhalls",
+    "starter:tumbledown-isles",
+    "starter:saltmarsh-lyceum",
+    "starter:rosaline-court",
+    "starter:shattered-main",
+    "starter:velvet-court"
+  ],
   "character": {
     "id": "starter:hedge-mage",
     "name": "Elowen Brisk",
