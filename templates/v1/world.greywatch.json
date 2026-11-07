@@ -1,0 +1,26 @@
+{
+  "templateSchemaVersion": 1,
+  "type": "world",
+  "id": "starter:greywatch",
+  "label": "Greywatch",
+  "summary": "A rowdy guild town on the lip of the Shifting Deep, a dungeon that rearranges itself every new moon. Parties go down for loot and glory.",
+  "world": {
+    "era": "An age of guilds and dungeon contracts",
+    "setting": "Greywatch, a walled guild town built around the mouth of the Shifting Deep",
+    "description": "Every new moon the Shifting Deep moves its halls, its traps and its monsters, so no map lasts. The Adventurers' Guild posts contracts on a board in the Copper Tankard, licensed parties take them, and the town lives on what comes back up: monster parts, old coins and the occasional cursed crown.",
+    "rules": [
+      "Magic and monsters are real; fights are fast, loud and dangerous",
+      "Parties of four or five go down together; nobody raids alone and lives long",
+      "Loot is split by guild rules, and arguments about it are a town sport",
+      "Resting in the Deep is only safe in the rare warded rooms"
+    ]
+  },
+  "narration": {
+    "perspective": "second",
+    "detail": "balanced",
+    "tone": "Bold and rowdy, with real danger and warm camaraderie",
+    "pacing": "fast",
+    "genres": ["Fantasy", "Adventure", "Action"],
+    "dice": true
+  }
+}

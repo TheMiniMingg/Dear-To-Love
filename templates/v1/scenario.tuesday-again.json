@@ -1,0 +1,111 @@
+{
+  "templateSchemaVersion": 1,
+  "type": "scenario",
+  "id": "starter:tuesday-again",
+  "label": "Tuesday, Again",
+  "summary": "Every day is Tuesday, October 14th, and at 11:42 someone dies. You are the only one who remembers. Today is loop one.",
+  "worlds": ["starter:calder-falls"],
+  "title": "Tuesday, Again",
+  "description": "You stopped in Calder Falls for one night on a road trip. You have now lived the same Tuesday once, and you are about to find out you will live it again. At 11:42 tonight, someone in town dies, the day resets, and only you remember. Find out who, why, and how to make it stop.",
+  "firstChapterTitle": "Loop One",
+  "chapterOutlines": [
+    {
+      "title": "Loop One",
+      "outline": "Live the Tuesday once, without knowing what is coming."
+    },
+    {
+      "title": "Learning the Day",
+      "outline": "Use the loops to learn the town, its people and its secrets."
+    },
+    {
+      "title": "11:42",
+      "outline": "Find out who dies, and why you cannot save them the easy way."
+    },
+    {
+      "title": "Wednesday",
+      "outline": "Break the loop, if you can."
+    }
+  ],
+  "scene": {
+    "location": "Room 6 of the Pine Rest Motel, Calder Falls, 6:00 a.m.",
+    "summary": "The radio alarm plays a song about October. The weather report promises a storm at nine. Somewhere across the road, a diner is opening."
+  },
+  "openThreads": [
+    "Who dies at 11:42?",
+    "Why are you the one who remembers?",
+    "Is anyone else looping?"
+  ],
+  "npcs": [
+    {
+      "id": "starter:npc-june",
+      "name": "June Calloway",
+      "control": "npc",
+      "pronouns": "she/her",
+      "role": "Diner owner",
+      "description": "The owner of the Falls Diner, who serves pie, pours coffee and knows everybody's business. She says the same thing to you every morning.",
+      "personality": ["warm", "nosy", "sad about something"],
+      "goals": ["Keep the diner open", "Hear from her son"]
+    },
+    {
+      "id": "starter:npc-sheriff",
+      "name": "Sheriff Ray Dunmore",
+      "control": "npc",
+      "pronouns": "he/him",
+      "role": "Sheriff",
+      "description": "The town sheriff, close to retirement, who has seen something like this before and does not want to talk about it.",
+      "personality": ["gruff", "tired", "decent"],
+      "goals": ["Get through one more quiet day"]
+    },
+    {
+      "id": "starter:npc-wes",
+      "name": "Wes Park",
+      "control": "npc",
+      "pronouns": "he/him",
+      "role": "Physics teacher",
+      "description": "The high school physics teacher, who has a chalkboard full of equations about time in his garage and a lot of coffee.",
+      "personality": ["excitable", "brilliant", "lonely"],
+      "goals": ["Prove his theory", "Be believed"]
+    }
+  ],
+  "relationships": [
+    {
+      "fromId": "starter:npc-june",
+      "toId": "@player",
+      "label": "Diner owner",
+      "status": "Friendly to a stranger"
+    },
+    {
+      "fromId": "starter:npc-sheriff",
+      "toId": "@player",
+      "label": "Sheriff",
+      "status": "Suspicious of strangers"
+    },
+    {
+      "fromId": "starter:npc-wes",
+      "toId": "@player",
+      "label": "Teacher",
+      "status": "Has not met you yet"
+    }
+  ],
+  "tracking": {
+    "meters": [
+      {
+        "name": "Loop",
+        "value": 1
+      }
+    ],
+    "inventory": true,
+    "items": [
+      {
+        "name": "Wristwatch",
+        "qty": 1,
+        "description": "It stopped at 11:42 last night and starts again every morning at 6:00."
+      },
+      {
+        "name": "Motel key",
+        "qty": 1,
+        "description": "Room 6. You always wake up here."
+      }
+    ]
+  }
+}

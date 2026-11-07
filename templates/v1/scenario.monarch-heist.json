@@ -1,0 +1,128 @@
+{
+  "templateSchemaVersion": 1,
+  "type": "scenario",
+  "id": "starter:monarch-heist",
+  "label": "One Night at the Monarch",
+  "summary": "A heist crew, one night, one vault, and a security chief who has never lost a guest's property. You are the inside person.",
+  "worlds": ["starter:isla-monarch"],
+  "title": "One Night at the Monarch",
+  "description": "Tonight is the Monarch's anniversary gala: four hundred guests, one vault and one window of eleven minutes when the vault's systems reset. You got a job at the casino three months ago as the inside person for a crew of five. Everyone has a part. Nobody has told you the whole plan.",
+  "firstChapterTitle": "The Gala",
+  "chapterOutlines": [
+    {
+      "title": "The Gala",
+      "outline": "Take your place at the gala as the crew moves into position."
+    },
+    {
+      "title": "Eleven Minutes",
+      "outline": "Open the vault while the party goes on above."
+    },
+    {
+      "title": "The Double-Cross",
+      "outline": "Discover who on the crew has a different plan."
+    },
+    {
+      "title": "Getting Off the Island",
+      "outline": "Escape the Monarch with the prize, or with your freedom."
+    }
+  ],
+  "scene": {
+    "location": "The Monarch's grand casino floor, during the anniversary gala, 9:40 p.m.",
+    "summary": "Chandeliers, a jazz band and four hundred of the richest people alive. In your ear, the crew is counting down. Across the room, the security chief is looking at you."
+  },
+  "openThreads": [
+    "What is really in the vault?",
+    "Who on the crew is lying?",
+    "Why does Augustin Roche seem to be expecting you?"
+  ],
+  "npcs": [
+    {
+      "id": "starter:npc-vince",
+      "name": "Vincent Duval",
+      "control": "npc",
+      "pronouns": "he/him",
+      "role": "Crew leader",
+      "description": "The crew's planner, a silver-haired gentleman thief who never raises his voice and never says thank you.",
+      "personality": ["smooth", "controlling", "loyal to his people"],
+      "goals": ["One last job, then retire"],
+      "abilities": ["Planning", "Reads people"]
+    },
+    {
+      "id": "starter:npc-zara",
+      "name": "Zara Quinn",
+      "control": "npc",
+      "pronouns": "she/her",
+      "role": "Safecracker",
+      "description": "The crew's safecracker, who listens to locks the way other people listen to music.",
+      "personality": ["intense", "funny under pressure", "secretive"],
+      "goals": ["Get something specific from the vault"],
+      "abilities": ["Safecracking", "Electronics"]
+    },
+    {
+      "id": "starter:npc-kessler",
+      "name": "Chief Anna Kessler",
+      "control": "npc",
+      "pronouns": "she/her",
+      "role": "Head of security",
+      "description": "The Monarch's head of security, who has never lost a guest's property and has been watching you for three months.",
+      "personality": ["sharp", "patient", "fair"],
+      "goals": ["Catch the crew in the act"]
+    }
+  ],
+  "relationships": [
+    {
+      "fromId": "starter:npc-vince",
+      "toId": "@player",
+      "label": "Crew leader",
+      "status": "Trusts your part, not you"
+    },
+    {
+      "fromId": "starter:npc-zara",
+      "toId": "@player",
+      "label": "Crew member",
+      "status": "Friendly, maybe too friendly"
+    },
+    {
+      "fromId": "starter:npc-kessler",
+      "toId": "@player",
+      "label": "Your boss at the casino",
+      "status": "Suspicious"
+    }
+  ],
+  "tracking": {
+    "meters": [
+      {
+        "name": "Health",
+        "value": 100,
+        "max": 100
+      },
+      {
+        "name": "Alarm",
+        "value": 0,
+        "max": 100
+      },
+      {
+        "name": "Minutes left",
+        "value": 11
+      }
+    ],
+    "inventory": true,
+    "items": [
+      {
+        "name": "Cloned keycard",
+        "qty": 1,
+        "description": "Opens staff doors. The vault needs more."
+      },
+      {
+        "name": "Earpiece",
+        "qty": 1,
+        "description": "Connects you to the crew. Kessler's people use the same frequency band."
+      },
+      {
+        "name": "Waiter's uniform",
+        "qty": 1,
+        "description": "Makes you invisible to the rich."
+      }
+    ]
+  }
+}

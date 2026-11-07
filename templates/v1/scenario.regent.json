@@ -1,0 +1,140 @@
+{
+  "templateSchemaVersion": 1,
+  "type": "scenario",
+  "id": "starter:regent",
+  "label": "The Regent's First Winter",
+  "summary": "The old king is dead, the heir is twelve, and his will names you regent. An army waits across the river, and a dragon sleeps under the mountain.",
+  "worlds": ["starter:ashen-throne"],
+  "title": "The Regent's First Winter",
+  "description": "King Aldous's will was read this morning before the whole court, and it named you regent until his son comes of age. Nobody expected it, least of all you. By nightfall you must face the council, calm the court, answer an envoy from the army across the river, and decide what to do about the dragon that woke up when the king died.",
+  "firstChapterTitle": "The Will",
+  "chapterOutlines": [
+    {
+      "title": "The Will",
+      "outline": "Take power in front of a court that does not want you."
+    },
+    {
+      "title": "The Council",
+      "outline": "Win, buy or break the loyalty of the great lords."
+    },
+    {
+      "title": "The Dragon",
+      "outline": "Go under the mountain to meet the dragon."
+    },
+    {
+      "title": "The River",
+      "outline": "Make peace or war before the spring thaw."
+    }
+  ],
+  "scene": {
+    "location": "The throne room of Emberhold, just after the reading of the will",
+    "summary": "The heir sits on a throne too big for him. Fifty nobles turn to look at you. Somewhere under the floor, something vast shifts in its sleep."
+  },
+  "openThreads": [
+    "Why did the king choose you?",
+    "Who on the council is working with the enemy?",
+    "What does the dragon want?"
+  ],
+  "npcs": [
+    {
+      "id": "starter:npc-edric",
+      "name": "Prince Edric",
+      "control": "npc",
+      "pronouns": "he/him",
+      "age": "12",
+      "role": "The heir",
+      "description": "The twelve-year-old heir, serious beyond his years, grieving and watching everyone who comes near him.",
+      "personality": ["solemn", "clever", "frightened"],
+      "goals": ["Be the king his father was"]
+    },
+    {
+      "id": "starter:npc-lord-hale",
+      "name": "Lord Marcus Hale",
+      "control": "npc",
+      "pronouns": "he/him",
+      "role": "Lord Chancellor",
+      "description": "The Lord Chancellor, who expected to be regent himself, and is smiling at you too much.",
+      "personality": ["polished", "ambitious", "patient"],
+      "goals": ["Rule through the boy"]
+    },
+    {
+      "id": "starter:npc-ravenshaw",
+      "name": "Commander Isolde Ravenshaw",
+      "control": "npc",
+      "pronouns": "she/her",
+      "role": "Commander of the guard",
+      "description": "The commander of the royal guard, a scarred veteran who served the old king for thirty years and will serve you if you deserve it.",
+      "personality": ["blunt", "honorable", "hard to impress"],
+      "goals": ["Protect the heir", "Avoid a war she knows they would lose"],
+      "abilities": ["Leads soldiers", "Master of the longsword"]
+    },
+    {
+      "id": "starter:npc-cindermaw",
+      "name": "Cindermaw",
+      "control": "npc",
+      "pronouns": "they/them",
+      "role": "The dragon under the mountain",
+      "species": "Dragon",
+      "description": "An ancient dragon who made a pact with the first king of Calderon. With the king dead, the pact is open again.",
+      "personality": ["ancient", "amused", "terrifying"],
+      "goals": ["Renew the pact, on new terms"],
+      "abilities": ["Fire", "Remembers a thousand years"]
+    }
+  ],
+  "relationships": [
+    {
+      "fromId": "starter:npc-edric",
+      "toId": "@player",
+      "label": "Ward",
+      "status": "Unsure of you"
+    },
+    {
+      "fromId": "starter:npc-lord-hale",
+      "toId": "@player",
+      "label": "Rival",
+      "status": "All smiles"
+    },
+    {
+      "fromId": "starter:npc-ravenshaw",
+      "toId": "@player",
+      "label": "Commander",
+      "status": "Waiting to judge you"
+    }
+  ],
+  "tracking": {
+    "meters": [
+      {
+        "name": "Health",
+        "value": 100,
+        "max": 100
+      },
+      {
+        "name": "Treasury",
+        "value": 500
+      },
+      {
+        "name": "Court support",
+        "value": 30,
+        "max": 100
+      },
+      {
+        "name": "Army",
+        "value": 60,
+        "max": 100
+      }
+    ],
+    "inventory": true,
+    "items": [
+      {
+        "name": "The regent's seal",
+        "qty": 1,
+        "description": "A heavy iron seal. Anything you stamp with it is law."
+      },
+      {
+        "name": "King Aldous's letter",
+        "qty": 1,
+        "description": "A sealed letter addressed to you, to be opened when you are ready. You are not sure you are."
+      }
+    ]
+  }
+}

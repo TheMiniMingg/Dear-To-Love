@@ -81,11 +81,29 @@ export function applyWorld(
     : { worldTemplateId: null };
 }
 
-/** Fill the story section (scene, others, chapters) from a template. */
-export function applyScenario(catalog: TemplateCatalog, id: string): Partial<CreateStoryDraft> {
+/**
+ * Fill the story section (scene, others, chapters) from a template. A
+ * scenario written as an adventure also brings its bars and items; moving
+ * off it drops them again unless you had changed them.
+ */
+export function applyScenario(
+  catalog: TemplateCatalog,
+  id: string,
+  current?: Pick<CreateStoryDraft, 'scenarioTemplateId' | 'tracking'>,
+): Partial<CreateStoryDraft> {
   const s = catalog.scenarios.find((x) => x.id === id);
-  if (!s) return { scenarioTemplateId: null };
+  const before = catalog.scenarios.find((x) => x.id === current?.scenarioTemplateId);
+  const untouched =
+    before?.tracking !== undefined &&
+    JSON.stringify(before.tracking) === JSON.stringify(current?.tracking);
+  const tracking = s?.tracking
+    ? { tracking: copy(s.tracking) }
+    : untouched
+      ? { tracking: undefined }
+      : {};
+  if (!s) return { scenarioTemplateId: null, ...tracking };
   return {
+    ...tracking,
     scenarioTemplateId: s.id,
     title: s.title,
     description: s.description,
@@ -577,7 +595,7 @@ export function StoryStep(props: StepProps) {
             label={t('Start from a scenario')}
             options={pickerOptions}
             value={current ?? ''}
-            onChange={(id) => update(applyScenario(catalog, id))}
+            onChange={(id) => update(applyScenario(catalog, id, draft))}
           />
           <dl className="facts">
             <dt>{t('Title')}</dt>
@@ -592,6 +610,12 @@ export function StoryStep(props: StepProps) {
             )}
             <dt>{t('First chapter')}</dt>
             <dd>{draft.firstChapterTitle || t('(not set)')}</dd>
+            {draft.tracking && (
+              <>
+                <dt>{t('Tracking')}</dt>
+                <dd>{trackingSummary(draft.tracking, true) || t('(none)')}</dd>
+              </>
+            )}
           </dl>
         </>
       ) : (

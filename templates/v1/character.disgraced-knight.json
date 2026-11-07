@@ -1,0 +1,32 @@
+{
+  "templateSchemaVersion": 1,
+  "type": "character",
+  "id": "starter:disgraced-knight",
+  "label": "The Disgraced Knight",
+  "summary": "A knight stripped of their title for refusing an order, looking for a cause worth the sword.",
+  "character": {
+    "id": "starter:disgraced-knight",
+    "name": "Roderic Thale",
+    "control": "player",
+    "pronouns": "he/him",
+    "role": "Knight without a title",
+    "description": "A former knight of the realm, stripped of his title for refusing an order he still will not talk about. He kept the armor and the habits.",
+    "personality": ["honorable", "stubborn", "quietly funny"],
+    "goals": ["Clear his name", "Protect people who cannot protect themselves"],
+    "abilities": ["Fights in heavy armor", "Leads in a crisis"],
+    "stats": [
+      {
+        "name": "Strength",
+        "value": 3
+      },
+      {
+        "name": "Nerve",
+        "value": 2
+      },
+      {
+        "name": "Charm",
+        "value": 0
+      }
+    ]
+  }
+}

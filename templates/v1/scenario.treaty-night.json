@@ -1,0 +1,128 @@
+{
+  "templateSchemaVersion": 1,
+  "type": "scenario",
+  "id": "starter:treaty-night",
+  "label": "The Treaty Night",
+  "summary": "You are the mortal envoy sent to renew the Night Treaty with the vampire houses. One house wants it broken; another's heir wants you.",
+  "worlds": ["starter:velvet-court"],
+  "title": "The Treaty Night",
+  "description": "Every fifty years a mortal envoy renews the Night Treaty before the Velvet Court. This year the envoy is you. You have seven nights of balls, audiences and negotiations. House Varn wants the treaty broken, House Sorel will support it for a price, and the heir of House Sorel has asked for you by name.",
+  "firstChapterTitle": "The Masked Ball",
+  "chapterOutlines": [
+    {
+      "title": "The Masked Ball",
+      "outline": "Present your credentials at the Court's welcome ball."
+    },
+    {
+      "title": "Seven Nights",
+      "outline": "Negotiate with the houses, collect favors and learn their secrets."
+    },
+    {
+      "title": "The Betrayal",
+      "outline": "Discover who intends to break the treaty, and how."
+    },
+    {
+      "title": "The Renewal",
+      "outline": "Stand before the Court and make your choice."
+    }
+  ],
+  "scene": {
+    "location": "The Palazzo Sorel's ballroom, at midnight, on the first night of the renewal",
+    "summary": "A thousand candles and not one mirror. The Court turns, as one, to look at you. Somewhere a violin stops."
+  },
+  "openThreads": [
+    "Who wants the treaty broken?",
+    "What happened to the last envoy?",
+    "What does the heir of House Sorel really want?"
+  ],
+  "npcs": [
+    {
+      "id": "starter:npc-lucien",
+      "name": "Lucien Sorel",
+      "control": "npc",
+      "pronouns": "he/him",
+      "role": "Heir of House Sorel",
+      "species": "Vampire",
+      "description": "The heir of House Sorel, four hundred years old and bored of all of it, until you arrived.",
+      "personality": ["charming", "melancholy", "dangerous when crossed"],
+      "goals": ["Win your trust", "Escape his mother's plans for him"],
+      "abilities": ["Reads moods like books", "Moves faster than sight"]
+    },
+    {
+      "id": "starter:npc-isadora",
+      "name": "Lady Isadora Varn",
+      "control": "npc",
+      "pronouns": "she/her",
+      "role": "Head of House Varn",
+      "species": "Vampire",
+      "description": "The head of House Varn, who remembers when vampires ruled openly and would very much like those days back.",
+      "personality": ["elegant", "ruthless", "patient"],
+      "goals": ["Break the treaty without breaking the letter of it"],
+      "abilities": ["Commands bats and fog"]
+    },
+    {
+      "id": "starter:npc-tomas",
+      "name": "Tomas Reyes",
+      "control": "npc",
+      "pronouns": "he/him",
+      "role": "Your secretary",
+      "description": "Your mortal secretary and oldest friend, who has a stake in his sleeve and a flask of garlic wine in his coat.",
+      "personality": ["anxious", "loyal", "witty"],
+      "goals": ["Get you home alive"]
+    }
+  ],
+  "relationships": [
+    {
+      "fromId": "starter:npc-lucien",
+      "toId": "@player",
+      "label": "Admirer",
+      "status": "Intrigued by you"
+    },
+    {
+      "fromId": "starter:npc-isadora",
+      "toId": "@player",
+      "label": "Opponent",
+      "status": "Smiling, which is worse"
+    },
+    {
+      "fromId": "starter:npc-tomas",
+      "toId": "@player",
+      "label": "Secretary and friend",
+      "status": "Worried sick"
+    }
+  ],
+  "tracking": {
+    "meters": [
+      {
+        "name": "Composure",
+        "value": 80,
+        "max": 100
+      },
+      {
+        "name": "Favor",
+        "value": 50,
+        "max": 100,
+        "who": "House Sorel"
+      },
+      {
+        "name": "Favor",
+        "value": 20,
+        "max": 100,
+        "who": "House Varn"
+      }
+    ],
+    "inventory": true,
+    "items": [
+      {
+        "name": "Sealed treaty",
+        "qty": 1,
+        "description": "The Night Treaty, three centuries old, waiting for one more signature."
+      },
+      {
+        "name": "Silver ring",
+        "qty": 1,
+        "description": "Your grandmother's ring. Vampires do not like to shake the hand that wears it."
+      }
+    ]
+  }
+}

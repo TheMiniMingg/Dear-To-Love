@@ -1,0 +1,32 @@
+{
+  "templateSchemaVersion": 1,
+  "type": "character",
+  "id": "starter:quartermaster",
+  "label": "The Quartermaster",
+  "summary": "A pirate quartermaster who keeps the books, the peace and a knife in each boot.",
+  "character": {
+    "id": "starter:quartermaster",
+    "name": "Bess Marrow",
+    "control": "player",
+    "pronouns": "she/her",
+    "role": "Quartermaster",
+    "description": "A pirate quartermaster who has kept three ships fed, paid and mostly not mutinous. Every pirate in the free port owes her money or a favor.",
+    "personality": ["shrewd", "loud", "loyal to her crew"],
+    "goals": ["Retire rich", "Never be cheated again"],
+    "abilities": ["Knife fighting", "Counts loot at a glance"],
+    "stats": [
+      {
+        "name": "Charm",
+        "value": 2
+      },
+      {
+        "name": "Strength",
+        "value": 2
+      },
+      {
+        "name": "Aim",
+        "value": 1
+      }
+    ]
+  }
+}

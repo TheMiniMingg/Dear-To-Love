@@ -1,0 +1,133 @@
+{
+  "templateSchemaVersion": 1,
+  "type": "scenario",
+  "id": "starter:supply-run",
+  "label": "The Supply Run",
+  "summary": "Food at Juniper Heights runs out in four days. You lead a run to the hospital across town, through streets full of the turned.",
+  "worlds": ["starter:juniper-heights"],
+  "title": "The Supply Run",
+  "description": "The roof garden failed in the frost. There are four days of food left for sixty people and the nearest unlooted supplies are in St. Brigid's Hospital, two miles across a dead suburb. The council has picked you to lead the run, with a team of three and one working truck.",
+  "firstChapterTitle": "The Briefing",
+  "chapterOutlines": [
+    {
+      "title": "The Briefing",
+      "outline": "Plan the run with the team in the school library."
+    },
+    {
+      "title": "Two Miles",
+      "outline": "Cross the suburb quietly, or not."
+    },
+    {
+      "title": "St. Brigid's",
+      "outline": "Search the hospital, where another group got there first."
+    },
+    {
+      "title": "The Way Back",
+      "outline": "Get home with the supplies, and with everyone."
+    }
+  ],
+  "scene": {
+    "location": "The library of Juniper Heights High, turned into a map room, at dawn on Day 41",
+    "summary": "A map of the town is taped across the tables, red Xs everywhere. Your team is waiting. The kitchen staff are pretending not to listen."
+  },
+  "openThreads": [
+    "Who else is at the hospital?",
+    "Will the truck hold out?",
+    "Someone on the team is hiding a bite. Who?"
+  ],
+  "npcs": [
+    {
+      "id": "starter:npc-coach",
+      "name": "Coach Dana Briggs",
+      "control": "npc",
+      "pronouns": "she/her",
+      "role": "Former gym teacher, head of security",
+      "description": "The school's former gym teacher, now its head of security. She runs the fortress like a championship season.",
+      "personality": ["tough", "fair", "carries everyone's worries"],
+      "goals": ["Keep all sixty alive"],
+      "abilities": ["Leadership", "Can drive anything"]
+    },
+    {
+      "id": "starter:npc-marcus",
+      "name": "Marcus Bell",
+      "control": "npc",
+      "pronouns": "he/him",
+      "role": "Nurse",
+      "description": "A night-shift nurse who walked into the school with a bag of medicine on Day 2 and has been holding everyone together since.",
+      "personality": ["calm", "funny", "exhausted"],
+      "goals": ["Find insulin for a sick survivor"],
+      "abilities": ["Field medicine"]
+    },
+    {
+      "id": "starter:npc-lena",
+      "name": "Lena Ortiz",
+      "control": "npc",
+      "pronouns": "she/her",
+      "role": "Scavenger",
+      "description": "A former delivery driver who knows every back road in town and treats the turned like bad traffic.",
+      "personality": ["reckless", "cheerful", "hiding a fresh bandage"],
+      "goals": ["Get to her sister's house near the hospital"],
+      "abilities": ["Driving", "Lockpicking"]
+    }
+  ],
+  "relationships": [
+    {
+      "fromId": "starter:npc-coach",
+      "toId": "@player",
+      "label": "Leader",
+      "status": "Trusts you with the run"
+    },
+    {
+      "fromId": "starter:npc-marcus",
+      "toId": "@player",
+      "label": "Teammate",
+      "status": "Glad you are leading"
+    },
+    {
+      "fromId": "starter:npc-lena",
+      "toId": "@player",
+      "label": "Teammate",
+      "status": "Thinks the plan is too careful"
+    }
+  ],
+  "tracking": {
+    "meters": [
+      {
+        "name": "Health",
+        "value": 100,
+        "max": 100
+      },
+      {
+        "name": "Stamina",
+        "value": 100,
+        "max": 100
+      },
+      {
+        "name": "Food",
+        "value": 4
+      },
+      {
+        "name": "Ammo",
+        "value": 12
+      }
+    ],
+    "inventory": true,
+    "items": [
+      {
+        "name": "Crowbar",
+        "qty": 1,
+        "description": "Quiet, reliable, opens doors and solves problems."
+      },
+      {
+        "name": "Bandages",
+        "qty": 3,
+        "description": "Clean, which is rare now."
+      },
+      {
+        "name": "Walkie-talkie",
+        "qty": 1,
+        "description": "Reaches the school from about a mile away. The battery is at half."
+      }
+    ]
+  }
+}

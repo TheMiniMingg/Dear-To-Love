@@ -1,0 +1,26 @@
+{
+  "templateSchemaVersion": 1,
+  "type": "world",
+  "id": "starter:saltmarsh-lyceum",
+  "label": "The Saltmarsh Lyceum",
+  "summary": "A seaside college of weather magic, where first-years bind a storm spirit and sit exams in the middle of a gale.",
+  "world": {
+    "era": "The three hundredth year of the Lyceum",
+    "setting": "The Saltmarsh Lyceum, a college of weather magic on a windswept tidal island",
+    "description": "Students come from every coast to learn to call wind, rain and fog. Each first-year binds a small weather spirit as a familiar, the four houses compete for the Tide Cup, and the causeway to the mainland floods twice a day, which is excellent for keeping students in after curfew and terrible for keeping them out of trouble.",
+    "rules": [
+      "Magic takes practice and goes wrong in funny or frightening ways",
+      "Familiars have opinions, moods and appetites",
+      "House points, exams and rivalries matter to everyone here",
+      "Teachers are strict but fair, and secrets travel fast"
+    ]
+  },
+  "narration": {
+    "perspective": "second",
+    "detail": "balanced",
+    "tone": "Whimsical and warm, with real stakes and late-night mischief",
+    "pacing": "normal",
+    "genres": ["School life", "Fantasy", "Romance"],
+    "dice": true
+  }
+}

@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+- **17 new worlds, 19 scenarios and 12 characters.** Raid the Shifting Deep with a party of
+  four in Greywatch, or join the resistance against STEWARD, the AI that runs Arclight. Also
+  new: a college of weather magic, a gothic fen village with a bell that rings for the dead, a
+  fortified high school forty-one days into an outbreak, a salvage crew and a ghost liner, a
+  talent agency ninety days before debut, a cozy potion shop on a turtle-ferry island, a
+  vampire court, a locked-room mystery on a 1934 airship, a pirate crew that just voted you
+  captain, a martial sect's stolen manual, waking up as a romance novel's villainess, a town
+  stuck on the same Tuesday, a casino heist, a supervillain's henchpeople forming a union, and
+  a regent's first winter with a dragon under the mountain. Most new scenarios start with
+  health, items and more already set up for them (the whole party's health and mana, a ship's
+  hull and fuel, a vampire house's favor), shown in Quick Start before you begin.
 - **A richer offline storyteller.** Playing without an AI service now feels like the kind of
   story you chose: fantasy, science fiction and cyberpunk, horror and mystery, romance and
   slice of life, and adventure each have their own scenes, twists and things to find. The

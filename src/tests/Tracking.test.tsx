@@ -9,8 +9,10 @@ import type {
   AssetDto,
   ProviderProfile,
   RouteView,
+  ScenarioTemplate,
   StoryStateV1,
   StoryVisual,
+  TemplateCatalog,
   Tracking,
 } from '../types';
 import { fakeRouteView } from './fakeBackend';
@@ -28,6 +30,7 @@ import {
   defaultTracking,
   trackingSummary,
 } from '../features/create/TrackingFields';
+import { applyScenario } from '../features/create/WizardSteps';
 import { MeterView } from '../features/reader/InventoryPanel';
 import { RichText } from '../features/reader/RichText';
 import { ReaderScreen } from '../features/reader/ReaderScreen';
@@ -81,6 +84,48 @@ describe('what a story starts tracking', () => {
       'Health 18/100, Gold 35, Kira: Health 40/60, an inventory with 2 items',
     );
     expect(trackingSummary(undefined)).toBe('');
+    expect(trackingSummary(tracking, true)).toBe(
+      'Health 18/100, Gold 35, bars for 1 other, an inventory with 2 items',
+    );
+  });
+
+  it('comes with an adventure scenario and goes when you pick another', () => {
+    const scenario = (id: string, tr?: Tracking): ScenarioTemplate => ({
+      templateSchemaVersion: 1,
+      id,
+      label: id,
+      summary: '',
+      worlds: [],
+      title: id,
+      description: '',
+      firstChapterTitle: 'One',
+      chapterOutlines: [],
+      scene: { location: 'Here', summary: '' },
+      openThreads: [],
+      npcs: [],
+      relationships: [],
+      tracking: tr,
+    });
+    const catalog = {
+      worlds: [],
+      characters: [],
+      scenarios: [scenario('t:raid', tracking), scenario('t:quiet')],
+    } as TemplateCatalog;
+    const raid = applyScenario(catalog, 't:raid', { scenarioTemplateId: null });
+    expect(raid.tracking).toEqual(tracking);
+    expect(raid.tracking).not.toBe(tracking);
+    // Untouched, the raid's bars go with it.
+    const back = applyScenario(catalog, 't:quiet', { scenarioTemplateId: 't:raid', tracking });
+    expect('tracking' in back && back.tracking === undefined).toBe(true);
+    // Changed, or set up by hand, they stay.
+    const mine = { ...tracking, meters: tracking.meters.slice(0, 1) };
+    expect(
+      'tracking' in
+        applyScenario(catalog, 't:quiet', { scenarioTemplateId: 't:raid', tracking: mine }),
+    ).toBe(false);
+    expect(
+      'tracking' in applyScenario(catalog, 't:quiet', { scenarioTemplateId: null, tracking }),
+    ).toBe(false);
   });
 
   it('turns on with defaults, and every bar, counter and item can change', async () => {

@@ -1,0 +1,117 @@
+{
+  "templateSchemaVersion": 1,
+  "type": "scenario",
+  "id": "starter:potion-shop",
+  "label": "The Potion Shop on Pell Island",
+  "summary": "You inherit your grandmother's dusty potion shop. The islanders need it open again by the Harvest Lantern festival.",
+  "worlds": ["starter:tumbledown-isles"],
+  "title": "The Potion Shop on Pell Island",
+  "description": "Your grandmother's potion shop on Pell Island has been closed for a year. The windows are dusty, the cauldron is cold and a very large cat is living in the herb drawer. The islanders are thrilled you have come: the Harvest Lantern festival is in one season, and nobody else knows how to brew the lantern oil.",
+  "firstChapterTitle": "A Dusty Welcome",
+  "chapterOutlines": [
+    {
+      "title": "A Dusty Welcome",
+      "outline": "Arrive on the ferry turtle and open the shop for the first time."
+    },
+    {
+      "title": "Neighbors and Recipes",
+      "outline": "Meet the islanders, gather ingredients and brew your first potions."
+    },
+    {
+      "title": "The Harvest Lantern",
+      "outline": "Brew the lantern oil in time for the festival."
+    }
+  ],
+  "scene": {
+    "location": "The ferry turtle's back, arriving at Pell Island's little harbor, on a breezy spring morning",
+    "summary": "The turtle yawns. On the dock, half the island has come to see the new potion-maker. Someone is holding a welcome banner upside down."
+  },
+  "openThreads": [
+    "Why did Grandmother close the shop?",
+    "Who keeps leaving herbs on the doorstep at night?"
+  ],
+  "npcs": [
+    {
+      "id": "starter:npc-bramble",
+      "name": "Bramble",
+      "control": "npc",
+      "pronouns": "he/him",
+      "role": "The shop cat",
+      "species": "Cat",
+      "description": "An enormous orange cat who came with the shop and may understand every word you say. He has strong feelings about catnip.",
+      "personality": ["lazy", "judgmental", "secretly helpful"],
+      "goals": ["Nap in the warmest spot", "Get you to brew catnip tonic"]
+    },
+    {
+      "id": "starter:npc-fen",
+      "name": "Fen Holloway",
+      "control": "npc",
+      "pronouns": "they/them",
+      "role": "Lighthouse keeper and gardener",
+      "description": "The island's lighthouse keeper, who grows rare herbs in the lighthouse garden and talks to them.",
+      "personality": ["shy", "gentle", "very funny once they relax"],
+      "goals": ["Win the festival's flower prize"]
+    },
+    {
+      "id": "starter:npc-mayor",
+      "name": "Mayor Pip Tumble",
+      "control": "npc",
+      "pronouns": "he/him",
+      "role": "Island mayor",
+      "description": "The island's cheerful mayor, who has never once made a decision without forming a committee first.",
+      "personality": ["enthusiastic", "fussy", "kind"],
+      "goals": ["Throw the best festival in a hundred years"]
+    }
+  ],
+  "relationships": [
+    {
+      "fromId": "starter:npc-bramble",
+      "toId": "@player",
+      "label": "Cat",
+      "status": "Tolerates you"
+    },
+    {
+      "fromId": "starter:npc-fen",
+      "toId": "@player",
+      "label": "Neighbor",
+      "status": "Shy but curious"
+    },
+    {
+      "fromId": "starter:npc-mayor",
+      "toId": "@player",
+      "label": "Mayor",
+      "status": "Delighted you are here"
+    }
+  ],
+  "tracking": {
+    "meters": [
+      {
+        "name": "Energy",
+        "value": 100,
+        "max": 100
+      },
+      {
+        "name": "Coins",
+        "value": 50
+      }
+    ],
+    "inventory": true,
+    "items": [
+      {
+        "name": "Grandmother's recipe book",
+        "qty": 1,
+        "description": "Spidery handwriting, pressed flowers and notes like 'add moonlight, not too much'."
+      },
+      {
+        "name": "Copper cauldron",
+        "qty": 1,
+        "description": "Dented, well loved and a little temperamental."
+      },
+      {
+        "name": "Watering can",
+        "qty": 1,
+        "description": "For the herb garden behind the shop."
+      }
+    ]
+  }
+}

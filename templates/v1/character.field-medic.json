@@ -1,0 +1,32 @@
+{
+  "templateSchemaVersion": 1,
+  "type": "character",
+  "id": "starter:field-medic",
+  "label": "The Field Medic",
+  "summary": "A medic who keeps people alive in the worst places, and keeps a list of the ones they could not.",
+  "character": {
+    "id": "starter:field-medic",
+    "name": "Amara Osei",
+    "control": "player",
+    "pronouns": "she/her",
+    "role": "Medic",
+    "description": "A combat medic who has patched people up in field tents, flooded streets and the back of moving trucks. Steady hands, dark jokes, no patience for heroics.",
+    "personality": ["calm", "dry", "fiercely caring"],
+    "goals": ["Keep everyone alive", "Stop counting the ones she lost"],
+    "abilities": ["Field surgery", "Stays calm under fire"],
+    "stats": [
+      {
+        "name": "Smarts",
+        "value": 2
+      },
+      {
+        "name": "Nerve",
+        "value": 2
+      },
+      {
+        "name": "Agility",
+        "value": 1
+      }
+    ]
+  }
+}

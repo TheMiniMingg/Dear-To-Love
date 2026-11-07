@@ -1,0 +1,32 @@
+{
+  "templateSchemaVersion": 1,
+  "type": "character",
+  "id": "starter:salvage-pilot",
+  "label": "The Salvage Pilot",
+  "summary": "A hotshot pilot with a talent for flying through things that should not be flown through.",
+  "character": {
+    "id": "starter:salvage-pilot",
+    "name": "Jonah Petrakis",
+    "control": "player",
+    "pronouns": "he/him",
+    "role": "Pilot",
+    "description": "A salvage pilot who can thread a ship through a debris field with his eyes half shut, and has the fines to prove it.",
+    "personality": ["cocky", "generous", "afraid of being still"],
+    "goals": ["Pay off his ship", "Find his missing father's last wreck"],
+    "abilities": ["Flies anything", "Talks his way out of trouble"],
+    "stats": [
+      {
+        "name": "Agility",
+        "value": 3
+      },
+      {
+        "name": "Nerve",
+        "value": 1
+      },
+      {
+        "name": "Luck",
+        "value": 1
+      }
+    ]
+  }
+}

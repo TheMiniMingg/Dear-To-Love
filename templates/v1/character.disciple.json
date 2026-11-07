@@ -1,0 +1,32 @@
+{
+  "templateSchemaVersion": 1,
+  "type": "character",
+  "id": "starter:disciple",
+  "label": "The Wandering Disciple",
+  "summary": "A young martial artist who left their sect to see the world, with a sword they have not yet earned.",
+  "character": {
+    "id": "starter:disciple",
+    "name": "Lan Shuo",
+    "control": "player",
+    "pronouns": "he/him",
+    "role": "Martial arts disciple",
+    "description": "A disciple of a small mountain sect, sent down into the world with a plain sword, three silver coins and too much confidence.",
+    "personality": ["earnest", "hot-headed", "honorable"],
+    "goals": ["Become a true master", "Repay his master's kindness"],
+    "abilities": ["Lightness technique", "Sword forms"],
+    "stats": [
+      {
+        "name": "Agility",
+        "value": 3
+      },
+      {
+        "name": "Nerve",
+        "value": 1
+      },
+      {
+        "name": "Smarts",
+        "value": 0
+      }
+    ]
+  }
+}

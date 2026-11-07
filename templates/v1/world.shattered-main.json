@@ -1,0 +1,26 @@
+{
+  "templateSchemaVersion": 1,
+  "type": "world",
+  "id": "starter:shattered-main",
+  "label": "The Shattered Main",
+  "summary": "Warm seas full of broken islands, rival crews and buried treasure, where a pirate captain is only as good as their last vote.",
+  "world": {
+    "era": "The last golden years of free sailing",
+    "setting": "The Shattered Main, a sea of a hundred islands, and the free port of Saltmother",
+    "description": "The Shattered Main is a warm sea full of islands, reefs and fog banks, too broken up for any navy to police. Pirate crews elect their captains and can unelect them just as fast. The free port of Saltmother trades in everything, the Admiralty is coming, and somewhere out there is the treasure of the Drowned Queen.",
+    "rules": [
+      "Crews vote on everything important, including who is captain",
+      "Sword fights, storms and boarding actions are fast and dramatic",
+      "A pirate's word is binding; breaking it is the one unforgivable thing",
+      "Treasure maps are usually fake, and occasionally not"
+    ]
+  },
+  "narration": {
+    "perspective": "second",
+    "detail": "balanced",
+    "tone": "Swashbuckling and loud, with salt and heart",
+    "pacing": "fast",
+    "genres": ["Adventure", "Action", "Comedy"],
+    "dice": true
+  }
+}

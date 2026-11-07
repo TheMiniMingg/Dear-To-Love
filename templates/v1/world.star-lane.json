@@ -1,0 +1,25 @@
+{
+  "templateSchemaVersion": 1,
+  "type": "world",
+  "id": "starter:star-lane",
+  "label": "Star Lane",
+  "summary": "A glittering street of talent agencies where trainees spend years in practice rooms for one chance to debut.",
+  "world": {
+    "era": "Present day",
+    "setting": "Star Lane, the talent agency district of a big, bright city",
+    "description": "Every building on Star Lane is a talent agency, a dance studio or a coffee shop full of exhausted trainees. Agencies sign young adults to train for years, then pick a handful to debut as a group. Contracts are strict, rankings are posted every month, and the fans are already watching before anyone has a name.",
+    "rules": [
+      "Every character is an adult; the youngest trainees are nineteen",
+      "Monthly rankings decide who stays",
+      "Dating is against the contract, which makes everything more complicated",
+      "Rivals can become friends, and friends can become rivals"
+    ]
+  },
+  "narration": {
+    "perspective": "second",
+    "detail": "balanced",
+    "tone": "Glossy, heartfelt and a little dramatic",
+    "pacing": "normal",
+    "genres": ["Romance", "Drama", "Slice of life"]
+  }
+}

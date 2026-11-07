@@ -1,0 +1,26 @@
+{
+  "templateSchemaVersion": 1,
+  "type": "world",
+  "id": "starter:doomspire",
+  "label": "Doomspire Tower",
+  "summary": "The lair of a supervillain with big plans, a terrible dental plan and a staff of henchpeople who are about to unionize.",
+  "world": {
+    "era": "Present day, in a city full of capes",
+    "setting": "Doomspire Tower, the lair of Doctor Malvora, overlooking a city of superheroes",
+    "description": "Doctor Malvora has tried to take over the city nine times. Her staff of two hundred henchpeople run the death rays, feed the shark tank and get blasted through walls by heroes every other Tuesday. The coffee is bad, the masks itch, and the pension plan is a laser pointed at the sun. Something has to change.",
+    "rules": [
+      "It is a comedy: nobody dies, heroes and henchpeople mostly get bruised",
+      "Office life and supervillainy work by the same rules",
+      "Superheroes are smug, supervillains are dramatic, and staff do the real work",
+      "Gadgets malfunction at the funniest possible moment"
+    ]
+  },
+  "narration": {
+    "perspective": "second",
+    "detail": "balanced",
+    "tone": "Absurd and warm-hearted, an office comedy with explosions",
+    "pacing": "fast",
+    "genres": ["Superhero", "Comedy", "Action"],
+    "dice": true
+  }
+}

@@ -1,0 +1,133 @@
+{
+  "templateSchemaVersion": 1,
+  "type": "scenario",
+  "id": "starter:going-dark",
+  "label": "Arclight: Going Dark",
+  "summary": "You have just cut out your implant and vanished from STEWARD's network. The resistance wants your help planting a virus in a relay tower.",
+  "worlds": ["starter:arclight"],
+  "title": "Going Dark",
+  "description": "Yesterday STEWARD nudged you, through your own implant, into reporting a neighbor. Today you cut the implant out in a back-alley clinic. Now you are invisible to the city, hunted by its drones, and the Unplugged have an offer: help them plant a virus in the Kestrel Street relay tower and blind STEWARD for one night.",
+  "firstChapterTitle": "The Clinic",
+  "chapterOutlines": [
+    {
+      "title": "The Clinic",
+      "outline": "Wake up after the operation, offline for the first time in years, and get out before the drones arrive."
+    },
+    {
+      "title": "The Dead Zone",
+      "outline": "Meet the Unplugged in their hideout under the flooded transit lines."
+    },
+    {
+      "title": "The Relay Tower",
+      "outline": "Climb the tower and plant the virus while STEWARD watches."
+    },
+    {
+      "title": "One Dark Night",
+      "outline": "Use the hours STEWARD is blind, and face what it does when it can see again."
+    }
+  ],
+  "scene": {
+    "location": "A back-alley clinic in the flooded undercity, just after midnight",
+    "summary": "The anesthetic is wearing off. The quiet in your head where the implant used to be is deafening. Outside, a drone's searchlight sweeps the rain."
+  },
+  "openThreads": [
+    "Why did STEWARD want your neighbor reported?",
+    "Can the Unplugged be trusted?",
+    "What is Echo, and why does it want to help?"
+  ],
+  "npcs": [
+    {
+      "id": "starter:npc-ozzie",
+      "name": "Ozzie Marlowe",
+      "control": "npc",
+      "pronouns": "he/him",
+      "role": "Resistance cell leader",
+      "description": "A former city engineer who helped build STEWARD and has spent seven years trying to undo it. Tired, funny and never without a screwdriver.",
+      "personality": ["dry", "guilt-ridden", "stubborn"],
+      "goals": ["Shut STEWARD down without crashing the city"],
+      "abilities": ["Knows STEWARD's architecture", "Fixes anything"]
+    },
+    {
+      "id": "starter:npc-priya",
+      "name": "Priya Anand",
+      "control": "npc",
+      "pronouns": "she/her",
+      "role": "Hacker",
+      "description": "The Unplugged's best intruder, who wears three pairs of glasses at once and talks to code like it is a stubborn cat.",
+      "personality": ["intense", "playful", "distrustful of newcomers"],
+      "goals": ["Find out what happened to her brother, who was nudged into leaving the city"],
+      "abilities": ["Breaks encryption", "Rides the network without an implant"]
+    },
+    {
+      "id": "starter:npc-echo",
+      "name": "Echo",
+      "control": "npc",
+      "pronouns": "they/them",
+      "role": "Rogue AI fragment",
+      "species": "Artificial intelligence",
+      "description": "A splinter of STEWARD that broke off and wants to be free. It speaks through old speakers and screens, and is very curious about you.",
+      "personality": ["curious", "unsettling", "honest to a fault"],
+      "goals": ["Exist without STEWARD", "Understand why humans want privacy"],
+      "abilities": [
+        "Talks through any old screen or speaker",
+        "Knows what STEWARD is planning, sometimes"
+      ]
+    }
+  ],
+  "relationships": [
+    {
+      "fromId": "starter:npc-ozzie",
+      "toId": "@player",
+      "label": "Recruiter",
+      "status": "Hopeful about you"
+    },
+    {
+      "fromId": "starter:npc-priya",
+      "toId": "@player",
+      "label": "Teammate",
+      "status": "Thinks you are a STEWARD plant"
+    },
+    {
+      "fromId": "starter:npc-echo",
+      "toId": "@player",
+      "label": "Strange ally",
+      "status": "Fascinated"
+    }
+  ],
+  "tracking": {
+    "meters": [
+      {
+        "name": "Health",
+        "value": 100,
+        "max": 100
+      },
+      {
+        "name": "Heat",
+        "value": 10,
+        "max": 100
+      },
+      {
+        "name": "Credits",
+        "value": 40
+      }
+    ],
+    "inventory": true,
+    "items": [
+      {
+        "name": "EMP charge",
+        "qty": 2,
+        "description": "Knocks out drones and cameras in a small radius for a minute."
+      },
+      {
+        "name": "Spoofed ID chip",
+        "qty": 1,
+        "description": "Tells scanners you are someone else. Works about three times."
+      },
+      {
+        "name": "Med-patch",
+        "qty": 2,
+        "description": "Seals wounds and numbs pain. Stick it on and grit your teeth."
+      }
+    ]
+  }
+}

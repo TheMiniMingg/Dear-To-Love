@@ -10,6 +10,7 @@ use ts_rs::TS;
 use super::draft::{CreateStoryDraft, DRAFT_SCHEMA_VERSION};
 use super::story::{ChapterOutlineInput, CreateStoryInput};
 use super::story_state::{Character, Control, Detail, Narration, Perspective, Relationship, World};
+use super::tracking::Tracking;
 use crate::errors::{AppError, AppResult};
 
 pub const TEMPLATE_SCHEMA_VERSION: u32 = 1;
@@ -22,7 +23,7 @@ macro_rules! bundled {
     };
 }
 
-/// Sixteen worlds, sixteen scenarios and fifteen characters, in picker order.
+/// 33 worlds, 35 scenarios and 27 characters, in picker order.
 const BUNDLED: &[&str] = bundled![
     "world.harbor-town.json",
     "world.glass-orchard.json",
@@ -40,6 +41,23 @@ const BUNDLED: &[&str] = bundled![
     "world.dust-creek.json",
     "world.lantern-palace.json",
     "world.maple-fern.json",
+    "world.greywatch.json",
+    "world.arclight.json",
+    "world.saltmarsh-lyceum.json",
+    "world.brackwater.json",
+    "world.juniper-heights.json",
+    "world.tallow-drift.json",
+    "world.star-lane.json",
+    "world.tumbledown-isles.json",
+    "world.velvet-court.json",
+    "world.aurelia-1934.json",
+    "world.shattered-main.json",
+    "world.nine-rivers.json",
+    "world.rosaline-court.json",
+    "world.calder-falls.json",
+    "world.isla-monarch.json",
+    "world.doomspire.json",
+    "world.ashen-throne.json",
     "scenario.unsigned-letter.json",
     "scenario.memory-harvest.json",
     "scenario.night-shift.json",
@@ -56,6 +74,25 @@ const BUNDLED: &[&str] = bundled![
     "scenario.redwater-stage.json",
     "scenario.empress-tea.json",
     "scenario.cafe-first-week.json",
+    "scenario.first-raid.json",
+    "scenario.lost-party.json",
+    "scenario.going-dark.json",
+    "scenario.last-free-radio.json",
+    "scenario.storm-familiar.json",
+    "scenario.thirteenth-bell.json",
+    "scenario.supply-run.json",
+    "scenario.ghost-liner.json",
+    "scenario.ninety-days.json",
+    "scenario.potion-shop.json",
+    "scenario.treaty-night.json",
+    "scenario.empty-cabin.json",
+    "scenario.captain-by-morning.json",
+    "scenario.stolen-manual.json",
+    "scenario.villainess-wakes.json",
+    "scenario.tuesday-again.json",
+    "scenario.monarch-heist.json",
+    "scenario.henchmen-union.json",
+    "scenario.regent.json",
     "character.new-keeper.json",
     "character.curious-detective.json",
     "character.wandering-musician.json",
@@ -71,6 +108,18 @@ const BUNDLED: &[&str] = bundled![
     "character.rookie-hero.json",
     "character.drifter.json",
     "character.court-physician.json",
+    "character.hedge-mage.json",
+    "character.disgraced-knight.json",
+    "character.netrunner.json",
+    "character.field-medic.json",
+    "character.salvage-pilot.json",
+    "character.trainee.json",
+    "character.dukes-daughter.json",
+    "character.disciple.json",
+    "character.quartermaster.json",
+    "character.henchperson.json",
+    "character.skeptic.json",
+    "character.cat-burglar.json",
 ];
 
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]
@@ -116,6 +165,12 @@ pub struct ScenarioTemplate {
     pub npcs: Vec<Character>,
     #[serde(default)]
     pub relationships: Vec<Relationship>,
+    /// What the story starts tracking (bars, counters, items), for
+    /// scenarios written as adventures. Unset: nothing is tracked unless
+    /// the player turns it on.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub tracking: Option<Tracking>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]
@@ -250,6 +305,11 @@ impl TemplateCatalog {
                             )));
                         }
                     }
+                    if let Some(t) = &s.tracking {
+                        t.validate().map_err(|e| {
+                            AppError::invalid_input(format!("scenario {}: {}", s.id, e.message))
+                        })?;
+                    }
                     cat.scenarios.push(s);
                 }
                 AnyTemplate::Character(c) => {
@@ -347,6 +407,7 @@ impl TemplateCatalog {
             first_chapter_title: scenario.first_chapter_title.clone(),
             chapter_outlines: scenario.chapter_outlines.clone(),
             story_type: input.story_type.clone(),
+            tracking: scenario.tracking.clone(),
             ..CreateStoryDraft::default()
         })
     }
@@ -387,7 +448,7 @@ mod tests {
         let cat = TemplateCatalog::bundled();
         assert_eq!(
             (cat.worlds.len(), cat.scenarios.len(), cat.characters.len()),
-            (16, 16, 15)
+            (33, 35, 27)
         );
         let draft = cat.resolve_quick_start(&starter()).unwrap();
         draft.base_state.validate().unwrap();
@@ -538,6 +599,57 @@ mod tests {
         let player = &state.characters[&state.player_character_id];
         assert_eq!(player.species.as_deref(), Some("Orc"));
         assert_eq!(player.stats.len(), 3);
+    }
+
+    /// A party raid starts with the player's and the party's bars and a
+    /// few supplies; a quiet story starts with nothing tracked.
+    #[test]
+    fn an_adventure_scenario_brings_its_bars_and_items() {
+        let cat = TemplateCatalog::bundled();
+        let raid = cat
+            .scenarios
+            .iter()
+            .find(|s| s.id == "starter:first-raid")
+            .unwrap();
+        let input = QuickStartInput {
+            world_id: "starter:greywatch".into(),
+            scenario_id: raid.id.clone(),
+            character_id: "starter:hedge-mage".into(),
+            ..starter()
+        };
+        let state = cat.resolve_quick_start(&input).unwrap().base_state;
+        let tr = state.tracking.expect("the raid is tracked");
+        let names: Vec<_> = tr
+            .meters
+            .iter()
+            .filter(|m| m.who.is_none())
+            .map(|m| m.name.as_str())
+            .collect();
+        assert_eq!(names, ["Health", "Mana", "Gold"]);
+        assert!(tr.inventory && tr.items.iter().any(|i| i.name == "Healing draught"));
+        let quiet = cat.resolve_quick_start(&starter()).unwrap().base_state;
+        assert!(quiet.tracking.is_none());
+    }
+
+    /// Party bars name someone in the scenario (or a ship or house that
+    /// is part of it), so the reader can group them under that name.
+    #[test]
+    fn party_bars_belong_to_someone_in_the_scenario() {
+        let cat = TemplateCatalog::bundled();
+        let not_people = ["Second Chance", "House Sorel", "House Varn"];
+        let mut tracked = 0;
+        for s in &cat.scenarios {
+            let Some(tr) = &s.tracking else { continue };
+            tracked += 1;
+            for who in tr.meters.iter().filter_map(|m| m.who.as_deref()) {
+                assert!(
+                    s.npcs.iter().any(|n| n.name == who) || not_people.contains(&who),
+                    "{}: {who} is not in the scenario",
+                    s.id
+                );
+            }
+        }
+        assert!(tracked >= 15, "most of the new scenarios are tracked");
     }
 
     #[test]

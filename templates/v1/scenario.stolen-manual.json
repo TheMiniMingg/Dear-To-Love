@@ -1,0 +1,125 @@
+{
+  "templateSchemaVersion": 1,
+  "type": "scenario",
+  "id": "starter:stolen-manual",
+  "label": "The Stolen Manual",
+  "summary": "Someone stole your sect's secret technique manual on the night of the tournament. Your master gives you seven days to bring it back.",
+  "worlds": ["starter:nine-rivers"],
+  "title": "The Stolen Manual",
+  "description": "On the night before the Nine Rivers tournament, the Willow Sect's Manual of the Falling Leaf was stolen from the sealed library. If it is used against the sect at the tournament, three hundred years of honor end. Your master gives you seven days and one instruction: bring it back without starting a war.",
+  "firstChapterTitle": "The Empty Shelf",
+  "chapterOutlines": [
+    {
+      "title": "The Empty Shelf",
+      "outline": "Investigate the theft in the Willow Sect's library."
+    },
+    {
+      "title": "The River Road",
+      "outline": "Follow the thief through teahouses, river towns and ambushes."
+    },
+    {
+      "title": "The Tournament",
+      "outline": "Fight in the tournament, where the stolen technique will be used."
+    },
+    {
+      "title": "The Truth of the Manual",
+      "outline": "Learn why it was stolen, and what it really contains."
+    }
+  ],
+  "scene": {
+    "location": "The Willow Sect's library on Mount Qingliu, at dawn, the morning after the theft",
+    "summary": "The seal on the door is unbroken. The shelf is empty. Your master is kneeling before it, very still."
+  },
+  "openThreads": ["Who could pass the seal?", "Which sect wants the Falling Leaf, and why?"],
+  "npcs": [
+    {
+      "id": "starter:npc-master-wu",
+      "name": "Master Wu Lan",
+      "control": "npc",
+      "pronouns": "she/her",
+      "role": "Head of the Willow Sect",
+      "description": "Your master, small, white-haired and the most dangerous person on the mountain. She speaks only when she has to.",
+      "personality": ["calm", "severe", "hides her affection"],
+      "goals": ["Keep the peace between the sects"],
+      "abilities": ["Falling Leaf technique", "Reads intentions in a glance"]
+    },
+    {
+      "id": "starter:npc-jian",
+      "name": "Bai Jian",
+      "control": "npc",
+      "pronouns": "he/him",
+      "role": "Senior disciple",
+      "description": "Your senior brother in the sect, perfect in every form, who has been strangely quiet since the theft.",
+      "personality": ["proud", "dutiful", "troubled"],
+      "goals": ["Become the next head of the sect"],
+      "abilities": ["Sword forms", "Lightness technique"]
+    },
+    {
+      "id": "starter:npc-mei",
+      "name": "Fei Mei",
+      "control": "npc",
+      "pronouns": "she/her",
+      "role": "Wandering swordswoman",
+      "description": "A wandering swordswoman with no sect, a fondness for wine and a habit of turning up wherever trouble is.",
+      "personality": ["playful", "mysterious", "unbeatable when sober"],
+      "goals": ["Settle an old grudge against the Iron Gate Sect"],
+      "abilities": ["Drunken sword style"]
+    }
+  ],
+  "relationships": [
+    {
+      "fromId": "starter:npc-master-wu",
+      "toId": "@player",
+      "label": "Master",
+      "status": "Trusts you with this"
+    },
+    {
+      "fromId": "starter:npc-jian",
+      "toId": "@player",
+      "label": "Senior brother",
+      "status": "Cold and distant"
+    },
+    {
+      "fromId": "starter:npc-mei",
+      "toId": "@player",
+      "label": "Stranger",
+      "status": "Amused by you"
+    }
+  ],
+  "tracking": {
+    "meters": [
+      {
+        "name": "Health",
+        "value": 100,
+        "max": 100
+      },
+      {
+        "name": "Qi",
+        "value": 60,
+        "max": 60
+      },
+      {
+        "name": "Silver",
+        "value": 20
+      }
+    ],
+    "inventory": true,
+    "items": [
+      {
+        "name": "Willow sword",
+        "qty": 1,
+        "description": "A plain, perfectly balanced sword given to every disciple of the sect."
+      },
+      {
+        "name": "Healing pills",
+        "qty": 3,
+        "description": "Bitter herbal pills that close wounds and restore qi."
+      },
+      {
+        "name": "Master Wu's token",
+        "qty": 1,
+        "description": "A jade token that tells any ally of the Willow Sect you speak for the master."
+      }
+    ]
+  }
+}

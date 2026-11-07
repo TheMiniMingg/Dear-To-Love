@@ -1,0 +1,25 @@
+{
+  "templateSchemaVersion": 1,
+  "type": "world",
+  "id": "starter:tumbledown-isles",
+  "label": "The Tumbledown Isles",
+  "summary": "A cluster of small, friendly islands linked by ferry turtles, where you have just inherited a run-down potion shop.",
+  "world": {
+    "era": "A long, gentle age of small magic",
+    "setting": "The Tumbledown Isles, five islands linked by ferry turtles and rope bridges",
+    "description": "On the Tumbledown Isles, magic is mostly small: charms against damp, potions for heartache, lanterns that glow when someone is thinking of you. Everybody knows everybody, the ferry turtles keep their own timetable, and the Harvest Lantern festival is the most important night of the year.",
+    "rules": [
+      "Nothing truly terrible happens here; problems are small, warm and funny",
+      "Neighbors notice everything and help anyway",
+      "Seasons change, crops grow and festivals come around",
+      "Magic is everyday and a little unreliable"
+    ]
+  },
+  "narration": {
+    "perspective": "second",
+    "detail": "detailed",
+    "tone": "Cozy, gentle and funny",
+    "pacing": "slow",
+    "genres": ["Slice of life", "Fantasy", "Comedy"]
+  }
+}

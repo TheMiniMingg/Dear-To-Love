@@ -1,0 +1,26 @@
+{
+  "templateSchemaVersion": 1,
+  "type": "world",
+  "id": "starter:ashen-throne",
+  "label": "The Ashen Throne",
+  "summary": "A kingdom at the edge of war, where the old king is dead, the heir is twelve and you are suddenly the regent.",
+  "world": {
+    "era": "The winter the old king died",
+    "setting": "Calderon, a cold northern kingdom, and its capital, the fortress city of Emberhold",
+    "description": "King Aldous died in the first snow, leaving a twelve-year-old heir, a council of ambitious lords, a dragon sleeping under the mountain and an army massing across the river. By his will, you rule as regent until the heir comes of age. Half the court thinks you will fail, and the other half is counting on it.",
+    "rules": [
+      "Politics are as dangerous as battles; every ally wants something",
+      "The dragon is real, old and not yet decided about anyone",
+      "Choices have consequences that come back seasons later",
+      "War is costly, and the common people pay first"
+    ]
+  },
+  "narration": {
+    "perspective": "second",
+    "detail": "balanced",
+    "tone": "Grand and grim, with warmth in loyal friendships",
+    "pacing": "normal",
+    "genres": ["Fantasy", "Drama", "Action"],
+    "dice": true
+  }
+}

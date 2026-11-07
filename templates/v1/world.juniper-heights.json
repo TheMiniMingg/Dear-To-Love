@@ -1,0 +1,26 @@
+{
+  "templateSchemaVersion": 1,
+  "type": "world",
+  "id": "starter:juniper-heights",
+  "label": "Juniper Heights, Day 41",
+  "summary": "A suburban high school turned fortress, forty-one days after the dead started walking. Food is running low.",
+  "world": {
+    "era": "Forty-one days after the outbreak",
+    "setting": "Juniper Heights High School, fortified with buses and fencing, in a dead suburb",
+    "description": "Nobody knows where the outbreak started. The turned are slow alone and terrible in crowds, and they follow noise. Sixty survivors have made Juniper Heights High a fortress: the gym is a dormitory, the science labs are the infirmary and the roof garden almost feeds everyone. Almost.",
+    "rules": [
+      "The turned follow noise; quiet is life",
+      "Every supply run is a real risk, and not everyone comes back",
+      "People are the bigger danger: other groups want what you have",
+      "Small kindnesses and gallows humor keep people going"
+    ]
+  },
+  "narration": {
+    "perspective": "second",
+    "detail": "balanced",
+    "tone": "Desperate and human, with gallows humor",
+    "pacing": "fast",
+    "genres": ["Post-apocalyptic", "Horror", "Action"],
+    "dice": true
+  }
+}
