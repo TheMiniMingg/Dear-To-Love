@@ -356,6 +356,17 @@ pub struct Character {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[ts(as = "Option<Vec<Stat>>", optional)]
     pub stats: Vec<Stat>,
+    /// The colour of their name in the reader, as `#rrggbb`. Unset picks
+    /// one from the name. Only for display: never sent to the model.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub color: Option<String>,
+}
+
+/// True for a colour written as `#rrggbb`.
+pub fn is_hex_color(s: &str) -> bool {
+    let b = s.as_bytes();
+    b.len() == 7 && b[0] == b'#' && b[1..].iter().all(u8::is_ascii_hexdigit)
 }
 
 /// A named number on a character that dice rolls can add.
@@ -443,6 +454,14 @@ impl StoryStateV1 {
             check_list("goals", &c.goals)?;
             check_list("abilities", &c.abilities)?;
             check_stats(c)?;
+            if let Some(color) = &c.color {
+                if !is_hex_color(color) {
+                    return bad(format!(
+                        "the name colour of {} must look like #a1b2c3",
+                        c.name
+                    ));
+                }
+            }
             for text in [
                 &c.gender,
                 &c.pronouns,
@@ -676,6 +695,7 @@ pub fn sample_lighthouse() -> StoryStateV1 {
             goals: vec!["Find out who keeps lighting the lamp".into()],
             abilities: vec![],
             stats: vec![],
+            color: None,
         },
     );
     characters.insert(
@@ -695,6 +715,7 @@ pub fn sample_lighthouse() -> StoryStateV1 {
             goals: vec![],
             abilities: vec![],
             stats: vec![],
+            color: None,
         },
     );
     StoryStateV1 {
@@ -780,6 +801,20 @@ mod tests {
         let mut s = lighthouse();
         s.relationships[0].to_id = "ghost".into();
         assert!(s.validate().is_err());
+    }
+
+    #[test]
+    fn name_colours_must_be_hex() {
+        let mut s = lighthouse();
+        for ok in ["#c2185b", "#00897B"] {
+            s.characters.get_mut("pc").unwrap().color = Some(ok.into());
+            s.validate().unwrap();
+        }
+        for bad in ["red", "#fff", "#12345g", "c2185b", "#c2185b00"] {
+            s.characters.get_mut("pc").unwrap().color = Some(bad.into());
+            assert!(s.validate().is_err(), "{bad}");
+        }
+        assert!(is_hex_color("#a1B2c3"));
     }
 
     #[test]

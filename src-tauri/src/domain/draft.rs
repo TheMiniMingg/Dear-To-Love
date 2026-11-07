@@ -216,6 +216,12 @@ fn clean_character(c: &Character, control: Control) -> Character {
             })
             .filter(|s| !s.name.is_empty())
             .collect(),
+        color: c
+            .color
+            .as_deref()
+            .map(str::trim)
+            .filter(|x| super::story_state::is_hex_color(x))
+            .map(str::to_ascii_lowercase),
     }
 }
 

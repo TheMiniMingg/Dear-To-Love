@@ -55,7 +55,7 @@ describe('Several stories at once', () => {
 
   it('goes back to the library from beside the story in one click', async () => {
     useUiStore.setState({ screen: { name: 'reader', routeId: 's1-main' } });
-    render(<ReaderRail />);
+    render(<ReaderRail storyId="s1" />);
     await userEvent.click(screen.getByRole('button', { name: 'Stories' }));
     expect(useUiStore.getState().screen).toEqual({ name: 'library' });
   });

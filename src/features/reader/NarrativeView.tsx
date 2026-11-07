@@ -1,11 +1,12 @@
-import { Fragment, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { Fragment, useContext, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { EventDto, MemoryNote, RollRequest } from '../../types';
 import { RollResult } from './DiceCards';
+import { NameColorsContext, nameStyle } from './nameColors';
 import { MemoryLine, notesOnly } from './notes';
 import { picturesOnly } from './pictures';
 import { RichText } from './RichText';
 import { t } from '../../i18n';
-import { chapterHeading } from '../../i18n/names';
+import { chapterHasTitle, chapterHeading } from '../../i18n/names';
 
 type Props = {
   events: EventDto[];
@@ -64,7 +65,15 @@ function EventBlock({
   currentNotes,
   onOpenNotes,
   onUndoNotes,
-}: { e: EventDto; focused: boolean; latest: boolean } & Omit<Props, 'events' | 'focus'>) {
+  opensChapter,
+}: {
+  e: EventDto;
+  focused: boolean;
+  latest: boolean;
+  /** The chapter's first reply, which opens with a drop cap. */
+  opensChapter: boolean;
+} & Omit<Props, 'events' | 'focus'>) {
+  const colorOf = useContext(NameColorsContext);
   const marked = !!bookmarked?.has(e.id);
   const bookmark = onBookmark && (
     <button
@@ -127,9 +136,27 @@ function EventBlock({
             </aside>
           )}
           <header className={cls('chapter-heading')} data-event-id={e.id} tabIndex={-1}>
-            <h2>{chapterHeading(e.payload.ordinal, e.payload.title)}</h2>
-            {branch}
-            {bookmark}
+            <h2 aria-label={chapterHeading(e.payload.ordinal, e.payload.title)}>
+              {chapterHasTitle(e.payload.ordinal, e.payload.title) ? (
+                <>
+                  <span className="chapter-number">
+                    {t('Chapter {n}', { n: e.payload.ordinal })}
+                  </span>
+                  <span className="chapter-title">{e.payload.title?.trim()}</span>
+                </>
+              ) : (
+                <span className="chapter-title">{chapterHeading(e.payload.ordinal, null)}</span>
+              )}
+            </h2>
+            <span className="chapter-ornament" aria-hidden="true">
+              <i />
+            </span>
+            {(branch || bookmark) && (
+              <div className="turn-actions">
+                {branch}
+                {bookmark}
+              </div>
+            )}
           </header>
         </>
       );
@@ -137,7 +164,9 @@ function EventBlock({
     case 'player':
       return (
         <div className={cls('turn-player')} data-event-id={e.id} tabIndex={-1}>
-          <span className="speaker">{playerName}</span>
+          <span className="speaker" style={nameStyle(colorOf(playerName))}>
+            {playerName}
+          </span>
           {e.payload.roll && <RollResult roll={e.payload.roll} fresh={latest} />}
           {e.payload.text.trim() && (
             <RichText text={e.payload.text} playerName={playerName} rolls={false} />
@@ -157,6 +186,7 @@ function EventBlock({
             text={e.payload.text}
             playerName={playerName}
             onRoll={latest ? onRoll : undefined}
+            dropCap={opensChapter}
           />
           {keepsNotes && (
             <MemoryLine
@@ -300,6 +330,17 @@ export function NarrativeView({
     el.focus({ preventScroll: true });
   }, [focus]);
 
+  // Which chapter start each event comes after, to find each chapter's first reply.
+  const chapterOf: number[] = [];
+  let lastChapter = -1;
+  events.forEach((e, i) => {
+    if (e.kind === 'chapter_start') lastChapter = i;
+    chapterOf.push(lastChapter);
+  });
+  const replied = new Set<number>();
+  // Only a chapter shown from its start opens with a drop cap.
+  replied.add(-1);
+
   const jump = () => {
     const el = scrollRef.current;
     if (!el) return;
@@ -322,6 +363,8 @@ export function NarrativeView({
           {!opening && notStarted && introBlock}
           {events.map((e, i) => {
             const focused = focus?.eventId === e.id;
+            const opensChapter = e.kind === 'assistant' && !replied.has(chapterOf[i] ?? -1);
+            if (opensChapter) replied.add(chapterOf[i] ?? -1);
             const block = (
               <EventBlock
                 // A new key replays the highlight when the same place is shown again.
@@ -340,6 +383,7 @@ export function NarrativeView({
                 onOpenNotes={onOpenNotes}
                 onUndoNotes={onUndoNotes}
                 latest={i >= events.length - 2 && i === lastOfKind(events, e.kind)}
+                opensChapter={opensChapter}
               />
             );
             return i === 0 && opening ? (

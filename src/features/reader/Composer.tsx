@@ -1,4 +1,5 @@
 import { useId, useRef, useState, type KeyboardEvent } from 'react';
+import { Dices, Phone, Send } from 'lucide-react';
 import { isComposing } from '../../app/keyboard';
 import type { DiceRules, RollRequest, Stat } from '../../types';
 import { isDice, rollFromComposer, wrapAction, type ComposeMode } from './messages';
@@ -199,6 +200,13 @@ export function Composer({
         </span>
       )}
       <button type="submit" className="primary" disabled={!ready}>
+        {mode === 'call' ? (
+          <Phone className="btn-icon" aria-hidden={true} />
+        ) : mode === 'roll' ? (
+          <Dices className="btn-icon" aria-hidden={true} />
+        ) : (
+          <Send className="btn-icon" aria-hidden={true} />
+        )}
         {mode === 'call' ? t('Call') : mode === 'roll' ? t('Roll') : t('Send')}
       </button>
     </form>
