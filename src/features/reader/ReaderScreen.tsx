@@ -209,6 +209,14 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
   const [view, setView] = useState<RouteView | null>(null);
   const [viewing, setViewing] = useState<SaveView | null>(null);
   const [panel, setPanel] = useState<Panel>(null);
+  // A window opened from the pause menu goes back to it when closed; one
+  // opened with a key or a button beside the story goes back to the story.
+  const lastPanel = useRef<Panel>(null);
+  const fromMenu = useRef(false);
+  useEffect(() => {
+    if (panel && panel !== 'menu') fromMenu.current = lastPanel.current === 'menu';
+    lastPanel.current = panel;
+  }, [panel]);
   /** The Story details tab to open on (the scene chip opens Scene). */
   const [detailsTab, setDetailsTab] = useState<DetailsTab>('characters');
   const [busy, setBusy] = useState(false);
@@ -766,7 +774,12 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
               >
                 {tKnown(view.storyteller.label)}
               </button>
-              <span className="chip save-chip" role="status" aria-live="polite">
+              <span
+                className="chip save-chip"
+                role="status"
+                aria-live="polite"
+                title={writing || busy ? undefined : saveStatus}
+              >
                 {writing ? t('Writing…') : busy ? t('Working…') : saveStatus}
               </span>
               <button
@@ -1048,7 +1061,8 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
                     panel === 'edit' ||
                     panel === 'end' ||
                     panel === 'storyteller' ||
-                    panel === 'inventory'
+                    panel === 'inventory' ||
+                    !fromMenu.current
                     ? null
                     : 'menu',
                 )

@@ -440,8 +440,13 @@
   justify-content: flex-end;
   gap: 0.5rem;
 }
-.save-chip {
+/* A save's or a model's name can be long: the two chips share one line beside the
+   scene, cut short (their tooltips have it all). */
+.reader-controls .chip {
   white-space: nowrap;
+  max-width: 9rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .scene-chip {
   justify-self: center;
