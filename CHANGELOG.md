@@ -61,6 +61,17 @@
 - **Change a picture's description.** **See or change what is sent** lets you rewrite a
   portrait's or an item picture's description before it is made; the safe-for-work sentence
   is always added.
+- **A friendlier start.** An empty library welcomes you with two big choices, **Preset
+  Story** and **Custom Story**. A chapter's start offers ways in above the action box (Look
+  around, Talk to someone there, Wait and listen), and opening a story puts you in the action
+  box. **Preset Story** has **Surprise me**, shows the genres as tags and keeps **Start
+  story** in view; in **Custom Story**, Previous, Next and Create story stay at the bottom of
+  a long step.
+- **Polish from a review pass.** Story covers are wider, so a whole card fits a small window;
+  the pause menu fits in two columns; **Story details** gives names, roles and places room;
+  **Settings** has links to each section at the top; **Save / Load** lists your saves apart
+  from the autosaves; a title stays with a name in ideas ("Lord Shen", not "Lord"); and
+  Escape closes a panel even after a button in it turned off while busy.
 - **Older chapters are kept in brief.** Beyond the 10 newest chapter recaps, the 40 before
   them are now sent in brief instead of being left out.
 - **Play several stories at once.** A Stories button beside the story goes back to the library
