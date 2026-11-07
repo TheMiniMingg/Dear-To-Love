@@ -72,6 +72,7 @@ export function tellingOf(n: Narration): Partial<Narration> {
     style: n.style,
     innerThoughts: n.innerThoughts,
     messageCards: n.messageCards,
+    sceneHeadings: n.sceneHeadings,
     language: n.language,
     dice: n.dice,
   };
@@ -164,6 +165,14 @@ export function StyleFields({
         checked={style === 'messages' || !!narration.messageCards}
         disabled={style === 'messages'}
         onChange={(on) => onChange({ messageCards: on || undefined })}
+      />
+      <Check
+        label={t('Show a heading when the place or time changes')}
+        hint={t(
+          'Such as "Countryside — 7:11 PM" above the part where the story moves on. Most AI models can do this.',
+        )}
+        checked={!!narration.sceneHeadings}
+        onChange={(on) => onChange({ sceneHeadings: on || undefined })}
       />
       <Check
         label={t('Roll dice for uncertain moments')}

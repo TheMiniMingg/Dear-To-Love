@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- **Texts and calls that sound like people.** The storyteller is now asked to write texts the
+  way each character really texts (short, casual, often several in a row, with emoji or
+  slang only when it suits them), to make calls sound like real speech, and to let characters
+  text or call you first when they have a reason. A character's portrait, when they have one,
+  is their picture on text, call and post cards.
+- **Place and time headings.** When the story moves to a new place or time, a heading such as
+  "Countryside — 7:11 PM" appears above it. New stories have it on; **Style** turns it off.
 - **Setup guide.** A new **Setup guide** (in the library, Settings and the footer) explains,
   step by step, how to play right away, which kind of AI service to choose, and how to
   connect each one: the AI labs, hosted open models, programs on your computer (Ollama, LM

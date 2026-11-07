@@ -204,8 +204,24 @@ pub fn system_prompt(state: &EffectiveState, frame: &StoryFrame) -> String {
              - A letter or note: <letter from=\"Name\">the text</letter>.\n\
              - A social media post: <post from=\"Name\">the text</post>.\n\
              {player_name} may text and call the same way (<text to=\"Name\">); answer in \
-             kind when it fits.\n"
+             kind when it fits.\n\
+             - Write texts the way that person really texts: short and casual, in their own \
+             voice, often several messages in a row rather than one long one. Use emoji, \
+             slang, abbreviations, lowercase or typos only when they suit that person. When \
+             time passes between messages, let the times move on.\n\
+             - Calls sound like real speech: short lines, pauses, interruptions, people \
+             talking over each other, background noise when it fits.\n\
+             - Characters may text or call {player_name} first when they have their own \
+             reason to.\n"
         ));
+    }
+    if s.narration.scene_headings {
+        out.push_str(
+            "\nSCENE HEADINGS\nWhen the story moves to a new place or a new time, start that part \
+             with a heading the app shows above it: <scene place=\"Countryside\" time=\"7:11 PM\"/>. \
+             Leave out whichever of the two stays the same, and use the story's own places. \
+             No heading while the scene goes on.\n",
+        );
     }
     if s.narration.dice {
         out.push_str(&format!(

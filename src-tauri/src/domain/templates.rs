@@ -309,8 +309,10 @@ impl TemplateCatalog {
             })?;
 
         let mut narration = world.narration.clone();
-        // New stories show texts, calls and letters as cards.
+        // New stories show texts, calls and letters as cards, with a heading
+        // where the place or time changes.
         narration.message_cards = true;
+        narration.scene_headings = true;
         if input.story_type.as_deref().is_some_and(rolls_dice) {
             narration.dice = true;
         }
@@ -407,6 +409,10 @@ mod tests {
             .base_state
             .narration;
         assert!(plain.message_cards);
+        assert!(
+            plain.scene_headings,
+            "new stories head new places and times"
+        );
         assert_eq!(plain.genres, ["Mystery", "Romance", "Slice of life"]);
         input.story_type = Some("Romance".into());
         let n = cat

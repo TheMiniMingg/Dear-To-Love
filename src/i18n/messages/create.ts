@@ -849,4 +849,17 @@ export const create: Messages = {
   ],
   'What is sent': ['发送的内容', '傳送的內容', '送信内容', '보내는 내용'],
   'Make it anyway': ['仍然生成', '仍然產生', 'それでも作る', '그래도 만들기'],
+  'Show a heading when the place or time changes': [
+    '地点或时间变化时显示标题',
+    '地點或時間變化時顯示標題',
+    '場所や時間が変わったら見出しを表示',
+    '장소나 시간이 바뀌면 제목 표시',
+  ],
+  'Such as "Countryside — 7:11 PM" above the part where the story moves on. Most AI models can do this.':
+    [
+      '例如在故事推进的地方上方显示“乡间 — 晚上 7:11”。大多数 AI 模型都能做到。',
+      '例如在故事推進的地方上方顯示「鄉間 — 晚上 7:11」。大多數 AI 模型都能做到。',
+      '話が進む場面の上に「田舎 — 午後7:11」のような見出しを表示します。ほとんどの AI モデルが対応しています。',
+      '이야기가 넘어가는 부분 위에 "시골 — 오후 7:11" 같은 제목을 표시합니다. 대부분의 AI 모델이 할 수 있습니다.',
+    ],
 };

@@ -57,7 +57,7 @@ mod tests {
 
 /// Tags the storyteller uses for texts, calls, thoughts, letters, posts
 /// and dice rolls.
-const MESSAGE_TAGS: [&str; 6] = ["text", "call", "thought", "letter", "post", "roll"];
+const MESSAGE_TAGS: [&str; 7] = ["text", "call", "thought", "letter", "post", "roll", "scene"];
 
 /// `key="value"` pairs from inside a tag.
 fn tag_attrs(head: &str) -> Vec<(String, String)> {
@@ -154,6 +154,7 @@ pub fn plain_message_tags(text: &str) -> String {
                 }
                 label
             }
+            "scene" => get("place").unwrap_or("Scene").to_string(),
             _ => match get("from") {
                 Some(from) => format!("Post by {from}"),
                 None => "Post".to_string(),
@@ -246,6 +247,13 @@ mod message_tag_tests {
             "Your phone buzzes.\n[Text from Erika K., 7:11 PM] Z...?\nIs that really you?\n\
              [Call with Erika K.: ringing] Ring.\n(Mara thinks: Careful.) [Text to Erika] hi \
              [Letter] Dear you [Post by Kit] Sunset!"
+        );
+        assert_eq!(
+            plain_message_tags(
+                "<scene place=\"Countryside\" time=\"7:11 PM\"/>\nYour phone vibrates. \
+                 <scene time=\"Midnight\"/>"
+            ),
+            "[Countryside, 7:11 PM]\nYour phone vibrates. [Scene, Midnight]"
         );
         assert_eq!(
             plain_message_tags("a < b <i>x</i> <textual>"),

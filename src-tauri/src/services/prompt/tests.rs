@@ -280,6 +280,22 @@ fn narration_style_thoughts_messages_and_language_reach_the_storyteller() {
     assert!(p.contains("<text from=\"Name\" time=\"7:11 PM\">the message</text>"));
     assert!(p.contains("<call with=\"Name\" status=\"ringing\"/>"));
     assert!(p.contains("Sam Ashby may text and call the same way (<text to=\"Name\">)"));
+    assert!(p.contains("- Write texts the way that person really texts: short and casual"));
+    assert!(p.contains("- Calls sound like real speech"));
+    assert!(p.contains("- Characters may text or call Sam Ashby first"));
+    assert!(
+        s.state.narration.scene_headings,
+        "new stories have headings"
+    );
+    s.state.narration.scene_headings = false;
+    let p = system_prompt(&s, &frame());
+    assert!(!p.contains("SCENE HEADINGS"), "only when asked");
+    s.state.narration.scene_headings = true;
+    let p = system_prompt(&s, &frame());
+    assert!(p.contains(
+        "\nSCENE HEADINGS\nWhen the story moves to a new place or a new time, start that part \
+         with a heading the app shows above it: <scene place=\"Countryside\" time=\"7:11 PM\"/>."
+    ));
 
     s.state.narration.style = Some(NarrationStyle::Thoughts);
     let p = system_prompt(&s, &frame());

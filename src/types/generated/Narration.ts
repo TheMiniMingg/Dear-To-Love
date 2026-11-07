@@ -36,4 +36,9 @@ language?: string,
  * Uncertain moments are decided by dice: the storyteller asks for a
  * roll and sets the odds, the app rolls.
  */
-dice?: boolean, };
+dice?: boolean, 
+/**
+ * A heading with the place and time where the scene moves, written as
+ * `<scene place="…" time="…"/>`.
+ */
+sceneHeadings?: boolean, };

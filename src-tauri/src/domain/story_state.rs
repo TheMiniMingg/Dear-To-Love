@@ -149,6 +149,11 @@ pub struct Narration {
     #[serde(default, skip_serializing_if = "is_false")]
     #[ts(as = "Option<bool>", optional)]
     pub dice: bool,
+    /// A heading with the place and time where the scene moves, written as
+    /// `<scene place="…" time="…"/>`.
+    #[serde(default, skip_serializing_if = "is_false")]
+    #[ts(as = "Option<bool>", optional)]
+    pub scene_headings: bool,
 }
 
 fn is_false(b: &bool) -> bool {
@@ -171,6 +176,7 @@ impl Default for Narration {
             message_cards: false,
             language: None,
             dice: false,
+            scene_headings: false,
         }
     }
 }

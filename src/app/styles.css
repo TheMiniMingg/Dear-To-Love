@@ -1724,6 +1724,16 @@ details summary {
   font-weight: 600;
   flex: none;
 }
+img.msg-avatar {
+  object-fit: cover;
+}
+/* "Countryside — 7:11 PM": where and when the story moves on. */
+.msg-scene {
+  margin: 1.6em 0 0.8em;
+  font-style: italic;
+  font-weight: 600;
+  color: var(--muted);
+}
 .msg-bubble-row {
   display: flex;
   flex-direction: column;
