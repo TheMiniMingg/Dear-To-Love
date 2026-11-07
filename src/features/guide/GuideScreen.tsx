@@ -137,10 +137,10 @@ export function GuideScreen() {
       </p>
       <nav className="guide-toc" aria-label={t('On this page')}>
         <ol>
-          {SECTIONS.map((s) => (
+          {SECTIONS.map((s, i) => (
             <li key={s.id}>
               <button type="button" className="link-button" onClick={() => jump(s.id)}>
-                {t(s.title)}
+                {i + 1}. {t(s.title)}
               </button>
             </li>
           ))}

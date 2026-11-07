@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useLayoutEffect, useRef } from 'react';
 import { commands } from '../api/commands';
 import { DiagnosticsScreen } from '../features/diagnostics/DiagnosticsScreen';
 import { BackupsScreen } from '../features/backups/BackupsScreen';
@@ -23,6 +23,13 @@ export function App() {
   // the app from here (screens keep their place in the store).
   const language = useLanguage((s) => s.locale);
   const backdrop = useBackdrop((s) => s.assetId !== null);
+  // Each screen opens at the top, or where you left it when you come back
+  // (the screens share one scrolling area).
+  const main = useRef<HTMLElement>(null);
+  const scrolled = useRef(new Map<string, number>());
+  useLayoutEffect(() => {
+    if (main.current) main.current.scrollTop = scrolled.current.get(screen.name) ?? 0;
+  }, [screen.name]);
   // Tells the app the interface loaded (used by the installer smoke test).
   useEffect(() => {
     void commands.frontendReady().catch(() => undefined);
@@ -30,7 +37,11 @@ export function App() {
   return (
     <div className={`app-shell${backdrop ? ' has-backdrop' : ''}`} key={language}>
       <Backdrop />
-      <main className="app-main">
+      <main
+        ref={main}
+        className="app-main"
+        onScroll={(e) => scrolled.current.set(screen.name, e.currentTarget.scrollTop)}
+      >
         {screen.name === 'library' && <LibraryScreen />}
         {screen.name === 'quickstart' && <QuickStartScreen />}
         {screen.name === 'create' && <CreateWizardScreen />}

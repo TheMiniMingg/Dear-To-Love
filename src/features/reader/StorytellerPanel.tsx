@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { commands, errorMessage } from '../../api/commands';
+import { useUiStore } from '../../app/store';
 import type { ProviderProfile, StorytellerInfo } from '../../types';
 import { StorytellerPicker } from '../settings/StorytellerPicker';
 import { t, tKnown, tr } from '../../i18n';
@@ -86,6 +87,9 @@ export function StorytellerPanel({
         )}
         <button type="button" onClick={onOpenSettings}>
           {t('Add or change connections in Settings')}
+        </button>
+        <button type="button" onClick={() => useUiStore.getState().navigate({ name: 'guide' })}>
+          {t('Setup guide')}
         </button>
       </div>
     </div>
