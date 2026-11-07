@@ -10,11 +10,12 @@ use crate::db::providers;
 use crate::db::runs::{self, RunDto};
 use crate::db::state::StateView;
 use crate::db::timeline::{
-    append_event, get_route, list_routes, route_chapters, route_history, AppendEvent, Appended,
-    ChapterDto, EventDto, RouteDto,
+    append_event, get_event, get_route, is_ancestor, list_routes, route_chapters, route_history,
+    AppendEvent, Appended, ChapterDto, EventDto, RouteDto,
 };
 use crate::db::Database;
 use crate::domain::events::{EditPayload, EventBody, StateEdit};
+use crate::domain::notes::{self, MemoryNote, NoteKind, NoteTag};
 use crate::domain::provider::{Billing, StorytellerChoice};
 use crate::domain::visuals::VisualSlot;
 use crate::errors::{AppError, AppResult};
@@ -195,6 +196,107 @@ pub async fn edit_details(
             body: EventBody::Edit(EditPayload { changes, note }),
             generation_run_id: None,
         },
+    )
+    .await
+}
+
+/// Undo the memory notes one of the storyteller's replies wrote: each note
+/// it added is removed, and each one it changed or removed goes back to how
+/// it was, from now on. A note changed again since then is left as it is.
+/// `note` is shown in the story (the reader's own words); without one it
+/// names the notes.
+pub async fn undo_reply_notes(
+    db: &Database,
+    story_id: &str,
+    route_id: &str,
+    expected_head_id: &str,
+    assistant_event_id: &str,
+    note: Option<String>,
+) -> AppResult<Appended> {
+    let event = {
+        let mut conn = db.reader().acquire().await?;
+        let event = get_event(&mut conn, assistant_event_id).await?;
+        if event.story_id != story_id
+            || !is_ancestor(&mut conn, story_id, assistant_event_id, expected_head_id).await?
+        {
+            return Err(AppError::invalid_input("that reply is not on this route"));
+        }
+        event
+    };
+    let EventBody::Assistant(reply) = EventBody::from_parts(&event.kind, &event.payload_json)?
+    else {
+        return Err(AppError::invalid_input(
+            "only a storyteller's reply writes notes",
+        ));
+    };
+    let parent = event
+        .parent_event_id
+        .as_deref()
+        .ok_or_else(|| AppError::internal("a reply always follows an action"))?;
+    let state = |id: String| async move {
+        Ok::<_, AppError>(
+            crate::db::state::state_at(db, story_id, &id)
+                .await?
+                .effective
+                .state,
+        )
+    };
+    let before = state(parent.to_string()).await?;
+    let after = state(assistant_event_id.to_string()).await?;
+    let now = state(expected_head_id.to_string()).await?;
+    let find = |list: &[MemoryNote], kind: NoteKind, name: &str| -> Option<MemoryNote> {
+        list.iter().find(|n| n.is(kind, name)).cloned()
+    };
+
+    let mut keys: Vec<(NoteKind, String)> = Vec::new();
+    for tag in notes::scan(&reply.text) {
+        let (NoteTag::Remember { kind, name, .. } | NoteTag::Forget { kind, name }) = tag;
+        if !keys
+            .iter()
+            .any(|(k, n)| *k == kind && notes::note_key(n) == notes::note_key(&name))
+        {
+            keys.push((kind, name));
+        }
+    }
+    let mut changes = Vec::new();
+    let mut names = Vec::new();
+    for (kind, name) in &keys {
+        let (was, wrote, is) = (
+            find(&before.notes, *kind, name),
+            find(&after.notes, *kind, name),
+            find(&now.notes, *kind, name),
+        );
+        // Notes are the same when their words are (who wrote them last
+        // doesn't matter).
+        let words = |n: &Option<MemoryNote>| n.as_ref().map(|n| n.text.clone());
+        if words(&was) == words(&wrote) || words(&is) != words(&wrote) {
+            // The reply changed nothing here, or the note changed since.
+            continue;
+        }
+        changes.push(match was {
+            Some(note) => StateEdit::UpsertNote { note },
+            None => StateEdit::RemoveNote {
+                kind: *kind,
+                name: name.clone(),
+            },
+        });
+        names.push(name.clone());
+    }
+    if changes.is_empty() {
+        return Err(AppError::invalid_input(if keys.is_empty() {
+            "this reply wrote no memory notes"
+        } else {
+            "these memory notes have changed since this reply; change them in Story memory"
+        }));
+    }
+    edit_details(
+        db,
+        story_id,
+        route_id,
+        expected_head_id,
+        changes,
+        note.filter(|n| !n.trim().is_empty())
+            .or_else(|| Some(names.join(", "))),
     )
     .await
 }

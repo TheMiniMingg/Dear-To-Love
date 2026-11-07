@@ -287,11 +287,15 @@ export function RichText({
       case 'meter':
       case 'item':
       case 'text':
+      case 'remember':
+      case 'forget':
         return null;
     }
   };
 
   blocks.forEach((b, i) => {
+    // Memory notes show under the reply ("Memory updated"), not in it.
+    if (b.kind === 'remember' || b.kind === 'forget') return;
     if (b.kind === 'meter' || b.kind === 'item') {
       const chip = <TrackerChip key={i} kind={b.kind} attrs={b.attrs} body={b.body} />;
       if (b.attrs.name || b.attrs.gain || b.attrs.lose) changes.push(chip);

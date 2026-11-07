@@ -2,16 +2,18 @@
 //!
 //! Only explicit events change structured state: `edit` (StateEdit ops) and
 //! `fact_confirm`. Chapter starts move the active chapter. Player and
-//! assistant prose never silently changes structured fields; the one
-//! exception is a story that keeps bars and items (`tracking`), where the
-//! `<meter>` and `<item>` tags in the storyteller's replies, shown in the
-//! reader where they happen, change them.
+//! assistant prose never silently changes structured fields; the
+//! exceptions are tags in the storyteller's replies, which the reader shows
+//! where they happen: `<meter>` and `<item>` in a story that keeps bars and
+//! items (`tracking`), and the `<remember>` and `<forget>` memory notes
+//! unless the player keeps the notes themselves (`manual_memory`).
 
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use ts_rs::TS;
 
 use super::events::{EventBody, StateEdit};
+use super::notes::{self, MAX_NOTES};
 use super::story_state::{KnownFact, StoryStateV1};
 use crate::errors::{AppError, AppResult};
 
@@ -69,11 +71,16 @@ impl EffectiveState {
                         .unwrap_or_default();
                     tracking.apply_reply(&p.text, player);
                 }
+                if !self.state.narration.manual_memory {
+                    let chapter = self.active_chapter.as_ref().map(|c| c.ordinal);
+                    notes::apply_reply(&mut self.state.notes, &p.text, chapter, event_id);
+                }
             }
             EventBody::Player(_) | EventBody::Checkpoint(_) => {}
             EventBody::Edit(p) => {
+                let chapter = self.active_chapter.as_ref().map(|c| c.ordinal);
                 for change in &p.changes {
-                    apply_edit(&mut self.state, change, event_id)?;
+                    apply_edit(&mut self.state, change, event_id, chapter)?;
                 }
                 self.state.validate()?;
             }
@@ -97,7 +104,12 @@ fn upsert_fact(state: &mut StoryStateV1, fact: KnownFact) {
     }
 }
 
-fn apply_edit(state: &mut StoryStateV1, edit: &StateEdit, event_id: &str) -> AppResult<()> {
+fn apply_edit(
+    state: &mut StoryStateV1,
+    edit: &StateEdit,
+    event_id: &str,
+    chapter: Option<u32>,
+) -> AppResult<()> {
     match edit {
         StateEdit::SetWorld { world } => state.world = world.clone(),
         StateEdit::SetNarration { narration } => state.narration = narration.clone(),
@@ -149,6 +161,23 @@ fn apply_edit(state: &mut StoryStateV1, edit: &StateEdit, event_id: &str) -> App
         StateEdit::SetScene { scene } => state.scene = scene.clone(),
         StateEdit::SetOpenThreads { open_threads } => state.open_threads = open_threads.clone(),
         StateEdit::SetTracking { tracking } => state.tracking = tracking.clone(),
+        StateEdit::UpsertNote { note } => {
+            let exists = state.notes.iter().any(|n| n.is(note.kind, &note.name));
+            if !exists && state.notes.len() >= MAX_NOTES {
+                return Err(AppError::invalid_input(format!(
+                    "this story already keeps {MAX_NOTES} memory notes; remove some first"
+                )));
+            }
+            let mut note = note.clone();
+            note.name = note.name.split_whitespace().collect::<Vec<_>>().join(" ");
+            note.text = note.text.trim().to_string();
+            note.chapter = note.chapter.or(chapter);
+            note.source_event_id = Some(event_id.to_string());
+            notes::upsert(&mut state.notes, note);
+        }
+        StateEdit::RemoveNote { kind, name } => {
+            notes::remove(&mut state.notes, *kind, name);
+        }
         StateEdit::SetVisualRef { slot, asset_id } => match asset_id {
             Some(a) => {
                 state.visual_refs.insert(slot.clone(), a.clone());
@@ -349,5 +378,78 @@ mod tests {
         let f = &s.state.known_facts[0];
         assert!(f.confirmed);
         assert_eq!(f.source_event_id.as_deref(), Some("f1"));
+    }
+
+    #[test]
+    fn replies_write_memory_notes_with_their_chapter() {
+        use crate::domain::events::AssistantPayload;
+        use crate::domain::notes::{MemoryNote, NoteKind};
+        let reply = |text: &str| {
+            EventBody::Assistant(AssistantPayload {
+                text: text.into(),
+                finish_reason: None,
+                provider_label: None,
+                model_id: None,
+            })
+        };
+        let mut s = EffectiveState::new(lighthouse());
+        s.apply(
+            "c4",
+            &EventBody::ChapterStart(ChapterStartPayload {
+                chapter_instance_id: "ci4".into(),
+                title: "Four".into(),
+                ordinal: 4,
+                source_outline_id: None,
+                previous_chapter_recap: None,
+            }),
+        )
+        .unwrap();
+        s.apply(
+            "a1",
+            &reply("<remember event=\"Ring given\">Z gave Erika a ring.</remember>"),
+        )
+        .unwrap();
+        let n = &s.state.notes[0];
+        assert_eq!((n.kind, n.chapter), (NoteKind::Event, Some(4)));
+        assert_eq!(n.source_event_id.as_deref(), Some("a1"));
+
+        // The player's own note keeps the chapter it is written in.
+        s.apply(
+            "e1",
+            &edit(vec![StateEdit::UpsertNote {
+                note: MemoryNote {
+                    kind: NoteKind::Place,
+                    name: "  Z's   house ".into(),
+                    text: " Two floors. ".into(),
+                    chapter: None,
+                    source_event_id: Some("elsewhere".into()),
+                },
+            }]),
+        )
+        .unwrap();
+        let n = &s.state.notes[1];
+        assert_eq!(
+            (n.name.as_str(), n.text.as_str(), n.chapter),
+            ("Z's house", "Two floors.", Some(4))
+        );
+        assert_eq!(n.source_event_id.as_deref(), Some("e1"));
+
+        // With notes kept by hand, replies don't write them.
+        let mut narration = s.state.narration.clone();
+        narration.manual_memory = true;
+        s.apply("e2", &edit(vec![StateEdit::SetNarration { narration }]))
+            .unwrap();
+        s.apply("a2", &reply("<forget event=\"Ring given\"/>"))
+            .unwrap();
+        assert_eq!(s.state.notes.len(), 2);
+        s.apply(
+            "e3",
+            &edit(vec![StateEdit::RemoveNote {
+                kind: NoteKind::Event,
+                name: "ring GIVEN".into(),
+            }]),
+        )
+        .unwrap();
+        assert_eq!(s.state.notes.len(), 1);
     }
 }

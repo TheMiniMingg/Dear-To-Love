@@ -117,6 +117,7 @@ async fn a_short_story_has_only_its_turns() {
     assert_eq!(m.summary, None);
     assert!(m.recaps.is_empty());
     assert_eq!(m.recaps_read, 10);
+    assert_eq!(m.recaps_briefed, 40);
     assert_eq!(m.first_summary_after, 16);
 }
 

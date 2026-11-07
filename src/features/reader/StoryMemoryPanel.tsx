@@ -4,6 +4,7 @@ import { commands, errorMessage } from '../../api/commands';
 import type { RouteView, StoryMemory, SummaryWriter } from '../../types';
 import { joinList, joinSentences, t, tKnown, tn, tr } from '../../i18n';
 import { chapterHeading } from '../../i18n/names';
+import { Notebook } from './Notebook';
 
 /** Who wrote a summary: "Cloud model (story-model)", or the offline storyteller. */
 function writerName(w: SummaryWriter | undefined): string {
@@ -13,19 +14,23 @@ function writerName(w: SummaryWriter | undefined): string {
 
 /**
  * Reader -> Story memory: what the storyteller reads besides the newest
- * turns, and a reminder that all of it is kept in the story, so a new
- * storyteller picks up where the last one left off.
+ * turns (the notebook of memory notes, the summary, chapter recaps and
+ * story details), and a reminder that all of it is kept in the story, so a
+ * new storyteller picks up where the last one left off.
  */
 export function StoryMemoryPanel({
   view,
   playerName,
   detailsDisabled,
+  onChanged,
   onOpenDetails,
   onOpenStoryteller,
 }: {
   view: RouteView;
   playerName: string;
+  /** True while a reply is being written: details and notes wait. */
   detailsDisabled: boolean;
+  onChanged: (v: RouteView) => void;
   onOpenDetails: () => void;
   onOpenStoryteller: () => void;
 }) {
@@ -75,6 +80,8 @@ export function StoryMemoryPanel({
           {t('Change storyteller')}
         </button>
       </div>
+
+      <Notebook view={view} disabled={detailsDisabled} onChanged={onChanged} />
 
       <section aria-labelledby="memory-summary">
         <h3 id="memory-summary">{t('The story so far')}</h3>
@@ -141,9 +148,17 @@ export function StoryMemoryPanel({
             </ol>
             {memory.recaps.length > memory.recapsRead && (
               <p className="muted small">
-                {t('The storyteller reads the newest {n}; the summary covers the rest.', {
-                  n: memory.recapsRead,
-                })}
+                {memory.recaps.length > memory.recapsRead + memory.recapsBriefed
+                  ? t(
+                      'The storyteller reads the newest {n} in full and the {m} before them in brief; the summary and the notebook cover the rest.',
+                      { n: memory.recapsRead, m: memory.recapsBriefed },
+                    )
+                  : t(
+                      'The storyteller reads the newest {n} in full and the earlier ones in brief.',
+                      {
+                        n: memory.recapsRead,
+                      },
+                    )}
               </p>
             )}
           </>

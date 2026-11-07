@@ -1,6 +1,7 @@
 import { Fragment, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import type { EventDto, RollRequest } from '../../types';
+import type { EventDto, MemoryNote, RollRequest } from '../../types';
 import { RollResult } from './DiceCards';
+import { MemoryLine, notesOnly } from './notes';
 import { picturesOnly } from './pictures';
 import { RichText } from './RichText';
 import { t } from '../../i18n';
@@ -26,6 +27,14 @@ type Props = {
   intro?: StoryIntro;
   /** Offer a Roll button when the latest reply asks for a roll. */
   onRoll?: (request: RollRequest) => void;
+  /** Replies write memory notes: show a "Memory updated" line under them. */
+  keepsNotes?: boolean;
+  /** The story's notes as they are now, to tell whether a reply's notes can be undone. */
+  currentNotes?: MemoryNote[];
+  /** Offer "See notes" on that line. */
+  onOpenNotes?: () => void;
+  /** Offer "Undo" on that line. */
+  onUndoNotes?: (eventId: string) => void;
 };
 
 export type StoryIntro = { premise: string; location: string; scene: string };
@@ -51,6 +60,10 @@ function EventBlock({
   playerName,
   onRoll,
   latest,
+  keepsNotes,
+  currentNotes,
+  onOpenNotes,
+  onUndoNotes,
 }: { e: EventDto; focused: boolean; latest: boolean } & Omit<Props, 'events' | 'focus'>) {
   const marked = !!bookmarked?.has(e.id);
   const bookmark = onBookmark && (
@@ -145,6 +158,14 @@ function EventBlock({
             playerName={playerName}
             onRoll={latest ? onRoll : undefined}
           />
+          {keepsNotes && (
+            <MemoryLine
+              text={e.payload.text}
+              current={currentNotes}
+              onOpen={onOpenNotes}
+              onUndo={onUndoNotes && (() => onUndoNotes(e.id))}
+            />
+          )}
           {(branch || regenerate || bookmark) && (
             <div className="turn-actions">
               {regenerate}
@@ -155,6 +176,15 @@ function EventBlock({
         </div>
       );
     case 'edit':
+      if (notesOnly(e.payload.changes)) {
+        return (
+          <p className={cls('turn-note')} data-event-id={e.id} tabIndex={-1}>
+            {e.payload.note
+              ? t('Memory changed: {note}.', { note: e.payload.note })
+              : t('Memory changed.')}
+          </p>
+        );
+      }
       return (
         <p className={cls('turn-note')} data-event-id={e.id} tabIndex={-1}>
           {e.payload.note
@@ -201,6 +231,10 @@ export function NarrativeView({
   playerName,
   intro,
   onRoll,
+  keepsNotes,
+  currentNotes,
+  onOpenNotes,
+  onUndoNotes,
 }: Props) {
   const opening = events[0]?.kind === 'chapter_start' && events[0].payload.ordinal === 1;
   const notStarted = !draft && !events.some((e) => e.kind === 'player');
@@ -301,6 +335,10 @@ export function NarrativeView({
                 focused={focused}
                 playerName={playerName}
                 onRoll={onRoll}
+                keepsNotes={keepsNotes}
+                currentNotes={currentNotes}
+                onOpenNotes={onOpenNotes}
+                onUndoNotes={onUndoNotes}
                 latest={i >= events.length - 2 && i === lastOfKind(events, e.kind)}
               />
             );

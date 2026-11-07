@@ -194,6 +194,9 @@ export const commands = {
   editStoryDetails: (
     r: RouteRef & { expectedHeadId: string; changes: StateEdit[]; note: string | null },
   ) => call<RouteView>('edit_story_details', r),
+  undoReplyNotes: (
+    r: RouteRef & { expectedHeadId: string; assistantEventId: string; note: string | null },
+  ) => call<RouteView>('undo_reply_notes', r),
   listImages: () => call<AssetDto[]>('list_images'),
   /** With no `scope` the images are shared with every story. */
   importImages: (paths: string[], scope?: ImageScope) =>

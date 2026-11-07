@@ -182,6 +182,7 @@ pub fn run() {
             commands::reader::end_chapter,
             commands::reader::regenerate_reply,
             commands::reader::edit_story_details,
+            commands::reader::undo_reply_notes,
             commands::reader::fork_route,
             commands::reader::restart_chapter,
             commands::reader::get_route_map,

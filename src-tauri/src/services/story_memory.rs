@@ -16,7 +16,7 @@ use crate::db::Database;
 use crate::domain::events::EventKind;
 use crate::errors::{AppError, AppResult};
 use crate::services::memory::{KEEP_RECENT_TURNS, OFFLINE_GENERATOR, SUMMARY_CHUNK_TURNS};
-use crate::services::prompt::{chapter_recaps, MAX_RECAPS_IN_PROMPT};
+use crate::services::prompt::{chapter_recaps, MAX_BRIEF_RECAPS, MAX_RECAPS_IN_PROMPT};
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, TS)]
 #[serde(rename_all = "camelCase")]
@@ -31,8 +31,10 @@ pub struct StoryMemory {
     pub summary: Option<MemorySummary>,
     /// Recaps of the chapters ended on this route, oldest first.
     pub recaps: Vec<MemoryRecap>,
-    /// How many of the newest recaps each reply reads.
+    /// How many of the newest recaps each reply reads in full.
     pub recaps_read: u32,
+    /// How many recaps before those each reply reads in brief.
+    pub recaps_briefed: u32,
     /// Replies a route needs before its first summary is written.
     pub first_summary_after: u32,
 }
@@ -133,6 +135,7 @@ pub async fn story_memory(db: &Database, route_id: &str) -> AppResult<StoryMemor
         summary,
         recaps,
         recaps_read: u32::try_from(MAX_RECAPS_IN_PROMPT).unwrap_or(u32::MAX),
+        recaps_briefed: u32::try_from(MAX_BRIEF_RECAPS).unwrap_or(u32::MAX),
         first_summary_after: KEEP_RECENT_TURNS + SUMMARY_CHUNK_TURNS,
     })
 }

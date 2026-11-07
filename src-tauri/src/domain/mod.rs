@@ -3,6 +3,7 @@ pub mod diagnostics;
 pub mod dice;
 pub mod draft;
 pub mod events;
+pub mod notes;
 pub mod provider;
 pub mod replay;
 pub mod story;

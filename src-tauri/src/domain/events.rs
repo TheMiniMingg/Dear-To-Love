@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 
 use super::dice::DiceRoll;
+use super::notes::{MemoryNote, NoteKind};
 use super::story_state::{Character, KnownFact, Narration, Relationship, Scene, World};
 use super::text::plain_message_tags;
 use super::tracking::Tracking;
@@ -181,6 +182,14 @@ pub enum StateEdit {
     SetTracking {
         #[ts(optional)]
         tracking: Option<Tracking>,
+    },
+    /// Write a memory note, replacing the one of the same kind and name.
+    UpsertNote {
+        note: MemoryNote,
+    },
+    RemoveNote {
+        kind: NoteKind,
+        name: String,
     },
 }
 

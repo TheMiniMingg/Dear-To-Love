@@ -714,6 +714,9 @@ fn remap_state(
     for r in &mut state.relationships {
         remap_event_ref(&mut r.source_event_id, events);
     }
+    for n in &mut state.notes {
+        remap_event_ref(&mut n.source_event_id, events);
+    }
     // A picture whose image isn't in the pack is dropped, never left
     // pointing at whatever this install might have under that id.
     state.visual_refs = std::mem::take(&mut state.visual_refs)
@@ -740,6 +743,9 @@ fn remap_body(
                 match c {
                     StateEdit::UpsertFact { fact } => {
                         remap_event_ref(&mut fact.source_event_id, events)
+                    }
+                    StateEdit::UpsertNote { note } => {
+                        remap_event_ref(&mut note.source_event_id, events)
                     }
                     StateEdit::SetRelationships { relationships } => {
                         for r in relationships {

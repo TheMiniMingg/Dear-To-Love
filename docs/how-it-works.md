@@ -74,27 +74,56 @@ again, in this order:
 2. **MESSAGES**: how to write texts, calls, letters and posts so the reader can show them as
    cards, when that is switched on.
 3. **DICE**: how to ask for a roll and set its odds, when dice are on.
-4. **STORY**: title, premise, genre, content rating, themes you want and hard limits.
-5. **WORLD**: setting, era, description and the world's rules.
-6. **CHARACTERS** and **RELATIONSHIPS**: everyone in the story as of this point on the route,
+4. **MEMORY NOTES**: how to keep the story's notebook (below), unless you keep it yourself.
+5. **STORY**: title, premise, genre, content rating, themes you want and hard limits.
+6. **WORLD**: setting, era, description and the world's rules.
+7. **CHARACTERS** and **RELATIONSHIPS**: everyone in the story as of this point on the route,
    with their stats.
-7. **ESTABLISHED FACTS**: facts the storyteller must keep to, and who knows them.
-8. **EARLIER CHAPTERS**: the recap of each chapter you ended with **End chapter** on this
-   route (the 10 most recent), so later chapters remember what happened.
-9. **NOW**: the chapter and its plan, where you are, what is happening, who is present and
-   the open questions.
-10. **STORY SO FAR**: a summary of older turns, when there is one.
-11. **Recent turns**, word for word, then **your action** last.
+8. **ESTABLISHED FACTS**: facts the storyteller must keep to, and who knows them.
+9. **MEMORY**: the story's notes, grouped as People, Places, Things, Timeline and Other facts.
+10. **EARLIER CHAPTERS**: the recap of each chapter you ended with **End chapter** on this
+    route: the 10 most recent in full and the 40 before them in brief (their first sentences).
+    Older chapters are left to the summary and the notes.
+11. **NOW**: the chapter and its plan, where you are, what is happening, who is present and
+    the open questions.
+12. **STORY SO FAR**: a summary of older turns, when there is one.
+13. **Recent turns**, word for word, then **your action** last.
 
 Every 8 replies, the older part of the story is summarized (by the same AI connection, or by
 the offline storyteller without any API call), and at least the 8 most recent turns are always
 sent word for word. Summaries are a cache: branches that share history share summaries, and a
 summary that no longer matches the story is ignored and redone.
 
-**Story memory** in the pause menu shows what the storyteller reads besides the newest
-turns: the summary (which turns it covers and who wrote it), the recaps of ended chapters,
-and the facts, relationships and open threads from **Story details**. All of it is stored in
-the story, never with an AI service, so a storyteller you switch to reads the same memory.
+### Memory notes
+
+A summary shortens everything a little, so a detail such as a ring given in chapter 4 could
+fade by chapter 9. Memory notes keep such details whole. As it writes, the storyteller ends a
+reply with a note when something lasting happens or comes to light:
+
+```text
+<remember person="Erika">Your girlfriend since chapter 4. Wears the silver ring you gave her.</remember>
+<remember place="Z's house">A two-floor house in the suburbs with a blue door.</remember>
+<forget item="Old phone"/>
+```
+
+There is one note for each kind and name (People, Places, Things, Timeline events and Other
+facts). A new note with the same kind and name replaces the old one, so a note always says
+where things stand now, and `<forget …/>` removes one. Timeline events keep the chapter they
+happened in. The reader never shows the tags: under the reply, a **Memory updated** line names
+what was noted, with **See notes** and **Undo** (which takes the notes back and leaves the story
+as it is). A story keeps up to 400 notes.
+
+Notes are part of the story like everything else, so they follow branches: going back to an
+earlier save or branching from an old turn gives the notes as they were then. The notebook in
+**Story memory** lists them, and you can add, change or remove any note while the story goes
+on; the change is saved like a **Story details** edit and holds from the next reply on.
+To keep the notebook yourself, turn off **Let the storyteller keep memory notes** in **Story
+details**: the storyteller still reads the notes but no longer writes them.
+
+Every note is sent while the notes fit in a fifth of the request (the connection's context
+limit less the room kept for the reply). Beyond that, notes about the people, places and things
+in the current scene and the latest turns come first, then the newest of the rest. Notes that
+do not fit are still named, so the storyteller knows they exist.
 
 **Preview context** in the pause menu shows exactly what would be sent for the next reply,
 with a token estimate. Nothing is sent until you play.
@@ -129,8 +158,9 @@ When that happens, or replies start forgetting things:
 - **End the chapter.** **End chapter** keeps a short recap of what happened, which every
   later reply reads, and gives the storyteller the next chapter's plan and a clear new focus.
   Edit the recap to keep the names, promises and secrets that matter.
-- **Pin what matters as a fact.** Facts are always sent, so a detail the summary might lose
-  belongs in **Story details → Facts**.
+- **Pin what matters as a note or a fact.** Facts are always sent, and notes are sent while
+  they fit, so a detail the summary might lose belongs in the notebook in **Story memory** or
+  in **Story details → Facts**.
 - **Lower the detail level or reply length** to leave more room for history.
 
 ### A full disk

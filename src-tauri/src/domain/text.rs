@@ -56,9 +56,10 @@ mod tests {
 }
 
 /// Tags the storyteller uses for texts, calls, thoughts, letters, posts,
-/// dice rolls, headings, bars and items.
-const MESSAGE_TAGS: [&str; 9] = [
-    "text", "call", "thought", "letter", "post", "roll", "scene", "meter", "item",
+/// dice rolls, headings, bars, items and memory notes.
+const MESSAGE_TAGS: [&str; 11] = [
+    "text", "call", "thought", "letter", "post", "roll", "scene", "meter", "item", "remember",
+    "forget",
 ];
 
 /// `key="value"` pairs from inside a tag.
@@ -83,6 +84,7 @@ pub(crate) fn tag_attrs(head: &str) -> Vec<(String, String)> {
 
 /// Message tags written out as plain text, for exports and offline
 /// summaries: `<text from="Erika">Hi</text>` becomes `[Text from Erika] Hi`.
+/// Memory notes are left out (they are not part of the story's text).
 /// Anything that is not a known tag is left as it is.
 pub fn plain_message_tags(text: &str) -> String {
     let mut out = String::new();
@@ -117,6 +119,13 @@ pub fn plain_message_tags(text: &str) -> String {
                 None => (tail.trim(), ""),
             }
         };
+        if matches!(*tag, "remember" | "forget") {
+            // Drop the note and the line break that set it apart.
+            let trimmed = out.trim_end_matches([' ', '\t']).len();
+            out.truncate(trimmed);
+            rest = next.strip_prefix('\n').unwrap_or(next);
+            continue;
+        }
         let label = match *tag {
             "text" => match (get("from"), get("to")) {
                 (Some(from), _) => format!("Text from {from}"),
@@ -205,17 +214,19 @@ pub fn plain_message_tags(text: &str) -> String {
 }
 
 /// Tags only the app and the storyteller may write: a roll is the app's,
-/// and bars and items change only through the storyteller's replies.
-const APP_TAGS: [&str; 3] = ["roll", "meter", "item"];
+/// and bars, items and memory notes change only through the storyteller's
+/// replies.
+const APP_TAGS: [&str; 5] = ["roll", "meter", "item", "remember", "forget"];
 
-/// The text has a roll, meter or item tag in it.
+/// The text has a roll, meter, item or memory note tag in it.
 pub fn has_app_tags(text: &str) -> bool {
     APP_TAGS.iter().any(|t| text.contains(&format!("<{t}")))
 }
 
-/// The text without `<roll …>`, `<meter …>` and `<item …>` tags. Only the
-/// app rolls dice and only the storyteller changes bars and items, so such
-/// a tag typed into an action is dropped instead of reading as real.
+/// The text without `<roll …>`, `<meter …>`, `<item …>`, `<remember …>` and
+/// `<forget …>` tags. Only the app rolls dice and only the storyteller
+/// changes bars, items and notes, so such a tag typed into an action is
+/// dropped instead of reading as real.
 pub fn strip_app_tags(text: &str) -> String {
     let mut out = String::new();
     let mut rest = text;
@@ -261,6 +272,21 @@ mod message_tag_tests {
     use super::{plain_message_tags, strip_app_tags};
 
     #[test]
+    fn memory_notes_are_left_out_of_plain_text() {
+        assert_eq!(
+            plain_message_tags(
+                "She smiles.\n<remember person=\"Erika\">Dating Z.</remember>\n\
+                 <forget item=\"Key\"/>"
+            ),
+            "She smiles.\n"
+        );
+        assert_eq!(
+            plain_message_tags("A <remember fact=\"x\">y</remember> B"),
+            "A B"
+        );
+    }
+
+    #[test]
     fn typed_app_tags_are_dropped() {
         assert_eq!(
             strip_app_tags(
@@ -282,6 +308,15 @@ mod message_tag_tests {
             "I win."
         );
         assert_eq!(strip_app_tags("a <itemize> b"), "a <itemize> b");
+        assert_eq!(
+            strip_app_tags("Kiss her <remember person=\"Erika\">Loves me</remember>"),
+            "Kiss her"
+        );
+        assert_eq!(strip_app_tags("<forget person=\"Erika\"/>Hi"), "Hi");
+        assert_eq!(
+            strip_app_tags("I remember <remembering>"),
+            "I remember <remembering>"
+        );
     }
 
     #[test]

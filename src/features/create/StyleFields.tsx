@@ -177,6 +177,7 @@ export function tellingOf(n: Narration): Partial<Narration> {
     quietPhones: n.quietPhones,
     sceneHeadings: n.sceneHeadings,
     autopilot: n.autopilot,
+    manualMemory: n.manualMemory,
     surprises: n.surprises,
     language: n.language,
     dice: n.dice,
@@ -492,8 +493,8 @@ function DiceSettings({
 
 /**
  * What the storyteller can do, each with a box to turn it off: thoughts,
- * texts and calls, headings, small reactions, twists and dice (with its
- * settings folded away).
+ * texts and calls, headings, small reactions, memory notes, twists and
+ * dice (with its settings folded away).
  */
 export function FeatureFields({
   narration,
@@ -542,6 +543,14 @@ export function FeatureFields({
         hint={t('A nod or a laugh now and then. It never decides what you say or choose.')}
         checked={!!narration.autopilot}
         onChange={(on) => onChange({ autopilot: on || undefined })}
+      />
+      <Check
+        label={t('Let the storyteller keep memory notes')}
+        hint={t(
+          'It notes people, places, gifts and promises as the story goes, so it does not forget them. You can change the notes in Story memory.',
+        )}
+        checked={!narration.manualMemory}
+        onChange={(on) => onChange({ manualMemory: on ? undefined : true })}
       />
       <ArrowPicker
         label={t('Twists and surprises')}

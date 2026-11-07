@@ -1,16 +1,26 @@
 /**
  * Message tags the storyteller (and the composer) write into story text:
  * texts, calls, inner thoughts, letters, posts, dice rolls, scene
- * headings, and changes to tracked bars and items. The reader
- * shows them as cards; anything else is prose. Mirrors `plain_message_tags`
- * in Rust.
+ * headings, changes to tracked bars and items, and memory notes. The
+ * reader shows them as cards; anything else is prose. Mirrors
+ * `plain_message_tags` in Rust.
  */
-import type { RollRequest } from '../../types';
+import type { NoteKind, RollRequest } from '../../types';
 import { t } from '../../i18n';
 import { plainStoryText } from '../../i18n/names';
 
 export type MessageTag =
-  'text' | 'call' | 'thought' | 'letter' | 'post' | 'roll' | 'scene' | 'meter' | 'item';
+  | 'text'
+  | 'call'
+  | 'thought'
+  | 'letter'
+  | 'post'
+  | 'roll'
+  | 'scene'
+  | 'meter'
+  | 'item'
+  | 'remember'
+  | 'forget';
 
 export type Block =
   | { kind: 'prose'; text: string }
@@ -32,10 +42,15 @@ const TAGS: MessageTag[] = [
   'scene',
   'meter',
   'item',
+  'remember',
+  'forget',
 ];
 
-/** Tags only the app (a roll) or the storyteller (bars and items) may write. */
-export const APP_TAGS: MessageTag[] = ['roll', 'meter', 'item'];
+/**
+ * Tags only the app (a roll) or the storyteller (bars, items and memory
+ * notes) may write.
+ */
+export const APP_TAGS: MessageTag[] = ['roll', 'meter', 'item', 'remember', 'forget'];
 
 function parseAttrs(head: string): Record<string, string> {
   const out: Record<string, string> = {};
@@ -146,6 +161,10 @@ function plainLabel(kind: MessageTag, a: Record<string, string>): string {
       label = a.gain ? `Got ${named(a.gain)}` : a.lose ? `Lost ${named(a.lose)}` : 'Item';
       break;
     }
+    case 'remember':
+    case 'forget':
+      label = '';
+      break;
   }
   return a.time ? `${label}, ${a.time}` : label;
 }
@@ -155,15 +174,83 @@ function plainLabel(kind: MessageTag, a: Record<string, string>): string {
  * language ("[Text from Mara] Are you up?"), as the app's core writes it.
  */
 export function plainText(text: string): string {
-  const words = parseBlocks(text)
-    .map((b) => {
-      if (b.kind === 'prose') return b.text;
+  let words = '';
+  let afterNote = false;
+  for (const b of parseBlocks(text)) {
+    if (b.kind === 'remember' || b.kind === 'forget') {
+      // Memory notes are not part of the story's text: drop each with the
+      // line break that set it apart.
+      words = words.replace(/[ \t]+$/, '');
+      afterNote = true;
+      continue;
+    }
+    let part: string;
+    if (b.kind === 'prose') {
+      part = afterNote && b.text.startsWith('\n') ? b.text.slice(1) : b.text;
+    } else {
       const label = plainLabel(b.kind, b.attrs);
-      if (b.kind === 'thought') return `(${label}: ${b.body})`;
-      return b.body ? `[${label}] ${b.body}` : `[${label}]`;
-    })
-    .join('');
+      part =
+        b.kind === 'thought'
+          ? `(${label}: ${b.body})`
+          : b.body
+            ? `[${label}] ${b.body}`
+            : `[${label}]`;
+    }
+    words += part;
+    afterNote = false;
+  }
   return plainStoryText(words);
+}
+
+/** One memory note a reply writes (`<remember>`) or removes (`<forget>`). */
+export type NoteChange = { forget: boolean; kind: NoteKind; name: string; text: string };
+
+const NOTE_KINDS: Record<string, NoteKind> = {
+  person: 'person',
+  who: 'person',
+  character: 'person',
+  place: 'place',
+  location: 'place',
+  item: 'item',
+  thing: 'item',
+  object: 'item',
+  event: 'event',
+  fact: 'fact',
+  about: 'fact',
+};
+
+/** One line, at most `max` characters, as `notes::clip` in Rust. */
+const clip = (s: string, max: number) =>
+  [...s.split(/\s+/).filter(Boolean).join(' ')].slice(0, max).join('');
+
+/**
+ * The memory notes a finished reply writes, as the app keeps them (the
+ * same rules as `notes::scan` in Rust).
+ */
+export function noteChanges(text: string): NoteChange[] {
+  const out: NoteChange[] = [];
+  for (const b of parseBlocks(text)) {
+    if ((b.kind !== 'remember' && b.kind !== 'forget') || b.open) continue;
+    let kind: NoteKind | undefined;
+    let name = '';
+    if (b.attrs.kind) {
+      kind = NOTE_KINDS[b.attrs.kind.toLowerCase()];
+      name = b.attrs.name ?? '';
+    } else {
+      for (const [key, value] of Object.entries(b.attrs)) {
+        if (NOTE_KINDS[key] && value.trim()) {
+          kind = NOTE_KINDS[key];
+          name = value;
+          break;
+        }
+      }
+    }
+    name = clip(name, 80);
+    const words = clip(b.body, 800);
+    if (!kind || !name || (b.kind === 'remember' && !words)) continue;
+    out.push({ forget: b.kind === 'forget', kind, name, text: words });
+  }
+  return out;
 }
 
 /** True when `text` contains at least one message tag. */

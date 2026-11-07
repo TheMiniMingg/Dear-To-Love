@@ -39,10 +39,11 @@ import { usePictureView } from './stage';
 import { StoryDetailsPanel } from './StoryDetailsPanel';
 import { StoryMemoryPanel } from './StoryMemoryPanel';
 import { StorytellerPanel } from './StorytellerPanel';
+import { standingNotes } from './notes';
 import { plainText } from './messages';
 import { PortraitsContext, portraitFinder } from './portraits';
 import { DiceRulesContext } from './DiceCards';
-import { intlLocale, joinSentences, msg, t, tKnown, tr } from '../../i18n';
+import { intlLocale, joinList, joinSentences, msg, t, tKnown, tr } from '../../i18n';
 import { chapterHasTitle, routeName, saveName } from '../../i18n/names';
 
 type Panel =
@@ -363,6 +364,26 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
     });
   }, [run, view]);
 
+  /** Take back the memory notes one reply wrote. */
+  const undoNotes = (eventId: string) =>
+    run(async () => {
+      if (!view) return;
+      const reply = view.history.find((e) => e.id === eventId);
+      const names =
+        reply?.kind === 'assistant'
+          ? standingNotes(reply.payload.text, view.state.state.notes ?? []).map((c) => c.name)
+          : [];
+      const v = await commands.undoReplyNotes({
+        storyId: view.story.id,
+        routeId: view.route.id,
+        expectedHeadId: view.state.headEventId,
+        assistantEventId: eventId,
+        note: names.length ? t('took back {names}', { names: joinList(names) }) : null,
+      });
+      setView(v);
+      setSaveStatus(t('Memory changed {time}', { time: timeNow() }));
+    });
+
   const toggleBookmark = async (eventId: string) => {
     if (!view) return;
     setError(null);
@@ -631,6 +652,12 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
                 viewing || busy || writing || awaitingReply
                   ? undefined
                   : (req) => void send('', req, false)
+              }
+              keepsNotes={!view.state.state.narration?.manualMemory}
+              currentNotes={view.state.state.notes ?? []}
+              onOpenNotes={viewing ? undefined : () => setPanel('memory')}
+              onUndoNotes={
+                viewing || writing || busy || awaitingReply ? undefined : (id) => void undoNotes(id)
               }
               intro={
                 viewing
@@ -1028,6 +1055,10 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
               view={view}
               playerName={player?.name ?? t('You')}
               detailsDisabled={awaitingReply || writing}
+              onChanged={(v) => {
+                setView(v);
+                setSaveStatus(t('Memory changed {time}', { time: timeNow() }));
+              }}
               onOpenDetails={() => setPanel('details')}
               onOpenStoryteller={() => setPanel('storyteller')}
             />

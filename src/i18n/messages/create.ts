@@ -1285,4 +1285,17 @@ export const create: Messages = {
     '다른 {n}명의 게이지',
   ],
   '(required)': ['（必填）', '（必填）', '（必須）', '(필수)'],
+  'Let the storyteller keep memory notes': [
+    '让讲述者记笔记',
+    '讓講述者記筆記',
+    '語り手に記憶メモを書かせる',
+    '이야기꾼이 기억 노트 쓰기',
+  ],
+  'It notes people, places, gifts and promises as the story goes, so it does not forget them. You can change the notes in Story memory.':
+    [
+      '随着故事进展，它会记下人物、地点、礼物和承诺，这样就不会忘记。你可以在“故事记忆”里修改这些笔记。',
+      '隨著故事進展，它會記下人物、地點、禮物和承諾，這樣就不會忘記。你可以在「故事記憶」裡修改這些筆記。',
+      '物語が進むにつれて人物・場所・贈り物・約束をメモし、忘れないようにします。メモは「ストーリーの記憶」で変更できます。',
+      '이야기가 진행되면서 인물, 장소, 선물, 약속을 적어 두어 잊지 않게 합니다. 노트는 스토리 기억에서 바꿀 수 있습니다.',
+    ],
 };
