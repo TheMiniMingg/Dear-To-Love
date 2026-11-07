@@ -9,6 +9,9 @@
  * --accent    links, primary buttons, focus   --on-accent  text on accent
  * --accent-soft  tinted fills     --border     lines
  * --name-mix  how much of a name colour shows against --fg
+ *
+ * Rose, Midnight and Parchment came first; Neon (science fiction), Café
+ * (cozy, everyday stories) and Gothic (horror and mysteries) followed.
  */
 
 :root,
@@ -100,6 +103,78 @@
   --name-mix: 72%;
   --page-glow: radial-gradient(1200px 700px at 50% -20%, rgb(255 250 235 / 0.7), transparent 70%);
   --shadow-color: 35deg 35% 25%;
+}
+
+:root[data-theme='neon'],
+[data-theme-preview='neon'] {
+  color-scheme: dark;
+  --bg: #0a0b14;
+  --surface: #12142a;
+  --surface-2: #1a1d38;
+  --fg: #e8f1ff;
+  --muted: #8f9ac0;
+  --accent: #3ee0f0;
+  --accent-strong: #ff5cd6;
+  --on-accent: #041318;
+  --border: #272b52;
+  --pass: #6ff0a8;
+  --warn: #ffc85c;
+  --fail: #ff7a9c;
+  --skipped: #8f9ac0;
+  --name-mix: 60%;
+  --page-glow:
+    radial-gradient(900px 480px at 88% -12%, rgb(62 224 240 / 0.14), transparent 70%),
+    radial-gradient(800px 480px at 8% 110%, rgb(255 92 214 / 0.1), transparent 70%);
+  --shadow-color: 250deg 60% 2%;
+}
+
+:root[data-theme='cafe'],
+[data-theme-preview='cafe'] {
+  color-scheme: light;
+  --bg: #f3ebe0;
+  --surface: #fbf7f0;
+  --surface-2: #ebdfcf;
+  --fg: #3b2a1e;
+  --muted: #735f4e;
+  --accent: #4c7444;
+  --accent-strong: #3d5f37;
+  --on-accent: #ffffff;
+  --border: #e0d0bb;
+  --pass: #3f7339;
+  --warn: #93590b;
+  --fail: #b0342b;
+  --skipped: #735f4e;
+  --name-mix: 74%;
+  --page-glow: radial-gradient(1100px 620px at 15% -15%, rgb(255 246 230 / 0.8), transparent 70%);
+  --shadow-color: 28deg 35% 25%;
+}
+
+:root[data-theme='gothic'],
+[data-theme-preview='gothic'] {
+  color-scheme: dark;
+  --bg: #121012;
+  --surface: #1b181b;
+  --surface-2: #242024;
+  --fg: #ede6e2;
+  --muted: #a69c98;
+  --accent: #e0535c;
+  --accent-strong: #ec7178;
+  --on-accent: #1a0507;
+  --border: #352e31;
+  --pass: #8ccf8a;
+  --warn: #e9b062;
+  --fail: #ff8a84;
+  --skipped: #a69c98;
+  --name-mix: 60%;
+  --page-glow: radial-gradient(1000px 560px at 50% -18%, rgb(150 20 35 / 0.18), transparent 70%);
+  --shadow-color: 350deg 40% 2%;
+}
+
+/* Gothic sets its headings in the story's serif. */
+:root[data-theme='gothic'] :is(h1, h2, h3),
+[data-theme-preview='gothic'] .swatch-title {
+  font-family: var(--font-story);
+  letter-spacing: 0.01em;
 }
 
 :root,

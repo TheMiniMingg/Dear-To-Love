@@ -304,4 +304,24 @@ export const common: Messages = {
     '{n}개는 이미 보관함에 있어 그대로 씁니다.',
   ],
   'just now': ['刚刚', '剛剛', 'たった今', '방금'],
+  'Save as a book': ['存为书', '存為書', '本として保存', '책으로 저장'],
+  'E-book (.epub)': ['电子书 (.epub)', '電子書 (.epub)', '電子書籍 (.epub)', '전자책 (.epub)'],
+  'Saved {file} ({size}): {chapters}, {turns}.': [
+    '已保存 {file}（{size}）：{chapters}，{turns}。',
+    '已儲存 {file}（{size}）：{chapters}，{turns}。',
+    '{file}（{size}）を保存しました：{chapters}、{turns}。',
+    '{file}({size})을(를) 저장했습니다: {chapters}, {turns}.',
+  ],
+  'The story’s cover is on the front.': [
+    '故事的封面就在书的正面。',
+    '故事的封面就在書的正面。',
+    'ストーリーの表紙が表に付いています。',
+    '스토리의 표지가 앞에 있습니다.',
+  ],
+  'The story has no cover picture, so the front shows its title.': [
+    '这个故事没有封面图片，所以封面显示的是标题。',
+    '這個故事沒有封面圖片，所以封面顯示的是標題。',
+    'このストーリーには表紙の絵がないので、表紙にはタイトルが入ります。',
+    '이 스토리에는 표지 그림이 없어서 표지에 제목이 들어갑니다.',
+  ],
 };

@@ -14,9 +14,11 @@ use crate::db::timeline::{
     AppendEvent, Appended, ChapterDto, EventDto, RouteDto,
 };
 use crate::db::Database;
+use crate::domain::bonds;
 use crate::domain::events::{EditPayload, EventBody, StateEdit};
 use crate::domain::notes::{self, MemoryNote, NoteKind, NoteTag};
 use crate::domain::provider::{Billing, StorytellerChoice};
+use crate::domain::story_state::StoryStateV1;
 use crate::domain::threads;
 use crate::domain::visuals::VisualSlot;
 use crate::errors::{AppError, AppResult};
@@ -325,9 +327,60 @@ pub async fn undo_reply_notes(
     if done != now.done_threads {
         changes.push(StateEdit::SetDoneThreads { done_threads: done });
     }
+    // Feelings it moved go back to how they were, unless they moved again.
+    let bond_tags = bonds::scan(&reply.text);
+    let mut relationships = now.relationships.clone();
+    let mut moved: Vec<String> = Vec::new();
+    for tag in &bond_tags {
+        let Some(id) = bonds::character_id(&after, &tag.name) else {
+            continue;
+        };
+        if moved.contains(&id) {
+            continue;
+        }
+        moved.push(id.clone());
+        let feeling = |s: &StoryStateV1| {
+            bonds::towards_player(s, &id).map(|i| {
+                let r = &s.relationships[i];
+                (r.status.clone(), r.bond)
+            })
+        };
+        let (was, wrote, is) = (feeling(&before), feeling(&after), feeling(&now));
+        if was == wrote || is != wrote {
+            continue;
+        }
+        let Some(i) = relationships
+            .iter()
+            .position(|r| r.from_id == id && r.to_id == now.player_character_id)
+        else {
+            continue;
+        };
+        match was {
+            Some((status, bond)) => {
+                relationships[i].status = status;
+                relationships[i].bond = bond;
+            }
+            // The reply began this relationship; it goes unless it says more.
+            None if relationships[i].label.trim().is_empty() => {
+                relationships.remove(i);
+            }
+            None => {
+                relationships[i].status.clear();
+                relationships[i].bond = None;
+            }
+        }
+        names.push(
+            now.characters
+                .get(&id)
+                .map_or_else(|| tag.name.clone(), |c| c.name.clone()),
+        );
+    }
+    if relationships != now.relationships {
+        changes.push(StateEdit::SetRelationships { relationships });
+    }
     if changes.is_empty() {
         return Err(AppError::invalid_input(
-            if keys.is_empty() && thread_tags.is_empty() {
+            if keys.is_empty() && thread_tags.is_empty() && bond_tags.is_empty() {
                 "this reply wrote no memory notes or threads"
             } else {
                 "what this reply noted has changed since; change it in Story memory"

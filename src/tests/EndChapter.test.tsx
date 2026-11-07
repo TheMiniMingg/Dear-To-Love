@@ -2,7 +2,7 @@
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { EventDto } from '../types';
+import type { EventDto, MemoryNote, NoteKind } from '../types';
 import { fakeRouteView } from './fakeBackend';
 
 const invoke = vi.fn();
@@ -65,12 +65,33 @@ const draft = {
   headEventId: 'ev-3',
 };
 
-function backend(onDraft: () => Promise<unknown>) {
+const note = (kind: NoteKind, name: string, text: string): MemoryNote => ({
+  kind,
+  name,
+  text,
+  chapter: 1,
+});
+
+const tidied: EventDto = {
+  id: 'ev-tidy',
+  originRouteId: 'route-1',
+  parentEventId: 'ev-3',
+  generationRunId: null,
+  createdAt: '2026-11-06T00:00:03Z',
+  kind: 'edit',
+  payload: { changes: [], note: 'tidied the notebook' },
+};
+
+const noTidy = { changes: [], writtenBy: '', headEventId: 'ev-3' };
+
+function backend(onDraft: () => Promise<unknown>, tidy: unknown = noTidy) {
   invoke.mockImplementation(async (cmd: string, args: Record<string, unknown>) => {
     if (cmd === 'get_route_view') return fakeRouteView(played);
     if (cmd === 'get_budget_status') throw { code: 'NOT_FOUND', message: 'none' };
     if (cmd === 'list_bookmarks') return [];
     if (cmd === 'draft_chapter_recap') return onDraft();
+    if (cmd === 'draft_notebook_tidy') return tidy;
+    if (cmd === 'edit_story_details') return fakeRouteView([...played, tidied]);
     if (cmd === 'end_chapter') {
       return fakeRouteView([
         ...played,
@@ -120,6 +141,68 @@ describe('End chapter', () => {
     const recap = screen.getByRole('complementary', { name: 'Recap of Chapter 1' });
     expect(recap).toHaveTextContent('the same as on the ferry office door');
     expect(screen.getByRole('heading', { name: 'Chapter 2: Low Tide' })).toBeInTheDocument();
+  });
+
+  it('tidies the notebook with the changes the player keeps, before the chapter ends', async () => {
+    const mara = note('person', 'Mara', 'Runs the ferry.');
+    const quill = note('person', 'Mara Quill', 'Hates the harbour master.');
+    const letter = note('item', 'The letter', 'Unsigned. Unsigned. Sealed with a gull.');
+    backend(async () => draft, {
+      changes: [
+        {
+          replaces: [mara, quill],
+          note: note('person', 'Mara Quill', 'Runs the ferry. Hates the harbour master.'),
+        },
+        { replaces: [letter], note: note('item', 'The letter', 'Unsigned, sealed with a gull.') },
+      ],
+      writtenBy: 'Test cloud',
+      headEventId: 'ev-3',
+    });
+    const dialog = await openEndChapter();
+    const review = await within(dialog).findByRole('group', { name: 'Tidy the notebook' });
+    expect(review).toHaveTextContent('Test cloud suggests merging and shortening');
+    const merge = within(review).getByRole('radiogroup', {
+      name: 'Merge 2 notes into “Mara Quill”',
+    });
+    expect(within(merge).getByRole('radio', { name: 'Keep' })).toBeChecked();
+    const shorten = within(review).getByRole('radiogroup', { name: 'Shorten “The letter”' });
+    await userEvent.click(within(shorten).getByRole('radio', { name: 'Undo' }));
+    expect(review).toHaveTextContent('Left as it is.');
+
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Save and start Chapter 2' }));
+    expect(invoke).toHaveBeenCalledWith('edit_story_details', {
+      storyId: 'story-1',
+      routeId: 'route-1',
+      expectedHeadId: 'ev-3',
+      changes: [
+        { op: 'removeNote', kind: 'person', name: 'Mara' },
+        { op: 'removeNote', kind: 'person', name: 'Mara Quill' },
+        {
+          op: 'upsertNote',
+          note: note('person', 'Mara Quill', 'Runs the ferry. Hates the harbour master.'),
+        },
+      ],
+      note: 'tidied the notebook',
+    });
+    // The chapter ends after the tidy-up, so the save holds it.
+    expect(invoke).toHaveBeenCalledWith(
+      'end_chapter',
+      expect.objectContaining({ expectedHeadId: 'ev-tidy' }),
+    );
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it('ends the chapter as before when the notebook needs no tidying', async () => {
+    backend(async () => draft);
+    const dialog = await openEndChapter();
+    await within(dialog).findByLabelText('What happened in Chapter 1: The Lamp Room');
+    expect(within(dialog).queryByRole('group', { name: 'Tidy the notebook' })).toBeNull();
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Save and start Chapter 2' }));
+    expect(invoke).not.toHaveBeenCalledWith('edit_story_details', expect.anything());
+    expect(invoke).toHaveBeenCalledWith(
+      'end_chapter',
+      expect.objectContaining({ expectedHeadId: 'ev-3' }),
+    );
   });
 
   it("says when the next title is the storyteller's idea, until it is changed", async () => {

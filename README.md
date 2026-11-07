@@ -30,9 +30,12 @@ Japanese and Korean, and stories can be written in many more languages.
   visual novel. One click switches to text only.
 - **Play several stories at once**, branch from any moment, and keep long stories consistent
   with automatic memory.
+- **Characters with feelings**: a bar for how each character feels about you, from cold to
+  devoted or from suspicious to complete trust, that moves as the story goes.
 - **Made for reading**: a book font, chapters that open like a book's, each character's name
-  in their own color, and three themes (Rose, Midnight and Parchment). A story can take the
-  look that fits its genre.
+  in their own color, and six themes (Rose, Midnight, Parchment, Neon, Café and Gothic). A
+  story can take the look that fits its genre, any reply can be read aloud, and any route
+  can be saved as an e-book.
 - **Every feature can be switched off** with a checkbox.
 
 ## Download
@@ -100,7 +103,9 @@ story can also **Send a text**, **Call** someone, **Think** a thought of your ow
   makes a new route and keeps the original. **Routes** shows them as a list, a map of how
   they branch, or a timeline.
 - **End a chapter** when it feels finished: the storyteller writes a recap, you can edit it,
-  and later chapters remember it.
+  and later chapters remember it. When the notebook has grown, it also offers to tidy it up:
+  merge notes about the same person and shorten long ones. Keep or undo each change. The
+  chapter name under the story's title lists every chapter so far; pick one to jump there.
 - **Long stories stay consistent.** Older turns are summarized automatically, so a story can
   run for thousands of turns. As it writes, the storyteller keeps a notebook of what must not
   be forgotten: people, places, things, a timeline and other facts, so the ring you gave in
@@ -110,6 +115,11 @@ story can also **Send a text**, **Call** someone, **Think** a thought of your ow
   **Preview context** shows exactly what it will read next.
 - **Change the story as you go** in **Story details**: characters, the world, the narration,
   the scene and the facts it must keep to.
+- **How they feel about you.** Each character can have a **Heart** bar (cold to devoted) or a
+  **Trust** bar (suspicious to complete trust) next to how they know you and how they feel
+  now. The storyteller reads them before every reply and moves them as things happen; the
+  "Memory updated" line shows the change (Mara +10) with **Undo**, and **Story details**
+  lets you set them yourself.
 - **The storyteller fills in the details, and you can change any of them.** It keeps a list
   of **threads to follow** (promises, mysteries, goals) that you can tick off in **Story
   memory**, offers to add anyone new it brings in to the cast, ends each reply with two or
@@ -122,18 +132,28 @@ story can also **Send a text**, **Call** someone, **Think** a thought of your ow
   says when it is ready.
 - **Where and when** the story is shows above it, and panels such as **Story details** and
   **Story memory** open beside the story instead of over it.
-- **Search and bookmarks**, and **Export** a route as text or a whole story as a
-  `.storypack` to share.
-- **Keyboard shortcuts** for almost everything; press **F1** to see them.
+- **Search and bookmarks**, and **Export** a route as text, as an e-book (`.epub`, with a
+  cover, a title page, a page for each chapter and the reading font, for any e-reader or book
+  app), or a whole story as a `.storypack` to share.
+- **Read aloud.** The speaker under a reply reads it with your computer's own voices, so it
+  works offline and costs nothing. Pick the voice and speed in **Settings → Sound**.
+- **Find anything with Ctrl/Cmd+K**: a story, a chapter, a window or a setting, as you type.
+- **Keyboard shortcuts** for almost everything; press **F1** to see them. Your first story
+  starts with four short tips; **Skip tips** hides them for good.
 - **Looks.** Stories are set in Literata, a font made for long reading, and each chapter
   opens with its number, its title and a large first letter. Everyone in the cast gets a
   color for their name, picked from the name; change it under **Name color** in **Story
-  details**. **Settings → Look** has three themes: Rose (light or dark with your computer),
-  Midnight and Parchment. With **Give each story a look that fits its genre** on, horror,
-  mysteries and science fiction read in Midnight, fantasy and history on Parchment and
-  romance in Rose; **Look** beside the story picks another for that story.
+  details**. **Settings → Look** has six themes: Rose (light or dark with your computer),
+  Midnight, Parchment, Neon, Café and Gothic. With **Give each story a look that fits its
+  genre** on, horror and mysteries read in Gothic, science fiction in Neon, thrillers in
+  Midnight, fantasy and history on Parchment, cozy stories in Café and romance in Rose;
+  **Look** beside the story picks another for that story.
 
-![The same app in Rose, Midnight and Parchment: a café romance, a horror story and a fantasy raid](docs/screenshots/themes.webp)
+![The same app in Rose, Midnight and Parchment: a café romance, a late-night radio story and a fantasy raid](docs/screenshots/themes.webp)
+
+![Neon, Café and Gothic: a cyberpunk heist, a potion shop on an island and a ghost story](docs/screenshots/themes-more.webp)
+
+![Settings → Look with all six themes and Give each story a look that fits its genre](docs/screenshots/settings-look.webp)
 
 ![A chapter opening: the chapter number, its title, an ornament and a large first letter](docs/screenshots/reader-look.webp)
 
@@ -148,6 +168,20 @@ story can also **Send a text**, **Call** someone, **Think** a thought of your ow
 ![Threads to follow in Story memory: open threads to tick off, a box to add one, and a settled thread](docs/screenshots/threads.webp)
 
 ![A portrait's description, rewritten before it is made, with the safe-for-work sentence the app always adds](docs/screenshots/picture-description.webp)
+
+![A reply that noted Mara, the letter and the lamp room, and moved Mara's heart bar up by 10](docs/screenshots/feelings.webp)
+
+![How Mara Quill feels about you in Story details: how she knows you, how she feels now and a Heart bar at 65](docs/screenshots/feelings-details.webp)
+
+![Ending a chapter: the recap, the next chapter's title and Tidy the notebook, which merges two notes about Mara and shortens the letter's](docs/screenshots/notebook-tidy.webp)
+
+![Ctrl+K finds the chapters, Replay a chapter and End chapter as you type](docs/screenshots/palette.webp)
+
+![The chapter list under the story's title: both chapters and Replay a chapter](docs/screenshots/chapter-jump.webp)
+
+![The first of four tips at the start of your first story](docs/screenshots/tour.webp)
+
+![A route saved as an e-book: the cover, the title page and the first chapter](docs/screenshots/book.webp)
 
 ### Texts and calls
 

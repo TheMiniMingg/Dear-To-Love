@@ -4,6 +4,7 @@ import type {
   KnownFact,
   Meter,
   Narration,
+  Relationship,
   StateEdit,
   StoryStateV1,
   Tracking,
@@ -61,6 +62,26 @@ function cleanStats(stats: Character['stats']): Pick<Character, 'stats'> {
 }
 
 const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
+
+/**
+ * Relationships as Rust keeps them: words trimmed, in a fixed key order, and
+ * one with no words and no bar dropped.
+ */
+function cleanRelationships(list: Relationship[]): Relationship[] {
+  return list
+    .map((r) => {
+      const out: Relationship = {
+        fromId: r.fromId,
+        toId: r.toId,
+        label: r.label.trim(),
+        status: r.status.trim(),
+      };
+      if (r.sourceEventId) out.sourceEventId = r.sourceEventId;
+      if (r.bond) out.bond = { kind: r.bond.kind, value: r.bond.value };
+      return out;
+    })
+    .filter((r) => r.label || r.status || r.bond);
+}
 
 /** Tracking as Rust keeps it: blank rows dropped, names trimmed, in key order. */
 function cleanTracking(tr: Tracking | undefined): Tracking | undefined {
@@ -303,6 +324,43 @@ export function diffState(
       before: show(before.doneThreads ?? []),
       after: show(settled),
     });
+  }
+
+  const relationships = cleanRelationships(after.relationships);
+  if (!same(relationships, cleanRelationships(before.relationships))) {
+    changes.push({ op: 'setRelationships', relationships });
+    const nameOf = (id: string, s: StoryStateV1) =>
+      id === s.playerCharacterId
+        ? t('you')
+        : s.characters[id]?.name || before.characters[id]?.name || t('someone');
+    const shown = (r: Relationship | undefined) => ({
+      label: r?.label ?? '',
+      status: r?.status ?? '',
+      bar: r?.bond
+        ? `${r.bond.kind === 'heart' ? t('Heart') : t('Trust')} ${r.bond.value}`
+        : t('No bar'),
+    });
+    const pair = (r: Relationship) => `${r.fromId}\u0000${r.toId}`;
+    const was = new Map(cleanRelationships(before.relationships).map((r) => [pair(r), r]));
+    const now = new Map(relationships.map((r) => [pair(r), r]));
+    for (const k of new Set([...was.keys(), ...now.keys()])) {
+      const a = was.get(k);
+      const b = now.get(k);
+      if (same(a, b)) continue;
+      const r = (b ?? a)!;
+      lines.push(
+        ...fieldLines(
+          `${nameOf(r.fromId, after)} → ${nameOf(r.toId, after)} · `,
+          shown(a),
+          shown(b),
+          [
+            ['label', msg('How they know you')],
+            ['status', msg('How they feel now')],
+            ['bar', msg('Bar')],
+          ],
+        ),
+      );
+    }
   }
 
   const tracking = cleanTracking(after.tracking);

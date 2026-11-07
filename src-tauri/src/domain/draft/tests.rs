@@ -82,6 +82,7 @@ fn custom_draft_from_scratch() {
         label: "Rival".into(),
         status: "Friendly".into(),
         source_event_id: None,
+        bond: None,
     });
     d.chapter_outlines = vec![
         ChapterOutlineInput {

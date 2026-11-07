@@ -6,14 +6,22 @@ import {
   CalendarClock,
   CircleCheck,
   Gem,
+  HeartHandshake,
   Lightbulb,
   ListTodo,
   MapPin,
   UserRound,
   type LucideIcon,
 } from 'lucide-react';
-import type { MemoryNote, NoteKind, StateEdit } from '../../types';
-import { noteChanges, threadChanges, type NoteChange, type ThreadChange } from './messages';
+import type { MemoryNote, NoteKind, StateEdit, StoryStateV1 } from '../../types';
+import {
+  bondChanges,
+  noteChanges,
+  threadChanges,
+  type NoteChange,
+  type ThreadChange,
+} from './messages';
+import { BOND_ICONS, standingBonds } from './feelings';
 import { msg, t } from '../../i18n';
 
 /** The notebook's sections, in the order the storyteller reads them. */
@@ -70,7 +78,9 @@ export function notesOnly(changes: StateEdit[]): boolean {
   return (
     changes.length > 0 &&
     changes.every((c) =>
-      ['upsertNote', 'removeNote', 'setOpenThreads', 'setDoneThreads'].includes(c.op),
+      ['upsertNote', 'removeNote', 'setOpenThreads', 'setDoneThreads', 'setRelationships'].includes(
+        c.op,
+      ),
     )
   );
 }
@@ -115,6 +125,7 @@ export function MemoryLine({
   text,
   current,
   threads,
+  feelings,
   onOpen,
   onUndo,
 }: {
@@ -123,16 +134,20 @@ export function MemoryLine({
   current?: MemoryNote[];
   /** The threads as they are now, likewise. */
   threads?: ThreadLists;
+  /** The story as it is now, for how people feel about the player. */
+  feelings?: StoryStateV1;
   onOpen?: () => void;
   onUndo?: () => void;
 }) {
   const changes = noteChanges(text);
   const threadMoves = threadChanges(text);
-  if (!changes.length && !threadMoves.length) return null;
+  const bonds = bondChanges(text);
+  if (!changes.length && !threadMoves.length && !bonds.length) return null;
   const stands =
     !current ||
     standingNotes(text, current).length > 0 ||
-    (!!threads && standingThreads(text, threads).length > 0);
+    (!!threads && standingThreads(text, threads).length > 0) ||
+    (!!feelings && standingBonds(text, feelings).length > 0);
   const undo = onUndo && stands ? onUndo : undefined;
   return (
     <p className="memory-line">
@@ -172,6 +187,33 @@ export function MemoryLine({
           >
             <Icon className="memory-chip-icon" aria-hidden={true} size={13} />
             <span className="memory-chip-text">{c.text}</span>
+          </span>
+        );
+      })}
+      {bonds.map((c, i) => {
+        const Icon = c.kind ? BOND_ICONS[c.kind] : HeartHandshake;
+        const change = c.change ? c.change.replace('-', '−') : '';
+        const said = c.kind
+          ? c.kind === 'heart'
+            ? t('{name}: heart {change}', { name: c.name, change })
+            : t('{name}: trust {change}', { name: c.name, change })
+          : c.name;
+        return (
+          <span
+            key={`bond-${i}`}
+            className={`memory-chip kind-bond${c.kind ? ` bond-${c.kind}` : ''}${
+              c.change?.startsWith('-') ? ' down' : ''
+            }`}
+            aria-label={c.line ? `${said}. ${c.line}` : said}
+          >
+            <Icon className="memory-chip-icon" aria-hidden={true} size={13} />
+            {c.name}
+            {change && <span className="bond-change">{change}</span>}
+            {c.line && (
+              <span className="memory-pop" role="tooltip">
+                {c.line}
+              </span>
+            )}
           </span>
         );
       })}

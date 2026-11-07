@@ -3,13 +3,17 @@ import {
   ArchiveRestore,
   Backpack,
   BookMarked,
+  BookOpenText,
   Brain,
+  Check,
+  ChevronDown,
   Download,
   Feather,
   GitBranch,
   Images,
   Keyboard,
   LibraryBig,
+  Lightbulb,
   ListOrdered,
   MapPin,
   Menu,
@@ -21,6 +25,7 @@ import {
   Stethoscope,
   Type,
   UserRoundPen,
+  Volume2,
   type LucideIcon,
 } from 'lucide-react';
 import {
@@ -33,10 +38,13 @@ import {
 import { useUiStore } from '../../app/store';
 import { useStoryLook } from '../../app/look';
 import { useReplyWatch } from '../../app/replyWatch';
+import { canReadAloud, speechLang, useReadAloud } from '../../app/readAloud';
+import { paletteSources, usePalette } from '../../app/palette';
 import { isComposing, isEditableTarget } from '../../app/keyboard';
 import { ariaKeys, isShortcut, useShortcutHelp, withKeys } from '../../app/shortcuts';
 import { Dialog } from '../../components/Dialog';
 import { KeyHint } from '../../components/KeyHint';
+import { MenuButton } from '../../components/MenuButton';
 import { ChaptersPanel } from '../routes/ChaptersPanel';
 import { RoutesPanel } from '../routes/RoutesPanel';
 import { SavesPanel } from '../saves/SavesPanel';
@@ -66,7 +74,9 @@ import { usePictureView } from './stage';
 import { StoryDetailsPanel, type DetailsTab } from './StoryDetailsPanel';
 import { StoryMemoryPanel } from './StoryMemoryPanel';
 import { StorytellerPanel } from './StorytellerPanel';
+import { Tour, useTour } from './Tour';
 import { standingNotes, standingThreads } from './notes';
+import { standingBonds } from './feelings';
 import { nextMoves, openingIdeas, parseBlocks, plainText, type NewCharacter } from './messages';
 import { NameColorsContext, nameColorFinder } from './nameColors';
 import { PortraitsContext, portraitFinder } from './portraits';
@@ -245,6 +255,9 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
       mounted.current = false;
     };
   }, []);
+
+  // Reading aloud stops when you leave the story.
+  useEffect(() => () => useReadAloud.getState().stop(), []);
 
   // Leaving while a reply is being written: it keeps going, and the app
   // says so (with a chime) when it is ready.
@@ -534,6 +547,7 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
                 open: s.openThreads,
                 done: s.doneThreads ?? [],
               }).map((c) => c.text),
+              ...standingBonds(reply.payload.text, s).map((c) => c.name),
             ]
           : [];
       const v = await commands.undoReplyNotes({
@@ -614,8 +628,8 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
   useLayoutEffect(() => {
     onKey.current = (e: KeyboardEvent) => {
       if (isComposing(e) || e.defaultPrevented || !view) return;
-      // The Keyboard shortcuts window is on top: leave the story alone.
-      if (useShortcutHelp.getState().open) return;
+      // The Keyboard shortcuts window or the palette is on top: leave the story alone.
+      if (useShortcutHelp.getState().open || usePalette.getState().open) return;
       const did = (fn?: () => void) => {
         e.preventDefault();
         fn?.();
@@ -666,6 +680,152 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
     window.addEventListener('keydown', listener);
     return () => window.removeEventListener('keydown', listener);
   }, []);
+
+  // The command palette offers this story's chapters and windows; it reads
+  // them when it opens, so they follow the story as it changes.
+  useLayoutEffect(() => {
+    paletteSources.set('reader', () => {
+      if (!view) return [];
+      const group = t('In this story');
+      const waiting = busy || awaitingReply || writing;
+      const open = (p: Exclude<Panel, null>) => () => {
+        setViewing(null);
+        setPanel(p);
+      };
+      const latestReply = view.history.findLast((e) => e.kind === 'assistant');
+      return [
+        ...view.chapters.map((c) => ({
+          id: `chapter:${c.eventId}`,
+          group,
+          label: chapterHeading(c.ordinal, c.title),
+          keywords: t('Chapter {n}', { n: c.ordinal }),
+          icon: BookOpenText,
+          run: () => goTo(c.eventId),
+        })),
+        { id: 'p:menu', group, label: t('Pause menu'), icon: Menu, run: open('menu') },
+        {
+          id: 'p:saves',
+          group,
+          label: t('Save / Load'),
+          icon: ArchiveRestore,
+          keys: 'saves' as const,
+          run: open('saves'),
+        },
+        {
+          id: 'p:quick',
+          group,
+          label: t('Quick save'),
+          icon: Save,
+          keys: 'quickSave' as const,
+          run: quickSave,
+        },
+        {
+          id: 'p:routes',
+          group,
+          label: t('Routes'),
+          icon: GitBranch,
+          keys: 'routes' as const,
+          run: open('routes'),
+        },
+        {
+          id: 'p:chapters',
+          group,
+          label: t('Replay a chapter…'),
+          icon: ListOrdered,
+          run: open('chapters'),
+        },
+        {
+          id: 'p:search',
+          group,
+          label: t('Story search'),
+          icon: Search,
+          keys: 'search' as const,
+          run: open('search'),
+        },
+        ...(waiting
+          ? []
+          : [
+              {
+                id: 'p:details',
+                group,
+                label: t('Story details'),
+                icon: UserRoundPen,
+                keys: 'details' as const,
+                run: () => openDetails(),
+              },
+              {
+                id: 'p:end',
+                group,
+                label: t('End chapter'),
+                icon: BookMarked,
+                keys: 'endChapter' as const,
+                run: open('end'),
+              },
+            ]),
+        {
+          id: 'p:memory',
+          group,
+          label: t('Story memory'),
+          icon: Brain,
+          keys: 'memory' as const,
+          run: open('memory'),
+        },
+        ...(view.state.state.tracking
+          ? [
+              {
+                id: 'p:inventory',
+                group,
+                label: t('Status and inventory'),
+                icon: Backpack,
+                run: open('inventory'),
+              },
+            ]
+          : []),
+        { id: 'p:pictures', group, label: t('Pictures'), icon: Images, run: open('pictures') },
+        {
+          id: 'p:storyteller',
+          group,
+          label: t('Storyteller'),
+          icon: Feather,
+          run: open('storyteller'),
+        },
+        {
+          id: 'p:context',
+          group,
+          label: t('Preview context'),
+          icon: ScanText,
+          run: open('context'),
+        },
+        { id: 'p:export', group, label: t('Export…'), icon: Download, run: open('export') },
+        {
+          id: 'p:tips',
+          group,
+          label: t('Show the first-time tips again'),
+          icon: Lightbulb,
+          run: () => useTour.getState().start(),
+        },
+        ...(latestReply && canReadAloud()
+          ? [
+              {
+                id: 'p:read',
+                group,
+                label: t('Read the latest reply aloud'),
+                icon: Volume2,
+                run: () =>
+                  useReadAloud
+                    .getState()
+                    .read(
+                      latestReply.id,
+                      latestReply.kind === 'assistant' ? plainText(latestReply.payload.text) : '',
+                      speechLang(view.state.state.narration?.language),
+                    ),
+              },
+            ]
+          : []),
+      ];
+    });
+  });
+  useEffect(() => () => void paletteSources.delete('reader'), []);
 
   useStoryLook(view?.story.id ?? null, view?.state.state.narration?.genres);
 
@@ -719,16 +879,39 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
               <h1 className="reader-title">{view.story.title}</h1>
               <div className="reader-meta">
                 {chapter && (
-                  <span className="reader-chapter">
-                    {chapterHasTitle(chapter.ordinal, chapter.title) ? (
-                      tr('Chapter {n}: {title}', {
-                        n: chapter.ordinal,
-                        title: <strong>{chapter.title}</strong>,
-                      })
-                    ) : (
-                      <strong>{t('Chapter {n}', { n: chapter.ordinal })}</strong>
-                    )}
-                  </span>
+                  <MenuButton
+                    label={t('Go to a chapter')}
+                    className="reader-chapter chapter-jump"
+                    items={[
+                      ...view.chapters.map((c) => ({
+                        label: chapterHeading(c.ordinal, c.title),
+                        icon:
+                          c.eventId === chapter.eventId ? (
+                            <Check className="menu-icon" aria-hidden={true} size={16} />
+                          ) : (
+                            <span className="menu-icon menu-icon-space" aria-hidden="true" />
+                          ),
+                        onSelect: () => goTo(c.eventId),
+                      })),
+                      {
+                        label: t('Replay a chapter…'),
+                        icon: <ListOrdered className="menu-icon" aria-hidden={true} size={16} />,
+                        onSelect: () => setPanel('chapters'),
+                      },
+                    ]}
+                  >
+                    <span>
+                      {chapterHasTitle(chapter.ordinal, chapter.title) ? (
+                        tr('Chapter {n}: {title}', {
+                          n: chapter.ordinal,
+                          title: <strong>{chapter.title}</strong>,
+                        })
+                      ) : (
+                        <strong>{t('Chapter {n}', { n: chapter.ordinal })}</strong>
+                      )}
+                    </span>
+                    <ChevronDown className="chapter-jump-icon" aria-hidden={true} size={14} />
+                  </MenuButton>
                 )}
                 <span>
                   {tr('Route: {label}', {
@@ -884,7 +1067,9 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
                   open: view.state.state.openThreads,
                   done: view.state.state.doneThreads ?? [],
                 }}
+                currentState={view.state.state}
                 sceneHeadings={!!view.state.state.narration?.sceneHeadings}
+                speechLang={speechLang(view.state.state.narration?.language)}
                 ideasShown={ideas.length > 0}
                 newcomers={
                   viewing || writing || busy || awaitingReply
@@ -974,6 +1159,7 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
                   </div>
                 </div>
               )}
+              <Tour hidden={!!panel || writing || awaitingReply} />
               {view.state.state.tracking && (
                 <TrackerHud
                   tracking={view.state.state.tracking}

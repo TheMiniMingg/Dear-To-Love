@@ -62,6 +62,12 @@ fn current_chapter(chain: &[EventRow]) -> AppResult<(u32, String, &[EventRow])> 
     }
 }
 
+/// Whether the chapter being played at the end of `chain` can end now.
+pub fn check_can_end(chain: &[EventRow]) -> AppResult<()> {
+    let (_, _, events) = current_chapter(chain)?;
+    check_endable(chain, events)
+}
+
 fn check_endable(chain: &[EventRow], events: &[EventRow]) -> AppResult<()> {
     if chain.last().and_then(EventRow::kind) == Some(EventKind::Player) {
         return Err(AppError::invalid_input(

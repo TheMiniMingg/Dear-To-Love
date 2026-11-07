@@ -733,6 +733,7 @@ fn an_unnamed_chapter_and_a_bare_relationship_read_plainly() {
         label: "Rival".into(),
         status: " ".into(),
         source_event_id: None,
+        bond: None,
     }];
     let p = system_prompt(&s, &frame());
     assert!(p.contains("\nNOW\nChapter 1\n"), "{p}");
@@ -741,4 +742,32 @@ fn an_unnamed_chapter_and_a_bare_relationship_read_plainly() {
 
     s.active_chapter.as_mut().unwrap().title = "Low Tide".into();
     assert!(system_prompt(&s, &frame()).contains("\nNOW\nChapter 1: Low Tide\n"));
+}
+
+#[test]
+fn feelings_and_their_bars_reach_the_storyteller() {
+    use crate::domain::story_state::{Bond, BondKind, Relationship};
+    let mut s = state();
+    let player = s.state.player_character_id.clone();
+    s.state.relationships.push(Relationship {
+        from_id: "starter:npc-mara".into(),
+        to_id: player,
+        label: String::new(),
+        status: "Warmer since the lamp".into(),
+        source_event_id: None,
+        bond: Some(Bond {
+            kind: BondKind::Trust,
+            value: 35,
+        }),
+    });
+    let p = system_prompt(&s, &frame());
+    assert!(
+        p.contains(": Warmer since the lamp [trust 35/100]\n"),
+        "{p}"
+    );
+    assert!(p.contains("\nFEELINGS\n") && p.contains("<bond name=\"Mina\" heart=\"+10\">"));
+    // Kept by hand: the bars are read, but the storyteller doesn't move them.
+    s.state.narration.manual_memory = true;
+    let p = system_prompt(&s, &frame());
+    assert!(p.contains("[trust 35/100]") && !p.contains("FEELINGS"));
 }

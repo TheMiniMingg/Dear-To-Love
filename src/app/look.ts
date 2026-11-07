@@ -3,7 +3,7 @@ import { create } from 'zustand';
 import { msg } from '../i18n';
 
 /** The app's colour themes. Rose follows the computer's light or dark mode. */
-export type ThemeId = 'rose' | 'midnight' | 'parchment';
+export type ThemeId = 'rose' | 'midnight' | 'parchment' | 'neon' | 'cafe' | 'gothic';
 
 export type Theme = { id: ThemeId; label: string; hint: string };
 
@@ -23,6 +23,21 @@ export const THEMES: Theme[] = [
     label: msg('Parchment'),
     hint: msg('Warm paper and dark ink, like an old book.'),
   },
+  {
+    id: 'neon',
+    label: msg('Neon'),
+    hint: msg('Near black with cyan and magenta, for science fiction.'),
+  },
+  {
+    id: 'cafe',
+    label: msg('Café'),
+    hint: msg('Latte browns and a soft green, for cozy stories.'),
+  },
+  {
+    id: 'gothic',
+    label: msg('Gothic'),
+    hint: msg('Charcoal and deep red, with serif headings, for horror.'),
+  },
 ];
 
 /** What a story looks like: its own theme, the app's, or one that fits its genre. */
@@ -36,30 +51,35 @@ const isTheme = (v: unknown): v is ThemeId => THEMES.some((x) => x.id === v);
  */
 const GENRE_THEMES: [ThemeId, string[]][] = [
   [
-    'midnight',
+    'gothic',
     [
       'horror',
-      'dark romance',
       'gothic',
-      'thriller',
       'mystery',
-      'noir',
-      'crime',
       'supernatural',
       'vampire',
       'dark fantasy',
-      'dystopian',
+      'dark romance',
+      'psychological',
+      'paranormal',
+    ],
+  ],
+  [
+    'neon',
+    [
       'cyberpunk',
       'sci-fi',
       'science fiction',
       'space',
       'space opera',
-      'post-apocalyptic',
-      'survival',
-      'spy',
-      'heist',
-      'psychological',
+      'dystopian',
+      'mecha',
+      'tech',
     ],
+  ],
+  [
+    'midnight',
+    ['thriller', 'noir', 'crime', 'post-apocalyptic', 'survival', 'spy', 'heist', 'detective'],
   ],
   [
     'parchment',
@@ -87,11 +107,14 @@ const GENRE_THEMES: [ThemeId, string[]][] = [
     ],
   ],
   [
+    'cafe',
+    ['slice of life', 'cozy', 'cosy', 'wholesome', 'everyday', 'friendship', 'family', 'cooking'],
+  ],
+  [
     'rose',
     [
       'romance',
       'romantic comedy',
-      'slice of life',
       'comedy',
       'drama',
       'dating sim',
@@ -101,10 +124,6 @@ const GENRE_THEMES: [ThemeId, string[]][] = [
       'school life',
       'workplace',
       'office',
-      'cozy',
-      'wholesome',
-      'friendship',
-      'family',
     ],
   ],
 ];

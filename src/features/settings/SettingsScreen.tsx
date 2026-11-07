@@ -28,15 +28,34 @@ const SECTIONS: [id: string, label: string][] = [
   ['settings-about', msg('About')],
 ];
 
+/** Settings' sections, for the command palette. */
+export const SETTINGS_SECTIONS: readonly [id: string, label: string][] = SECTIONS;
+
+/** Scrolls a section of Settings into view and puts the focus on it. */
+function showSection(id: string): boolean {
+  const el = document.getElementById(id);
+  if (!el) return false;
+  const still = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+  el.scrollIntoView?.({ block: 'start', behavior: still ? 'auto' : 'smooth' });
+  el.focus({ preventScroll: true });
+  return true;
+}
+
+/** Opens Settings (if it isn't open) at one of its sections. */
+export function goToSettingsSection(id: string) {
+  const ui = useUiStore.getState();
+  if (ui.screen.name !== 'settings') ui.navigate({ name: 'settings' });
+  // Sections that wait for the connections to load appear a moment later.
+  let frames = 0;
+  const tryShow = () => {
+    if (!showSection(id) && ++frames < 90) requestAnimationFrame(tryShow);
+  };
+  requestAnimationFrame(tryShow);
+}
+
 /** A row of links to each section of the long Settings page; it stays at the top. */
 function SettingsJump() {
-  const go = (id: string) => {
-    const el = document.getElementById(id);
-    if (!el) return;
-    const still = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-    el.scrollIntoView?.({ block: 'start', behavior: still ? 'auto' : 'smooth' });
-    el.focus({ preventScroll: true });
-  };
+  const go = (id: string) => void showSection(id);
   return (
     <nav className="settings-jump" aria-label={t('Settings sections')}>
       {SECTIONS.map(([id, label]) => (

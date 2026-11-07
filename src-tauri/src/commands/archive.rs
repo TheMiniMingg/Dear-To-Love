@@ -1,4 +1,4 @@
-//! Storypack export and import, and readable text export of a route. Paths
+//! Storypack export and import, and a route as readable text or a book. Paths
 //! come from the system save and open dialogs.
 
 use std::path::{Path, PathBuf};
@@ -7,6 +7,7 @@ use tauri::State;
 
 use crate::errors::{AppError, AppResult};
 use crate::services::archive::{self, StorypackExport, StorypackImport, TextExport, TextFormat};
+use crate::services::book::{self, BookExport, BookLabels, BOOK_EXTENSION};
 use crate::state::AppState;
 
 pub const STORYPACK_EXTENSION: &str = "storypack";
@@ -99,6 +100,18 @@ pub async fn export_route_text(
 ) -> AppResult<TextExport> {
     let dest = target(&path, format.extension())?;
     archive::export_route_text(state.db()?, &route_id, format, timestamps, &dest).await
+}
+
+/// This route as an EPUB book, with its cover and the reading font.
+#[tauri::command]
+pub async fn export_route_book(
+    state: State<'_, AppState>,
+    route_id: String,
+    path: String,
+    labels: BookLabels,
+) -> AppResult<BookExport> {
+    let dest = target(&path, BOOK_EXTENSION)?;
+    book::export_route_book(state.db()?, &state.assets()?, &route_id, labels, &dest).await
 }
 
 #[cfg(test)]

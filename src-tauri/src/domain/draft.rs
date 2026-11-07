@@ -427,6 +427,7 @@ impl CreateStoryDraft {
                 label: clean_text(&r.label),
                 status: clean_text(&r.status),
                 source_event_id: None,
+                bond: r.bond,
             })
             .collect();
         let base_state = StoryStateV1 {

@@ -29,6 +29,7 @@ export type ShortcutId =
   | 'moveStories'
   | 'settings'
   | 'help'
+  | 'palette'
   | 'closeWindow';
 
 type Shortcut = { id: ShortcutId; keys: string[]; label: string };
@@ -66,6 +67,11 @@ export const SHORTCUT_GROUPS: { title: string; items: Shortcut[] }[] = [
   {
     title: msg('Anywhere'),
     items: [
+      {
+        id: 'palette',
+        keys: ['Mod+K'],
+        label: msg('Go to anything: a story, chapter, window or setting'),
+      },
       { id: 'settings', keys: ['Mod+,'], label: msg('Settings') },
       { id: 'help', keys: ['F1', 'Mod+/'], label: msg('Show this list') },
       { id: 'closeWindow', keys: ['Escape'], label: msg('Close a window') },
