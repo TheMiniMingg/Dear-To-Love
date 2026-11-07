@@ -68,6 +68,14 @@ test('story details, another reply and route safety', async () => {
   assert.doesNotMatch(alt, /Story details changed/, 'the edit stays on Main');
 
   await click('button*=Routes');
+  await waitForText(b, '[role="dialog"]', 'Another reply: “');
+  // The same routes as a map and as a timeline.
+  await click('//div[@role="dialog"]//label[.//span[normalize-space()="Map"]]');
+  await waitForText(b, '[aria-label="Route map"]', 'Main');
+  assert.match(await textOf(b, '[aria-label="Route map"]'), /Alt/);
+  await click('//div[@role="dialog"]//label[.//span[normalize-space()="Timeline"]]');
+  await waitForText(b, '[aria-label="Route timeline"]', 'Alt');
+  await click('//div[@role="dialog"]//label[.//span[normalize-space()="List"]]');
   await waitForText(b, '[role="dialog"]', 'Switch');
   await click('//div[@role="dialog"]//button[normalize-space()="Switch"]');
   await waitForText(b, '[data-testid="route-label"]', 'Main');

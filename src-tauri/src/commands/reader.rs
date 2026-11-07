@@ -14,6 +14,7 @@ use crate::services::context::{self, ContextPreview};
 use crate::services::generation::{self, Ctx, Submitted};
 use crate::services::memory::{self, SummaryEnv};
 use crate::services::reader::{self, RouteView};
+use crate::services::route_map::{self, RouteNode};
 use crate::state::AppState;
 
 #[tauri::command]
@@ -219,6 +220,16 @@ pub async fn restart_chapter(
     let db = state.db()?;
     let r = timeline::restart_chapter(db, &story_id, &route_id, &chapter_event_id).await?;
     reader::route_view(db, &r.id).await
+}
+
+/// Every route of the story with where it branched and how far it got,
+/// for the list, map and timeline views.
+#[tauri::command]
+pub async fn get_route_map(
+    state: State<'_, AppState>,
+    story_id: String,
+) -> AppResult<Vec<RouteNode>> {
+    route_map::route_map(state.db()?, &story_id).await
 }
 
 #[tauri::command]

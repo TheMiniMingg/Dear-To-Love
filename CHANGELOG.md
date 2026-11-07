@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- **Routes as a list, a map or a timeline.** **Routes** now says where each route branched
+  ("after turn 4"), what it did differently first (another reply, a different action or a
+  change), how many turns it has, its chapter and its latest words. Switch between a **List**,
+  a **Map** of how the routes branch, and a **Timeline** of the turns each route covers; the
+  app remembers your choice. Every view can switch, rename, hide and show routes.
 - **Portraits from a description.** Add a picture connection (**OpenAI images**, or **Stable
   Diffusion WebUI** on your own computer) and choose it under **Settings → Pictures**. Then
   **Make portrait**, while creating a story or from a story's **Pictures**, draws a character
