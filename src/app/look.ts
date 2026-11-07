@@ -120,6 +120,23 @@ export function themeForGenres(genres: readonly string[] | undefined): ThemeId |
   return null;
 }
 
+/** How wide the story's column is. */
+export type ReadingWidth = 'narrow' | 'medium' | 'wide';
+/** How much room there is between the story's lines. */
+export type LineSpacing = 'compact' | 'normal' | 'roomy';
+
+export const READING_WIDTHS: { id: ReadingWidth; label: string; rem: number }[] = [
+  { id: 'narrow', label: msg('Narrow'), rem: 34 },
+  { id: 'medium', label: msg('Medium'), rem: 41 },
+  { id: 'wide', label: msg('Wide'), rem: 52 },
+];
+
+export const LINE_SPACINGS: { id: LineSpacing; label: string; lineHeight: number }[] = [
+  { id: 'compact', label: msg('Compact'), lineHeight: 1.55 },
+  { id: 'normal', label: msg('Normal'), lineHeight: 1.75 },
+  { id: 'roomy', label: msg('Roomy'), lineHeight: 2 },
+];
+
 type Look = {
   /** The theme of every screen, and of stories that keep the app's look. */
   theme: ThemeId;
@@ -127,6 +144,10 @@ type Look = {
   fitGenre: boolean;
   /** Looks chosen for single stories, by story id. */
   stories: Record<string, StoryLook>;
+  /** How wide the story's column is, in every story. */
+  width: ReadingWidth;
+  /** The room between the story's lines, in every story. */
+  spacing: LineSpacing;
 };
 
 type LookState = Look & {
@@ -139,7 +160,13 @@ type LookState = Look & {
 };
 
 const STORAGE_KEY = 'dtl.look';
-const DEFAULTS: Look = { theme: 'rose', fitGenre: true, stories: {} };
+const DEFAULTS: Look = {
+  theme: 'rose',
+  fitGenre: true,
+  stories: {},
+  width: 'medium',
+  spacing: 'normal',
+};
 
 function load(): Look {
   try {
@@ -153,6 +180,8 @@ function load(): Look {
       theme: isTheme(raw.theme) ? raw.theme : DEFAULTS.theme,
       fitGenre: typeof raw.fitGenre === 'boolean' ? raw.fitGenre : DEFAULTS.fitGenre,
       stories,
+      width: READING_WIDTHS.some((x) => x.id === raw.width) ? raw.width! : DEFAULTS.width,
+      spacing: LINE_SPACINGS.some((x) => x.id === raw.spacing) ? raw.spacing! : DEFAULTS.spacing,
     };
   } catch {
     return DEFAULTS;
@@ -175,9 +204,9 @@ export const useLook = create<LookState>((set, get) => ({
   ...load(),
   open: null,
   update: (next) => {
-    const { theme, fitGenre, stories } = { ...get(), ...next };
-    save({ theme, fitGenre, stories });
-    set({ theme, fitGenre, stories });
+    const { theme, fitGenre, stories, width, spacing } = { ...get(), ...next };
+    save({ theme, fitGenre, stories, width, spacing });
+    set({ theme, fitGenre, stories, width, spacing });
   },
   setStoryLook: (storyId, look) => {
     const stories = { ...get().stories };
@@ -188,13 +217,27 @@ export const useLook = create<LookState>((set, get) => ({
   setOpen: (open) => set({ open }),
 }));
 
+/** The story column's width and line spacing, as stylesheet variables. */
+export function readingStyle(look: Pick<Look, 'width' | 'spacing'>): Record<string, string> {
+  const width = READING_WIDTHS.find((x) => x.id === look.width) ?? READING_WIDTHS[1]!;
+  const spacing = LINE_SPACINGS.find((x) => x.id === look.spacing) ?? LINE_SPACINGS[1]!;
+  return {
+    '--reading-width': `${width.rem}rem`,
+    '--reading-leading': String(spacing.lineHeight),
+  };
+}
+
 /** The look a story gets when nothing was chosen for it. */
 export function defaultStoryTheme(look: Pick<Look, 'theme' | 'fitGenre'>, genres: string[]) {
   return (look.fitGenre && themeForGenres(genres)) || look.theme;
 }
 
 /** The theme a story is shown in. */
-export function storyTheme(look: Look, storyId: string, genres: string[]): ThemeId {
+export function storyTheme(
+  look: Pick<Look, 'theme' | 'fitGenre' | 'stories'>,
+  storyId: string,
+  genres: string[],
+): ThemeId {
   const own = look.stories[storyId];
   if (own === 'app') return look.theme;
   return own ?? defaultStoryTheme(look, genres);

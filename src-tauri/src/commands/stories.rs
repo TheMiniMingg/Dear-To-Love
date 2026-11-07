@@ -1,10 +1,12 @@
 use tauri::State;
 
 use crate::db::{drafts, stories};
-use crate::domain::draft::{CreateStoryDraft, DraftProblem, WizardDraft};
+use crate::domain::draft::{CreateStoryDraft, DraftProblem, DraftStep, WizardDraft};
 use crate::domain::story::{StoryCreated, StorySummary};
 use crate::domain::templates::{QuickStartInput, TemplateCatalog};
 use crate::errors::AppResult;
+use crate::services::memory::SummaryEnv;
+use crate::services::story_setup::{self, FilledDraft};
 use crate::state::AppState;
 
 #[tauri::command]
@@ -32,6 +34,25 @@ pub fn compose_story_draft(input: QuickStartInput) -> AppResult<CreateStoryDraft
 #[tauri::command]
 pub fn check_story_draft(draft: CreateStoryDraft) -> Vec<DraftProblem> {
     draft.check()
+}
+
+/// Fill in the empty fields of a wizard step (every step without one) with
+/// the draft's storyteller: one possibly paid request, or offline from the
+/// presets. Nothing is saved; the wizard keeps the result as its draft.
+#[tauri::command]
+pub async fn fill_story_draft(
+    state: State<'_, AppState>,
+    draft: CreateStoryDraft,
+    step: Option<DraftStep>,
+    offline: Option<bool>,
+) -> AppResult<FilledDraft> {
+    let env = SummaryEnv {
+        db: state.db()?,
+        secrets: state.secrets.as_ref(),
+        jobs: &state.memory,
+        session_id: &state.session_id,
+    };
+    story_setup::fill_draft(&env, draft, step, offline.unwrap_or(false)).await
 }
 
 /// Create a story from the wizard and discard the wizard's saved draft.

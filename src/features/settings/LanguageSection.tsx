@@ -1,4 +1,5 @@
 import { useId } from 'react';
+import { Languages } from 'lucide-react';
 import { LANGUAGES, systemLocale, t, useLanguage, type LanguageChoice } from '../../i18n';
 
 const nameOf = (id: string) => LANGUAGES.find((l) => l.id === id)?.name ?? id;
@@ -18,7 +19,10 @@ export function LanguageSection() {
       tabIndex={-1}
       aria-labelledby={`${id}-title`}
     >
-      <h2 id={`${id}-title`}>{t('Language')}</h2>
+      <h2 id={`${id}-title`} className="section-title">
+        <Languages className="section-icon" aria-hidden={true} />
+        {t('Language')}
+      </h2>
       <p className="muted">
         {t(
           "The language of menus, buttons and messages. A story is written in the language set in its own style, so you can play in one language with the app in another. Story presets and templates are in English; the storyteller still writes in the story's language.",

@@ -6,6 +6,7 @@ import { ariaKeys, useShortcutHelp, withKeys } from '../../app/shortcuts';
 import { defaultStoryTheme, themeForGenres, THEMES, useLook } from '../../app/look';
 import { Dialog } from '../../components/Dialog';
 import { ThemePicker } from '../../components/ThemePicker';
+import { ReadingControls } from '../../components/ReadingControls';
 import { t } from '../../i18n';
 
 const ICON = { className: 'rail-icon', 'aria-hidden': true, strokeWidth: 1.75 } as const;
@@ -52,7 +53,7 @@ export function ReaderRail({ storyId, genres }: { storyId: string; genres?: stri
         type="button"
         className="rail-button"
         onClick={() => setLook(true)}
-        title={t('Choose the colors this story is read in')}
+        title={t('Choose the colors, text size, width and line spacing')}
       >
         <Palette {...ICON} />
         <span className="rail-label">{t('Look')}</span>
@@ -113,6 +114,8 @@ export function StoryLookDialog({
       <p className="muted small">
         {t('Only on this computer. The app theme is in Settings, under Look.')}
       </p>
+      <h3 className="settings-subtitle">{t('Reading, in every story')}</h3>
+      <ReadingControls />
       <div className="button-row dialog-actions">
         <button type="button" className="primary" onClick={onClose}>
           {t('Done')}

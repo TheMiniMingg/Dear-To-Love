@@ -53,6 +53,8 @@ export type { EventBody } from './generated/EventBody';
 export type { EventDto } from './generated/EventDto';
 export type { EventKind } from './generated/EventKind';
 export type { FactConfirmPayload } from './generated/FactConfirmPayload';
+export type { FillField } from './generated/FillField';
+export type { FilledDraft } from './generated/FilledDraft';
 export type { GenerationSettings } from './generated/GenerationSettings';
 export type { ImageImport } from './generated/ImageImport';
 export type { ImageScope } from './generated/ImageScope';

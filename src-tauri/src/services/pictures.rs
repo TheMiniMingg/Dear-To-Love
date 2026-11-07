@@ -2,7 +2,7 @@
 //!
 //! Two kinds of service make pictures: OpenAI's images API (and servers
 //! that copy it) and Stable Diffusion WebUI. Each call is one ledger row
-//! (purpose `character_suggestion`, shown as "Character picture"); the
+//! (purpose `character_suggestion`, shown as "Story ideas and pictures"); the
 //! picture goes into the library like any added image, for the story it
 //! was made for. Portraits are always asked for as safe-for-work, fully
 //! clothed head-and-shoulders pictures, whatever the story's rating.

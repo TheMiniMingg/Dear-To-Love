@@ -14,6 +14,8 @@ import type {
   BudgetStatus,
   CreateStoryDraft,
   DraftProblem,
+  DraftStep,
+  FilledDraft,
   ConnectionCheck,
   ContextPreview,
   DiagnosticCheck,
@@ -167,6 +169,12 @@ export const commands = {
     call<CreateStoryDraft>('compose_story_draft', { input }),
   checkStoryDraft: (draft: CreateStoryDraft) =>
     call<DraftProblem[]>('check_story_draft', { draft }),
+  /**
+   * Fills the empty fields of a step (every step without one) with the
+   * draft's storyteller, or offline from the presets. Nothing is saved.
+   */
+  fillStoryDraft: (draft: CreateStoryDraft, step: DraftStep | null, offline = false) =>
+    call<FilledDraft>('fill_story_draft', { draft, step, offline }),
   createStory: (draft: CreateStoryDraft) => call<StoryCreated>('create_story', { draft }),
   getWizardDraft: () => call<WizardDraft | null>('get_wizard_draft'),
   saveWizardDraft: (wizard: WizardDraft) => call<WizardDraft>('save_wizard_draft', { wizard }),
