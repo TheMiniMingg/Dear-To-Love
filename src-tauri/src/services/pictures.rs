@@ -309,10 +309,40 @@ fn article(word: &str) -> &'static str {
 /// Always the last sentence of a portrait description, never cut off.
 const SAFE_FOR_WORK: &str = "One person, fully clothed, safe for work, no text.";
 
+/// `description` cut to fit, then the closing sentence that is never cut
+/// off and never left out.
+fn with_closing(description: &str, closing: &str) -> String {
+    let room = MAX_PROMPT_CHARS - closing.chars().count() - 1;
+    let mut text = description.split_whitespace().collect::<Vec<_>>().join(" ");
+    if text.chars().count() > room {
+        text = text.chars().take(room).collect();
+    }
+    if !text.is_empty() {
+        text.push(' ');
+    }
+    text.push_str(closing);
+    text
+}
+
 /// The description sent for a character's portrait. Names are left out
 /// (picture models draw words, not people); the world's era and setting
 /// set the clothes and the background.
 pub fn portrait_prompt(c: &Character, world: &World, style: PortraitStyle) -> Prompt {
+    portrait_prompt_from(&portrait_description(c, world, style))
+}
+
+/// A portrait prompt from a description, drafted or the player's own; the
+/// safe-for-work sentence always closes it.
+pub fn portrait_prompt_from(description: &str) -> Prompt {
+    Prompt {
+        text: with_closing(description, SAFE_FOR_WORK),
+        avoid: "nudity, sexual content, gore, text, watermark, extra people".into(),
+    }
+}
+
+/// The drafted portrait description, without the closing sentence: what
+/// the player sees and can change before the picture is made.
+pub fn portrait_description(c: &Character, world: &World, style: PortraitStyle) -> String {
     let mut who = String::new();
     match clean(&c.species) {
         Some(sp) if !sp.eq_ignore_ascii_case("human") => {
@@ -362,18 +392,7 @@ pub fn portrait_prompt(c: &Character, world: &World, style: PortraitStyle) -> Pr
         (true, false) => parts.push(format!("A softly blurred background of {setting}.")),
         (true, true) => {}
     }
-    // Long looks are cut, never the closing safe-for-work sentence.
-    let room = MAX_PROMPT_CHARS - SAFE_FOR_WORK.chars().count() - 1;
-    let mut text = parts.join(" ");
-    if text.chars().count() > room {
-        text = text.chars().take(room).collect();
-    }
-    text.push(' ');
-    text.push_str(SAFE_FOR_WORK);
-    Prompt {
-        text,
-        avoid: "nudity, sexual content, gore, text, watermark, extra people".into(),
-    }
+    parts.join(" ")
 }
 
 /// Always the last sentence of an item's description, never cut off.
@@ -382,6 +401,20 @@ const ITEM_SAFE: &str = "The object alone, no people, safe for work, no text.";
 /// The description sent for an inventory item's picture: what it is, in
 /// the style chosen, with the world's era and setting for its look.
 pub fn item_prompt(name: &str, about: &str, world: &World, style: PortraitStyle) -> Prompt {
+    item_prompt_from(&item_description(name, about, world, style))
+}
+
+/// An item picture prompt from a description, drafted or the player's own;
+/// the safe-for-work sentence always closes it.
+pub fn item_prompt_from(description: &str) -> Prompt {
+    Prompt {
+        text: with_closing(description, ITEM_SAFE),
+        avoid: "people, hands, nudity, sexual content, gore, text, watermark".into(),
+    }
+}
+
+/// The drafted item description, without the closing sentence.
+pub fn item_description(name: &str, about: &str, world: &World, style: PortraitStyle) -> String {
     let one_line = |s: &str| s.split_whitespace().collect::<Vec<_>>().join(" ");
     let name = one_line(name);
     let about = one_line(about);
@@ -403,17 +436,7 @@ pub fn item_prompt(name: &str, about: &str, world: &World, style: PortraitStyle)
         (true, false) => parts.push(format!("Made the way things are in {setting}.")),
         (true, true) => {}
     }
-    let room = MAX_PROMPT_CHARS - ITEM_SAFE.chars().count() - 1;
-    let mut text = parts.join(" ");
-    if text.chars().count() > room {
-        text = text.chars().take(room).collect();
-    }
-    text.push(' ');
-    text.push_str(ITEM_SAFE);
-    Prompt {
-        text,
-        avoid: "people, hands, nudity, sexual content, gore, text, watermark".into(),
-    }
+    parts.join(" ")
 }
 
 /// An inventory item's picture to make.
@@ -434,6 +457,11 @@ pub struct ItemPictureInput {
     #[serde(default)]
     #[ts(as = "Option<bool>", optional)]
     pub budget_override: bool,
+    /// The picture's description as the player wrote it, in place of the
+    /// drafted one. The safe-for-work sentence is added all the same.
+    #[serde(default)]
+    #[ts(optional)]
+    pub prompt: Option<String>,
 }
 
 /// A portrait to make.
@@ -458,6 +486,48 @@ pub struct PortraitInput {
     #[serde(default)]
     #[ts(as = "Option<bool>", optional)]
     pub budget_override: bool,
+    /// The portrait's description as the player wrote it, in place of the
+    /// drafted one. The safe-for-work sentence is added all the same.
+    #[serde(default)]
+    #[ts(optional)]
+    pub prompt: Option<String>,
+}
+
+/// The player's own description, when they wrote one.
+fn own(prompt: &Option<String>) -> Option<&str> {
+    prompt.as_deref().map(str::trim).filter(|p| !p.is_empty())
+}
+
+/// What a picture would be made from, for the player to read and change
+/// first: the drafted description, and what is always added to it.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct PictureDraft {
+    pub description: String,
+    /// The closing sentence added to every description, never left out.
+    pub closing: String,
+    /// What the picture must not show.
+    pub avoid: String,
+}
+
+pub fn draft_portrait_prompt(input: &PortraitInput) -> PictureDraft {
+    let made = portrait_prompt_from("");
+    PictureDraft {
+        description: portrait_description(&input.character, &input.world, input.style),
+        closing: SAFE_FOR_WORK.to_string(),
+        avoid: made.avoid,
+    }
+}
+
+pub fn draft_item_prompt(input: &ItemPictureInput) -> PictureDraft {
+    let name = input.name.split_whitespace().collect::<Vec<_>>().join(" ");
+    let made = item_prompt_from("");
+    PictureDraft {
+        description: item_description(&name, &input.description, &input.world, input.style),
+        closing: ITEM_SAFE.to_string(),
+        avoid: made.avoid,
+    }
 }
 
 /// The picture connection in use, or a message saying how to add one.
@@ -501,7 +571,10 @@ pub async fn make_portrait(
         secrets,
         session_id,
         Made {
-            prompt: portrait_prompt(&input.character, &input.world, input.style),
+            prompt: match own(&input.prompt) {
+                Some(p) => portrait_prompt_from(p),
+                None => portrait_prompt(&input.character, &input.world, input.style),
+            },
             label: format!("Portrait of {name}"),
             tag: "Portrait",
             scope,
@@ -532,7 +605,10 @@ pub async fn make_item_picture(
         secrets,
         session_id,
         Made {
-            prompt: item_prompt(&name, &input.description, &input.world, input.style),
+            prompt: match own(&input.prompt) {
+                Some(p) => item_prompt_from(p),
+                None => item_prompt(&name, &input.description, &input.world, input.style),
+            },
             label: name,
             tag: "Item",
             scope: ImportScope::Story(input.story_id.clone()),

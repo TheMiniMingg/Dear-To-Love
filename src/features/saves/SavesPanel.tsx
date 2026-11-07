@@ -10,6 +10,8 @@ type Props = {
   onView: (saveId: string) => void;
   onResume: (saveId: string) => void;
   onSaved: (save: SaveDto) => void;
+  /** A name to start from, such as where and when the story is. */
+  suggestedName?: string;
 };
 
 const TYPE_LABEL: Record<string, string> = {
@@ -18,9 +20,16 @@ const TYPE_LABEL: Record<string, string> = {
   auto: msg('Autosave'),
 };
 
-export function SavesPanel({ storyId, routeId, onView, onResume, onSaved }: Props) {
+export function SavesPanel({
+  storyId,
+  routeId,
+  onView,
+  onResume,
+  onSaved,
+  suggestedName = '',
+}: Props) {
   const [saves, setSaves] = useState<SaveDto[] | null>(null);
-  const [label, setLabel] = useState('');
+  const [label, setLabel] = useState(suggestedName);
   const [error, setError] = useState<string | null>(null);
   const [reload, setReload] = useState(0);
 
@@ -38,7 +47,7 @@ export function SavesPanel({ storyId, routeId, onView, onResume, onSaved }: Prop
   const save = async () => {
     try {
       const s = await commands.createSave({ storyId, routeId, label: label.trim() || t('Save') });
-      setLabel('');
+      setLabel(suggestedName);
       onSaved(s);
       setReload((n) => n + 1);
     } catch (e) {
@@ -70,6 +79,7 @@ export function SavesPanel({ storyId, routeId, onView, onResume, onSaved }: Prop
           value={label}
           maxLength={120}
           placeholder={t('e.g. Before the dance')}
+          onFocus={(e) => e.target.select()}
           onChange={(e) => setLabel(e.target.value)}
         />
         <button type="submit" className="primary">

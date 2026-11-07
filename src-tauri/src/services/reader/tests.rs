@@ -407,3 +407,81 @@ async fn a_story_can_keep_its_notes_by_hand() {
     let err = undo_reply_notes(&t.db, &s.story_id, &s.main_route_id, &reply, &reply, None).await;
     assert!(err.is_err());
 }
+
+#[tokio::test]
+async fn a_reply_keeps_the_quest_log_and_its_threads_can_be_undone() {
+    let (t, s) = story().await;
+    let open_of = |v: &RouteView| v.state.effective.state.open_threads.clone();
+    let done_of = |v: &RouteView| v.state.effective.state.done_threads.clone();
+    let start = route_view(&t.db, &s.main_route_id).await.unwrap();
+    let mut first_open = open_of(&start);
+    first_open.push("Find who sent the letter".into());
+    let first = exchange(
+        &t,
+        &s,
+        &s.head_event_id,
+        "A letter. <thread>Find who sent the letter</thread>",
+    )
+    .await;
+    let v = route_view(&t.db, &s.main_route_id).await.unwrap();
+    assert_eq!(open_of(&v), first_open);
+
+    let second = exchange(
+        &t,
+        &s,
+        &first,
+        "It was Kip. <thread done>find who sent the letter.</thread>\
+         <thread>Pay Kip back</thread>",
+    )
+    .await;
+    let v = route_view(&t.db, &s.main_route_id).await.unwrap();
+    assert!(open_of(&v).contains(&"Pay Kip back".to_string()));
+    assert_eq!(done_of(&v), vec!["Find who sent the letter".to_string()]);
+
+    // Undo the second reply: the letter is open again where it stood, and
+    // Kip's debt goes.
+    undo_reply_notes(&t.db, &s.story_id, &s.main_route_id, &second, &second, None)
+        .await
+        .unwrap();
+    let v = route_view(&t.db, &s.main_route_id).await.unwrap();
+    assert_eq!(open_of(&v), first_open);
+    assert!(done_of(&v).is_empty());
+    match &v.history.last().unwrap().body {
+        EventBody::Edit(p) => assert_eq!(
+            p.note.as_deref(),
+            Some("Find who sent the letter, Pay Kip back")
+        ),
+        other => panic!("expected an edit, got {other:?}"),
+    }
+
+    // A thread the player moved since is left where they put it.
+    let head = v.state.head_event_id.clone();
+    let moved = edit_details(
+        &t.db,
+        &s.story_id,
+        &s.main_route_id,
+        &head,
+        vec![
+            StateEdit::SetOpenThreads {
+                open_threads: vec![],
+            },
+            StateEdit::SetDoneThreads {
+                done_threads: vec!["Find who sent the letter".into()],
+            },
+        ],
+        None,
+    )
+    .await
+    .unwrap();
+    let err = undo_reply_notes(
+        &t.db,
+        &s.story_id,
+        &s.main_route_id,
+        &moved.event_id,
+        &first,
+        None,
+    )
+    .await
+    .unwrap_err();
+    assert!(err.message.contains("changed since"), "{}", err.message);
+}

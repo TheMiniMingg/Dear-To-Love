@@ -41,6 +41,9 @@ pub struct ChapterRecapDraft {
     pub written_by: String,
     pub next_ordinal: u32,
     pub next_title: String,
+    /// The storyteller suggested `next_title` from how the chapter ended
+    /// (not the outline's title or the plain "Chapter N").
+    pub next_title_suggested: bool,
     /// The route head the recap was written for.
     pub head_event_id: String,
 }
@@ -76,7 +79,11 @@ fn check_endable(chain: &[EventRow], events: &[EventRow]) -> AppResult<()> {
     Ok(())
 }
 
-/// Messages asking a model for the chapter's recap.
+/// How the recap's last line suggests the next chapter's title.
+const NEXT_TITLE: &str = "Next chapter:";
+
+/// Messages asking a model for the chapter's recap, and with
+/// `suggest_title` a title for the next chapter on a last line.
 pub fn recap_messages(
     ordinal: u32,
     title: &str,
@@ -84,7 +91,16 @@ pub fn recap_messages(
     player_name: &str,
     language: Option<&str>,
     max_chars: usize,
+    suggest_title: bool,
 ) -> AppResult<Vec<ModelMessage>> {
+    let ask = if suggest_title {
+        format!(
+            " Reply with the recap, then a last line of its own: \"{NEXT_TITLE} \" and a short \
+             title for the next chapter, two to six words, that fits where the story is going."
+        )
+    } else {
+        " Reply with the recap only.".to_string()
+    };
     Ok(vec![
         ModelMessage {
             role: Role::System,
@@ -94,8 +110,7 @@ pub fn recap_messages(
                  character is {player_name}. In past tense and the third person, say what \
                  happened, what {player_name} decided and did, what changed between the \
                  characters, and what is still unresolved. Keep names, places, promises, \
-                 items and secrets. Plain prose, no headings, at most 200 words.{} Reply \
-                 with the recap only.",
+                 items and secrets. Plain prose, no headings, at most 200 words.{}{ask}",
                 written_in(language)
             ),
         },
@@ -109,10 +124,45 @@ pub fn recap_messages(
     ])
 }
 
+/// The recap and the next chapter's suggested title from a reply that may
+/// end with a `Next chapter: …` line.
+pub fn split_next_title(reply: &str) -> (String, Option<String>) {
+    let reply = reply.trim();
+    let (body, last) = match reply.rfind('\n') {
+        Some(i) => (&reply[..i], reply[i + 1..].trim()),
+        None => ("", reply),
+    };
+    // `**Next chapter:** …` in markdown too.
+    let last = last.trim_start_matches(['*', '_']).replacen(":**", ":", 1);
+    let last = last.as_str();
+    let label = last
+        .get(..NEXT_TITLE.len())
+        .filter(|l| l.eq_ignore_ascii_case(NEXT_TITLE))
+        .map(|l| l.len())
+        .or_else(|| {
+            last.find("Next chapter：")
+                .map(|i| i + "Next chapter：".len())
+        });
+    let Some(after) = label else {
+        return (reply.to_string(), None);
+    };
+    let title: String = last[after..]
+        .trim()
+        .trim_matches(|c: char| matches!(c, '"' | '“' | '”' | '*' | '「' | '」'))
+        .trim()
+        .chars()
+        .take(120)
+        .collect();
+    (
+        body.trim().to_string(),
+        (!title.is_empty()).then_some(title),
+    )
+}
+
 /// Write a recap of the chapter being played on `route_id`. Nothing is
 /// stored; `end_chapter` keeps the version the player approves.
 pub async fn draft_recap(env: &SummaryEnv<'_>, route_id: &str) -> AppResult<ChapterRecapDraft> {
-    let (chain, player_name, language, next, head) = {
+    let (chain, player_name, language, mut next, head) = {
         let mut conn = env.db.reader().acquire().await?;
         let route = get_route(&mut conn, route_id).await?;
         let head = route
@@ -133,6 +183,7 @@ pub async fn draft_recap(env: &SummaryEnv<'_>, route_id: &str) -> AppResult<Chap
     let (ordinal, title, events) = current_chapter(&chain)?;
     check_endable(&chain, events)?;
 
+    let mut suggested = false;
     let (recap, written_by) = match providers::route_storyteller(env.db, route_id).await? {
         None => (
             extractive(None, events, &player_name)?,
@@ -147,8 +198,17 @@ pub async fn draft_recap(env: &SummaryEnv<'_>, route_id: &str) -> AppResult<Chap
                 estimate_messages(m).saturating_add(max_output) <= settings.max_context_tokens
             };
             let language = language.as_deref();
-            let mut messages =
-                recap_messages(ordinal, &title, events, &player_name, language, usize::MAX)?;
+            // A title the story's outline already gives is kept as it is.
+            let suggest_title = next.2.is_none();
+            let mut messages = recap_messages(
+                ordinal,
+                &title,
+                events,
+                &player_name,
+                language,
+                usize::MAX,
+                suggest_title,
+            )?;
             let mut from = 0;
             while !fits(&messages) {
                 // Shorten every turn first, then leave out the oldest turns.
@@ -159,6 +219,7 @@ pub async fn draft_recap(env: &SummaryEnv<'_>, route_id: &str) -> AppResult<Chap
                     &player_name,
                     language,
                     SHORTENED_TURN_CHARS,
+                    suggest_title,
                 )?;
                 if fits(&messages) {
                     break;
@@ -193,7 +254,12 @@ pub async fn draft_recap(env: &SummaryEnv<'_>, route_id: &str) -> AppResult<Chap
                 },
             )
             .await?;
-            (c.text.trim().to_string(), row.label)
+            let (recap, title) = split_next_title(&c.text);
+            if let (true, Some(title)) = (suggest_title, title) {
+                next.1 = title;
+                suggested = true;
+            }
+            (recap, row.label)
         }
     };
     Ok(ChapterRecapDraft {
@@ -203,6 +269,7 @@ pub async fn draft_recap(env: &SummaryEnv<'_>, route_id: &str) -> AppResult<Chap
         written_by,
         next_ordinal: next.0,
         next_title: next.1,
+        next_title_suggested: suggested,
         head_event_id: head,
     })
 }

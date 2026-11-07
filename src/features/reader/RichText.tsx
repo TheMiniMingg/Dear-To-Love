@@ -2,7 +2,14 @@ import { useContext, type ReactNode } from 'react';
 import type { RollRequest } from '../../types';
 import { Thumb } from '../images/ImageGrid';
 import { RollAsk, RollResult } from './DiceCards';
-import { APP_TAGS, parseBlocks, rollRequestOf, samePerson, type Block } from './messages';
+import {
+  APP_TAGS,
+  ASIDE_TAGS,
+  parseBlocks,
+  rollRequestOf,
+  samePerson,
+  type Block,
+} from './messages';
 import { NameColorsContext, nameStyle } from './nameColors';
 import { PortraitsContext } from './portraits';
 import { msg, t } from '../../i18n';
@@ -109,6 +116,7 @@ export function RichText({
   onRoll,
   rolls = true,
   dropCap = false,
+  sceneHeadings = true,
 }: {
   text: string;
   playerName: string;
@@ -122,6 +130,8 @@ export function RichText({
   rolls?: boolean;
   /** The first reply of a chapter: a drop cap when it opens with prose. */
   dropCap?: boolean;
+  /** Show scene headings; off, the marks still keep the place and time. */
+  sceneHeadings?: boolean;
 }) {
   const colorOf = useContext(NameColorsContext);
   // Only a scene heading may come before the paragraph that gets the drop cap.
@@ -317,13 +327,19 @@ export function RichText({
       case 'text':
       case 'remember':
       case 'forget':
+      case 'thread':
+      case 'character':
+      case 'next':
         return null;
     }
   };
 
   blocks.forEach((b, i) => {
-    // Memory notes show under the reply ("Memory updated"), not in it.
-    if (b.kind === 'remember' || b.kind === 'forget') return;
+    // Notes, threads and new characters show under the reply, next moves
+    // by the composer: none of them in it.
+    if ((ASIDE_TAGS as string[]).includes(b.kind)) return;
+    // Scene marks the player turned headings off for are kept, not shown.
+    if (b.kind === 'scene' && !sceneHeadings) return;
     if (b.kind === 'meter' || b.kind === 'item') {
       const chip = <TrackerChip key={i} kind={b.kind} attrs={b.attrs} body={b.body} />;
       if (b.attrs.name || b.attrs.gain || b.attrs.lose) changes.push(chip);

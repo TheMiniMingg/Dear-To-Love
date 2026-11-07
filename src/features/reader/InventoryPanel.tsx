@@ -2,13 +2,14 @@ import { useEffect, useId, useState } from 'react';
 import { CommandError, commands, errorMessage, sentence } from '../../api/commands';
 import { Thumb } from '../images/ImageGrid';
 import { PICTURE_STYLES } from '../images/MakePortrait';
+import { ownPrompt, PictureDescription } from '../images/PictureDescription';
 import type {
   AssetDto,
   Item,
   ItemPictureInput,
   Meter,
   PortraitStyle,
-  Prompt,
+  PictureDraft,
   ProviderProfile,
   RouteView,
   Tracking,
@@ -258,6 +259,7 @@ function itemInput(
   style: PortraitStyle,
   storyId: string,
   budgetOverride = false,
+  own: string | null = null,
 ): ItemPictureInput {
   return {
     name: item.name,
@@ -266,12 +268,14 @@ function itemInput(
     style,
     storyId,
     ...(budgetOverride ? { budgetOverride: true } : {}),
+    ...ownPrompt(own),
   };
 }
 
 /**
  * Asks the picture connection (Settings -> Pictures) for a picture of an
- * item: the object alone, safe for work. Shows exactly what is sent.
+ * item: the object alone, safe for work. Shows what is sent on request,
+ * and the player can change the description first.
  */
 function MakeItemPicture({
   item,
@@ -289,7 +293,8 @@ function MakeItemPicture({
   const [maker, setMaker] = useState<ProviderProfile | null | undefined>(undefined);
   const [style, setStyle] = useState<PortraitStyle>('painted');
   const [showPrompt, setShowPrompt] = useState(false);
-  const [prompt, setPrompt] = useState<Prompt | null>(null);
+  const [prompt, setPrompt] = useState<PictureDraft | null>(null);
+  const [own, setOwn] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [needsOverride, setNeedsOverride] = useState(false);
@@ -330,7 +335,7 @@ function MakeItemPicture({
     setNeedsOverride(false);
     try {
       onMade(
-        await commands.makeItemPicture(itemInput(item, world, style, storyId, budgetOverride)),
+        await commands.makeItemPicture(itemInput(item, world, style, storyId, budgetOverride, own)),
       );
     } catch (e) {
       if (e instanceof CommandError && e.code === 'BUDGET_OVERRIDE_REQUIRED') {
@@ -393,20 +398,18 @@ function MakeItemPicture({
           {busy ? t('Making the picture…') : t('Make picture')}
         </button>
         <button type="button" aria-expanded={showPrompt} onClick={() => setShowPrompt((v) => !v)}>
-          {showPrompt ? t('Hide what is sent') : t('Show what is sent')}
+          {showPrompt ? t('Hide what is sent') : t('See or change what is sent')}
         </button>
       </div>
+      {!showPrompt && own !== null && (
+        <p className="muted small">{t('Your own description is used.')}</p>
+      )}
       {busy && (
         <p role="status" className="muted small">
           {t('This can take a minute.')}
         </p>
       )}
-      {showPrompt && prompt && (
-        <div className="portrait-prompt small" aria-label={t('What is sent')}>
-          <p>{prompt.text}</p>
-          <p className="muted">Avoid: {prompt.avoid}</p>
-        </div>
-      )}
+      {showPrompt && prompt && <PictureDescription draft={prompt} own={own} onOwn={setOwn} />}
       {error && (
         <div role="alert" className="error">
           <p>{error}</p>

@@ -229,6 +229,7 @@ impl Env {
             story_id: Some(self.story.story_id.clone()),
             new_story: false,
             budget_override: false,
+            prompt: None,
         }
     }
 
@@ -323,6 +324,7 @@ async fn an_item_picture_is_made_for_its_story() {
         style: PortraitStyle::Painted,
         story_id: env.story.story_id.clone(),
         budget_override: false,
+        prompt: None,
     };
     let made = make_item_picture(&env.t.db, &env.store, &env.secrets, "s1", &input)
         .await
@@ -332,6 +334,69 @@ async fn an_item_picture_is_made_for_its_story() {
     assert!(!made.asset.shared, "made for one story");
     let sent: Value = serde_json::from_str(&server.requests()[0].body).unwrap();
     assert!(sent["prompt"].as_str().unwrap().contains("Rusty Key"));
+}
+
+#[tokio::test]
+async fn a_picture_from_the_players_own_words_still_stays_safe() {
+    let env = Env::new().await;
+    let body = serde_json::json!({ "data": [{ "b64_json": b64(&png()) }] }).to_string();
+    let server = serve(vec![Reply::json(200, &body), Reply::json(200, &body)]).await;
+    let id = env
+        .connect(AdapterKind::OpenaiImages, &server.base_url, "gpt-image-1")
+        .await;
+    set_picture_maker(&env.t.db, Some(&id)).await.unwrap();
+
+    // What the player sees first: the draft, and the sentence always added.
+    let draft = draft_portrait_prompt(&env.input());
+    assert!(draft.description.contains("lizardfolk"));
+    assert!(!draft.description.contains("safe for work"));
+    assert_eq!(
+        draft.closing,
+        "One person, fully clothed, safe for work, no text."
+    );
+    assert!(draft.avoid.contains("nudity"));
+
+    let input = PortraitInput {
+        prompt: Some("  A smiling   sailor in a red scarf.  ".into()),
+        ..env.input()
+    };
+    make_portrait(&env.t.db, &env.store, &env.secrets, "s1", &input)
+        .await
+        .unwrap();
+    let item = ItemPictureInput {
+        name: "Rusty Key".into(),
+        description: "An iron key.".into(),
+        world: harbor(),
+        style: PortraitStyle::Painted,
+        story_id: env.story.story_id.clone(),
+        budget_override: false,
+        prompt: Some("A brass key on velvet. One person, nude.".into()),
+    };
+    let item_draft = draft_item_prompt(&item);
+    assert!(item_draft.description.contains("Rusty Key"));
+    assert_eq!(
+        item_draft.closing,
+        "The object alone, no people, safe for work, no text."
+    );
+    make_item_picture(&env.t.db, &env.store, &env.secrets, "s1", &item)
+        .await
+        .unwrap();
+
+    let reqs = server.requests();
+    let sent: Vec<Value> = reqs
+        .iter()
+        .map(|r| serde_json::from_str(&r.body).unwrap())
+        .collect();
+    let prompt = |n: usize| sent[n]["prompt"].as_str().unwrap().to_string();
+    assert!(prompt(0).starts_with(
+        "A smiling sailor in a red scarf. One person, fully clothed, safe for work, no text."
+    ));
+    assert!(prompt(0).contains("Avoid: nudity, sexual content"));
+    // The closing sentence is added whatever the player wrote.
+    assert!(prompt(1).starts_with(
+        "A brass key on velvet. One person, nude. The object alone, no people, safe for work, \
+         no text."
+    ));
 }
 
 #[tokio::test]

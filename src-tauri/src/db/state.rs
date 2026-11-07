@@ -18,6 +18,12 @@ use crate::errors::{AppError, AppResult};
 /// Snapshot every N events along a path (by depth from the root).
 pub const SNAPSHOT_INTERVAL: usize = 20;
 
+/// The version cached snapshots are stored under: the state schema, and
+/// which tags replay reads from replies. Raise it whenever replay starts
+/// reading something new from old events, so older snapshots are not used.
+/// 2: scene headings move the scene, and `<thread>` tags keep open threads.
+pub const SNAPSHOT_VERSION: i64 = STORY_STATE_SCHEMA_VERSION as i64 * 1000 + 2;
+
 #[derive(Debug, Clone, Serialize, TS)]
 #[serde(rename_all = "camelCase")]
 #[ts(export)]
@@ -73,7 +79,7 @@ pub async fn state_with_snapshots(
          JOIN events e ON e.id = s.event_id WHERE e.story_id = ? AND s.schema_version = ?",
     )
     .bind(story_id)
-    .bind(STORY_STATE_SCHEMA_VERSION as i64)
+    .bind(SNAPSHOT_VERSION)
     .fetch_all(&mut *conn)
     .await?;
     let cached: HashMap<String, (String, String)> = cached
@@ -116,13 +122,18 @@ pub async fn store_snapshots(db: &Database, snaps: &[(String, EffectiveState)]) 
         return Ok(());
     }
     let mut tx = db.write_txn().await?;
+    // Snapshots from before replay read something new are never used again.
+    sqlx::query("DELETE FROM snapshots WHERE schema_version <> ?")
+        .bind(SNAPSHOT_VERSION)
+        .execute(&mut *tx)
+        .await?;
     for (event_id, s) in snaps {
         sqlx::query(
             "INSERT OR IGNORE INTO snapshots (event_id, schema_version, state_json, state_hash, created_at) \
              VALUES (?, ?, ?, ?, ?)",
         )
         .bind(event_id)
-        .bind(STORY_STATE_SCHEMA_VERSION as i64)
+        .bind(SNAPSHOT_VERSION)
         .bind(serde_json::to_string(s).expect("state serializes"))
         .bind(s.hash())
         .bind(now())

@@ -295,7 +295,10 @@ fn follows_the_style() {
     let r = reply(&thoughts, "Open the window", 6, false);
     assert!(r.contains("<thought who=\"Mara\">"), "{r}");
 
-    let adventure = with(|s| s.narration.style = Some(NarrationStyle::Adventure));
+    let adventure = with(|s| {
+        s.narration.style = Some(NarrationStyle::Adventure);
+        s.narration.no_suggestions = true;
+    });
     let r = reply(&adventure, "Look around", 1, true);
     assert!(r.starts_with("**"), "{r}");
     let p = Person {
@@ -565,4 +568,25 @@ fn keeps_track_of_fights_spells_rest_money_items_and_feelings() {
     for r in replies(&plain, "Attack the goblin and search its pockets") {
         assert!(!r.contains("<meter") && !r.contains("<item"), "{r}");
     }
+}
+
+#[test]
+fn suggests_next_moves_unless_turned_off() {
+    let on = with(|_| {});
+    let r = reply(&on, "Open the window", 3, false);
+    let ideas: Vec<&str> = r
+        .match_indices("<next>")
+        .map(|(i, _)| {
+            let rest = &r[i + 6..];
+            &rest[..rest.find("</next>").unwrap()]
+        })
+        .collect();
+    assert!((2..=3).contains(&ideas.len()), "{r}");
+    let mut unique = ideas.clone();
+    unique.dedup();
+    assert_eq!(unique.len(), ideas.len(), "different ideas: {r}");
+    assert!(r.trim_end().ends_with("</next>"), "at the end: {r}");
+
+    let off = with(|s| s.narration.no_suggestions = true);
+    assert!(!reply(&off, "Open the window", 3, false).contains("<next>"));
 }

@@ -24,8 +24,8 @@
   its cover, makes a copy, exports it or deletes it. Arrow keys move between the cards.
 - **A notice when a reply is ready.** When a reply finishes in a story you left, a notice says
   so, with **Read it** to go there, and a soft chime that **Settings → Sound** can turn off.
-- **A tidier reader.** Where and when the story is shows above it, taken from the newest
-  scene heading; click it to correct the scene. The kind of action is a row of pills with
+- **A tidier reader.** Where and when the story is shows above it; click it to correct the
+  scene. The kind of action is a row of pills with
   icons, with Quick save, Save / Load, End chapter, Routes and Search beside them. Another
   reply, Branch from here, Change this action and the bookmark are icons under each reply,
   lines in script style show the speaker's portrait, and the pause menu has icons. While a
@@ -46,6 +46,21 @@
   Turn off **Let the storyteller keep memory notes** in **Story details** to keep them only
   by hand. When a story has more notes than fit, the ones about the current scene go first and
   the rest are still named.
+- **Threads to follow.** The storyteller keeps a short list of promises, mysteries and goals
+  the story has not settled, and ticks them off when they are. The "Memory updated" line
+  names the threads a reply opened or settled (Undo takes them back too), and **Story memory
+  → Threads to follow** lets you tick one off, reword it, add your own or reopen one.
+- **Someone new.** When the storyteller brings in a named character who is not in the cast,
+  a card under the reply offers to add them as they are, change them first, or not now.
+- **Ideas for your next move.** Two or three ideas sit above the empty action box after each
+  reply; pick one to put it in the box. **Suggest what you could do next** turns them off.
+- **Where and when, always.** The scene above the story and in **Story details** (with a new
+  **When**) follows the place and time the storyteller marks, headings on or off. A save's
+  name starts from it, and **End chapter** says when the next chapter's title is the
+  storyteller's idea.
+- **Change a picture's description.** **See or change what is sent** lets you rewrite a
+  portrait's or an item picture's description before it is made; the safe-for-work sentence
+  is always added.
 - **Older chapters are kept in brief.** Beyond the 10 newest chapter recaps, the 40 before
   them are now sent in brief instead of being left out.
 - **Play several stories at once.** A Stories button beside the story goes back to the library

@@ -14,6 +14,10 @@ export type StoryStateV1 = { schemaVersion: number, playerCharacterId: string, w
  */
 characters: { [key in string]: Character }, relationships: Array<Relationship>, knownFacts: Array<KnownFact>, scene: Scene, openThreads: Array<string>, 
 /**
+ * Threads settled along the way, newest last: the quest log's done list.
+ */
+doneThreads?: Array<string>, 
+/**
  * Optional asset ids by slot (e.g. `"cover"`, `"background"`).
  */
 visualRefs: { [key in string]: string }, 

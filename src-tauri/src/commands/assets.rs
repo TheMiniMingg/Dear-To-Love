@@ -12,7 +12,7 @@ use crate::db::assets::{self, AssetDto, AssetUsage, ImportScope, StoryVisual};
 use crate::domain::visuals::VisualSlot;
 use crate::errors::{AppError, AppResult};
 use crate::services::assets::{self as library, Size};
-use crate::services::pictures::{self, ItemPictureInput, PortraitInput, Prompt};
+use crate::services::pictures::{self, ItemPictureInput, PictureDraft, PortraitInput};
 use crate::state::AppState;
 
 /// Most files added in one go.
@@ -139,10 +139,11 @@ pub async fn delete_image(state: State<'_, AppState>, asset_id: String) -> AppRe
     library::delete(state.db()?, &state.assets()?, &asset_id).await
 }
 
-/// The description a portrait would be made from. Sends nothing.
+/// The description a portrait would be made from, to read and change
+/// first. Sends nothing.
 #[tauri::command]
-pub fn preview_portrait(input: PortraitInput) -> Prompt {
-    pictures::portrait_prompt(&input.character, &input.world, input.style)
+pub fn preview_portrait(input: PortraitInput) -> PictureDraft {
+    pictures::draft_portrait_prompt(&input)
 }
 
 /// Makes a portrait with the picture connection (one request, which may be
@@ -163,10 +164,11 @@ pub async fn make_portrait(
     Ok(made.asset)
 }
 
-/// The description an item's picture would be made from. Sends nothing.
+/// The description an item's picture would be made from, to read and
+/// change first. Sends nothing.
 #[tauri::command]
-pub fn preview_item_picture(input: ItemPictureInput) -> Prompt {
-    pictures::item_prompt(&input.name, &input.description, &input.world, input.style)
+pub fn preview_item_picture(input: ItemPictureInput) -> PictureDraft {
+    pictures::draft_item_prompt(&input)
 }
 
 /// Makes a picture of an inventory item with the picture connection (one

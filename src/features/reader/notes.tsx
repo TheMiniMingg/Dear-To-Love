@@ -2,9 +2,18 @@
  * Memory notes in the reader: the "Memory updated" line under a reply, and
  * the names of the notebook's sections.
  */
-import { CalendarClock, Gem, Lightbulb, MapPin, UserRound, type LucideIcon } from 'lucide-react';
+import {
+  CalendarClock,
+  CircleCheck,
+  Gem,
+  Lightbulb,
+  ListTodo,
+  MapPin,
+  UserRound,
+  type LucideIcon,
+} from 'lucide-react';
 import type { MemoryNote, NoteKind, StateEdit } from '../../types';
-import { noteChanges, type NoteChange } from './messages';
+import { noteChanges, threadChanges, type NoteChange, type ThreadChange } from './messages';
 import { msg, t } from '../../i18n';
 
 /** The notebook's sections, in the order the storyteller reads them. */
@@ -56,9 +65,35 @@ export const noteKey = (name: string) => name.trim().split(/\s+/).join(' ').toLo
 export const sameNote = (n: MemoryNote, kind: NoteKind, name: string) =>
   n.kind === kind && noteKey(n.name) === noteKey(name);
 
-/** True when an edit only changes memory notes (shown as "Memory changed"). */
+/** True when an edit only changes memory notes or threads (shown as "Memory changed"). */
 export function notesOnly(changes: StateEdit[]): boolean {
-  return changes.length > 0 && changes.every((c) => c.op === 'upsertNote' || c.op === 'removeNote');
+  return (
+    changes.length > 0 &&
+    changes.every((c) =>
+      ['upsertNote', 'removeNote', 'setOpenThreads', 'setDoneThreads'].includes(c.op),
+    )
+  );
+}
+
+/**
+ * A thread's key, as `threads::thread_key` in Rust: lower case, single
+ * spaces, no closing full stop or question mark.
+ */
+export const threadKey = (text: string) =>
+  text
+    .trim()
+    .split(/\s+/)
+    .join(' ')
+    .replace(/[.?!。？！]+$/u, '')
+    .toLowerCase();
+
+/** Open and settled threads, as the story keeps them. */
+export type ThreadLists = { open: string[]; done: string[] };
+
+/** The threads a reply opened or settled that still stand as it left them. */
+export function standingThreads(text: string, now: ThreadLists): ThreadChange[] {
+  const has = (list: string[], t: string) => list.some((x) => threadKey(x) === threadKey(t));
+  return threadChanges(text).filter((c) => has(c.done ? now.done : now.open, c.text));
 }
 
 /**
@@ -79,18 +114,26 @@ export function standingNotes(text: string, current: MemoryNote[]): NoteChange[]
 export function MemoryLine({
   text,
   current,
+  threads,
   onOpen,
   onUndo,
 }: {
   text: string;
   /** The notes as they are now: Undo is offered only while some of this reply's notes stand. */
   current?: MemoryNote[];
+  /** The threads as they are now, likewise. */
+  threads?: ThreadLists;
   onOpen?: () => void;
   onUndo?: () => void;
 }) {
   const changes = noteChanges(text);
-  if (!changes.length) return null;
-  const undo = onUndo && (!current || standingNotes(text, current).length) ? onUndo : undefined;
+  const threadMoves = threadChanges(text);
+  if (!changes.length && !threadMoves.length) return null;
+  const stands =
+    !current ||
+    standingNotes(text, current).length > 0 ||
+    (!!threads && standingThreads(text, threads).length > 0);
+  const undo = onUndo && stands ? onUndo : undefined;
   return (
     <p className="memory-line">
       <span className="memory-label">{t('Memory updated')}</span>
@@ -112,6 +155,23 @@ export function MemoryLine({
             <span className="memory-pop" role="tooltip">
               {c.text}
             </span>
+          </span>
+        );
+      })}
+      {threadMoves.map((c, i) => {
+        const Icon = c.done ? CircleCheck : ListTodo;
+        return (
+          <span
+            key={`thread-${i}`}
+            className={`memory-chip kind-thread${c.done ? ' done' : ''}`}
+            aria-label={
+              c.done
+                ? t('Thread settled: {thread}', { thread: c.text })
+                : t('New thread: {thread}', { thread: c.text })
+            }
+          >
+            <Icon className="memory-chip-icon" aria-hidden={true} size={13} />
+            <span className="memory-chip-text">{c.text}</span>
           </span>
         );
       })}

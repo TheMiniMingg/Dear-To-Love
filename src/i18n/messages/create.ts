@@ -436,7 +436,6 @@ export const create: Messages = {
     '스토리가 시작될 때 일어나고 있는 일. 이야기꾼이 여기서부터 이어 갑니다.',
   ],
   'First chapter title': ['第一章标题', '第一章標題', '最初の章のタイトル', '첫 챕터 제목'],
-  'Open questions': ['悬而未决的问题', '懸而未決的問題', '未解決の問い', '남은 질문'],
   'Point of view': ['视角', '視角', '視点', '시점'],
   Pacing: ['节奏', '節奏', 'テンポ', '전개 속도'],
   'Warm, gently mysterious': [
@@ -709,7 +708,6 @@ export const create: Messages = {
   ],
   'Make portrait': ['生成肖像', '產生肖像', '肖像画を作る', '초상화 만들기'],
   'Hide what is sent': ['隐藏发送内容', '隱藏傳送內容', '送信内容を隠す', '보내는 내용 숨기기'],
-  'Show what is sent': ['显示发送内容', '顯示傳送內容', '送信内容を表示', '보내는 내용 보기'],
   'Give the character a name first.': [
     '请先给角色起个名字。',
     '請先給角色取個名字。',
@@ -1187,13 +1185,6 @@ export const create: Messages = {
     '語り手に記憶メモを書かせる',
     '이야기꾼이 기억 노트 쓰기',
   ],
-  'It notes people, places, gifts and promises as the story goes, so it does not forget them. You can change the notes in Story memory.':
-    [
-      '随着故事进展，它会记下人物、地点、礼物和承诺，这样就不会忘记。你可以在“故事记忆”里修改这些笔记。',
-      '隨著故事進展，它會記下人物、地點、禮物和承諾，這樣就不會忘記。你可以在「故事記憶」裡修改這些筆記。',
-      '物語が進むにつれて人物・場所・贈り物・約束をメモし、忘れないようにします。メモは「ストーリーの記憶」で変更できます。',
-      '이야기가 진행되면서 인물, 장소, 선물, 약속을 적어 두어 잊지 않게 합니다. 노트는 스토리 기억에서 바꿀 수 있습니다.',
-    ],
   'More genres': ['更多类型', '更多類型', 'その他のジャンル', '다른 장르'],
   'Pick from the list or write your own. Any genre works.': [
     '从列表中选择或自己填写。任何类型都可以。',
@@ -1530,4 +1521,23 @@ export const create: Messages = {
       '雨がカフェの窓をつたう。頬に小麦粉をつけたミナが、カウンターから顔を上げる。\n\nミナ：「遅刻よ」',
       '빗물이 카페 창문을 타고 흘러내린다. 미나가 카운터에서 고개를 든다. 뺨에 밀가루가 묻어 있다.\n\n미나: "늦었네."',
     ],
+  'It notes people, places, gifts and promises as the story goes, keeps the threads still to follow, and offers to add new characters. You can change all of it in Story memory.':
+    [
+      '随着故事进展，它会记下人物、地点、礼物和承诺，整理尚未解开的线索，并在新角色出现时提议加入。这些都可以在“故事记忆”里修改。',
+      '隨著故事進展，它會記下人物、地點、禮物和承諾，整理尚未解開的線索，並在新角色出現時提議加入。這些都可以在「故事記憶」裡修改。',
+      '物語が進むにつれて人物・場所・贈り物・約束をメモし、未回収の伏線をまとめ、新しい人物が出てきたら登場人物への追加を提案します。どれも「ストーリーの記憶」で変更できます。',
+      '이야기가 진행되면서 인물, 장소, 선물, 약속을 적어 두고, 남은 실마리를 정리하며, 새 인물이 나오면 등장인물에 추가할지 묻습니다. 모두 스토리 기억에서 바꿀 수 있습니다.',
+    ],
+  'Suggest what you could do next': [
+    '提示你接下来可以做什么',
+    '提示你接下來可以做什麼',
+    '次にできることを提案する',
+    '다음에 할 수 있는 일 제안',
+  ],
+  'Two or three ideas above the box after each reply. Pick one to put it in the box.': [
+    '每次回复后，在输入框上方给出两三个点子。选一个就会填进输入框。',
+    '每次回覆後，在輸入框上方給出兩三個點子。選一個就會填進輸入框。',
+    '返信のたびに、入力欄の上に 2〜3 個のアイデアを表示します。選ぶと入力欄に入ります。',
+    '답장마다 입력란 위에 아이디어를 두세 개 보여 줍니다. 하나를 고르면 입력란에 들어갑니다.',
+  ],
 };
