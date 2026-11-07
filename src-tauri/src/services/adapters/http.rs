@@ -80,7 +80,9 @@ pub fn send_error(e: reqwest::Error) -> GenerateError {
 
 pub fn provider_message(body: &str) -> Option<String> {
     let v: Value = serde_json::from_str(body).ok()?;
-    let e = v.get("error").unwrap_or(&v);
+    // Google wraps its error in a one-item list.
+    let v = v.as_array().and_then(|a| a.first()).unwrap_or(&v);
+    let e = v.get("error").unwrap_or(v);
     e.get("message")
         .and_then(Value::as_str)
         .or_else(|| e.as_str())
@@ -96,6 +98,20 @@ pub fn looks_like_context_limit(body: &str) -> bool {
         || b.contains("prompt is too long")
 }
 
+/// A refused key some services answer with 400 instead of 401 (Google:
+/// "API key not valid. Please pass a valid API key.", `API_KEY_INVALID`).
+pub fn looks_like_bad_key(body: &str) -> bool {
+    let b = body.to_ascii_lowercase();
+    b.contains("api_key_invalid")
+        || ((b.contains("api key") || b.contains("api_key") || b.contains("apikey"))
+            && (b.contains("invalid")
+                || b.contains("not valid")
+                || b.contains("a valid")
+                || b.contains("missing")
+                || b.contains("expired")
+                || b.contains("incorrect")))
+}
+
 /// Map an HTTP error status. Requests refused outright (bad key, rate limit,
 /// unknown model) are not charged; server errors might have been.
 pub fn http_error(status: u16, body: &str) -> GenerateError {
@@ -106,6 +122,10 @@ pub fn http_error(status: u16, body: &str) -> GenerateError {
     };
     match status {
         401 | 403 => GenerateError::not_charged(AppError::new(
+            ErrorCode::AuthFailed,
+            with("the AI service refused the API key"),
+        )),
+        400 if looks_like_bad_key(body) => GenerateError::not_charged(AppError::new(
             ErrorCode::AuthFailed,
             with("the AI service refused the API key"),
         )),

@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Feather, ImageIcon, Keyboard, PlugZap, ShieldCheck } from 'lucide-react';
-import { commands, errorMessage } from '../../api/commands';
+import { CommandError, commands, errorMessage } from '../../api/commands';
 import { useUiStore } from '../../app/store';
 import { useShortcutHelp } from '../../app/shortcuts';
 import { Dialog } from '../../components/Dialog';
-import type { ProviderProfile, StorytellerInfo } from '../../types';
+import type { ConnectionCheck, ProviderProfile, StorytellerInfo } from '../../types';
 import { AboutSection, UpdatesSection } from '../updates/UpdatesSection';
 import { ConnectionForm } from './ConnectionForm';
 import { BackdropSection } from './BackdropSection';
@@ -13,7 +13,7 @@ import { LookSection } from './LookSection';
 import { SoundSection } from './SoundSection';
 import { ADAPTER_LABELS, makesPictures, pictureConnections, storyConnections } from './kinds';
 import { retiredPictureModel } from './presets';
-import { msg, t, tr } from '../../i18n';
+import { joinSentences, msg, t, tr } from '../../i18n';
 
 type Note = { tone: 'ok' | 'warn' | 'error'; text: string };
 
@@ -69,6 +69,26 @@ function SettingsJump() {
       ))}
     </nav>
   );
+}
+
+/** The result of a connection check, in the player's language. */
+function checkMessage(p: ProviderProfile, r: ConnectionCheck): string {
+  if (r.ok) {
+    return r.modelListed === false
+      ? t('Connected, but “{model}” is not in the server’s model list. Check the model name.', {
+          model: p.modelId,
+        })
+      : t('Connected. “{model}” is available.', { model: p.modelId });
+  }
+  const text = errorMessage(new CommandError(r.code ?? 'PROVIDER_ERROR', r.message));
+  return !p.hasKey && p.billing === 'paid' && p.adapter !== 'ollama'
+    ? joinSentences([
+        text,
+        t(
+          'No API key is saved for this connection, and most online services need one. Choose Edit to add it.',
+        ),
+      ])
+    : text;
 }
 
 export function SettingsScreen() {
@@ -137,7 +157,7 @@ export function SettingsScreen() {
       const r = await commands.testConnection(p.id);
       note(p.id, {
         tone: r.ok ? (r.modelListed === false ? 'warn' : 'ok') : 'error',
-        text: r.message,
+        text: checkMessage(p, r),
       });
     } catch (e) {
       note(p.id, { tone: 'error', text: errorMessage(e) });

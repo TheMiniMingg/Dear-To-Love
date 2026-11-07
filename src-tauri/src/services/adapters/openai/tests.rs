@@ -134,6 +134,18 @@ async fn http_errors_are_typed_and_never_echo_the_key() {
             Charge::None,
         ),
         (
+            400,
+            r#"[{"error":{"code":400,"message":"API key not valid. Please pass a valid API key.","status":"INVALID_ARGUMENT","details":[{"reason":"API_KEY_INVALID"}]}}]"#,
+            ErrorCode::AuthFailed,
+            Charge::None,
+        ),
+        (
+            400,
+            r#"{"error":{"message":"Invalid value for 'temperature': must be at most 2."}}"#,
+            ErrorCode::ProviderError,
+            Charge::None,
+        ),
+        (
             404,
             r#"{"error":{"message":"model not found"}}"#,
             ErrorCode::ProviderError,
