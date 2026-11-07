@@ -2198,8 +2198,14 @@ img.msg-avatar {
   padding: 0.25rem 0 0.25rem 0.75rem;
   border-left: 3px solid var(--border);
 }
+.make-portrait .picture-description .field,
 .picture-description .field {
+  max-width: none;
   margin: 0;
+}
+.picture-description textarea {
+  width: 100%;
+  resize: vertical;
 }
 .picture-description p {
   margin: 0;

@@ -1131,6 +1131,9 @@ details.more-options > summary {
   align-items: center;
   gap: 0.4rem;
 }
+.thread-log h3:focus {
+  outline: none;
+}
 .thread-list {
   list-style: none;
   margin: 0;

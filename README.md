@@ -110,6 +110,12 @@ story can also **Send a text**, **Call** someone, **Think** a thought of your ow
   **Preview context** shows exactly what it will read next.
 - **Change the story as you go** in **Story details**: characters, the world, the narration,
   the scene and the facts it must keep to.
+- **The storyteller fills in the details, and you can change any of them.** It keeps a list
+  of **threads to follow** (promises, mysteries, goals) that you can tick off in **Story
+  memory**, offers to add anyone new it brings in to the cast, ends each reply with two or
+  three ideas for your next move (pick one to put it in the box), and keeps track of where
+  and when the story is. It also suggests the next chapter's title and a save's name, and you
+  can rewrite a portrait's description before the picture is made.
 - **Your library** shows each story as a card with its cover, how far it got and its last
   line. Search, sort and pin stories, and rename, copy or change the cover of one from its
   **…** menu. A reply keeps writing when you leave a story, and a notice (with a soft chime)
@@ -136,6 +142,12 @@ story can also **Send a text**, **Call** someone, **Think** a thought of your ow
 ![A reply that noted Mina, the silver ring and the moment you gave it, with See notes and Undo](docs/screenshots/memory-line.webp)
 
 ![The notebook in Story memory, beside the story: Mina with her portrait, a place, a thing and a timeline that marks Chapter 1](docs/screenshots/notebook.webp)
+
+![A reply that opened a thread and brought in Hazel, a florist: a card offers to add her to the cast, and three ideas for the next move sit above the box](docs/screenshots/details.webp)
+
+![Threads to follow in Story memory: open threads to tick off, a box to add one, and a settled thread](docs/screenshots/threads.webp)
+
+![A portrait's description, rewritten before it is made, with the safe-for-work sentence the app always adds](docs/screenshots/picture-description.webp)
 
 ### Texts and calls
 

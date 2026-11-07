@@ -2,7 +2,7 @@
 // change: open threads (with a list to tick off in Story memory), a card for
 // someone new, ideas for the next move above the box, where and when the
 // story is, and a save name to start from.
-import { render, screen, within } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { EventDto, RouteView, StateEdit, StoryMemory, StoryStateV1 } from '../types';
@@ -106,9 +106,17 @@ function setup(view: RouteView) {
         return [];
       case 'get_storyteller':
         return view.storyteller;
-      case 'edit_story_details':
-        edits.push(args as (typeof edits)[number]);
-        return view;
+      case 'edit_story_details': {
+        const edit = args as (typeof edits)[number];
+        edits.push(edit);
+        // Thread lists change as asked, so the reader shows the result.
+        const next = structuredClone(view);
+        for (const c of edit.changes) {
+          if (c.op === 'setOpenThreads') next.state.state.openThreads = c.openThreads;
+          if (c.op === 'setDoneThreads') next.state.state.doneThreads = c.doneThreads;
+        }
+        return next;
+      }
       default:
         throw { code: 'NOT_FOUND', message: cmd };
     }
@@ -208,17 +216,19 @@ describe('Threads to follow in Story memory', () => {
         },
       ],
     });
+    // Its button is gone with it; the focus stays in the list.
+    await waitFor(() =>
+      expect(within(log).getByRole('heading', { name: 'Threads to follow' })).toHaveFocus(),
+    );
 
-    await userEvent.click(within(log).getByText('Settled (1)'));
+    expect(within(log).getByText('Nothing open right now.')).toBeInTheDocument();
+    await userEvent.click(within(log).getByText('Settled (2)'));
     await userEvent.click(
       within(log).getByRole('button', { name: 'Reopen Meet Mara at the harbor' }),
     );
     expect(edits.at(-1)?.changes).toEqual([
-      {
-        op: 'setOpenThreads',
-        openThreads: ['Find out who sent the letter', 'Meet Mara at the harbor'],
-      },
-      { op: 'setDoneThreads', doneThreads: [] },
+      { op: 'setOpenThreads', openThreads: ['Meet Mara at the harbor'] },
+      { op: 'setDoneThreads', doneThreads: ['Find out who sent the letter'] },
     ]);
   });
 
@@ -247,13 +257,13 @@ describe('Threads to follow in Story memory', () => {
     await userEvent.clear(edit);
     await userEvent.type(edit, 'Find out who sealed the letter{Enter}');
     expect(edits.at(-1)?.changes).toEqual([
-      { op: 'setOpenThreads', openThreads: ['Find out who sealed the letter'] },
+      { op: 'setOpenThreads', openThreads: ['Find out who sealed the letter', 'Pay Rowan back'] },
     ]);
 
-    await userEvent.click(
-      within(log).getByRole('button', { name: 'Remove Find out who sent the letter' }),
-    );
-    expect(edits.at(-1)?.changes).toEqual([{ op: 'setOpenThreads', openThreads: [] }]);
+    await userEvent.click(within(log).getByRole('button', { name: 'Remove Pay Rowan back' }));
+    expect(edits.at(-1)?.changes).toEqual([
+      { op: 'setOpenThreads', openThreads: ['Find out who sealed the letter'] },
+    ]);
   });
 
   it('says who keeps the list when the player keeps the notes', async () => {

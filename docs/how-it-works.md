@@ -125,6 +125,35 @@ limit less the room kept for the reply). Beyond that, notes about the people, pl
 in the current scene and the latest turns come first, then the newest of the rest. Notes that
 do not fit are still named, so the storyteller knows they exist.
 
+### Threads, new characters, ideas and the scene
+
+The storyteller fills in a few more things as it writes, each one yours to change:
+
+- **Threads to follow.** Promises, mysteries, goals and plans the story has not settled are
+  written as `<thread>Find out who sent the letter</thread>`, and
+  `<thread done>Find out who sent the letter</thread>` settles one. They show on the **Memory
+  updated** line (Undo takes them back too) and in **Story memory → Threads to follow**,
+  where you can tick one off, reword it, remove it, add your own or reopen a settled one. Up
+  to 40 open and 40 settled threads are kept; every request lists the open ones.
+- **Someone new.** When a named character joins who is not in the cast, the reply ends with
+  a tag for them:
+  `<character name="Rowan Ellis" role="barista" age="30s">How they look.</character>`. A card
+  under the reply offers **Add to the cast** (as they are), **Change first** or **Not now**
+  (remembered on this computer). Added, they join the scene and every later request. An
+  adults-only story refuses anyone whose age says under 18.
+- **Ideas for your next move.** Each reply ends with two or three `<next>…</next>` ideas.
+  They sit above the empty action box; picking one puts it in the box to send or change.
+  **Suggest what you could do next** in the story's settings turns them off.
+- **Where and when.** The storyteller marks a new place or time with
+  `<scene place="…" time="…"/>`. With headings on, the mark shows as a heading; off, it is
+  hidden, but the scene above the story and in **Story details** follows it either way, and a
+  save's name starts from it.
+- **The next chapter's title.** When a story has no planned title for the next chapter, the
+  recap ends with a suggested one, which **End chapter** offers to keep or change.
+
+Threads and new characters are asked for only while the storyteller keeps the memory notes.
+None of the tags are shown as story text, and all of them follow branches like the rest.
+
 **Preview context** in the pause menu shows exactly what would be sent for the next reply,
 with a token estimate. Nothing is sent until you play.
 
@@ -548,11 +577,12 @@ never makes pictures.
 
 - **What is sent**: one description, built from the character's species, gender or pronouns,
   age, role, looks and up to three personality traits, plus the world's era and setting for
-  the clothes and background. Names, story text and hidden details are never sent. **Show
-  what is sent** in the portrait panel shows it exactly.
-- **Always safe for work.** Every description ends with "One person, fully clothed, safe for
-  work, no text", and asks the service to avoid nudity, sexual content and gore, whatever the
-  story's rating.
+  the clothes and background. Names, story text and hidden details are never sent. **See or
+  change what is sent** in the portrait panel shows the description, and you can rewrite it
+  before the picture is made (item pictures too).
+- **Always safe for work.** Every description, yours too, ends with "One person, fully
+  clothed, safe for work, no text", and asks the service to avoid nudity, sexual content and
+  gore, whatever the story's rating. These can't be changed.
 - **Where it goes**: the picture joins the library like any picture you add, labelled
   "Portrait of …" and tagged Portrait, and is kept for that story only (for a story still
   being created, for the story once it is made).

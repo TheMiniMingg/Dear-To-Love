@@ -5,7 +5,7 @@
  * them off, reword, remove, add and reopen them. Each change is saved as an
  * edit at the newest turn, like the notebook's.
  */
-import { useId, useState } from 'react';
+import { useId, useRef, useState } from 'react';
 import { CircleCheck, ListTodo, Pencil, RotateCcw, Trash2 } from 'lucide-react';
 import { commands, errorMessage } from '../../api/commands';
 import type { RouteView, StateEdit } from '../../types';
@@ -40,6 +40,8 @@ export function ThreadLog({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const id = useId();
+  const section = useRef<HTMLElement>(null);
+  const heading = useRef<HTMLHeadingElement>(null);
   const locked = disabled || busy;
 
   const save = async (next: { open?: string[]; done?: string[] }, note: string) => {
@@ -58,6 +60,11 @@ export function ThreadLog({
       });
       setEditing(null);
       onChanged(v);
+      // A ticked or removed thread takes its buttons with it: keep the
+      // focus in the list, so keys (Escape too) still reach the panel.
+      requestAnimationFrame(() => {
+        if (!section.current?.contains(document.activeElement)) heading.current?.focus();
+      });
       return true;
     } catch (e) {
       setError(errorMessage(e));
@@ -92,8 +99,8 @@ export function ThreadLog({
   };
 
   return (
-    <section aria-labelledby={`${id}-title`} className="thread-log">
-      <h3 id={`${id}-title`}>
+    <section ref={section} aria-labelledby={`${id}-title`} className="thread-log">
+      <h3 id={`${id}-title`} ref={heading} tabIndex={-1}>
         <ListTodo aria-hidden={true} size={18} /> {t('Threads to follow')}
       </h3>
       <p className="muted small">
