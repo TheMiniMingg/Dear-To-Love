@@ -1,4 +1,5 @@
 import { useId } from 'react';
+import { Volume2 } from 'lucide-react';
 import { useLibraryPrefs } from '../../app/library';
 import { playChime } from '../../app/replyWatch';
 import { t } from '../../i18n';
@@ -15,7 +16,10 @@ export function SoundSection() {
       tabIndex={-1}
       aria-labelledby={`${id}-title`}
     >
-      <h2 id={`${id}-title`}>{t('Sound')}</h2>
+      <h2 id={`${id}-title`} className="section-title">
+        <Volume2 className="section-icon" aria-hidden={true} />
+        {t('Sound')}
+      </h2>
       <p className="muted">{t('What the app plays on this computer.')}</p>
       <div className="field">
         <label className="check">

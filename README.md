@@ -70,7 +70,8 @@ checks in **Settings → Updates** to be told when a new release is out.
 ## Getting started
 
 1. **Preset Story** opens a ready-made story. Pick a type of story, a world, a scenario and
-   who you play with the arrows, then **Start story**. To make your own instead, choose
+   who you play with the arrows; the story shows as a cover, in the look it will be read in,
+   with its cast and first page. Then **Start story**. To make your own instead, choose
    **Custom Story**.
 2. Write what you do and press Enter. Without any setup, the built-in offline storyteller
    answers, so you can try everything first.
@@ -79,7 +80,7 @@ checks in **Settings → Updates** to be told when a new release is out.
    walks through each one with buttons to its key and model pages, and fills in a new
    connection for you.
 
-![Preset Story with the Greywatch dungeon raid](docs/screenshots/quickstart.webp)
+![Preset Story: The Unsigned Letter as a cover in Midnight, with its genres, cast, first page and Start story](docs/screenshots/quickstart.webp)
 
 ## Playing
 
@@ -131,11 +132,14 @@ story can also **Send a text**, **Call** someone, **Think** a thought of your ow
   details**. **Settings → Look** has three themes: Rose (light or dark with your computer),
   Midnight and Parchment. With **Give each story a look that fits its genre** on, horror,
   mysteries and science fiction read in Midnight, fantasy and history on Parchment and
-  romance in Rose; **Look** beside the story picks another for that story.
+  romance in Rose; **Look** beside the story picks another for that story. Text size, column
+  width and line spacing are there too, and in **Settings → Look** beside a sample of a story.
 
 ![The same app in Rose, Midnight and Parchment: a café romance, a horror story and a fantasy raid](docs/screenshots/themes.webp)
 
 ![A chapter opening: the chapter number, its title, an ornament and a large first letter](docs/screenshots/reader-look.webp)
+
+![Settings → Look: themes, then text size, column width and line spacing beside a sample of a story](docs/screenshots/settings-reading.webp)
 
 ![The library as cards: covers, how far each story got and its last line](docs/screenshots/library.webp)
 
@@ -232,9 +236,17 @@ you leave empty is for the story to decide, and the storyteller doesn't bring up
 left out (your species, say) unless the story needs it or you do. Fields most people can
 skip are folded under **More options**. **Guided** starts from a preset world, character
 and opening instead, chosen with arrows and menus, and **None** takes a preset back. The
-draft is saved as you go.
+draft is saved as you go. The step bar at the top goes to any step, and a preview beside the
+steps shows the story as a cover, with its first page, as you fill it in.
 
-![Custom Story: type your own or pick from the list](docs/screenshots/create.webp)
+**Fill in the rest** on each step asks the storyteller to fill that step's empty fields to fit
+what you wrote: a few words of setting become an era, a description and rules; a title and a
+premise become an opening scene and two or three people to meet. Your own words stay as you
+typed them, everything it fills in can be changed, and **Undo** takes it all back. On Review,
+**Fill in everything left** does every step at once. Without a connection, or if the call
+fails, the offline storyteller fills in from the preset story closest to what you wrote.
+
+![Custom Story: Fill in the rest filled the title, opening scene and two people, and the preview shows them](docs/screenshots/create.webp)
 
 **RPG mode** is a switch on the first step for stats, health, mana, items and dice rolls.
 Each stat says what it is for (Strength is raw power; Fitness is stamina and athletics) and

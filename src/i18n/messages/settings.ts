@@ -963,12 +963,6 @@ export const settings: Messages = {
     '따뜻한 종이와 짙은 잉크, 오래된 책처럼.',
   ],
   Look: ['外观', '外觀', '見た目', '디자인'],
-  'How the app looks on this computer.': [
-    '应用在这台电脑上的外观。',
-    '應用程式在這台電腦上的外觀。',
-    'このパソコンでのアプリの見た目。',
-    '이 컴퓨터에서 앱이 보이는 모습.',
-  ],
   Theme: ['主题', '主題', 'テーマ', '테마'],
   'Give each story a look that fits its genre': [
     '让每个故事使用符合其类型的外观',
@@ -1004,4 +998,77 @@ export const settings: Messages = {
     '이 컴퓨터에서 앱이 내는 소리.',
   ],
   'Settings sections': ['设置分区', '設定分區', '設定のセクション', '설정 섹션'],
+  Narrow: ['窄', '窄', '狭い', '좁게'],
+  Medium: ['中', '中', '中くらい', '중간'],
+  Wide: ['宽', '寬', '広い', '넓게'],
+  Compact: ['紧凑', '緊湊', '詰める', '촘촘하게'],
+  Roomy: ['宽松', '寬鬆', 'ゆったり', '여유 있게'],
+  Small: ['小', '小', '小', '작게'],
+  Large: ['大', '大', '大', '크게'],
+  Larger: ['更大', '更大', '特大', '더 크게'],
+  Largest: ['最大', '最大', '最大', '가장 크게'],
+  'Column width': ['栏宽', '欄寬', '行の幅', '단 너비'],
+  'Line spacing': ['行距', '行距', '行間', '줄 간격'],
+  'Sample of how stories look': [
+    '故事显示效果示例',
+    '故事顯示效果範例',
+    '物語の見え方の見本',
+    '이야기가 보이는 모습 예시',
+  ],
+  'The bell over the door rings. Mina looks up from the espresso machine, and for a moment she forgets the cup in her hand.':
+    [
+      '门上的铃铛响了。米娜从咖啡机前抬起头，一时忘了手里的杯子。',
+      '門上的鈴鐺響了。米娜從咖啡機前抬起頭，一時忘了手裡的杯子。',
+      'ドアの上のベルが鳴る。ミナはエスプレッソマシンから顔を上げ、一瞬、手にしたカップのことを忘れる。',
+      '문 위의 종이 울린다. 미나는 에스프레소 머신에서 고개를 들고, 잠시 손에 든 컵을 잊는다.',
+    ],
+  'Mina:': ['米娜：', '米娜：', 'ミナ：', '미나:'],
+  '“You came back. I was starting to think the scone scared you off.”': [
+    '“你回来了。我还以为那个司康把你吓跑了呢。”',
+    '「你回來了。我還以為那個司康把你嚇跑了呢。」',
+    '「戻ってきたのね。スコーンに怖気づいたのかと思い始めてた」',
+    '“돌아왔네요. 스콘 때문에 겁먹고 도망간 줄 알았어요.”',
+  ],
+  'How the app and your stories look on this computer.': [
+    '应用和你的故事在这台电脑上的样子。',
+    '應用程式和你的故事在這台電腦上的樣子。',
+    'このコンピューターでのアプリと物語の見た目です。',
+    '이 컴퓨터에서 앱과 이야기가 보이는 모습입니다.',
+  ],
+  Reading: ['阅读', '閱讀', '読みやすさ', '읽기'],
+  'Privacy and data': ['隐私与数据', '隱私與資料', 'プライバシーとデータ', '개인정보와 데이터'],
+  'Your stories, pictures and settings stay on this computer. The app sends nothing anywhere except the requests to the AI connections you add, and the once-a-day check for a new version if it is on.':
+    [
+      '你的故事、图片和设置都留在这台电脑上。除了发给你添加的 AI 连接的请求，以及（如果开启）每天一次检查新版本，应用不会向任何地方发送内容。',
+      '你的故事、圖片和設定都留在這台電腦上。除了發給你新增的 AI 連線的請求，以及（如果開啟）每天一次檢查新版本，應用程式不會向任何地方傳送內容。',
+      '物語、画像、設定はこのコンピューターに保存されます。アプリが外に送るのは、追加した AI 接続へのリクエストと、オンにしている場合の 1 日 1 回の新バージョン確認だけです。',
+      '이야기, 그림, 설정은 이 컴퓨터에 남습니다. 앱은 당신이 추가한 AI 연결로 보내는 요청과, 켜 두었다면 하루 한 번 새 버전 확인 외에는 아무 데도 보내지 않습니다.',
+    ],
+  "API keys are kept in your computer's own password store, never in the stories, backups, exports or reports.":
+    [
+      'API 密钥保存在电脑自带的密码库里，绝不会出现在故事、备份、导出文件或报告中。',
+      'API 金鑰保存在電腦內建的密碼庫裡，絕不會出現在故事、備份、匯出檔案或報告中。',
+      'API キーはコンピューター自身のパスワード保管庫に保存され、物語、バックアップ、書き出し、レポートには決して入りません。',
+      'API 키는 컴퓨터 자체의 암호 저장소에 보관되며, 이야기, 백업, 내보내기, 보고서에는 절대 들어가지 않습니다.',
+    ],
+  'Backups and exports are yours to keep or share. A support report from Diagnostics holds counts and check results only: no story text and no keys.':
+    [
+      '备份和导出文件归你保管或分享。诊断里的支持报告只包含数量和检查结果：没有故事文字，也没有密钥。',
+      '備份和匯出檔案歸你保管或分享。診斷裡的支援報告只包含數量和檢查結果：沒有故事文字，也沒有金鑰。',
+      'バックアップと書き出したファイルは、保管も共有もあなた次第です。診断のサポートレポートには件数とチェック結果だけが入り、物語の本文やキーは含まれません。',
+      '백업과 내보낸 파일은 보관하든 공유하든 당신의 것입니다. 진단의 지원 보고서에는 개수와 점검 결과만 담기며, 이야기 본문이나 키는 들어가지 않습니다.',
+    ],
+  'Most things in a story have a key: save, search, the menu, larger or smaller text and more. Press F1 anywhere to see them all.':
+    [
+      '故事里的大多数操作都有快捷键：保存、搜索、菜单、放大或缩小文字等等。在任何地方按 F1 即可查看全部。',
+      '故事裡的大多數操作都有快捷鍵：儲存、搜尋、選單、放大或縮小文字等等。在任何地方按 F1 即可查看全部。',
+      '物語のほとんどの操作にはキーがあります。保存、検索、メニュー、文字の拡大・縮小などです。どこでも F1 を押すと一覧が見られます。',
+      '이야기 속 대부분의 기능에는 단축키가 있습니다. 저장, 검색, 메뉴, 글자 크게·작게 등. 어디서든 F1을 누르면 모두 볼 수 있습니다.',
+    ],
+  'Show keyboard shortcuts': [
+    '显示键盘快捷键',
+    '顯示鍵盤快捷鍵',
+    'キーボードショートカットを表示',
+    '키보드 단축키 보기',
+  ],
 };

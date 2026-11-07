@@ -1608,4 +1608,83 @@ export const create: Messages = {
     '{name} の ID「{id}」は namespace:name の形にしてください。',
     '{name}의 ID "{id}"은(는) namespace:name 형식이어야 합니다.',
   ],
+  Cast: ['角色', '角色', '登場人物', '등장인물'],
+  'First page': ['第一页', '第一頁', '最初のページ', '첫 페이지'],
+  'Step {n} of {total}': [
+    '第 {n} 步，共 {total} 步',
+    '第 {n} 步，共 {total} 步',
+    'ステップ {n}／{total}',
+    '{total}단계 중 {n}단계',
+  ],
+  'Filling in…': ['正在填写…', '正在填寫…', '記入中…', '채우는 중…'],
+  'Fill in everything left': [
+    '填写剩下的所有内容',
+    '填寫剩下的所有內容',
+    '残りをすべて埋める',
+    '남은 칸 모두 채우기',
+  ],
+  'Fill in the rest': ['填写其余部分', '填寫其餘部分', '残りを埋める', '나머지 채우기'],
+  'The storyteller fills every empty field to fit what you wrote. You can change anything afterwards.':
+    [
+      '讲述者会按你写的内容填好所有空白栏。之后什么都可以改。',
+      '講述者會按你寫的內容填好所有空白欄。之後什麼都可以改。',
+      '語り手が、あなたの書いた内容に合わせて空欄をすべて埋めます。あとから何でも変えられます。',
+      '이야기꾼이 당신이 쓴 내용에 맞춰 빈칸을 모두 채웁니다. 나중에 무엇이든 바꿀 수 있습니다.',
+    ],
+  'The storyteller fills the empty fields on this step to fit what you wrote. You can change anything afterwards.':
+    [
+      '讲述者会按你写的内容填好这一步的空白栏。之后什么都可以改。',
+      '講述者會按你寫的內容填好這一步的空白欄。之後什麼都可以改。',
+      '語り手が、あなたの書いた内容に合わせてこのステップの空欄を埋めます。あとから何でも変えられます。',
+      '이야기꾼이 당신이 쓴 내용에 맞춰 이 단계의 빈칸을 채웁니다. 나중에 무엇이든 바꿀 수 있습니다.',
+    ],
+  'Filled in from a preset story: {fields}.': [
+    '已根据预设故事填写：{fields}。',
+    '已根據預設故事填寫：{fields}。',
+    'プリセットの物語から記入しました：{fields}。',
+    '프리셋 이야기에서 채웠습니다: {fields}.',
+  ],
+  '{who} filled in {fields}.': [
+    '{who} 填写了 {fields}。',
+    '{who} 填寫了 {fields}。',
+    '{who} が {fields} を記入しました。',
+    '{who}이(가) {fields}을(를) 채웠습니다.',
+  ],
+  'Every field is filled in already.': [
+    '所有栏目都已填写。',
+    '所有欄位都已填寫。',
+    'すべての欄がすでに埋まっています。',
+    '모든 칸이 이미 채워져 있습니다.',
+  ],
+  'Every field on this step is filled in already.': [
+    '这一步的所有栏目都已填写。',
+    '這一步的所有欄位都已填寫。',
+    'このステップの欄はすべて埋まっています。',
+    '이 단계의 칸은 모두 채워져 있습니다.',
+  ],
+  'The offline storyteller only knows the preset stories, and none of them fits what you wrote. Add an AI connection in Settings for ideas that follow your own words, or fill the fields in yourself.':
+    [
+      '离线讲述者只认识预设故事，而它们都和你写的不符。在设置里添加 AI 连接，就能得到贴合你文字的点子；也可以自己填写。',
+      '離線講述者只認識預設故事，而它們都和你寫的不符。在設定裡新增 AI 連線，就能得到貼合你文字的點子；也可以自己填寫。',
+      'オフラインの語り手はプリセットの物語しか知らず、あなたの書いた内容に合うものがありません。設定で AI 接続を追加すると、あなたの言葉に沿ったアイデアが出せます。自分で記入することもできます。',
+      '오프라인 이야기꾼은 프리셋 이야기만 알고 있는데, 그중 당신이 쓴 내용에 맞는 것이 없습니다. 설정에서 AI 연결을 추가하면 당신의 글을 따르는 아이디어를 받을 수 있습니다. 직접 채워도 됩니다.',
+    ],
+  'Fill in from the preset stories instead': [
+    '改用预设故事填写',
+    '改用預設故事填寫',
+    '代わりにプリセットの物語から埋める',
+    '대신 프리셋 이야기로 채우기',
+  ],
+  'Preview of your story': [
+    '你的故事预览',
+    '你的故事預覽',
+    'あなたの物語のプレビュー',
+    '내 이야기 미리 보기',
+  ],
+  'Your story takes shape here as you fill it in.': [
+    '你一边填写，故事就在这里逐渐成形。',
+    '你一邊填寫，故事就在這裡逐漸成形。',
+    '記入するにつれて、ここに物語の形が見えてきます。',
+    '채워 갈수록 여기서 이야기가 모양을 갖춥니다.',
+  ],
 };

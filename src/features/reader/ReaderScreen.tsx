@@ -31,7 +31,7 @@ import {
   runErrorMessage,
 } from '../../api/commands';
 import { useUiStore } from '../../app/store';
-import { useStoryLook } from '../../app/look';
+import { readingStyle, useLook, useStoryLook } from '../../app/look';
 import { useReplyWatch } from '../../app/replyWatch';
 import { isComposing, isEditableTarget } from '../../app/keyboard';
 import { ariaKeys, isShortcut, useShortcutHelp, withKeys } from '../../app/shortcuts';
@@ -205,6 +205,8 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
   const clearDraft = useUiStore((s) => s.clearDraft);
   const stepTextSize = useUiStore((s) => s.stepTextSize);
   const textSize = useUiStore((s) => s.textSize);
+  const readingWidth = useLook((s) => s.width);
+  const lineSpacing = useLook((s) => s.spacing);
 
   const [view, setView] = useState<RouteView | null>(null);
   const [viewing, setViewing] = useState<SaveView | null>(null);
@@ -712,7 +714,10 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
         <section
           className="reader"
           aria-label={t('Reading {title}', { title: view.story.title })}
-          style={{ fontSize: `${textSize}rem` }}
+          style={{
+            fontSize: `${textSize}rem`,
+            ...readingStyle({ width: readingWidth, spacing: lineSpacing }),
+          }}
         >
           <header className="reader-status">
             <div className="reader-heading">

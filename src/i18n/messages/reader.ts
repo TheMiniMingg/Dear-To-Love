@@ -1452,12 +1452,6 @@ export const reader: Messages = {
   ],
   Undo: ['撤销', '復原', '元に戻す', '되돌리기'],
   'took back {names}': ['撤回了 {names}', '撤回了 {names}', '{names} を取り消し', '{names} 되돌림'],
-  'Choose the colors this story is read in': [
-    '选择阅读这个故事时的配色',
-    '選擇閱讀這個故事時的配色',
-    'この物語を読むときの色を選ぶ',
-    '이 이야기를 읽을 때의 색 고르기',
-  ],
   'Look of this story': [
     '这个故事的外观',
     '這個故事的外觀',
@@ -1693,5 +1687,17 @@ export const reader: Messages = {
     '每次回覆後自動儲存，保留最新的 {n} 個。',
     '返信のたびに作られ、新しい {n} 件が残ります。',
     '답장마다 만들어지며, 최근 {n}개가 남습니다.',
+  ],
+  'Choose the colors, text size, width and line spacing': [
+    '选择颜色、文字大小、宽度和行距',
+    '選擇顏色、文字大小、寬度和行距',
+    '色、文字の大きさ、幅、行間を選ぶ',
+    '색, 글자 크기, 너비, 줄 간격 고르기',
+  ],
+  'Reading, in every story': [
+    '阅读设置（所有故事）',
+    '閱讀設定（所有故事）',
+    '読みやすさ（すべての物語）',
+    '읽기 설정 (모든 이야기)',
   ],
 };

@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
+import { Feather, ImageIcon, Keyboard, PlugZap, ShieldCheck } from 'lucide-react';
 import { commands, errorMessage } from '../../api/commands';
 import { useUiStore } from '../../app/store';
+import { useShortcutHelp } from '../../app/shortcuts';
 import { Dialog } from '../../components/Dialog';
 import type { ProviderProfile, StorytellerInfo } from '../../types';
 import { AboutSection, UpdatesSection } from '../updates/UpdatesSection';
@@ -24,6 +26,8 @@ const SECTIONS: [id: string, label: string][] = [
   ['settings-storyteller', msg('Storyteller')],
   ['settings-pictures', msg('Pictures')],
   ['settings-connections', msg('AI connections')],
+  ['settings-privacy', msg('Privacy and data')],
+  ['settings-shortcuts', msg('Shortcuts')],
   ['settings-updates', msg('Updates')],
   ['settings-about', msg('About')],
 ];
@@ -187,7 +191,10 @@ export function SettingsScreen() {
         tabIndex={-1}
         aria-labelledby="storyteller-title"
       >
-        <h2 id="storyteller-title">{t('Storyteller')}</h2>
+        <h2 id="storyteller-title" className="section-title">
+          <Feather className="section-icon" aria-hidden={true} />
+          {t('Storyteller')}
+        </h2>
         <p className="muted">
           {t(
             "Who writes the replies in your stories. A story can pick its own storyteller instead (click the storyteller's name above the story). Changing it only affects new replies; what is already written stays as it is.",
@@ -235,7 +242,10 @@ export function SettingsScreen() {
         tabIndex={-1}
         aria-labelledby="pictures-title"
       >
-        <h2 id="pictures-title">{t('Pictures')}</h2>
+        <h2 id="pictures-title" className="section-title">
+          <ImageIcon className="section-icon" aria-hidden={true} />
+          {t('Pictures')}
+        </h2>
         <p className="muted">
           {t(
             "Makes a character's portrait from their description, when you choose a portrait while creating or reading a story. Portraits are always asked for as safe-for-work pictures.",
@@ -288,7 +298,10 @@ export function SettingsScreen() {
         aria-labelledby="connections-title"
       >
         <div className="screen-header">
-          <h2 id="connections-title">{t('AI connections')}</h2>
+          <h2 id="connections-title" className="section-title">
+            <PlugZap className="section-icon" aria-hidden={true} />
+            {t('AI connections')}
+          </h2>
           <button type="button" className="primary" onClick={() => setEditing('new')}>
             {t('Add connection')}
           </button>
@@ -389,6 +402,57 @@ export function SettingsScreen() {
             "Usage and cost estimates are recorded for every request to a paid service. Set a spending limit in your provider's own dashboard too; this app cannot see your balance.",
           )}
         </p>
+      </section>
+
+      <section
+        id="settings-privacy"
+        className="settings-section"
+        tabIndex={-1}
+        aria-labelledby="privacy-title"
+      >
+        <h2 id="privacy-title" className="section-title">
+          <ShieldCheck className="section-icon" aria-hidden={true} />
+          {t('Privacy and data')}
+        </h2>
+        <ul className="plain-facts">
+          <li>
+            {t(
+              'Your stories, pictures and settings stay on this computer. The app sends nothing anywhere except the requests to the AI connections you add, and the once-a-day check for a new version if it is on.',
+            )}
+          </li>
+          <li>
+            {t(
+              "API keys are kept in your computer's own password store, never in the stories, backups, exports or reports.",
+            )}
+          </li>
+          <li>
+            {t(
+              'Backups and exports are yours to keep or share. A support report from Diagnostics holds counts and check results only: no story text and no keys.',
+            )}
+          </li>
+        </ul>
+      </section>
+
+      <section
+        id="settings-shortcuts"
+        className="settings-section"
+        tabIndex={-1}
+        aria-labelledby="shortcuts-title"
+      >
+        <h2 id="shortcuts-title" className="section-title">
+          <Keyboard className="section-icon" aria-hidden={true} />
+          {t('Shortcuts')}
+        </h2>
+        <p className="muted">
+          {t(
+            'Most things in a story have a key: save, search, the menu, larger or smaller text and more. Press F1 anywhere to see them all.',
+          )}
+        </p>
+        <div className="button-row">
+          <button type="button" onClick={() => useShortcutHelp.getState().setOpen(true)}>
+            {t('Show keyboard shortcuts')}
+          </button>
+        </div>
       </section>
 
       <UpdatesSection />

@@ -13,6 +13,12 @@
   look of its genre: Midnight for horror, mysteries and science fiction, Parchment for
   fantasy and history, Rose for romance. **Look** beside the story chooses another for that
   story. Looks are a setting of this computer.
+- **Reading the way you like.** **Settings → Look** and **Look** beside the story choose the
+  text size, the column width (Narrow, Medium or Wide) and the line spacing (Compact, Normal or
+  Roomy) for every story, shown on a sample of a story as you choose. They are remembered on
+  this computer.
+- **Settings at a glance.** Every section of Settings has an icon, and two new ones say what
+  stays on your computer (**Privacy and data**) and how to see every key (**Shortcuts**).
 - **Name colors.** Each character's name shows in their own color in the story, on script
   lines and on text, call and post cards, picked from the name so it never changes. Choose
   another under **Name color** in **Story details**; it is only for the screen and is never
@@ -88,6 +94,19 @@
   ready-made story; it was New story) and **Custom Story** (it was Create your own). Custom
   Story opens in Custom with every field empty. Guided is one click away, and **None (start
   blank)** takes back a preset world, character or opening.
+- **Fill in the rest.** Each step of Custom Story has **Fill in the rest**: the storyteller
+  fills that step's empty fields to fit what you wrote, in one request, and says which it
+  filled. A few words of setting become an era, a description and rules; a title and a premise
+  become an opening scene and two or three people to meet, each with a role and how they know
+  you. Your own words stay, everything can be changed, and **Undo** takes it all back. Review
+  has **Fill in everything left**. Without a connection, or when the call fails, the offline
+  storyteller fills in from the preset story closest to what you wrote. Everyone it invents is
+  an adult.
+- **A story you can see as you make it.** Preset Story shows the story as a cover in the look
+  it will be read in: its picture or a large letter, title, genres, premise, cast (you first)
+  and the first page in the story's font. Custom Story shows the same cover beside the steps
+  and fills it in as you type, and a step bar at the top ticks off the steps behind you and
+  goes to any step.
 - **Type your own or pick one.** The type of story, setting, era, name, pronouns, role,
   species and tone each take your own words or a pick from a list, and × clears them. Only
   your name is needed to begin: the title becomes _Untitled story_, the first chapter

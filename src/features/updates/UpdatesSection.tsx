@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Info, RefreshCw } from 'lucide-react';
 import { commands, errorMessage } from '../../api/commands';
 import { formatWhen } from '../../api/backups';
 import { useUiStore } from '../../app/store';
@@ -97,7 +98,10 @@ export function UpdatesSection() {
       tabIndex={-1}
       aria-labelledby="updates-title"
     >
-      <h2 id="updates-title">{t('Updates')}</h2>
+      <h2 id="updates-title" className="section-title">
+        <RefreshCw className="section-icon" aria-hidden={true} />
+        {t('Updates')}
+      </h2>
       <label className="check">
         <input
           type="checkbox"
@@ -187,7 +191,10 @@ export function AboutSection() {
       tabIndex={-1}
       aria-labelledby="about-title"
     >
-      <h2 id="about-title">{t('About')}</h2>
+      <h2 id="about-title" className="section-title">
+        <Info className="section-icon" aria-hidden={true} />
+        {t('About')}
+      </h2>
       <p>
         {info ? (
           <>

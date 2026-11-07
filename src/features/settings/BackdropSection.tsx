@@ -1,4 +1,5 @@
 import { useEffect, useId, useState } from 'react';
+import { Wallpaper } from 'lucide-react';
 import { commands, errorMessage } from '../../api/commands';
 import { useBackdrop, VEILS, type Veil } from '../../app/backdropStore';
 import { Dialog } from '../../components/Dialog';
@@ -21,7 +22,10 @@ export function BackdropSection() {
       tabIndex={-1}
       aria-labelledby={`${id}-title`}
     >
-      <h2 id={`${id}-title`}>{t('Background picture')}</h2>
+      <h2 id={`${id}-title`} className="section-title">
+        <Wallpaper className="section-icon" aria-hidden={true} />
+        {t('Background picture')}
+      </h2>
       <p className="muted">
         {t(
           'A picture of your own behind every screen, softened so the text stays easy to read. It is a setting of this computer.',
