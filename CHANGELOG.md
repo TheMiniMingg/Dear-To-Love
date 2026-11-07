@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- **Dice rolls.** With **Roll dice for uncertain moments** on (the default for Adventure,
+  Fantasy and School life), the storyteller stops at risky moments and asks for a roll. It
+  sets the odds from the story, such as a test scored 40 to 100 after studying twice. You
+  press **Roll** and the app rolls fairly. Characters can have **stats** that add to rolls,
+  and **Roll dice** in the action box rolls on your own. A roll is saved with the action, so
+  another reply never rerolls it.
 - **Type of story** comes first in Quick Start and the wizard and narrows the preset worlds.
   New genres include School life, Action, Cyberpunk, Post-apocalyptic, Superhero, Western and
   Dating sim.

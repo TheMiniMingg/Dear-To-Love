@@ -439,6 +439,42 @@ describe('Create a story', () => {
     });
   });
 
+  it('an adventure rolls dice, and the player gets stats', async () => {
+    render(<CreateWizardScreen />);
+    const type = await screen.findByRole('combobox', { name: 'Type of story' });
+    await userEvent.selectOptions(type, 'Adventure');
+    await userEvent.click(screen.getByRole('button', { name: '2. You' }));
+    const stats = await screen.findByRole('group', { name: 'Stats' });
+    await userEvent.click(within(stats).getByRole('button', { name: 'Add a stat' }));
+    await userEvent.type(within(stats).getByLabelText('Stat 1 name'), 'Nerve');
+    const value = within(stats).getByLabelText('Nerve value');
+    await userEvent.clear(value);
+    await userEvent.type(value, '3');
+
+    await userEvent.click(screen.getByRole('button', { name: '4. Narration' }));
+    const dice = await screen.findByRole('checkbox', { name: 'Roll dice for uncertain moments' });
+    expect(dice).toBeChecked();
+    await userEvent.click(screen.getByRole('button', { name: '5. Review' }));
+    const summary = await screen.findByLabelText('Story summary');
+    expect(summary).toHaveTextContent('dice rolls');
+    expect(summary).toHaveTextContent('Nerve 3');
+    await userEvent.click(await screen.findByRole('button', { name: 'Create story' }));
+    const draft = lastCall('create_story')?.draft as CreateStoryDraft;
+    expect(draft.narration.dice).toBe(true);
+    expect(draft.player.stats).toEqual([{ name: 'Nerve', value: 3 }]);
+
+    // Another type turns dice off again.
+    await userEvent.click(screen.getByRole('button', { name: '1. World' }));
+    await userEvent.selectOptions(
+      await screen.findByRole('combobox', { name: 'Type of story' }),
+      'Romance',
+    );
+    await userEvent.click(screen.getByRole('button', { name: '4. Narration' }));
+    expect(
+      await screen.findByRole('checkbox', { name: 'Roll dice for uncertain moments' }),
+    ).not.toBeChecked();
+  });
+
   it('Review lists problems and links to the step that fixes them', async () => {
     problems = [{ step: 'character', message: 'Give your character a name.' }];
     render(<CreateWizardScreen />);

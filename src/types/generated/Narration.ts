@@ -31,4 +31,9 @@ messageCards?: boolean,
  * The language the story is written in, e.g. "Japanese". Unset leaves
  * it to the model, which usually follows the player.
  */
-language?: string, };
+language?: string, 
+/**
+ * Uncertain moments are decided by dice: the storyteller asks for a
+ * roll and sets the odds, the app rolls.
+ */
+dice?: boolean, };

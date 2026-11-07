@@ -75,9 +75,9 @@ impl Env {
                     story_id: self.story.story_id.clone(),
                     route_id: route_id.into(),
                     expected_head_id: head,
-                    body: EventBody::Player(PlayerPayload {
-                        text: format!("action {k}. More detail."),
-                    }),
+                    body: EventBody::Player(PlayerPayload::new(format!(
+                        "action {k}. More detail."
+                    ))),
                     generation_run_id: None,
                 },
             )
@@ -285,7 +285,7 @@ async fn branches_only_see_summaries_of_their_own_past() {
     };
     for branch in [&before.id, &after.id] {
         let head = env.head(branch).await;
-        let sub = submit_action(env.db(), &sid, branch, &head, "Open the door")
+        let sub = submit_action(env.db(), &sid, branch, &head, "Open the door", None)
             .await
             .unwrap();
         generate(&ctx, &sub.run_id, &mut |_| {}).await.unwrap();

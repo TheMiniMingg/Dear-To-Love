@@ -647,9 +647,9 @@ pub async fn edit_prior_player_turn_tx(
     new_text: String,
 ) -> AppResult<(RouteDto, Appended)> {
     let ev = get_event(conn, player_event_id).await?;
-    if ev.kind() != Some(EventKind::Player) {
+    let EventBody::Player(old) = EventBody::from_parts(&ev.kind, &ev.payload_json)? else {
         return Err(AppError::invalid_input("only player actions can be edited"));
-    }
+    };
     let parent = ev
         .parent_event_id
         .ok_or_else(|| AppError::internal("action without a parent event"))?;
@@ -665,7 +665,11 @@ pub async fn edit_prior_player_turn_tx(
             story_id: story_id.into(),
             route_id: fork.id.clone(),
             expected_head_id: parent,
-            body: EventBody::Player(PlayerPayload { text: new_text }),
+            // A roll stays as it was: changing the words never rerolls.
+            body: EventBody::Player(PlayerPayload {
+                text: new_text,
+                roll: old.roll,
+            }),
             generation_run_id: None,
         },
     )

@@ -11,8 +11,8 @@ use ts_rs::TS;
 
 use super::story::{ChapterOutlineInput, CreateStoryInput};
 use super::story_state::{
-    names_a_minor, Character, ContentRating, Control, Narration, Relationship, Scene, StoryStateV1,
-    World, STORY_STATE_SCHEMA_VERSION,
+    names_a_minor, Character, ContentRating, Control, Narration, Relationship, Scene, Stat,
+    StoryStateV1, World, STORY_STATE_SCHEMA_VERSION,
 };
 use super::templates::{check_id, SceneTemplate, PLAYER_PLACEHOLDER};
 use crate::errors::{AppError, AppResult};
@@ -134,6 +134,15 @@ fn clean_character(c: &Character, control: Control) -> Character {
         personality: clean_list(&c.personality),
         goals: clean_list(&c.goals),
         abilities: clean_list(&c.abilities),
+        stats: c
+            .stats
+            .iter()
+            .map(|s| Stat {
+                name: clean_text(&s.name),
+                value: s.value,
+            })
+            .filter(|s| !s.name.is_empty())
+            .collect(),
     }
 }
 

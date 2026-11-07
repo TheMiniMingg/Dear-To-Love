@@ -33,7 +33,7 @@ async fn story(t: &TestDb) -> StoryCreated {
 }
 
 fn player(text: &str) -> EventBody {
-    EventBody::Player(PlayerPayload { text: text.into() })
+    EventBody::Player(PlayerPayload::new(text))
 }
 
 fn reply(text: &str) -> EventBody {

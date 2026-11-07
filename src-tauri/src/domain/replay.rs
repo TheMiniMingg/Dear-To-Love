@@ -190,9 +190,7 @@ mod tests {
             ),
             (
                 "p1".to_string(),
-                EventBody::Player(PlayerPayload {
-                    text: "I sail to the mainland".into(),
-                }),
+                EventBody::Player(PlayerPayload::new("I sail to the mainland")),
             ),
         ];
         let s = replay(base.clone(), events.iter().map(|(i, b)| (i.as_str(), b))).unwrap();
@@ -250,6 +248,7 @@ mod tests {
             personality: vec![],
             goals: vec![],
             abilities: vec![],
+            stats: vec![],
         };
         assert!(s
             .apply(

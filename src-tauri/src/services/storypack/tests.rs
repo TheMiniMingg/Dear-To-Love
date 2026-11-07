@@ -33,7 +33,7 @@ fn route(id: &str, parent: Option<&str>, fork: Option<&str>, head: &str) -> Pack
 }
 
 fn player(text: &str) -> EventBody {
-    EventBody::Player(PlayerPayload { text: text.into() })
+    EventBody::Player(PlayerPayload::new(text))
 }
 
 fn reply(text: &str) -> EventBody {

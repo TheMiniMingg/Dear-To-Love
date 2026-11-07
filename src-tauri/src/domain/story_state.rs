@@ -144,6 +144,11 @@ pub struct Narration {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
     pub language: Option<String>,
+    /// Uncertain moments are decided by dice: the storyteller asks for a
+    /// roll and sets the odds, the app rolls.
+    #[serde(default, skip_serializing_if = "is_false")]
+    #[ts(as = "Option<bool>", optional)]
+    pub dice: bool,
 }
 
 fn is_false(b: &bool) -> bool {
@@ -165,6 +170,7 @@ impl Default for Narration {
             inner_thoughts: false,
             message_cards: false,
             language: None,
+            dice: false,
         }
     }
 }
@@ -209,7 +215,23 @@ pub struct Character {
     pub goals: Vec<String>,
     #[serde(default)]
     pub abilities: Vec<String>,
+    /// Numbers added to the dice rolls that use them, e.g. Smarts 2.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[ts(as = "Option<Vec<Stat>>", optional)]
+    pub stats: Vec<Stat>,
 }
+
+/// A named number on a character that dice rolls can add.
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[ts(export)]
+pub struct Stat {
+    pub name: String,
+    pub value: i32,
+}
+
+const MAX_STATS: usize = 30;
+const MAX_STAT_VALUE: i32 = 1000;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -283,6 +305,7 @@ impl StoryStateV1 {
             check_list("personality", &c.personality)?;
             check_list("goals", &c.goals)?;
             check_list("abilities", &c.abilities)?;
+            check_stats(c)?;
             for text in [
                 &c.gender,
                 &c.pronouns,
@@ -363,6 +386,32 @@ impl StoryStateV1 {
         }
         Ok(())
     }
+}
+
+fn check_stats(c: &Character) -> AppResult<()> {
+    let bad = |msg: String| Err(AppError::invalid_input(msg));
+    if c.stats.len() > MAX_STATS {
+        return bad(format!("{} has more than {MAX_STATS} stats", c.name.trim()));
+    }
+    let mut seen = BTreeSet::new();
+    for stat in &c.stats {
+        let name = stat.name.trim();
+        if name.is_empty() || name.chars().count() > 60 {
+            return bad(format!(
+                "every stat of {} needs a name of 1 to 60 characters",
+                c.name.trim()
+            ));
+        }
+        if !seen.insert(name.to_lowercase()) {
+            return bad(format!("{} has two stats named {name}", c.name.trim()));
+        }
+        if stat.value.abs() > MAX_STAT_VALUE {
+            return bad(format!(
+                "{name} must be between -{MAX_STAT_VALUE} and {MAX_STAT_VALUE}"
+            ));
+        }
+    }
+    Ok(())
 }
 
 /// Whether a character's age text says they are under 18: a first number
@@ -475,6 +524,7 @@ pub fn sample_lighthouse() -> StoryStateV1 {
             personality: vec!["curious".into()],
             goals: vec!["Find out who keeps lighting the lamp".into()],
             abilities: vec![],
+            stats: vec![],
         },
     );
     characters.insert(
@@ -492,6 +542,7 @@ pub fn sample_lighthouse() -> StoryStateV1 {
             personality: vec!["wry".into()],
             goals: vec![],
             abilities: vec![],
+            stats: vec![],
         },
     );
     StoryStateV1 {

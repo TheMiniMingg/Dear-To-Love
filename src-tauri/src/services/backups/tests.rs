@@ -38,9 +38,7 @@ async fn story(t: &TestDb, title: &str) -> StoryCreated {
             story_id: s.story_id.clone(),
             route_id: s.main_route_id.clone(),
             expected_head_id: s.head_event_id.clone(),
-            body: EventBody::Player(PlayerPayload {
-                text: format!("I open {title}."),
-            }),
+            body: EventBody::Player(PlayerPayload::new(format!("I open {title}."))),
             generation_run_id: None,
         },
     )

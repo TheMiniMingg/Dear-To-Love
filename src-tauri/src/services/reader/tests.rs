@@ -106,7 +106,7 @@ async fn invalid_or_stale_edits_write_nothing() {
 
     // While an action waits for its reply, details can't change under it.
     let state = route_view(&t.db, &s.main_route_id).await.unwrap().state;
-    let sub = submit_action(&t.db, &s.story_id, &s.main_route_id, &head, "Wait")
+    let sub = submit_action(&t.db, &s.story_id, &s.main_route_id, &head, "Wait", None)
         .await
         .unwrap();
     let waiting = sub.view.route.head_event_id.clone().unwrap();

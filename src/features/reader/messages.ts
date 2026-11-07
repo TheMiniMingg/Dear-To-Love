@@ -1,10 +1,12 @@
 /**
  * Message tags the storyteller (and the composer) write into story text:
- * texts, calls, inner thoughts, letters and posts. The reader shows them as
- * cards; anything else is prose. Mirrors `plain_message_tags` in Rust.
+ * texts, calls, inner thoughts, letters, posts and dice rolls. The reader
+ * shows them as cards; anything else is prose. Mirrors `plain_message_tags`
+ * in Rust.
  */
+import type { RollRequest } from '../../types';
 
-export type MessageTag = 'text' | 'call' | 'thought' | 'letter' | 'post';
+export type MessageTag = 'text' | 'call' | 'thought' | 'letter' | 'post' | 'roll';
 
 export type Block =
   | { kind: 'prose'; text: string }
@@ -16,7 +18,7 @@ export type Block =
       open: boolean;
     };
 
-const TAGS: MessageTag[] = ['text', 'call', 'thought', 'letter', 'post'];
+const TAGS: MessageTag[] = ['text', 'call', 'thought', 'letter', 'post', 'roll'];
 
 function parseAttrs(head: string): Record<string, string> {
   const out: Record<string, string> = {};
@@ -122,4 +124,56 @@ export function wrapAction(
     case 'think':
       return `<thought who="${attr(player)}">${body}</thought>`;
   }
+}
+
+/**
+ * The roll a storyteller asks for with `<roll for dice target stat/>`, or
+ * null when the tag has no dice or already has a result.
+ */
+export function rollRequestOf(attrs: Record<string, string>): RollRequest | null {
+  const dice = attrs.dice?.trim();
+  if (!dice || attrs.result) return null;
+  const req: RollRequest = { label: attrs.for?.trim() || 'A roll', dice, asked: true };
+  const target = Number.parseInt(attrs.target ?? '', 10);
+  if (Number.isFinite(target)) req.target = target;
+  if (attrs.stat?.trim()) req.stat = attrs.stat.trim();
+  return req;
+}
+
+/** The last roll the storyteller asked for in `text` (the one to answer). */
+export function lastRollRequest(text: string): RollRequest | null {
+  let found: RollRequest | null = null;
+  for (const b of parseBlocks(text)) {
+    if (b.kind === 'roll') found = rollRequestOf(b.attrs) ?? found;
+  }
+  return found;
+}
+
+/** Dice the app can roll: `1d20`, `2d6+1`, `d100` or a range such as `40-100`. */
+export const DICE_PATTERN =
+  /^\s*(\d{0,2}\s*d\s*\d{1,4}(\s*[+-]\s*\d{1,7})?|-?\d{1,7}\s*(-|–|to)\s*-?\d{1,7})\s*$/i;
+
+/**
+ * A roll from the composer: one short line is what the roll is for; longer
+ * text keeps its first line (shortened) as the label and is sent as words.
+ */
+export function rollFromComposer(
+  value: string,
+  { dice, stat, target }: { dice: string; stat: string; target: string },
+): { text: string; roll: RollRequest } {
+  const words = value.trim();
+  const oneLine = !words.includes('\n') && [...words].length <= 120;
+  const first = words.split('\n')[0]!.trim();
+  const label = !words
+    ? 'A roll'
+    : oneLine
+      ? words
+      : [...first].length > 80
+        ? `${[...first].slice(0, 79).join('')}…`
+        : first;
+  const roll: RollRequest = { label, dice: dice.trim() };
+  if (stat.trim()) roll.stat = stat.trim();
+  const t = Number.parseInt(target, 10);
+  if (Number.isFinite(t)) roll.target = t;
+  return { text: oneLine ? '' : words, roll };
 }

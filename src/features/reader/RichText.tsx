@@ -1,5 +1,7 @@
 import type { ReactNode } from 'react';
-import { parseBlocks, samePerson, type Block } from './messages';
+import type { RollRequest } from '../../types';
+import { RollAsk, RollResult } from './DiceCards';
+import { parseBlocks, rollRequestOf, samePerson, type Block } from './messages';
 
 type Tagged = Exclude<Block, { kind: 'prose' }>;
 
@@ -75,19 +77,23 @@ const CALL_STATUS: Record<string, string> = {
 type Group = { peer: string; texts: { sent: boolean; body: string; time: string }[] };
 
 /**
- * Story text with texts, calls, thoughts, letters and posts shown as cards.
- * `playerName` decides which texts are the player's own (right side).
+ * Story text with texts, calls, thoughts, letters, posts and dice rolls
+ * shown as cards. `playerName` decides which texts are the player's own
+ * (right side). `onRoll` offers a Roll button on the last roll asked for.
  */
 export function RichText({
   text,
   playerName,
   streaming = false,
+  onRoll,
 }: {
   text: string;
   playerName: string;
   streaming?: boolean;
+  onRoll?: (request: RollRequest) => void;
 }) {
   const blocks = parseBlocks(text, streaming);
+  const lastAsk = blocks.findLastIndex((b) => b.kind === 'roll' && !!rollRequestOf(b.attrs));
   const out: ReactNode[] = [];
   let group: Group | null = null;
   let lastPeer = '';
@@ -203,6 +209,34 @@ export function RichText({
             </div>
             <Prose text={b.body} />
           </div>
+        );
+      }
+      case 'roll': {
+        const request = rollRequestOf(a);
+        if (request) {
+          return (
+            <RollAsk
+              key={key}
+              request={request}
+              onRoll={key === lastAsk && !streaming ? onRoll : undefined}
+            />
+          );
+        }
+        const total = Number.parseInt(a.result ?? '', 10);
+        if (!Number.isFinite(total)) return null;
+        const target = Number.parseInt(a.target ?? '', 10);
+        return (
+          <RollResult
+            key={key}
+            roll={{
+              label: a.for || 'A roll',
+              dice: a.dice ?? '',
+              total,
+              target: Number.isFinite(target) ? target : undefined,
+              stat: a.stat,
+              bonus: Number.parseInt(a.bonus ?? '0', 10) || 0,
+            }}
+          />
         );
       }
       case 'text':

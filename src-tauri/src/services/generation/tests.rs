@@ -69,7 +69,7 @@ impl Env {
 
     async fn submit(&self, route_id: &str, text: &str) -> AppResult<Submitted> {
         let head = self.head(route_id).await;
-        submit_action(self.db(), &self.story.story_id, route_id, &head, text).await
+        submit_action(self.db(), &self.story.story_id, route_id, &head, text, None).await
     }
 
     async fn gen(&self, run_id: &str) -> (AppResult<RouteView>, Vec<StreamMessage>) {
@@ -191,6 +191,7 @@ async fn offline_turn_streams_then_commits_once() {
         env.route(),
         &env.story.head_event_id,
         "again",
+        None,
     )
     .await
     .unwrap_err();
@@ -307,8 +308,22 @@ async fn dropped_reply_keeps_action_and_retry_adds_one_reply() {
 async fn concurrent_sends_and_active_run_guard() {
     let env = Env::new().await;
     let head = env.story.head_event_id.clone();
-    let a = submit_action(env.db(), &env.story.story_id, env.route(), &head, "first");
-    let b = submit_action(env.db(), &env.story.story_id, env.route(), &head, "second");
+    let a = submit_action(
+        env.db(),
+        &env.story.story_id,
+        env.route(),
+        &head,
+        "first",
+        None,
+    );
+    let b = submit_action(
+        env.db(),
+        &env.story.story_id,
+        env.route(),
+        &head,
+        "second",
+        None,
+    );
     let (a, b) = tokio::join!(a, b);
     let codes: Vec<_> = [&a, &b]
         .iter()
@@ -868,4 +883,98 @@ async fn budget_gate_on_replies() {
         .unwrap();
     env.gen(&retry.run_id).await.0.unwrap();
     assert_eq!(server.requests().len(), 1);
+}
+
+#[tokio::test]
+async fn a_roll_is_made_with_the_players_stat_and_never_rerolled() {
+    let env = Env::new().await;
+    // Give the player a stat from here on.
+    let view = route_view(env.db(), env.route()).await.unwrap();
+    let state = &view.state.effective.state;
+    let mut player = state.characters[&state.player_character_id].clone();
+    player.stats = vec![crate::domain::story_state::Stat {
+        name: "Nerve".into(),
+        value: 5,
+    }];
+    let head = env.head(env.route()).await;
+    crate::services::reader::edit_details(
+        env.db(),
+        &env.story.story_id,
+        env.route(),
+        &head,
+        vec![crate::domain::events::StateEdit::UpsertCharacter { character: player }],
+        None,
+    )
+    .await
+    .unwrap();
+
+    let head = env.head(env.route()).await;
+    let request = RollRequest {
+        label: "Jump the gap".into(),
+        dice: "1d20".into(),
+        stat: Some("nerve".into()),
+        target: Some(12),
+        asked: true,
+    };
+    let sub = submit_action(
+        env.db(),
+        &env.story.story_id,
+        env.route(),
+        &head,
+        "",
+        Some(&request),
+    )
+    .await
+    .unwrap();
+    let EventBody::Player(action) = &sub.view.history.last().unwrap().body else {
+        panic!("the head is the action");
+    };
+    let roll = action.roll.clone().expect("the roll is stored");
+    assert_eq!(
+        (roll.stat.as_deref(), roll.bonus, roll.asked),
+        (Some("Nerve"), 5, true)
+    );
+    assert!((6..=25).contains(&roll.total), "{roll:?}");
+    roll.validate().unwrap();
+
+    // The offline storyteller follows the roll as it fell.
+    let (view, _) = env.gen(&sub.run_id).await;
+    let reply = match &view.unwrap().history.last().unwrap().body {
+        EventBody::Assistant(a) => a.text.clone(),
+        other => panic!("expected a reply, got {other:?}"),
+    };
+    assert!(!reply.contains("<roll"), "{reply}");
+
+    // Changing the words keeps the same roll.
+    let action_id = sub.view.history.last().unwrap().id.clone();
+    let edited = edit_action(
+        env.db(),
+        &env.story.story_id,
+        env.route(),
+        &action_id,
+        "I take a run at it.",
+    )
+    .await
+    .unwrap();
+    let EventBody::Player(changed) = &edited.view.history.last().unwrap().body else {
+        panic!("the head is the changed action");
+    };
+    assert_eq!(changed.text, "I take a run at it.");
+    assert_eq!(changed.roll.as_ref(), Some(&roll));
+
+    // A bad roll is refused before anything is written.
+    let head = env.head(env.route()).await;
+    let mut bad = request.clone();
+    bad.dice = "a bucket of dice".into();
+    assert!(submit_action(
+        env.db(),
+        &env.story.story_id,
+        env.route(),
+        &head,
+        "",
+        Some(&bad)
+    )
+    .await
+    .is_err());
+    assert_eq!(env.head(env.route()).await, head);
 }

@@ -5,6 +5,7 @@ use tauri::{AppHandle, Manager, State};
 
 use crate::db::runs;
 use crate::db::timeline::{self, RouteDto};
+use crate::domain::dice::RollRequest;
 use crate::domain::events::StateEdit;
 use crate::domain::provider::StreamMessage;
 use crate::errors::AppResult;
@@ -20,7 +21,8 @@ pub async fn get_route_view(state: State<'_, AppState>, route_id: String) -> App
     reader::route_view(state.db()?, &route_id).await
 }
 
-/// Commit the player's action and create a pending reply.
+/// Commit the player's action and create a pending reply. With `roll`,
+/// the app rolls the dice and stores the result with the action.
 #[tauri::command]
 pub async fn submit_action(
     state: State<'_, AppState>,
@@ -28,8 +30,17 @@ pub async fn submit_action(
     route_id: String,
     expected_head_id: String,
     text: String,
+    roll: Option<RollRequest>,
 ) -> AppResult<Submitted> {
-    generation::submit_action(state.db()?, &story_id, &route_id, &expected_head_id, &text).await
+    generation::submit_action(
+        state.db()?,
+        &story_id,
+        &route_id,
+        &expected_head_id,
+        &text,
+        roll.as_ref(),
+    )
+    .await
 }
 
 /// Write the reply for a pending run, streaming drafts over `on_event`.

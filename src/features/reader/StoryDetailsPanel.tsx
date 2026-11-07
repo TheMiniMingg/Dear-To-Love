@@ -3,7 +3,7 @@ import { commands, errorMessage } from '../../api/commands';
 import { ArrowPicker } from '../../components/ArrowPicker';
 import type { Character, EventDto, Pacing, RouteView, StoryStateV1 } from '../../types';
 import { ContentFields } from '../create/ContentFields';
-import { LinesField, TextArea, TextField } from '../create/fields';
+import { LinesField, StatsField, TextArea, TextField } from '../create/fields';
 import { StyleFields } from '../create/StyleFields';
 import { DETAILS, PERSPECTIVES } from '../create/WizardSteps';
 import { diffState, editProblems, summarize, type ChangeLine } from './stateDiff';
@@ -103,6 +103,7 @@ function CharacterFields({
         value={c.abilities}
         onChange={(abilities) => onChange({ abilities })}
       />
+      <StatsField value={c.stats ?? []} onChange={(stats) => onChange({ stats })} />
     </>
   );
 }

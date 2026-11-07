@@ -1,4 +1,5 @@
 import { useId } from 'react';
+import type { Stat } from '../../types';
 import { ArrowPicker, type PickerOption } from '../../components/ArrowPicker';
 
 /** Unique non-empty values, first spelling wins. */
@@ -173,6 +174,91 @@ export function ToggleList({
           {p}
         </label>
       ))}
+    </fieldset>
+  );
+}
+
+/** Stat names offered while typing; any name works. */
+export const STAT_NAMES = [
+  'Strength',
+  'Agility',
+  'Smarts',
+  'Charm',
+  'Nerve',
+  'Luck',
+  'Stealth',
+  'Magic',
+  'Study',
+  'Fitness',
+];
+
+/**
+ * A character's stats: a name and a number each, added to the dice rolls
+ * that use them.
+ */
+export function StatsField({
+  value,
+  onChange,
+  hint = 'Each stat is added to the dice rolls that use it, for example Smarts 2 on a test.',
+}: {
+  value: Stat[];
+  onChange: (v: Stat[]) => void;
+  hint?: string;
+}) {
+  const id = useId();
+  const set = (i: number, patch: Partial<Stat>) =>
+    onChange(value.map((s, j) => (j === i ? { ...s, ...patch } : s)));
+  return (
+    <fieldset className="field stats-field" aria-describedby={`${id}-hint`}>
+      <legend>Stats</legend>
+      <p id={`${id}-hint`} className="muted small">
+        {hint}
+      </p>
+      {value.map((s, i) => (
+        <div key={i} className="stat-row">
+          <label htmlFor={`${id}-name-${i}`} className="visually-hidden">
+            Stat {i + 1} name
+          </label>
+          <input
+            id={`${id}-name-${i}`}
+            value={s.name}
+            list={`${id}-names`}
+            maxLength={60}
+            placeholder="Name, e.g. Charm"
+            onChange={(e) => set(i, { name: e.target.value })}
+          />
+          <label htmlFor={`${id}-value-${i}`} className="visually-hidden">
+            {s.name.trim() || `Stat ${i + 1}`} value
+          </label>
+          <input
+            id={`${id}-value-${i}`}
+            type="number"
+            inputMode="numeric"
+            min={-1000}
+            max={1000}
+            value={Number.isFinite(s.value) ? s.value : 0}
+            onChange={(e) => set(i, { value: Math.trunc(Number(e.target.value) || 0) })}
+          />
+          <button
+            type="button"
+            className="danger-link"
+            aria-label={`Remove stat ${s.name.trim() || i + 1}`}
+            onClick={() => onChange(value.filter((_, j) => j !== i))}
+          >
+            Remove
+          </button>
+        </div>
+      ))}
+      <datalist id={`${id}-names`}>
+        {STAT_NAMES.map((n) => (
+          <option key={n} value={n} />
+        ))}
+      </datalist>
+      {value.length < 30 && (
+        <button type="button" onClick={() => onChange([...value, { name: '', value: 1 }])}>
+          Add a stat
+        </button>
+      )}
     </fieldset>
   );
 }

@@ -1614,3 +1614,117 @@ details summary {
 .msg-post p {
   margin: 0.2rem 0;
 }
+
+/* Dice rolls in the story (DiceCards). */
+.msg-roll {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0.9em 0;
+  padding: 0.7rem 0.9rem;
+  max-width: 34rem;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--accent) 6%, var(--bg));
+}
+.msg-roll .roll-die {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 2.8rem;
+  height: 2.8rem;
+  border-radius: 10px;
+  border: 2px solid var(--accent);
+  color: var(--accent);
+  font-weight: 700;
+  font-size: 1.15rem;
+  font-variant-numeric: tabular-nums;
+}
+.msg-roll .roll-icon {
+  width: 1.8rem;
+  height: 1.8rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+}
+.msg-roll .roll-icon circle {
+  fill: currentColor;
+  stroke: none;
+}
+.msg-roll .roll-body {
+  flex: 1;
+  min-width: 10rem;
+}
+.msg-roll .roll-detail {
+  display: block;
+  color: var(--muted);
+  font-size: 0.9em;
+}
+.msg-roll .roll-outcome {
+  font-weight: 700;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+}
+.msg-roll.success .roll-die {
+  border-color: var(--pass);
+  color: var(--pass);
+}
+.msg-roll.success .roll-outcome {
+  color: var(--pass);
+  background: color-mix(in srgb, var(--pass) 14%, transparent);
+}
+.msg-roll.failure .roll-die {
+  border-color: var(--fail);
+  color: var(--fail);
+}
+.msg-roll.failure .roll-outcome {
+  color: var(--fail);
+  background: color-mix(in srgb, var(--fail) 14%, transparent);
+}
+.msg-roll.rolled.fresh .roll-die {
+  animation: roll-tumble 0.7s ease-out;
+}
+@keyframes roll-tumble {
+  0% {
+    transform: rotate(-200deg) scale(0.6);
+    opacity: 0.2;
+  }
+  70% {
+    transform: rotate(12deg) scale(1.08);
+    opacity: 1;
+  }
+  100% {
+    transform: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .msg-roll.rolled.fresh .roll-die {
+    animation: none;
+  }
+}
+.composer-mode .roll-dice-input {
+  width: 6rem;
+}
+.composer-mode .roll-target-input {
+  width: 4.5rem;
+}
+.composer-mode input[aria-invalid='true'] {
+  border-color: var(--fail);
+}
+
+/* A character's stats (StatsField). */
+.stats-field .stat-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  margin: 0.35rem 0;
+}
+.stats-field .stat-row input:first-of-type {
+  flex: 1;
+  min-width: 8rem;
+}
+.stats-field .stat-row input[type='number'] {
+  width: 5.5rem;
+}
