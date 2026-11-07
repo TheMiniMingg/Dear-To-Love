@@ -26,7 +26,8 @@ use crate::domain::events::{EventBody, EventKind};
 use crate::domain::provider::{ModelMessage, Role};
 use crate::domain::replay::EffectiveState;
 use crate::domain::story_state::{
-    ContentRating, Control, Detail, NarrationStyle, Pacing, Perspective,
+    ContentRating, Control, Detail, DiceRules, NarrationStyle, Pacing, Perspective, RollFrequency,
+    RollOdds, Surprises, Tense,
 };
 use crate::errors::{AppError, AppResult, ErrorCode};
 use crate::services::tokens::{estimate_message, estimate_messages, estimate_text};
@@ -110,6 +111,96 @@ pub fn rating_guidance(rating: ContentRating) -> &'static str {
 const MINORS_RULE: &str = "Never write sexual content involving anyone under 18, and never \
      describe a character in a sexual context as a child or with a child's body.";
 
+/// The DICE section, from the story's dice rules (unset keeps the usual ones).
+fn dice_rules(rules: Option<&DiceRules>, player_name: &str) -> String {
+    let rules = rules.cloned().unwrap_or_default();
+    let fixed = rules
+        .dice
+        .as_deref()
+        .map(str::trim)
+        .filter(|d| !d.is_empty());
+    let mut out = String::from(
+        "\nDICE\nDice decide uncertain moments in this story. The app rolls them fairly; \
+         you set the odds.\n",
+    );
+    if rules.player_only {
+        out.push_str(&format!(
+            "- Never ask for a roll yourself: {player_name} rolls when they choose to.\n"
+        ));
+    } else {
+        let example = match fixed {
+            Some(d) => format!("dice=\"{d}\" target=\"…\""),
+            None => "dice=\"1d20\" target=\"12\"".to_string(),
+        };
+        out.push_str(&format!(
+            "- When {player_name} tries something that could go either way and matters, do \
+             not decide how it turns out. Write up to the moment of truth, then end your \
+             reply with a roll for the player to make: <roll for=\"what the roll decides\" \
+             {example}/>.\n"
+        ));
+        let stat = if rules.no_stats {
+            String::new()
+        } else {
+            format!(" Add stat=\"Name\" to add one of {player_name}'s stats.")
+        };
+        match fixed {
+            Some(d) => out.push_str(&format!(
+                "- Use dice=\"{d}\" for every roll. target is the total needed to succeed; \
+                 leave it out when the number itself is the result.{stat}\n"
+            )),
+            None => out.push_str(&format!(
+                "- dice is dice (1d20, 2d6+1, 1d100) or a range of whole numbers (40-100). \
+                 target is the total needed to succeed; leave it out when the number itself is \
+                 the result, such as a test score.{stat}\n"
+            )),
+        }
+        let lean = match rules.odds {
+            Some(RollOdds::Generous) => " Lean generous: success should be more likely than not.",
+            Some(RollOdds::Tough) => " Lean tough: failure is common and costly.",
+            _ => "",
+        };
+        let example = if fixed.is_none() {
+            format!(
+                " For example, a test scored 0-100 becomes dice=\"40-100\" after \
+                 {player_name} studied for it twice."
+            )
+        } else {
+            String::new()
+        };
+        out.push_str(&format!(
+            "- Set the odds from the story so far: practice, preparation, skill, help and \
+             good choices raise the low end or lower the target; injury, haste, fear and \
+             poor choices do the opposite.{example}{lean}\n"
+        ));
+        out.push_str(match rules.frequency {
+            Some(RollFrequency::Rare) => {
+                "- Ask for a roll only at big, dramatic turning points, at most one per reply.\n"
+            }
+            Some(RollFrequency::Often) => {
+                "- Ask for a roll whenever the outcome of what the player tries is uncertain, \
+                 at most one per reply.\n"
+            }
+            _ => "- Ask for at most one roll per reply, and none for easy or trivial things.\n",
+        });
+    }
+    if rules.no_stats {
+        out.push_str("- Stats are not added to rolls in this story.\n");
+    }
+    if rules.crits {
+        out.push_str(
+            "- A roll can say critical=\"success\" or critical=\"failure\" (the die's highest \
+             or lowest face): make it a spectacular success or a disaster, whatever the target.\n",
+        );
+    }
+    out.push_str(&format!(
+        "- An action can start with a roll's result: <roll for=\"…\" dice=\"…\" \
+         result=\"17\" outcome=\"success\"/>. Write what happens with exactly that \
+         result: never reroll, ignore or soften it. {player_name} may also roll on \
+         their own; treat that roll the same way.\n"
+    ));
+    out
+}
+
 pub fn system_prompt(state: &EffectiveState, frame: &StoryFrame) -> String {
     let s = &state.state;
     let player = s.characters.get(&s.player_character_id);
@@ -120,10 +211,32 @@ pub fn system_prompt(state: &EffectiveState, frame: &StoryFrame) -> String {
         "You are the narrator of an interactive story. The player writes what their \
          character does or says; you write what happens next.\n",
     );
+    let control = if s.narration.autopilot {
+        format!(
+            "- The player controls {player_name}. You may describe {player_name}'s small, \
+             natural reactions (a nod, a laugh, a glance), but never decide their choices, \
+             words, thoughts or feelings beyond what the player wrote."
+        )
+    } else {
+        format!(
+            "- The player controls {player_name}. Never decide {player_name}'s actions, words, \
+             thoughts or feelings beyond what the player wrote."
+        )
+    };
+    let twists = match s.narration.surprises {
+        Some(Surprises::Off) => {
+            "Don't rush to resolve threads, and don't add surprises of your own: what \
+             happens follows from the player's actions and what the characters would \
+             plausibly do."
+        }
+        Some(Surprises::Often) => {
+            "Don't rush to resolve threads, but bring in twists, complications and \
+             surprises often."
+        }
+        _ => "Don't rush to resolve threads or force a twist.",
+    };
     out.push_str(&format!(
-        "- The player controls {player_name}. Never decide {player_name}'s actions, words, \
-         thoughts or feelings beyond what the player wrote. End at a moment that invites \
-         the player's next move.\n\
+        "{control} End at a moment that invites the player's next move.\n\
          - You play everyone else, from allies to villains to passers-by, and the world \
          itself. Each character acts from their own personality, goals, knowledge and \
          circumstances, not from a script: they can disagree, refuse, lie, change their \
@@ -132,7 +245,7 @@ pub fn system_prompt(state: &EffectiveState, frame: &StoryFrame) -> String {
          choices have lasting consequences, and earlier characters and threads can return \
          or cross paths.\n\
          - Let events take the time they need: a chapter can cover one night or several \
-         months. Don't rush to resolve threads or force a twist.\n\
+         months. {twists}\n\
          - Keep track of developments, relationships, secrets (and who knows them) and \
          consequences still to come, and build on them.\n"
     ));
@@ -151,13 +264,29 @@ pub fn system_prompt(state: &EffectiveState, frame: &StoryFrame) -> String {
              it is needed.\n"
         )),
         NarrationStyle::Script => out.push_str(
-            "- Write like a script: every line starts with the speaker's name and a colon. \
-             Stage directions are short and in *asterisks*; no other narration.\n",
+            "- Write like a script: each spoken line as Name: \"words\", and short stage \
+             directions on their own lines in *asterisks*; no other narration.\n",
         ),
         NarrationStyle::Messages => out.push_str(&format!(
             "- Tell the story mostly through messages between the characters (texts, \
              calls, letters and posts), with little narration in between, in {person}.\n"
         )),
+        NarrationStyle::Roleplay => out.push_str(&format!(
+            "- Write like a roleplay chat, in {person}: actions and descriptions in \
+             *asterisks*, dialogue in quotes, and short replies that keep the back-and-forth \
+             going.\n"
+        )),
+        NarrationStyle::Adventure => out.push_str(&format!(
+            "- Write like a classic text adventure, in {person}: say briefly where \
+             {player_name} is and what can be seen and done there, name the way out and the \
+             things worth a closer look, and answer what {player_name} tries plainly and \
+             with dry wit.\n"
+        )),
+    }
+    match s.narration.tense {
+        Some(Tense::Present) => out.push_str("- Write in the present tense.\n"),
+        Some(Tense::Past) => out.push_str("- Write in the past tense.\n"),
+        None => {}
     }
     let length = match s.narration.detail {
         Detail::Brief => "one or two short paragraphs",
@@ -211,8 +340,15 @@ pub fn system_prompt(state: &EffectiveState, frame: &StoryFrame) -> String {
              time passes between messages, let the times move on.\n\
              - Calls sound like real speech: short lines, pauses, interruptions, people \
              talking over each other, background noise when it fits.\n\
-             - Characters may text or call {player_name} first when they have their own \
-             reason to.\n"
+             {}\n",
+            if s.narration.quiet_phones {
+                format!("- Only {player_name} starts texts and calls; others answer.")
+            } else {
+                format!(
+                    "- Characters may text or call {player_name} first when they have their \
+                     own reason to."
+                )
+            }
         ));
     }
     if s.narration.scene_headings {
@@ -224,27 +360,7 @@ pub fn system_prompt(state: &EffectiveState, frame: &StoryFrame) -> String {
         );
     }
     if s.narration.dice {
-        out.push_str(&format!(
-            "\nDICE\nDice decide uncertain moments in this story. The app rolls them fairly; \
-             you set the odds.\n\
-             - When {player_name} tries something that could go either way and matters, do \
-             not decide how it turns out. Write up to the moment of truth, then end your \
-             reply with a roll for the player to make: <roll for=\"what the roll decides\" \
-             dice=\"1d20\" target=\"12\"/>.\n\
-             - dice is dice (1d20, 2d6+1, 1d100) or a range of whole numbers (40-100). \
-             target is the total needed to succeed; leave it out when the number itself is \
-             the result, such as a test score. Add stat=\"Name\" to add one of \
-             {player_name}'s stats.\n\
-             - Set the odds from the story so far: practice, preparation, skill, help and \
-             good choices raise the low end or lower the target; injury, haste, fear and \
-             poor choices do the opposite. For example, a test scored 0-100 becomes \
-             dice=\"40-100\" after {player_name} studied for it twice.\n\
-             - Ask for at most one roll per reply, and none for easy or trivial things.\n\
-             - An action can start with a roll's result: <roll for=\"…\" dice=\"…\" \
-             result=\"17\" outcome=\"success\"/>. Write what happens with exactly that \
-             result: never reroll, ignore or soften it. {player_name} may also roll on \
-             their own; treat that roll the same way.\n"
-        ));
+        out.push_str(&dice_rules(s.narration.dice_rules.as_ref(), player_name));
     }
 
     let n = &s.narration;

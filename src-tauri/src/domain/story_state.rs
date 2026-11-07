@@ -87,6 +87,91 @@ pub enum NarrationStyle {
     Script,
     /// Told mostly through texts, calls, letters and posts.
     Messages,
+    /// Like a roleplay chat: actions in asterisks, dialogue in quotes,
+    /// short back-and-forth replies.
+    Roleplay,
+    /// Like a classic text adventure: where you are, what you can see and
+    /// do, and what happened when you tried.
+    Adventure,
+}
+
+/// Present or past tense. Unset leaves it to the model.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "lowercase")]
+#[ts(export)]
+pub enum Tense {
+    Present,
+    Past,
+}
+
+/// How much the storyteller surprises the player. Unset is `Sometimes`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "lowercase")]
+#[ts(export)]
+pub enum Surprises {
+    /// Only what follows from the player's actions and the characters.
+    Off,
+    Sometimes,
+    Often,
+}
+
+/// How often the storyteller asks for a roll. Unset is `Normal`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "lowercase")]
+#[ts(export)]
+pub enum RollFrequency {
+    /// Only at big, dramatic turning points.
+    Rare,
+    Normal,
+    /// Whenever something uncertain is tried.
+    Often,
+}
+
+/// How the storyteller sets the odds. Unset is `Fair`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "lowercase")]
+#[ts(export)]
+pub enum RollOdds {
+    Generous,
+    Fair,
+    Tough,
+}
+
+/// How dice work in a story that rolls them. Every field left out keeps the
+/// usual behavior.
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[ts(export)]
+pub struct DiceRules {
+    /// Dice for every roll, such as `1d20` or `2d6`. Unset lets the
+    /// storyteller choose, including ranges such as `40-100`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub dice: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub frequency: Option<RollFrequency>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub odds: Option<RollOdds>,
+    /// The player's stats are not added to rolls.
+    #[serde(default, skip_serializing_if = "is_false")]
+    #[ts(as = "Option<bool>", optional)]
+    pub no_stats: bool,
+    /// A single die's highest face is a critical success and its lowest a
+    /// critical failure, whatever the target.
+    #[serde(default, skip_serializing_if = "is_false")]
+    #[ts(as = "Option<bool>", optional)]
+    pub crits: bool,
+    /// The number needed is not shown until the dice are rolled.
+    #[serde(default, skip_serializing_if = "is_false")]
+    #[ts(as = "Option<bool>", optional)]
+    pub hide_target: bool,
+    /// The storyteller never asks for rolls; the player rolls when they
+    /// choose.
+    #[serde(default, skip_serializing_if = "is_false")]
+    #[ts(as = "Option<bool>", optional)]
+    pub player_only: bool,
 }
 
 /// How much the storyteller may show. Unset leaves it to the model.
@@ -154,6 +239,24 @@ pub struct Narration {
     #[serde(default, skip_serializing_if = "is_false")]
     #[ts(as = "Option<bool>", optional)]
     pub scene_headings: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub tense: Option<Tense>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub surprises: Option<Surprises>,
+    /// The storyteller may describe the player character's small reactions
+    /// (a nod, a laugh), never their choices or words.
+    #[serde(default, skip_serializing_if = "is_false")]
+    #[ts(as = "Option<bool>", optional)]
+    pub autopilot: bool,
+    /// Characters never text or call the player first.
+    #[serde(default, skip_serializing_if = "is_false")]
+    #[ts(as = "Option<bool>", optional)]
+    pub quiet_phones: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub dice_rules: Option<DiceRules>,
 }
 
 fn is_false(b: &bool) -> bool {
@@ -177,6 +280,11 @@ impl Default for Narration {
             language: None,
             dice: false,
             scene_headings: false,
+            tense: None,
+            surprises: None,
+            autopilot: false,
+            quiet_phones: false,
+            dice_rules: None,
         }
     }
 }
@@ -378,6 +486,14 @@ impl StoryStateV1 {
         check_list("genres", &self.narration.genres)?;
         check_list("themes", &self.narration.themes)?;
         check_list("limits", &self.narration.limits)?;
+        if let Some(dice) = self
+            .narration
+            .dice_rules
+            .as_ref()
+            .and_then(|r| r.dice.as_deref())
+        {
+            crate::domain::dice::DiceSpec::parse(dice)?;
+        }
         if let Some(language) = &self.narration.language {
             if language.chars().count() > 60 {
                 return bad("the story language is longer than 60 characters".into());

@@ -4,12 +4,9 @@ import type {
   ChapterOutlineInput,
   ContentRating,
   CreateStoryDraft,
-  Detail,
   DraftProblem,
   DraftStep,
   Narration,
-  Pacing,
-  Perspective,
   TemplateCatalog,
   World,
 } from '../../types';
@@ -31,15 +28,20 @@ import {
 } from './fields';
 import { ERAS, PERSONALITIES, RACES, ROLES, RULES, SETTINGS } from './presets';
 import {
+  DETAILS,
   DICE_STORY_TYPES,
+  FeatureFields,
+  PERSPECTIVES,
   STYLES,
   StyleFields,
   appStoryLanguage,
+  featureList,
+  labelOf,
   storyLanguageLabel,
   tellingOf,
 } from './StyleFields';
 import { BACKGROUND_SLOT, COVER_SLOT, livePictures } from './PicturesStep';
-import { joinList, msg, t, tKnown, tn, tOptions } from '../../i18n';
+import { joinList, msg, t, tKnown, tn } from '../../i18n';
 
 export type StepProps = {
   draft: CreateStoryDraft;
@@ -50,22 +52,6 @@ export type StepProps = {
 
 export const PLAYER = '@player';
 
-export const PERSPECTIVES: PickerOption<Perspective>[] = [
-  { value: 'second', label: msg('Second person (you)') },
-  { value: 'first', label: msg('First person (I)') },
-  { value: 'third', label: msg('Third person (they)') },
-];
-export const DETAILS: PickerOption<Detail>[] = [
-  { value: 'brief', label: msg('Brief') },
-  { value: 'balanced', label: msg('Balanced') },
-  { value: 'detailed', label: msg('Detailed') },
-  { value: 'cinematic', label: msg('Cinematic') },
-];
-const PACINGS: PickerOption<Pacing>[] = [
-  { value: 'fast', label: msg('Fast') },
-  { value: 'normal', label: msg('Normal') },
-  { value: 'slow', label: msg('Slow') },
-];
 const PRONOUNS = ['she/her', 'he/him', 'they/them'];
 
 const copy = <T,>(v: T): T => JSON.parse(JSON.stringify(v)) as T;
@@ -663,24 +649,6 @@ export function NarrationStep({ draft, update, catalog, guided }: StepProps) {
   return (
     <>
       <StyleFields narration={n} onChange={set} typeLanguage={!guided} />
-      <ArrowPicker
-        label={t('Point of view')}
-        options={tOptions(PERSPECTIVES)}
-        value={n.perspective}
-        onChange={(perspective) => set({ perspective })}
-      />
-      <ArrowPicker
-        label={t('Detail')}
-        options={tOptions(DETAILS)}
-        value={n.detail}
-        onChange={(detail) => set({ detail })}
-      />
-      <ArrowPicker
-        label={t('Pacing')}
-        options={tOptions(PACINGS)}
-        value={n.pacing}
-        onChange={(pacing) => set({ pacing })}
-      />
       {guided ? (
         <PresetPicker
           label={t('Tone')}
@@ -696,6 +664,8 @@ export function NarrationStep({ draft, update, catalog, guided }: StepProps) {
           placeholder={t('Warm, gently mysterious')}
         />
       )}
+      <h2>{t('Features')}</h2>
+      <FeatureFields narration={n} onChange={set} />
       <h2>{t('What kind of story')}</h2>
       <ContentFields
         narration={n}
@@ -805,14 +775,15 @@ export function ReviewStep({
         <dd>{draft.firstChapterTitle || t('(not set)')}</dd>
         <dt>{t('Narration')}</dt>
         <dd>
-          {t(STYLES.find((st) => st.value === (draft.narration.style ?? 'narrated'))?.label ?? '')}{' '}
-          · {t(PERSPECTIVES.find((p) => p.value === draft.narration.perspective)?.label ?? '')} ·{' '}
-          {t(DETAILS.find((d) => d.value === draft.narration.detail)?.label ?? '')}
+          {labelOf(STYLES, draft.narration.style ?? 'narrated')} ·{' '}
+          {labelOf(PERSPECTIVES, draft.narration.perspective)} ·{' '}
+          {labelOf(DETAILS, draft.narration.detail)}
           {draft.narration.tone && ` · ${draft.narration.tone}`}
           {draft.narration.language &&
             ` · ${t('in {language}', { language: storyLanguageLabel(draft.narration.language) })}`}
-          {draft.narration.dice && ` · ${t('dice rolls')}`}
         </dd>
+        <dt>{t('Features')}</dt>
+        <dd>{joinList(featureList(draft.narration)) || t('(none)')}</dd>
         <dt>{t('Kind of story')}</dt>
         <dd>
           {storyKind(

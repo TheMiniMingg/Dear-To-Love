@@ -4,6 +4,7 @@ import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { Composer } from '../features/reader/Composer';
+import { DiceRulesContext } from '../features/reader/DiceCards';
 import {
   isDice,
   lastRollRequest,
@@ -195,5 +196,48 @@ describe('Roll dice in the composer', () => {
       stat: 'Fitness',
       target: 12,
     });
+  });
+
+  it('follows the story dice settings: own dice, no stats, a secret target, criticals', async () => {
+    const onRoll = vi.fn();
+    render(
+      <DiceRulesContext.Provider value={{ dice: '2d6', noStats: true, hideTarget: true }}>
+        <RichText
+          playerName="Sam"
+          onRoll={onRoll}
+          text={
+            '<roll for="Old roll" dice="1d20" result="20" critical="success" target="25"/>\n\n' +
+            '<roll for="Pick the lock" dice="1d20" stat="Hands" target="12"/>'
+          }
+        />
+      </DiceRulesContext.Provider>,
+    );
+    const ask = screen.getByRole('group', { name: 'Roll for Pick the lock' });
+    expect(ask).toHaveTextContent('2d6');
+    expect(ask).not.toHaveTextContent('Hands');
+    expect(ask).not.toHaveTextContent('needs 12');
+    await userEvent.click(within(ask).getByRole('button', { name: 'Roll 2d6' }));
+    expect(onRoll).toHaveBeenCalled();
+    expect(
+      screen.getByRole('group', { name: 'Roll for Old roll: 20, Critical success' }),
+    ).toHaveClass('critical', 'success');
+  });
+
+  it('leaves stats out of the composer when the story adds none', async () => {
+    render(
+      <Composer
+        value=""
+        onChange={() => undefined}
+        onSubmit={() => undefined}
+        disabled={false}
+        placeholder="What do you do?"
+        stats={[{ name: 'Fitness', value: 2 }]}
+        dice
+        diceRules={{ dice: '3d6', noStats: true }}
+      />,
+    );
+    await userEvent.selectOptions(screen.getByLabelText('Kind of action'), 'Roll dice');
+    expect(screen.getByLabelText('Dice')).toHaveValue('3d6');
+    expect(screen.queryByLabelText('With')).toBeNull();
   });
 });

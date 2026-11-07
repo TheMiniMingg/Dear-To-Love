@@ -2,6 +2,21 @@
 
 ## Unreleased
 
+- **More ways to tell a story, with an example of each.** Two new styles, _Roleplay chat_
+  (actions in italics, short replies) and _Text adventure_ (where you are, what you see and
+  the ways onward), join Narrated, Script, Thoughts and Messages. Under the style picker a
+  short example shows how the story will read, with a heading, a thought or a text card when
+  those are on. Script lines now read `Name: "line"` with stage directions in italics. Point
+  of view, detail and pacing say what each choice means, and a new **Tense** picker sets
+  present or past.
+- **Every feature has a box.** **Features** (in the wizard's Narration step and Story details)
+  turns each one on or off: inner thoughts, texts and calls as cards, characters texting you
+  first, place and time headings, your small reactions written for you, how often twists come,
+  and dice.
+- **Dice settings.** Folded away under the dice box: who asks for rolls, the dice every roll
+  uses (or the storyteller's pick), how often it asks, generous, fair or tough odds, whether
+  stats count, critical rolls on a natural top or bottom face, and whether the number needed
+  shows before you roll. The app enforces the dice and stats rules itself.
 - **Texts and calls that sound like people.** The storyteller is now asked to write texts the
   way each character really texts (short, casual, often several in a row, with emoji or
   slang only when it suits them), to make calls sound like real speech, and to let characters

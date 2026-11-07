@@ -18,6 +18,7 @@ import { SearchPanel } from '../search/SearchPanel';
 import type {
   BookmarkDto,
   BudgetStatus,
+  DiceRules,
   ErrorCode,
   EventDto,
   RollRequest,
@@ -39,6 +40,7 @@ import { StoryMemoryPanel } from './StoryMemoryPanel';
 import { StorytellerPanel } from './StorytellerPanel';
 import { plainText } from './messages';
 import { PortraitsContext, portraitFinder } from './portraits';
+import { DiceRulesContext } from './DiceCards';
 import { intlLocale, joinSentences, msg, t, tKnown, tr } from '../../i18n';
 import { chapterHasTitle, routeName, saveName } from '../../i18n/names';
 
@@ -79,6 +81,8 @@ const PANEL_TITLES: Record<Exclude<Panel, null>, string> = {
 type Stream = { runId: string; text: string };
 
 const POLL_MS = 1500;
+/** Usual dice, kept as one object so the cards don't redraw for nothing. */
+const NO_RULES: DiceRules = {};
 
 function timeNow(): string {
   return new Date().toLocaleTimeString(intlLocale(), { hour: '2-digit', minute: '2-digit' });
@@ -480,6 +484,7 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
   const player = view.state.state.characters[view.state.state.playerCharacterId];
   const events = viewing ? viewing.history : view.history;
   const portraitOf = portraitFinder(view);
+  const diceRules = view.state.state.narration?.diceRules ?? NO_RULES;
 
   return (
     <section
@@ -604,35 +609,37 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
 
       <div ref={narrativeHost} className="reader-body">
         <PortraitsContext.Provider value={portraitOf}>
-          <NarrativeView
-            events={events}
-            draft={viewing ? null : stream}
-            playerName={player?.name ?? t('You')}
-            onBranch={viewing ? undefined : (id) => void branchFrom(id)}
-            onRegenerate={viewing || writing || busy ? undefined : openRegenerate}
-            onEditAction={
-              viewing || writing || busy
-                ? undefined
-                : (id) => openEdit(view.history.find((x) => x.id === id))
-            }
-            onBookmark={viewing ? undefined : (id) => void toggleBookmark(id)}
-            bookmarked={viewing ? undefined : bookmarked}
-            focus={viewing ? null : focus}
-            onRoll={
-              viewing || busy || writing || awaitingReply
-                ? undefined
-                : (req) => void send('', req, false)
-            }
-            intro={
-              viewing
-                ? undefined
-                : {
-                    premise: view.story.description,
-                    location: view.state.state.scene.location,
-                    scene: view.state.state.scene.summary,
-                  }
-            }
-          />
+          <DiceRulesContext.Provider value={diceRules}>
+            <NarrativeView
+              events={events}
+              draft={viewing ? null : stream}
+              playerName={player?.name ?? t('You')}
+              onBranch={viewing ? undefined : (id) => void branchFrom(id)}
+              onRegenerate={viewing || writing || busy ? undefined : openRegenerate}
+              onEditAction={
+                viewing || writing || busy
+                  ? undefined
+                  : (id) => openEdit(view.history.find((x) => x.id === id))
+              }
+              onBookmark={viewing ? undefined : (id) => void toggleBookmark(id)}
+              bookmarked={viewing ? undefined : bookmarked}
+              focus={viewing ? null : focus}
+              onRoll={
+                viewing || busy || writing || awaitingReply
+                  ? undefined
+                  : (req) => void send('', req, false)
+              }
+              intro={
+                viewing
+                  ? undefined
+                  : {
+                      premise: view.story.description,
+                      location: view.state.state.scene.location,
+                      scene: view.state.state.scene.summary,
+                    }
+              }
+            />
+          </DiceRulesContext.Provider>
         </PortraitsContext.Provider>
         <ReaderRail />
       </div>
@@ -696,6 +703,7 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
             placeholder={t('What do you do? (Enter to send, Shift+Enter for a new line)')}
             playerName={player?.name ?? t('You')}
             dice={!!view.state.state.narration?.dice}
+            diceRules={diceRules}
             stats={player?.stats}
             contacts={Object.values(view.state.state.characters)
               .filter((c) => c.control !== 'player')

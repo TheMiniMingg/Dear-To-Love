@@ -149,8 +149,10 @@ pub fn plain_message_tags(text: &str) -> String {
                 if let Some(target) = get("target") {
                     label.push_str(&format!(", needs {target}"));
                 }
-                if let Some(outcome) = get("outcome") {
-                    label.push_str(&format!(", {outcome}"));
+                match (get("critical"), get("outcome")) {
+                    (Some(critical), _) => label.push_str(&format!(", critical {critical}")),
+                    (None, Some(outcome)) => label.push_str(&format!(", {outcome}")),
+                    (None, None) => {}
                 }
                 label
             }

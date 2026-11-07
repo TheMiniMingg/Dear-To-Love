@@ -1,6 +1,6 @@
 import { useId, useRef, useState, type KeyboardEvent } from 'react';
 import { isComposing } from '../../app/keyboard';
-import type { RollRequest, Stat } from '../../types';
+import type { DiceRules, RollRequest, Stat } from '../../types';
 import { isDice, rollFromComposer, wrapAction, type ComposeMode } from './messages';
 import { msg, t } from '../../i18n';
 
@@ -23,6 +23,8 @@ type Props = {
   /** Offer "Roll dice" (stories with dice on), with the player's stats. */
   dice?: boolean;
   stats?: Stat[];
+  /** The story's dice settings: its own dice, and whether stats count. */
+  diceRules?: DiceRules;
 };
 
 type Mode = ComposeMode | 'roll';
@@ -59,12 +61,13 @@ export function Composer({
   playerName = t('You'),
   dice = false,
   stats = [],
+  diceRules = {},
 }: Props) {
   const ref = useRef<HTMLTextAreaElement>(null);
   const id = useId();
   const [chosen, setMode] = useState<Mode>('act');
   const [to, setTo] = useState('');
-  const [roll, setRoll] = useState({ dice: '1d20', stat: '', target: '' });
+  const [roll, setRoll] = useState({ dice: diceRules.dice ?? '1d20', stat: '', target: '' });
   const mode = chosen === 'roll' && !dice ? 'act' : chosen;
   const needsTo = mode === 'text' || mode === 'call';
   const ready =
@@ -143,7 +146,7 @@ export function Composer({
                 <option key={d} value={d} />
               ))}
             </datalist>
-            {stats.some((s) => s.name.trim()) && (
+            {!diceRules.noStats && stats.some((s) => s.name.trim()) && (
               <>
                 <label htmlFor={`${id}-stat`}>{t('With')}</label>
                 <select

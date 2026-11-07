@@ -254,12 +254,21 @@ yet (such as _School life_) still makes that kind of story from any world.
 
 ## How the story is told
 
-Also in **Narration** (wizard and Story details):
+Also in **Narration** (wizard and Story details). Under the **Style** picker, a short example
+shows how the chosen style reads, drawn the way the reader draws it, with a heading, a thought
+or a text card when those are on.
 
-- **Style**: _Narrated_ (a narrator and dialogue), _Thoughts and dialogue, no narrator_ (only
-  what the characters say and think, with at most a short line of action), _Script_ (names,
-  lines and short stage directions) or _Messages_ (told mostly through texts, calls, letters
-  and posts).
+- **Style**: _Narrated_ (a narrator and dialogue), _Script_ (`Name: "line"`, with short stage
+  directions in italics), _Roleplay chat_ (actions in italics, dialogue in quotes and short
+  replies), _Thoughts and dialogue, no narrator_ (only what the characters say and think, with
+  at most a short line of action), _Messages_ (told mostly through texts, calls, letters and
+  posts) or _Text adventure_ (where you are, what you can see and the ways onward).
+- **Point of view** ("You open the door.", "I open the door." or "Sam opens the door.") and
+  **Tense** (present, past, or not set to let the storyteller choose).
+- **Detail** and **Pacing**: how long each reply is and how fast events move.
+
+**Features** lists what the storyteller can do, each with a box to turn it off:
+
 - **Show other characters' inner thoughts**: after you act, the characters can show what they
   really think of it, even when they don't say it. Your own character's thoughts are always
   yours to write.
@@ -267,7 +276,8 @@ Also in **Narration** (wizard and Story details):
   messages as tags and the reader shows them as a phone screen, a call, a letter or a post.
   For example `<text from="Erika K." time="7:11 PM">Is that really you?</text>` becomes a text
   bubble from Erika K. Any model that follows instructions can do this; the offline storyteller
-  answers your own texts and calls.
+  answers your own texts and calls. **Characters can text or call you first** (on) lets them
+  start a conversation when they have a reason; off, only you do.
 - **Texts that read like texts**: with cards on, the storyteller is asked to write each
   character's texts the way that person would (short, casual, often several in a row, with
   emoji, slang or lowercase only when it suits them), to make calls sound like real speech,
@@ -277,6 +287,16 @@ Also in **Narration** (wizard and Story details):
   starts a new place or time with `<scene place="Countryside" time="7:11 PM"/>`, which the
   reader shows as a heading, "Countryside — 7:11 PM", and exports write as
   `[Countryside, 7:11 PM]`.
+- **Let the storyteller add your small reactions** (off): the storyteller may write that your
+  character nods, laughs or glances, but never what they say, choose, think or feel beyond
+  what you wrote. Off, it writes nothing for your character at all.
+- **Twists and surprises**: _Sometimes_ (when the story calls for one), _Often_ (complications
+  keep coming) or _None_ (what happens follows only from what you and the characters do).
+- **Roll dice for uncertain moments**, with its **Dice settings** folded away below it (see
+  [Dice](#dice)).
+
+The story's language is set in the same place:
+
 - **Story language**: the language the story is written in, whatever language you type in.
   Summaries and chapter recaps follow it too. New stories start with the app's language
   (Settings → Language) when it is Chinese, Japanese or Korean. Not set, most models answer in
@@ -325,6 +345,22 @@ Fantasy and School life stories). Then:
   and the number you need.
 - The storyteller narrates what the roll decided, success or failure. The offline storyteller
   asks for a roll when you try something risky.
+
+**Dice settings**, folded away under the dice box, change the rules for one story. Each one
+left as it is keeps the usual behavior:
+
+- **Who asks for rolls**: the storyteller (and you, any time), or only you, when you choose to.
+- **Dice for every roll**: such as `1d20`, `2d6` or `0-100`. Every roll the storyteller asks
+  for uses these dice, whatever it wrote; empty lets it pick dice that suit the moment.
+- **How often to ask**: only at big moments, when it matters (usual), or whenever the outcome
+  is uncertain.
+- **Odds**: generous, fair (set from the story) or tough.
+- **Add your stats to rolls** (on): off, rolls never add a stat, and the action box hides it.
+- **Critical rolls** (off): on a single die, the top number is a critical success and a 1 a
+  critical failure, whatever the target. The card says so, and the storyteller makes it
+  spectacular or a disaster.
+- **Show the number needed before you roll** (on): off, the card keeps the target hidden
+  until the dice land.
 
 ## Adult and explicit stories
 

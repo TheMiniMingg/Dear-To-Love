@@ -170,6 +170,16 @@ pub struct RollRequest {
     pub asked: bool,
 }
 
+/// A single die that landed on its highest or lowest face, in a story with
+/// critical rolls: it succeeds or fails whatever the target.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "lowercase")]
+#[ts(export)]
+pub enum Critical {
+    Success,
+    Failure,
+}
+
 /// A roll that was made, stored with the player's action.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -196,6 +206,9 @@ pub struct DiceRoll {
     #[serde(default, skip_serializing_if = "is_false")]
     #[ts(as = "Option<bool>", optional)]
     pub asked: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub critical: Option<Critical>,
 }
 
 fn is_zero(n: &i32) -> bool {
@@ -212,9 +225,39 @@ fn attr(value: &str) -> String {
 }
 
 impl DiceRoll {
-    /// `Some(true)` when the roll met its target.
+    /// `Some(true)` when the roll met its target (or was a critical
+    /// success), `Some(false)` when it fell short (or was a critical failure).
     pub fn success(&self) -> Option<bool> {
-        self.target.map(|t| self.total >= t)
+        match self.critical {
+            Some(Critical::Success) => Some(true),
+            Some(Critical::Failure) => Some(false),
+            None => self.target.map(|t| self.total >= t),
+        }
+    }
+
+    /// The single die (not a range) that it was, if any: its number of sides.
+    fn single_die(&self) -> Option<u32> {
+        match DiceSpec::parse(&self.dice) {
+            Ok(DiceSpec::Dice {
+                count: 1, sides, ..
+            }) if sides >= 2 => Some(sides),
+            _ => None,
+        }
+    }
+
+    /// In a story with critical rolls: a single die's highest face is a
+    /// critical success and its lowest a critical failure.
+    pub fn mark_critical(&mut self) {
+        let (Some(sides), Some(&face)) = (self.single_die(), self.faces.first()) else {
+            return;
+        };
+        self.critical = if face == sides as i32 {
+            Some(Critical::Success)
+        } else if face == 1 {
+            Some(Critical::Failure)
+        } else {
+            None
+        };
     }
 
     /// The roll as the storyteller reads it, e.g.
@@ -241,6 +284,11 @@ impl DiceRoll {
             out.push_str(&format!(" target=\"{t}\""));
         }
         out.push_str(&format!(" result=\"{}\"", self.total));
+        match self.critical {
+            Some(Critical::Success) => out.push_str(" critical=\"success\""),
+            Some(Critical::Failure) => out.push_str(" critical=\"failure\""),
+            None => {}
+        }
         match self.success() {
             Some(true) => out.push_str(" outcome=\"success\""),
             Some(false) => out.push_str(" outcome=\"failure\""),
@@ -269,6 +317,17 @@ impl DiceRoll {
         }
         if self.stat.as_ref().is_some_and(|s| s.chars().count() > 60) {
             return bad("a stat name is at most 60 characters");
+        }
+        if let Some(c) = self.critical {
+            let face = self.faces.first().copied();
+            let ok = match (self.single_die(), c) {
+                (Some(sides), Critical::Success) => face == Some(sides as i32),
+                (Some(_), Critical::Failure) => face == Some(1),
+                (None, _) => false,
+            };
+            if !ok {
+                return bad("only a single die's highest or lowest face is critical");
+            }
         }
         // A bonus comes only from a stat, and a stat is at most 1000 either way.
         if (self.stat.is_none() && self.bonus != 0) || self.bonus.abs() > 1000 {
@@ -343,6 +402,7 @@ pub fn roll(
         faces,
         total,
         asked: req.asked,
+        critical: None,
     })
 }
 
@@ -469,5 +529,41 @@ mod tests {
         }
         assert!(seen.iter().all(|s| *s));
         assert_eq!(os_uniform(1).unwrap(), 0);
+    }
+
+    #[test]
+    fn a_single_die_can_be_critical() {
+        let mut r = roll(&req("1d20"), None, &mut |_n| Ok(19)).unwrap();
+        assert_eq!(r.total, 20);
+        r.target = Some(25);
+        r.mark_critical();
+        assert_eq!(r.critical, Some(Critical::Success));
+        assert_eq!(
+            r.success(),
+            Some(true),
+            "a critical success beats any target"
+        );
+        assert!(r
+            .tag()
+            .contains(" result=\"20\" critical=\"success\" outcome=\"success\""));
+        r.validate().unwrap();
+
+        let mut low = roll(&req("1d20"), None, &mut |_n| Ok(0)).unwrap();
+        low.target = Some(1);
+        low.mark_critical();
+        assert_eq!(low.success(), Some(false));
+        let mut mid = roll(&req("1d20"), None, &mut |_n| Ok(9)).unwrap();
+        mid.mark_critical();
+        assert_eq!(mid.critical, None);
+        // Ranges and several dice are never critical.
+        let mut range = roll(&req("40-100"), None, &mut |_n| Ok(60)).unwrap();
+        range.mark_critical();
+        assert_eq!(range.critical, None);
+        let mut two = roll(&req("2d6"), None, &mut |_n| Ok(5)).unwrap();
+        two.mark_critical();
+        assert_eq!(two.critical, None);
+        // A stored critical must match the face.
+        mid.critical = Some(Critical::Success);
+        assert!(mid.validate().is_err());
     }
 }

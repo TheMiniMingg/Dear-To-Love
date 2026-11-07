@@ -1,6 +1,16 @@
 import type { Character, KnownFact, Narration, StateEdit, StoryStateV1 } from '../../types';
 import { cleanOptionalList, minorsIn, RATING_LABELS } from '../create/ContentFields';
-import { STYLES } from '../create/StyleFields';
+import {
+  DETAILS,
+  PACINGS,
+  PERSPECTIVES,
+  STYLES,
+  SURPRISES,
+  TENSES,
+  cleanDiceRules,
+  diceSummary,
+  labelOf,
+} from '../create/StyleFields';
 import { joinList, msg, t } from '../../i18n';
 
 /** One line of the "what changes" preview. */
@@ -62,6 +72,13 @@ function cleanNarration(n: Narration): Narration {
   const language = n.language?.trim();
   if (language) out.language = language;
   if (n.dice) out.dice = true;
+  if (n.sceneHeadings) out.sceneHeadings = true;
+  if (n.tense) out.tense = n.tense;
+  if (n.surprises && n.surprises !== 'sometimes') out.surprises = n.surprises;
+  if (n.autopilot) out.autopilot = true;
+  if (n.quietPhones) out.quietPhones = true;
+  const diceRules = cleanDiceRules(n.diceRules);
+  if (diceRules) out.diceRules = diceRules;
   return out;
 }
 const show = (v: unknown) =>
@@ -136,17 +153,27 @@ export function diffState(
   const narration = cleanNarration(after.narration);
   if (!same(narration, cleanNarration(before.narration))) {
     changes.push({ op: 'setNarration', narration });
+    const onOff = (on: boolean | undefined) => (on ? t('On') : t('Off'));
     const shown = (n: Narration) => ({
       ...n,
+      perspective: labelOf(PERSPECTIVES, n.perspective),
+      detail: labelOf(DETAILS, n.detail),
+      pacing: labelOf(PACINGS, n.pacing),
       rating: n.rating ? t(RATING_LABELS[n.rating]) : t('Not set'),
       genres: n.genres ?? [],
       themes: n.themes ?? [],
       limits: n.limits ?? [],
-      style: t(STYLES.find((s) => s.value === (n.style ?? 'narrated'))?.label ?? n.style ?? ''),
-      innerThoughts: n.innerThoughts ? t('On') : t('Off'),
-      messageCards: n.messageCards ? t('On') : t('Off'),
+      style: labelOf(STYLES, n.style ?? 'narrated'),
+      innerThoughts: onOff(n.innerThoughts),
+      messageCards: onOff(n.messageCards),
       language: n.language ?? t('Not set'),
-      dice: n.dice ? t('On') : t('Off'),
+      dice: onOff(n.dice),
+      sceneHeadings: onOff(n.sceneHeadings),
+      tense: n.tense ? labelOf(TENSES, n.tense) : t('Not set'),
+      surprises: labelOf(SURPRISES, n.surprises ?? 'sometimes'),
+      autopilot: onOff(n.autopilot),
+      quietPhones: onOff(!n.quietPhones),
+      diceRules: diceSummary(n.diceRules) || t('Usual'),
     });
     lines.push(
       ...fieldLines(`${t('Narration')} · `, shown(before.narration), shown(narration), [
@@ -163,6 +190,12 @@ export function diffState(
         ['messageCards', msg('Texts and calls as cards')],
         ['language', msg('Story language')],
         ['dice', msg('Dice')],
+        ['diceRules', msg('Dice settings')],
+        ['tense', msg('Tense')],
+        ['sceneHeadings', msg('Place and time headings')],
+        ['autopilot', msg('Your small reactions')],
+        ['quietPhones', msg('Characters can text or call you first')],
+        ['surprises', msg('Twists and surprises')],
       ]),
     );
   }

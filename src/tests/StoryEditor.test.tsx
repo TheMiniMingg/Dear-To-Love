@@ -274,4 +274,50 @@ describe('diffState', () => {
       after: 'Korean',
     });
   });
+
+  it('keeps every feature and dice setting, with the usual ones left out', () => {
+    const after = structuredClone(state);
+    after.narration = {
+      ...after.narration,
+      perspective: 'first',
+      tense: 'past',
+      surprises: 'sometimes',
+      autopilot: true,
+      quietPhones: true,
+      sceneHeadings: true,
+      dice: true,
+      diceRules: { dice: ' 2d6 ', frequency: 'normal', odds: 'tough', crits: true, noStats: false },
+    };
+    const { changes, lines } = diffState(state, after);
+    expect(changes).toEqual([
+      {
+        op: 'setNarration',
+        narration: {
+          ...state.narration,
+          perspective: 'first',
+          dice: true,
+          sceneHeadings: true,
+          tense: 'past',
+          autopilot: true,
+          quietPhones: true,
+          diceRules: { dice: '2d6', odds: 'tough', crits: true },
+        },
+      },
+    ]);
+    expect(lines).toContainEqual({
+      what: 'Narration · Point of view',
+      before: 'Second person (you)',
+      after: 'First person (I)',
+    });
+    expect(lines).toContainEqual({
+      what: 'Narration · Dice settings',
+      before: 'Usual',
+      after: '2d6, tough odds, critical rolls',
+    });
+    expect(lines).toContainEqual({
+      what: 'Narration · Characters can text or call you first',
+      before: 'On',
+      after: 'Off',
+    });
+  });
 });

@@ -1235,4 +1235,7 @@ export const reader: Messages = {
   'Show on stage': ['在舞台上显示', '在舞台上顯示', 'ステージに表示', '무대에 표시'],
   'Show {name}': ['显示{name}', '顯示{name}', '{name}を表示', '{name} 표시'],
   'Picture view': ['图片视图', '圖片檢視', '画像ビュー', '이미지 보기'],
+  'Critical success': ['大成功', '大成功', 'クリティカル成功', '크리티컬 성공'],
+  'Critical failure': ['大失败', '大失敗', 'クリティカル失敗', '크리티컬 실패'],
+  Usual: ['默认', '預設', '標準', '기본'],
 };

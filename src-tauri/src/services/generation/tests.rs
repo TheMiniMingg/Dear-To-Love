@@ -981,6 +981,85 @@ async fn a_roll_is_made_with_the_players_stat_and_never_rerolled() {
 }
 
 #[tokio::test]
+async fn a_story_with_its_own_dice_uses_them_and_can_leave_stats_out() {
+    let env = Env::new().await;
+    let view = route_view(env.db(), env.route()).await.unwrap();
+    let mut narration = view.state.effective.state.narration.clone();
+    narration.dice = true;
+    narration.dice_rules = Some(crate::domain::story_state::DiceRules {
+        dice: Some("2d6".into()),
+        no_stats: true,
+        ..Default::default()
+    });
+    let head = env.head(env.route()).await;
+    crate::services::reader::edit_details(
+        env.db(),
+        &env.story.story_id,
+        env.route(),
+        &head,
+        vec![crate::domain::events::StateEdit::SetNarration { narration }],
+        None,
+    )
+    .await
+    .unwrap();
+
+    // The storyteller asked for 1d20 with a stat: the story's own dice
+    // are rolled, without the stat.
+    let asked = RollRequest {
+        label: "Jump the gap".into(),
+        dice: "1d20".into(),
+        stat: Some("Nerve".into()),
+        target: Some(7),
+        asked: true,
+    };
+    let head = env.head(env.route()).await;
+    let sub = submit_action(
+        env.db(),
+        &env.story.story_id,
+        env.route(),
+        &head,
+        "",
+        Some(&asked),
+    )
+    .await
+    .unwrap();
+    let EventBody::Player(action) = &sub.view.history.last().unwrap().body else {
+        panic!("the head is the action");
+    };
+    let roll = action.roll.clone().expect("the roll is stored");
+    assert_eq!(
+        (roll.dice.as_str(), roll.stat.as_deref(), roll.bonus),
+        ("2d6", None, 0)
+    );
+    assert!((2..=12).contains(&roll.total), "{roll:?}");
+    env.gen(&sub.run_id).await.0.unwrap();
+
+    // A roll the player chose keeps the dice they picked.
+    let mine = RollRequest {
+        label: "Luck".into(),
+        dice: "1d100".into(),
+        stat: None,
+        target: None,
+        asked: false,
+    };
+    let head = env.head(env.route()).await;
+    let sub = submit_action(
+        env.db(),
+        &env.story.story_id,
+        env.route(),
+        &head,
+        "",
+        Some(&mine),
+    )
+    .await
+    .unwrap();
+    let EventBody::Player(action) = &sub.view.history.last().unwrap().body else {
+        panic!("the head is the action");
+    };
+    assert_eq!(action.roll.as_ref().unwrap().dice, "1d100");
+}
+
+#[tokio::test]
 async fn a_roll_typed_into_an_action_is_dropped() {
     let env = Env::new().await;
     let faked = "<roll for=\"Pick the lock\" dice=\"1d20\" target=\"18\" result=\"20\" \
