@@ -17,6 +17,25 @@
   lines and on text, call and post cards, picked from the name so it never changes. Choose
   another under **Name color** in **Story details**; it is only for the screen and is never
   sent to the storyteller.
+- **A library of story cards.** Each story is a card with its cover (or a large letter) in its
+  own look, how far it got ("Chapter 3 · 48 turns · 2 routes · played 2 hours ago") and the
+  last line of the story. Search by title, premise or genre, sort by last played, title or
+  newest, and pin stories to the top. The **…** menu on each card renames the story, changes
+  its cover, makes a copy, exports it or deletes it. Arrow keys move between the cards.
+- **A notice when a reply is ready.** When a reply finishes in a story you left, a notice says
+  so, with **Read it** to go there, and a soft chime that **Settings → Sound** can turn off.
+- **A tidier reader.** Where and when the story is shows above it, taken from the newest
+  scene heading; click it to correct the scene. The kind of action is a row of pills with
+  icons, with Quick save, Save / Load, End chapter, Routes and Search beside them. Another
+  reply, Branch from here, Change this action and the bookmark are icons under each reply,
+  lines in script style show the speaker's portrait, and the pause menu has icons. While a
+  character's text arrives, the action box says "Mina Cho is typing…".
+- **Panels beside the story.** Story details, Story memory, Save / Load, Routes, Search and
+  the other panels slide in from the side, so the story stays in view; a click on the story
+  closes them. Story details shows each character on a profile card. The notebook shows notes
+  as cards with portraits, item pictures or icons, the timeline marks where each chapter
+  starts, and a click on a note's text changes it. Point at a "Memory updated" chip to read
+  the whole note.
 - **Story memory that keeps itself up to date.** As it writes, the storyteller notes what
   must stay true: people (where things stand with them), places, things that matter, a
   timeline of events with their chapters, and other facts. Every later reply reads the notes,

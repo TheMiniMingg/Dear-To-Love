@@ -10,6 +10,7 @@ import { QuickStartScreen } from '../features/create/QuickStartScreen';
 import { ReaderScreen } from '../features/reader/ReaderScreen';
 import { SettingsScreen } from '../features/settings/SettingsScreen';
 import { UsageScreen } from '../features/usage/UsageScreen';
+import { ReplyToast } from '../components/ReplyToast';
 import { ShortcutsDialog } from '../components/ShortcutsDialog';
 import { StatusFooter } from '../components/StatusFooter';
 import { Backdrop } from './Backdrop';
@@ -58,6 +59,7 @@ export function App() {
       </main>
       <StatusFooter />
       <ShortcutsDialog />
+      <ReplyToast />
     </div>
   );
 }

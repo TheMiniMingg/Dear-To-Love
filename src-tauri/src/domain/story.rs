@@ -50,7 +50,7 @@ pub struct StoryCreated {
     pub route_version: i32,
 }
 
-#[derive(Debug, Clone, Serialize, TS, sqlx::FromRow)]
+#[derive(Debug, Clone, Serialize, TS)]
 #[serde(rename_all = "camelCase")]
 #[ts(export)]
 pub struct StorySummary {
@@ -68,4 +68,13 @@ pub struct StorySummary {
     /// A reply is being written on one of its routes right now (it keeps
     /// going while the player is in another story).
     pub writing: bool,
+    /// The story's genres as it was made; they pick its look.
+    pub genres: Vec<String>,
+    /// The chapter the last played route is in.
+    pub chapter: Option<i32>,
+    /// Actions taken on the last played route.
+    pub turns: i32,
+    /// The newest reply on the last played route (its story text), for a
+    /// line of it in the library.
+    pub last_reply: Option<String>,
 }

@@ -156,10 +156,15 @@ describe('Memory updated line', () => {
     expect(
       await screen.findByText('Erika turns the ring in the lamplight and smiles.'),
     ).toBeInTheDocument();
-    expect(screen.queryByText(/Wears the silver ring you gave her/)).not.toBeInTheDocument();
+    // The note is not part of the story's text (only of the hover card under it).
+    expect(
+      screen.queryByText(/Wears the silver ring you gave her/, {
+        ignore: 'script, style, .memory-pop',
+      }),
+    ).not.toBeInTheDocument();
     const line = screen.getByText('Memory updated').closest('p')!;
-    expect(within(line).getByText('Erika')).toHaveAttribute(
-      'title',
+    // Pointing at a note's name shows what it says.
+    expect(within(line).getByText('Erika')).toHaveTextContent(
       'Your girlfriend since chapter 4. Wears the silver ring you gave her.',
     );
     expect(within(line).getByText('Silver ring')).toBeInTheDocument();

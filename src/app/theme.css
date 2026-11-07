@@ -211,7 +211,7 @@ label.check > input[type='checkbox']:focus-visible {
 }
 
 /* Round choices in the theme's colour (pickers that hide theirs aside). */
-input[type='radio']:not(.segmented input, .theme-option input, .swatch input) {
+input[type='radio']:not(.segmented input, .theme-option input, .swatch input, .mode-pill input) {
   appearance: none;
   flex: none;
   width: 1.1em;
@@ -227,7 +227,12 @@ input[type='radio']:not(.segmented input, .theme-option input, .swatch input) {
     border-color 0.15s var(--ease),
     box-shadow 0.15s var(--ease);
 }
-input[type='radio']:not(.segmented input, .theme-option input, .swatch input):checked {
+input[type='radio']:not(
+    .segmented input,
+    .theme-option input,
+    .swatch input,
+    .mode-pill input
+  ):checked {
   border-color: var(--accent);
   background: var(--accent);
   box-shadow: inset 0 0 0 3px var(--surface);

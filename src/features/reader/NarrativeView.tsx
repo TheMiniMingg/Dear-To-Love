@@ -1,4 +1,13 @@
-import { Fragment, useContext, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import {
+  Fragment,
+  useContext,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from 'react';
+import { Bookmark, BookmarkCheck, GitBranch, PenLine, RefreshCw } from 'lucide-react';
 import type { EventDto, MemoryNote, RollRequest } from '../../types';
 import { RollResult } from './DiceCards';
 import { NameColorsContext, nameStyle } from './nameColors';
@@ -40,6 +49,8 @@ type Props = {
 
 export type StoryIntro = { premise: string; location: string; scene: string };
 
+const ACTION_ICON = { 'aria-hidden': true, size: 16, strokeWidth: 1.9 } as const;
+
 function Paragraphs({ text }: { text: string }) {
   return (
     <>
@@ -75,50 +86,53 @@ function EventBlock({
 } & Omit<Props, 'events' | 'focus'>) {
   const colorOf = useContext(NameColorsContext);
   const marked = !!bookmarked?.has(e.id);
+  // Small icon buttons that show when the pointer is over the turn (or a
+  // key reaches them); a bookmark stays in view. The label is for screen
+  // readers and the tooltip.
+  const action = (label: string, title: string, icon: ReactNode, onClick: () => void) => (
+    <button type="button" className="turn-action" onClick={onClick} title={title}>
+      {icon}
+      <span className="visually-hidden">{label}</span>
+    </button>
+  );
   const bookmark = onBookmark && (
     <button
       type="button"
-      className="branch-button bookmark-button"
+      className="turn-action bookmark-button"
       aria-pressed={marked}
       onClick={() => onBookmark(e.id)}
       title={marked ? t('Remove this bookmark') : t('Bookmark this place to find it again')}
     >
-      {marked ? t('Bookmarked') : t('Bookmark')}
+      {marked ? <BookmarkCheck {...ACTION_ICON} /> : <Bookmark {...ACTION_ICON} />}
+      <span className="visually-hidden">{marked ? t('Bookmarked') : t('Bookmark')}</span>
     </button>
   );
   const cls = (base: string) =>
     [base, marked && 'is-bookmarked', focused && 'event-focus'].filter(Boolean).join(' ');
-  const branch = onBranch && (
-    <button
-      type="button"
-      className="branch-button"
-      onClick={() => onBranch(e.id)}
-      aria-label={t('Branch from here')}
-      title={t('Start a new branch from this point')}
-    >
-      {t('Branch from here')}
-    </button>
-  );
-  const regenerate = onRegenerate && (
-    <button
-      type="button"
-      className="branch-button"
-      onClick={() => onRegenerate(e.id)}
-      title={t('Write a different reply on a new route; this one stays')}
-    >
-      {t('Another reply')}
-    </button>
-  );
-  const change = onEditAction && (
-    <button
-      type="button"
-      className="branch-button"
-      onClick={() => onEditAction(e.id)}
-      title={t('Change what you did, on a new route; this one stays')}
-    >
-      {t('Change this action')}
-    </button>
-  );
+  const branch =
+    onBranch &&
+    action(
+      t('Branch from here'),
+      t('Start a new branch from this point'),
+      <GitBranch {...ACTION_ICON} />,
+      () => onBranch(e.id),
+    );
+  const regenerate =
+    onRegenerate &&
+    action(
+      t('Another reply'),
+      t('Write a different reply on a new route; this one stays'),
+      <RefreshCw {...ACTION_ICON} />,
+      () => onRegenerate(e.id),
+    );
+  const change =
+    onEditAction &&
+    action(
+      t('Change this action'),
+      t('Change what you did, on a new route; this one stays'),
+      <PenLine {...ACTION_ICON} />,
+      () => onEditAction(e.id),
+    );
   switch (e.kind) {
     case 'chapter_start': {
       const recap = e.payload.previousChapterRecap?.trim();

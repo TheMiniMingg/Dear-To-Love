@@ -1,5 +1,5 @@
-import { useId, useRef, useState, type KeyboardEvent } from 'react';
-import { Dices, Phone, Send } from 'lucide-react';
+import { useId, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
+import { Cloud, Dices, Drama, Phone, Send, Smartphone, type LucideIcon } from 'lucide-react';
 import { isComposing } from '../../app/keyboard';
 import type { DiceRules, RollRequest, Stat } from '../../types';
 import { isDice, rollFromComposer, wrapAction, type ComposeMode } from './messages';
@@ -26,16 +26,18 @@ type Props = {
   stats?: Stat[];
   /** The story's dice settings: its own dice, and whether stats count. */
   diceRules?: DiceRules;
+  /** Buttons shown at the end of the row of kinds (the reader's toolbar). */
+  tools?: ReactNode;
 };
 
 type Mode = ComposeMode | 'roll';
 
-const MODES: { value: Mode; label: string }[] = [
-  { value: 'act', label: msg('Do or say') },
-  { value: 'text', label: msg('Send a text') },
-  { value: 'call', label: msg('Call') },
-  { value: 'think', label: msg('Think') },
-  { value: 'roll', label: msg('Roll dice') },
+const MODES: { value: Mode; label: string; icon: LucideIcon }[] = [
+  { value: 'act', label: msg('Do or say'), icon: Drama },
+  { value: 'text', label: msg('Send a text'), icon: Smartphone },
+  { value: 'call', label: msg('Call'), icon: Phone },
+  { value: 'think', label: msg('Think'), icon: Cloud },
+  { value: 'roll', label: msg('Roll dice'), icon: Dices },
 ];
 
 const PLACEHOLDERS: Record<Exclude<Mode, 'act'>, string> = {
@@ -49,8 +51,9 @@ const DICE = ['1d20', '1d6', '2d6', '1d100', '1d4', '1d8', '1d10', '1d12', '0-10
 
 /**
  * Free-text action box. Enter sends, Shift+Enter adds a new line, and Enter
- * that confirms an IME composition never sends. The mode menu turns the
- * action into a text message, a phone call, a thought or a dice roll.
+ * that confirms an IME composition never sends. The row of kinds above it
+ * turns the action into a text message, a phone call, a thought or a dice
+ * roll.
  */
 export function Composer({
   value,
@@ -63,6 +66,7 @@ export function Composer({
   dice = false,
   stats = [],
   diceRules = {},
+  tools,
 }: Props) {
   const ref = useRef<HTMLTextAreaElement>(null);
   const id = useId();
@@ -101,16 +105,22 @@ export function Composer({
       }}
     >
       <div className="composer-mode">
-        <label htmlFor={`${id}-mode`} className="visually-hidden">
-          {t('Kind of action')}
-        </label>
-        <select id={`${id}-mode`} value={mode} onChange={(e) => setMode(e.target.value as Mode)}>
+        <fieldset className="mode-pills">
+          <legend className="visually-hidden">{t('Kind of action')}</legend>
           {MODES.filter((m) => dice || m.value !== 'roll').map((m) => (
-            <option key={m.value} value={m.value}>
-              {t(m.label)}
-            </option>
+            <label key={m.value} className="mode-pill">
+              <input
+                type="radio"
+                name={`${id}-mode`}
+                value={m.value}
+                checked={mode === m.value}
+                onChange={() => setMode(m.value)}
+              />
+              <m.icon className="mode-icon" aria-hidden={true} size={15} />
+              <span>{t(m.label)}</span>
+            </label>
           ))}
-        </select>
+        </fieldset>
         {needsTo && (
           <>
             <label htmlFor={`${id}-to`}>{mode === 'text' ? t('To') : t('Who')}</label>
@@ -179,6 +189,7 @@ export function Composer({
             />
           </>
         )}
+        {tools && <div className="composer-tools">{tools}</div>}
       </div>
       <label htmlFor="composer-input" className="visually-hidden">
         {t('What do you do?')}

@@ -7,6 +7,7 @@ import { App } from './app/App';
 import { initialTheme } from './app/look';
 import './app/styles.css';
 import './app/theme.css';
+import './app/ui.css';
 
 // The saved theme before the first paint, so the window never flashes another.
 document.documentElement.dataset.theme = initialTheme();

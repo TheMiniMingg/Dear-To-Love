@@ -85,9 +85,18 @@ test('keyboard-only: quick start, play, save, load as branch, reopen', async () 
 
   // On the new branch, texting a character shows a phone card, and the offline
   // storyteller texts back.
-  const mode = await b.$('.composer-mode select');
-  await mode.selectByVisibleText('Send a text');
-  await typeInto(b, '.composer-mode input', 'Mara Quill');
+  // The kinds of action are one group of radio pills: arrow keys pick one.
+  const pickMode = async (key, value) => {
+    await b.execute(() => document.querySelector('.mode-pill input:checked')?.focus());
+    await b.keys([key]);
+    await b.waitUntil(
+      () =>
+        b.execute((v) => document.querySelector('.mode-pill input:checked')?.value === v, value),
+      { timeout: 5000, timeoutMsg: `the ${value} pill was not chosen` },
+    );
+  };
+  await pickMode('ArrowRight', 'text');
+  await typeInto(b, '.composer-mode input[list]', 'Mara Quill');
   await typeInto(b, '#composer-input', 'Are you awake?');
   await b.keys(['Enter']);
   await waitForText(b, '[aria-label="Text messages with Mara Quill"]', 'Are you awake?');
@@ -97,7 +106,7 @@ test('keyboard-only: quick start, play, save, load as branch, reopen', async () 
     1,
     'the reply is a text from Mara',
   );
-  await mode.selectByVisibleText('Do or say');
+  await pickMode('ArrowLeft', 'act');
 
   // Reopen the app: the story and its routes are still there (T02 at UI level).
   await session.stop();

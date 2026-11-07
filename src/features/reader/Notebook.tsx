@@ -5,11 +5,16 @@
  * the newest turn, so it holds from the next reply on and can be undone
  * like any other change.
  */
-import { useEffect, useId, useRef, useState } from 'react';
+import { useContext, useEffect, useId, useRef, useState } from 'react';
+import { Pencil, Trash2 } from 'lucide-react';
 import { commands, errorMessage } from '../../api/commands';
 import type { MemoryNote, NoteKind, RouteView, StateEdit } from '../../types';
 import { t } from '../../i18n';
-import { NOTE_KINDS, noteKey, sameNote } from './notes';
+import { Thumb } from '../images/ImageGrid';
+import { NameColorsContext, nameStyle } from './nameColors';
+import { NOTE_ICONS, NOTE_KINDS, noteKey, sameNote } from './notes';
+import { itemKey, picture } from './pictures';
+import { PortraitsContext } from './portraits';
 
 /** As `MAX_NOTE_NAME` and `MAX_NOTE_TEXT` in Rust. */
 const MAX_NAME = 80;
@@ -195,14 +200,22 @@ export function Notebook({
       {NOTE_KINDS.map(({ kind, heading }) => {
         const list = ordered(shown, kind);
         if (!list.length) return null;
+        const Icon = NOTE_ICONS[kind];
         return (
-          <div key={kind} className="note-group">
+          <div key={kind} className={`note-group kind-${kind}`}>
             <h4>
+              <Icon className="note-group-icon" aria-hidden={true} size={16} />
               {t(heading)} <span className="muted small">({list.length})</span>
             </h4>
-            <ul aria-label={t(heading)} className="note-list">
-              {list.map((n) => {
+            <ul
+              aria-label={t(heading)}
+              className={kind === 'event' ? 'note-list timeline' : 'note-list'}
+            >
+              {list.map((n, i) => {
                 const key = keyOf(n);
+                // On the timeline, each chapter's first event carries its name.
+                const marker =
+                  kind === 'event' && n.chapter !== undefined && list[i - 1]?.chapter !== n.chapter;
                 if (editing?.key === key) {
                   return (
                     <li key={key}>
@@ -220,80 +233,96 @@ export function Notebook({
                     </li>
                   );
                 }
+                const edit = () => {
+                  if (locked) return;
+                  setAdding(null);
+                  setRemoving(null);
+                  setError(null);
+                  setEditing({
+                    key,
+                    draft: {
+                      kind: n.kind,
+                      name: n.name,
+                      text: n.text,
+                      chapter: n.chapter !== undefined ? String(n.chapter) : '',
+                    },
+                  });
+                };
                 return (
                   <li key={key} className="note" data-note={key}>
-                    <div className="note-head">
-                      <strong>{n.name}</strong>
-                      {kind === 'event' && n.chapter !== undefined && (
-                        <span className="muted small">{t('Chapter {n}', { n: n.chapter })}</span>
-                      )}
-                      <span className="note-actions">
-                        <button
-                          type="button"
-                          className="link-button"
-                          disabled={locked}
-                          aria-label={t('Change note: {name}', { name: n.name })}
-                          onClick={() => {
-                            setAdding(null);
-                            setRemoving(null);
-                            setError(null);
-                            setEditing({
-                              key,
-                              draft: {
-                                kind: n.kind,
-                                name: n.name,
-                                text: n.text,
-                                chapter: n.chapter !== undefined ? String(n.chapter) : '',
-                              },
-                            });
-                          }}
-                        >
-                          {t('Change')}
-                        </button>
-                        <button
-                          type="button"
-                          className="danger-link"
-                          disabled={locked}
-                          aria-label={t('Remove note: {name}', { name: n.name })}
-                          onClick={() => {
-                            setEditing(null);
-                            setError(null);
-                            setRemoving(key);
-                          }}
-                        >
-                          {t('Remove')}
-                        </button>
+                    {marker && (
+                      <span className="timeline-chapter">
+                        {t('Chapter {n}', { n: n.chapter ?? 0 })}
                       </span>
-                    </div>
-                    <p className="note-text">{n.text}</p>
-                    {removing === key && (
-                      <div
-                        className="note-confirm"
-                        role="group"
-                        aria-label={t('Remove note: {name}', { name: n.name })}
-                      >
-                        <span>
-                          {t('Remove this note? The storyteller will no longer read it.')}
-                        </span>
-                        <button
-                          type="button"
-                          className="danger"
-                          disabled={locked}
-                          onClick={() =>
-                            void save(
-                              [{ op: 'removeNote', kind: n.kind, name: n.name }],
-                              t('removed {name}', { name: n.name }),
-                              'add',
-                            )
-                          }
-                        >
-                          {t('Remove')}
-                        </button>
-                        <button type="button" disabled={busy} onClick={() => closeForms(key)}>
-                          {t('Keep')}
-                        </button>
-                      </div>
                     )}
+                    {kind !== 'event' && <NoteVisual note={n} view={view} />}
+                    <div className="note-main">
+                      <div className="note-head">
+                        <strong>{n.name}</strong>
+                        <span className="note-actions">
+                          <button
+                            type="button"
+                            className="note-action"
+                            disabled={locked}
+                            aria-label={t('Change note: {name}', { name: n.name })}
+                            title={t('Change')}
+                            onClick={edit}
+                          >
+                            <Pencil aria-hidden={true} size={15} />
+                          </button>
+                          <button
+                            type="button"
+                            className="note-action danger-action"
+                            disabled={locked}
+                            aria-label={t('Remove note: {name}', { name: n.name })}
+                            title={t('Remove')}
+                            onClick={() => {
+                              setEditing(null);
+                              setError(null);
+                              setRemoving(key);
+                            }}
+                          >
+                            <Trash2 aria-hidden={true} size={15} />
+                          </button>
+                        </span>
+                      </div>
+                      {/* Clicking the words changes them too (the pencil is the way by keyboard). */}
+                      <p
+                        className={locked ? 'note-text' : 'note-text editable'}
+                        onClick={edit}
+                        title={locked ? undefined : t('Click to change')}
+                      >
+                        {n.text}
+                      </p>
+                      {removing === key && (
+                        <div
+                          className="note-confirm"
+                          role="group"
+                          aria-label={t('Remove note: {name}', { name: n.name })}
+                        >
+                          <span>
+                            {t('Remove this note? The storyteller will no longer read it.')}
+                          </span>
+                          <button
+                            type="button"
+                            className="danger"
+                            disabled={locked}
+                            onClick={() =>
+                              void save(
+                                [{ op: 'removeNote', kind: n.kind, name: n.name }],
+                                t('removed {name}', { name: n.name }),
+                                'add',
+                              )
+                            }
+                          >
+                            {t('Remove')}
+                          </button>
+                          <button type="button" disabled={busy} onClick={() => closeForms(key)}>
+                            {t('Keep')}
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </li>
                 );
               })}
@@ -322,6 +351,40 @@ export function Notebook({
         </div>
       )}
     </section>
+  );
+}
+
+/**
+ * Beside a note: the person's portrait (or their initial in their colour),
+ * a thing's picture, or the icon of the note's kind.
+ */
+function NoteVisual({ note, view }: { note: MemoryNote; view: RouteView }) {
+  const portraitOf = useContext(PortraitsContext);
+  const colorOf = useContext(NameColorsContext);
+  if (note.kind === 'person') {
+    const portrait = portraitOf(note.name);
+    if (portrait) return <Thumb assetId={portrait} alt="" className="note-visual" />;
+    return (
+      <span
+        className="note-visual note-initial"
+        style={nameStyle(colorOf(note.name))}
+        aria-hidden="true"
+      >
+        {[...note.name.trim()][0]?.toUpperCase()}
+      </span>
+    );
+  }
+  if (note.kind === 'item') {
+    const key = itemKey(note.name);
+    const held = view.state.state.tracking?.items?.some((i) => itemKey(i.name) === key);
+    const asset = held ? picture(view, `item:${key}`).assetId : null;
+    if (asset) return <Thumb assetId={asset} alt="" className="note-visual" />;
+  }
+  const Icon = NOTE_ICONS[note.kind];
+  return (
+    <span className="note-visual note-icon" aria-hidden="true">
+      <Icon size={18} />
+    </span>
   );
 }
 
