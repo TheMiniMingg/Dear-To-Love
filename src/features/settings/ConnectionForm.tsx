@@ -154,7 +154,7 @@ export function ConnectionForm({ existing, preset: startPreset, onSaved, onCance
         {pictures && (
           <p className="muted small">
             {t(
-              'Makes character portraits from their descriptions. It never writes story replies; choose it under Pictures in Settings.',
+              'Makes portraits and item pictures from their descriptions. It never writes story replies; choose it under Pictures in Settings.',
             )}
           </p>
         )}

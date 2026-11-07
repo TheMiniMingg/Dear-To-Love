@@ -41,12 +41,6 @@ export const settings: Messages = {
       '스토리의 답장을 쓰는 역할입니다. 스토리마다 따로 이야기꾼을 고를 수도 있습니다(스토리 위쪽의 이야기꾼 이름을 클릭). 바꾸면 새 답장에만 적용되고, 이미 쓴 내용은 그대로입니다.',
     ],
   'Offline storyteller': ['离线讲述者', '離線講述者', 'オフラインの語り手', '오프라인 이야기꾼'],
-  'Built in. Simple replies, works without internet, never costs anything.': [
-    '内置。回复简单，无需联网，完全免费。',
-    '內建。回覆簡單，無需連網，完全免費。',
-    '内蔵です。返信はシンプルで、インターネットなしで動き、費用はかかりません。',
-    '내장되어 있습니다. 답장은 간단하고 인터넷 없이 작동하며 비용이 들지 않습니다.',
-  ],
   'local, no API charges': [
     '本地，无 API 费用',
     '本機，無 API 費用',
@@ -185,13 +179,6 @@ export const settings: Messages = {
     'Stable Diffusion WebUI（画像）',
     'Stable Diffusion WebUI(이미지)',
   ],
-  'Makes character portraits from their descriptions. It never writes story replies; choose it under Pictures in Settings.':
-    [
-      '根据角色描述生成肖像。它从不撰写故事回复；请在设置的“图片”中选择它。',
-      '根據角色描述產生肖像。它從不撰寫故事回覆；請在設定的「圖片」中選擇它。',
-      'キャラクターの説明から肖像画を作ります。ストーリーの返信は書きません。設定の「画像」で選んでください。',
-      '캐릭터 설명으로 초상화를 만듭니다. 스토리 답장은 쓰지 않으니 설정의 "이미지"에서 고르세요.',
-    ],
   "Uses Anthropic's own Messages API. Claude picks its own temperature, so that setting is not sent. Some Claude models think before they write, so leave room in the reply length.":
     [
       '使用 Anthropic 自己的 Messages API。Claude 会自行决定温度，因此不会发送该设置。有些 Claude 模型会先思考再写，所以请在回复长度上留出余量。',
@@ -320,12 +307,6 @@ export const settings: Messages = {
     'ホスティングされたオープンモデル（API キー）',
     '호스팅된 오픈 모델(API 키)',
   ],
-  'Pictures (for character portraits)': [
-    '图片（用于角色肖像）',
-    '圖片（用於角色肖像）',
-    '画像（キャラクターの肖像画用）',
-    '이미지(캐릭터 초상화용)',
-  ],
   'Anything else': ['其他', '其他', 'その他', '기타'],
   "Load a model and start the server in LM Studio's Developer tab.": [
     '在 LM Studio 的“开发者”标签页中加载模型并启动服务器。',
@@ -411,13 +392,6 @@ export const settings: Messages = {
     'Hugging Face のアクセストークンをキーとして使ってください。',
     'Hugging Face 액세스 토큰을 키로 쓰세요.',
   ],
-  "Makes character portraits. OpenAI charges for each picture; the app records every request but can't price pictures.":
-    [
-      '生成角色肖像。OpenAI 按张收费；应用会记录每次请求，但无法为图片计价。',
-      '產生角色肖像。OpenAI 按張收費；應用程式會記錄每次請求，但無法為圖片計價。',
-      'キャラクターの肖像画を作ります。OpenAI は画像ごとに課金します。アプリはリクエストをすべて記録しますが、画像の料金は計算できません。',
-      '캐릭터 초상화를 만듭니다. OpenAI는 이미지마다 요금을 받습니다. 앱은 요청을 모두 기록하지만 이미지 가격은 계산하지 못합니다.',
-    ],
   'Makes portraits on this computer, for free. Start the WebUI with --api. The model "default" uses whichever one it has loaded.':
     [
       '在这台电脑上免费生成肖像。用 --api 启动 WebUI。模型填“default”即使用它当前加载的模型。',
@@ -518,12 +492,6 @@ export const settings: Messages = {
     '測試並開始玩',
     'テストして遊び始める',
     '테스트하고 플레이 시작하기',
-  ],
-  'Character portraits (optional)': [
-    '角色肖像（可选）',
-    '角色肖像（可選）',
-    'キャラクターの肖像（任意）',
-    '캐릭터 초상화(선택)',
   ],
   'Keep costs in check': ['控制费用', '控制費用', '費用を抑える', '비용 관리하기'],
   'Your keys stay on this computer': [
@@ -630,13 +598,6 @@ export const settings: Messages = {
       '이 컴퓨터에서 실행되는 프로그램은 짧은 기억(4096토큰)으로 모델을 불러오는 경우가 많습니다. 답변이 스토리의 시작을 잊는다면 프로그램의 컨텍스트 크기와 연결의 컨텍스트 한도를 높이세요.',
     ],
   'Open Settings': ['打开设置', '開啟設定', '設定を開く', '설정 열기'],
-  "A picture connection draws a character's portrait from their description. Portraits are always asked for as safe-for-work pictures, and you can use your own pictures instead.":
-    [
-      '图片连接会根据角色的描述画出肖像。肖像始终以适合工作场合（SFW）的图片来请求，你也可以改用自己的图片。',
-      '圖片連線會根據角色的描述畫出肖像。肖像一律以適合工作場合（SFW）的圖片來請求，你也可以改用自己的圖片。',
-      '画像の接続は、キャラクターの説明から肖像を描きます。肖像は常に職場でも安全な（SFW）画像として依頼され、自分の画像を使うこともできます。',
-      '이미지 연결은 캐릭터 설명으로 초상화를 그립니다. 초상화는 항상 업무 환경에도 안전한(SFW) 이미지로 요청되며, 직접 가진 이미지를 써도 됩니다.',
-    ],
   'Your first picture connection is put to use; Settings → Pictures chooses another, or none.': [
     '你的第一个图片连接会被自动使用；可以在“设置 → 图片”中改选其他连接，或不使用。',
     '你的第一個圖片連線會被自動使用；可以在「設定 → 圖片」中改選其他連線，或不使用。',
@@ -952,5 +913,39 @@ export const settings: Messages = {
     'OpenAI 已停用這個圖片模型。請編輯此連線並改選 {model}。',
     'OpenAI はこの画像モデルの提供を終了しました。接続を編集して {model} を選んでください。',
     'OpenAI가 이 그림 모델을 종료했습니다. 연결을 편집해 {model}을(를) 선택하세요.',
+  ],
+  'Makes portraits and item pictures from their descriptions. It never writes story replies; choose it under Pictures in Settings.':
+    [
+      '根据描述生成角色肖像和物品图片。它从不撰写故事回复；请在设置的“图片”中选择它。',
+      '根據描述產生角色肖像和物品圖片。它從不撰寫故事回覆；請在設定的「圖片」中選擇它。',
+      '説明から肖像画やアイテムの画像を作ります。ストーリーの返信は書きません。設定の「画像」で選んでください。',
+      '설명으로 초상화와 아이템 그림을 만듭니다. 스토리 답장은 쓰지 않으니 설정의 "이미지"에서 고르세요.',
+    ],
+  'Pictures (portraits and items)': [
+    '图片（肖像和物品）',
+    '圖片（肖像和物品）',
+    '画像（肖像画とアイテム）',
+    '이미지(초상화와 아이템)',
+  ],
+  "Makes portraits and item pictures. OpenAI charges for each picture; the app records every request but can't price pictures.":
+    [
+      '生成角色肖像和物品图片。OpenAI 按张收费；应用会记录每次请求，但无法为图片计价。',
+      '產生角色肖像和物品圖片。OpenAI 按張收費；應用程式會記錄每次請求，但無法為圖片計價。',
+      '肖像画やアイテムの画像を作ります。OpenAI は画像ごとに課金します。アプリはリクエストをすべて記録しますが、画像の料金は計算できません。',
+      '초상화와 아이템 그림을 만듭니다. OpenAI는 이미지마다 요금을 받습니다. 앱은 요청을 모두 기록하지만 이미지 가격은 계산하지 못합니다.',
+    ],
+  'Pictures (optional)': ['图片（可选）', '圖片（可選）', '画像（任意）', '이미지(선택)'],
+  'A picture connection draws portraits of characters and pictures of items from their descriptions. Pictures are always asked for as safe for work, and you can use your own pictures instead.':
+    [
+      '图片连接会根据描述画出角色肖像和物品图片。图片始终以适合工作场合（SFW）的内容来请求，你也可以改用自己的图片。',
+      '圖片連線會根據描述畫出角色肖像和物品圖片。圖片一律以適合工作場合（SFW）的內容來請求，你也可以改用自己的圖片。',
+      '画像の接続は、説明からキャラクターの肖像画やアイテムの画像を描きます。画像は常に職場でも安全な（SFW）内容で依頼され、自分の画像を使うこともできます。',
+      '이미지 연결은 설명으로 캐릭터 초상화와 아이템 그림을 그립니다. 그림은 항상 업무 환경에도 안전한(SFW) 내용으로 요청되며, 직접 가진 이미지를 써도 됩니다.',
+    ],
+  'Built in. Simple replies in English, works without internet, never costs anything.': [
+    '内置。用英文写简单的回复，无需联网，完全免费。',
+    '內建。用英文寫簡單的回覆，無需連網，完全免費。',
+    '内蔵です。英語でシンプルな返信を書き、インターネットなしで動き、費用はかかりません。',
+    '내장되어 있습니다. 영어로 간단한 답장을 쓰고 인터넷 없이 작동하며 비용이 들지 않습니다.',
   ],
 };

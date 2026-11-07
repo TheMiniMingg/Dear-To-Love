@@ -40,6 +40,15 @@ export function LibraryScreen() {
     };
   }, [reload]);
 
+  // A reply keeps writing while you play another story; look again until
+  // every story here has finished.
+  const writing = stories?.some((s) => s.writing) ?? false;
+  useEffect(() => {
+    if (!writing) return;
+    const id = window.setTimeout(() => setReload((n) => n + 1), 1500);
+    return () => window.clearTimeout(id);
+  }, [writing, stories]);
+
   // After a restart that finished (or failed) a restore, say so once.
   useEffect(() => {
     let live = true;
@@ -180,9 +189,17 @@ export function LibraryScreen() {
               data-roving
               onClick={() => navigate({ name: 'reader', routeId: s.lastRouteId })}
             >
-              {s.coverAssetId && <Thumb assetId={s.coverAssetId} alt="" className="story-cover" />}
+              {s.coverAssetId ? (
+                <Thumb assetId={s.coverAssetId} alt="" className="story-cover" />
+              ) : (
+                // Without a cover, the story's first letter keeps the list even.
+                <span className="story-letter" aria-hidden="true">
+                  {[...s.title.trim()][0]?.toUpperCase() ?? '?'}
+                </span>
+              )}
               <span className="story-text">
                 <span className="story-title">{s.title}</span>
+                {s.writing && <span className="story-writing small">{t('Writing a reply…')}</span>}
                 {s.description && <span className="muted">{s.description}</span>}
                 <span className="muted small">
                   {t('{routes} · last played {when}', {
