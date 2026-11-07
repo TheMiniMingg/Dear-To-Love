@@ -1,5 +1,28 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { ArchiveRestore, BookMarked, GitBranch, Menu, Save, Search } from 'lucide-react';
+import {
+  ArchiveRestore,
+  Backpack,
+  BookMarked,
+  Brain,
+  Download,
+  Feather,
+  GitBranch,
+  Images,
+  Keyboard,
+  LibraryBig,
+  ListOrdered,
+  MapPin,
+  Menu,
+  Play,
+  Save,
+  ScanText,
+  Search,
+  Settings,
+  Stethoscope,
+  Type,
+  UserRoundPen,
+  type LucideIcon,
+} from 'lucide-react';
 import {
   CommandError,
   commands,
@@ -9,6 +32,7 @@ import {
 } from '../../api/commands';
 import { useUiStore } from '../../app/store';
 import { useStoryLook } from '../../app/look';
+import { useReplyWatch } from '../../app/replyWatch';
 import { isComposing, isEditableTarget } from '../../app/keyboard';
 import { ariaKeys, isShortcut, useShortcutHelp, withKeys } from '../../app/shortcuts';
 import { Dialog } from '../../components/Dialog';
@@ -38,11 +62,12 @@ import { PicturesPanel } from './PicturesPanel';
 import { ReaderRail } from './ReaderRail';
 import { ScenePictures } from './ScenePictures';
 import { usePictureView } from './stage';
-import { StoryDetailsPanel } from './StoryDetailsPanel';
+import { StoryDetailsPanel, type DetailsTab } from './StoryDetailsPanel';
 import { StoryMemoryPanel } from './StoryMemoryPanel';
 import { StorytellerPanel } from './StorytellerPanel';
 import { standingNotes } from './notes';
-import { plainText } from './messages';
+import { parseBlocks, plainText } from './messages';
+import { currentScene } from './scene';
 import { NameColorsContext, nameColorFinder } from './nameColors';
 import { PortraitsContext, portraitFinder } from './portraits';
 import { DiceRulesContext } from './DiceCards';
@@ -85,7 +110,73 @@ const PANEL_TITLES: Record<Exclude<Panel, null>, string> = {
   end: msg('End chapter'),
 };
 
+const MENU_ICON = { className: 'btn-icon', 'aria-hidden': true } as const;
+
+/** Panels that slide in beside the story instead of covering it. */
+const SHEETS: ReadonlySet<Panel> = new Set<Panel>([
+  'saves',
+  'routes',
+  'chapters',
+  'details',
+  'pictures',
+  'context',
+  'export',
+  'search',
+  'storyteller',
+  'memory',
+  'inventory',
+]);
+
 type Stream = { runId: string; text: string };
+
+/**
+ * Who is texting, while a reply that opens with a text message is being
+ * written: the character's name, or null for anything else.
+ */
+function texting(draft: string, playerName: string): string | null {
+  const first = parseBlocks(draft, true).find((b) => b.kind !== 'prose' || b.text.trim());
+  if (first?.kind !== 'text') return null;
+  const from = first.attrs.from?.trim();
+  return from && from !== playerName ? from : null;
+}
+
+/** A small button with an icon in the reader's toolbar; its name shows as a tooltip. */
+function ToolButton({
+  icon: Icon,
+  label,
+  title,
+  keys,
+  onClick,
+  disabled,
+  badge,
+}: {
+  icon: LucideIcon;
+  label: string;
+  title: string;
+  keys: string | undefined;
+  onClick: () => void;
+  disabled?: boolean;
+  badge?: number;
+}) {
+  return (
+    <button
+      type="button"
+      className="tool-button"
+      onClick={onClick}
+      disabled={disabled}
+      title={title}
+      aria-keyshortcuts={keys}
+    >
+      <Icon aria-hidden={true} size={18} strokeWidth={1.8} />
+      <span className="visually-hidden">{label}</span>
+      {badge !== undefined && badge > 1 && (
+        <span className="tool-badge" aria-hidden="true">
+          {badge}
+        </span>
+      )}
+    </button>
+  );
+}
 
 const POLL_MS = 1500;
 /** Usual dice, kept as one object so the cards don't redraw for nothing. */
@@ -106,6 +197,8 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
   const [view, setView] = useState<RouteView | null>(null);
   const [viewing, setViewing] = useState<SaveView | null>(null);
   const [panel, setPanel] = useState<Panel>(null);
+  /** The Story details tab to open on (the scene chip opens Scene). */
+  const [detailsTab, setDetailsTab] = useState<DetailsTab>('characters');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saveStatus, setSaveStatus] = useState<string>(() => t('All changes saved'));
@@ -132,6 +225,20 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
       mounted.current = false;
     };
   }, []);
+
+  // Leaving while a reply is being written: it keeps going, and the app
+  // says so (with a chime) when it is ready.
+  const leaving = useRef<{ storyId: string; title: string } | null>(null);
+  useEffect(() => {
+    leaving.current = stream && view ? { storyId: view.story.id, title: view.story.title } : null;
+  }, [stream, view]);
+  useEffect(
+    () => () => {
+      const l = leaving.current;
+      if (l) useReplyWatch.getState().watch(l.storyId, l.title);
+    },
+    [],
+  );
 
   /** Month-to-date budget standing; shown as a banner past the warning level. */
   const refreshBudget = useCallback(() => {
@@ -405,6 +512,11 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
     }
   };
 
+  const openDetails = (tab: DetailsTab = 'characters') => {
+    setDetailsTab(tab);
+    setPanel('details');
+  };
+
   /** Close any panel or save view and show this place in the story. */
   const goTo = (eventId: string) => {
     setViewing(null);
@@ -443,8 +555,7 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
       if (isShortcut(e, 'saves')) return did(() => setPanel('saves'));
       if (isShortcut(e, 'routes')) return did(() => setPanel('routes'));
       if (isShortcut(e, 'memory')) return did(() => setPanel('memory'));
-      if (isShortcut(e, 'details'))
-        return did(() => !awaitingReply && !writing && setPanel('details'));
+      if (isShortcut(e, 'details')) return did(() => !awaitingReply && !writing && openDetails());
       if (isShortcut(e, 'endChapter')) return did(() => !waiting && !viewing && setPanel('end'));
       if (isShortcut(e, 'pictures')) {
         const pictures = usePictureView.getState();
@@ -515,132 +626,157 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
   const portraitOf = portraitFinder(view);
   const colorOf = nameColorFinder(view);
   const diceRules = view.state.state.narration?.diceRules ?? NO_RULES;
+  const scene = currentScene(events, view.state.state.scene.location);
+  const typist = stream ? texting(stream.text, player?.name ?? '') : null;
+  const visibleRoutes = view.routes.filter((r) => !r.hidden).length;
 
+  // Portraits and name colours reach the story and the panels over it.
   return (
-    <section
-      className="reader"
-      aria-label={t('Reading {title}', { title: view.story.title })}
-      style={{ fontSize: `${textSize}rem` }}
-    >
-      <header className="reader-status">
-        <div>
-          <h1 className="reader-title">{view.story.title}</h1>
-          <div className="reader-meta">
-            <span>
-              {tr('Route: {label}', {
-                label: <strong data-testid="route-label">{routeName(view.route.label)}</strong>,
-              })}
-            </span>
-            {chapter && (
-              <span>
-                {chapterHasTitle(chapter.ordinal, chapter.title) ? (
-                  tr('Chapter {n}: {title}', {
-                    n: chapter.ordinal,
-                    title: <strong>{chapter.title}</strong>,
-                  })
-                ) : (
-                  <strong>{t('Chapter {n}', { n: chapter.ordinal })}</strong>
-                )}
-              </span>
-            )}
-          </div>
-        </div>
-        <div className="reader-meta">
-          <button
-            type="button"
-            className="chip chip-button"
-            onClick={() => setPanel('storyteller')}
-            title={
-              view.storyteller.profileId
-                ? t('Replies come from {name} ({model}). Click to change it for this story.', {
-                    name: view.storyteller.label,
-                    model: view.storyteller.modelId ?? '',
-                  })
-                : t(
-                    'Replies come from the built-in offline storyteller. Click to choose another for this story.',
-                  )
-            }
-          >
-            {tKnown(view.storyteller.label)}
-          </button>
-          <span className="chip" role="status" aria-live="polite">
-            {writing ? t('Writing…') : busy ? t('Working…') : saveStatus}
-          </span>
-          <button
-            type="button"
-            onClick={() => setPanel('menu')}
-            title={withKeys(t('Pause menu'), 'menu')}
-            aria-keyshortcuts={ariaKeys('menu')}
-          >
-            <Menu className="btn-icon" aria-hidden={true} />
-            {t('Menu')}
-          </button>
-        </div>
-      </header>
-
-      {showBudget && (
-        <div
-          className={`budget-banner ${budget.level}`}
-          role="region"
-          aria-label={t('Monthly budget')}
+    <PortraitsContext.Provider value={portraitOf}>
+      <NameColorsContext.Provider value={colorOf}>
+        <section
+          className="reader"
+          aria-label={t('Reading {title}', { title: view.story.title })}
+          style={{ fontSize: `${textSize}rem` }}
         >
-          <p>
-            {joinSentences([
-              budget.level === 'reached'
-                ? t("You've reached your monthly budget: about {spent} of {limit}.", {
-                    spent: formatUsd(budget.spentMicroUsd),
-                    limit: formatUsd(budget.limitMicroUsd ?? 0),
-                  })
-                : t("You've used {percent}% of your monthly budget: about {spent} of {limit}.", {
-                    percent: budget.percent ?? 0,
-                    spent: formatUsd(budget.spentMicroUsd),
-                    limit: formatUsd(budget.limitMicroUsd ?? 0),
-                  }),
-              budget.paused
-                ? t('New paid replies are paused; local and offline storytellers still work.')
-                : '',
-            ])}
-          </p>
-          <div className="button-row">
-            <button type="button" onClick={() => navigate({ name: 'usage' })}>
-              {t('Usage & budget')}
-            </button>
-            <button type="button" onClick={dismissBudget}>
-              {t('Dismiss for this month')}
-            </button>
-          </div>
-        </div>
-      )}
+          <header className="reader-status">
+            <div className="reader-heading">
+              <h1 className="reader-title">{view.story.title}</h1>
+              <div className="reader-meta">
+                {chapter && (
+                  <span className="reader-chapter">
+                    {chapterHasTitle(chapter.ordinal, chapter.title) ? (
+                      tr('Chapter {n}: {title}', {
+                        n: chapter.ordinal,
+                        title: <strong>{chapter.title}</strong>,
+                      })
+                    ) : (
+                      <strong>{t('Chapter {n}', { n: chapter.ordinal })}</strong>
+                    )}
+                  </span>
+                )}
+                <span>
+                  {tr('Route: {label}', {
+                    label: <strong data-testid="route-label">{routeName(view.route.label)}</strong>,
+                  })}
+                </span>
+              </div>
+            </div>
+            {(scene.place || scene.time) && (
+              <button
+                type="button"
+                className="scene-chip"
+                disabled={awaitingReply || writing || !!viewing}
+                onClick={() => openDetails('scene')}
+                title={
+                  awaitingReply || writing
+                    ? t('Story details can change once the waiting action has its reply.')
+                    : t('Where and when the story is. Click to correct it.')
+                }
+              >
+                <MapPin className="scene-chip-icon" aria-hidden={true} size={15} />
+                <span className="scene-place">{scene.place}</span>
+                {scene.place && scene.time && <span aria-hidden="true">·</span>}
+                {scene.time && <span className="scene-time">{scene.time}</span>}
+              </button>
+            )}
+            <div className="reader-meta reader-controls">
+              <button
+                type="button"
+                className="chip chip-button"
+                onClick={() => setPanel('storyteller')}
+                title={
+                  view.storyteller.profileId
+                    ? t('Replies come from {name} ({model}). Click to change it for this story.', {
+                        name: view.storyteller.label,
+                        model: view.storyteller.modelId ?? '',
+                      })
+                    : t(
+                        'Replies come from the built-in offline storyteller. Click to choose another for this story.',
+                      )
+                }
+              >
+                {tKnown(view.storyteller.label)}
+              </button>
+              <span className="chip save-chip" role="status" aria-live="polite">
+                {writing ? t('Writing…') : busy ? t('Working…') : saveStatus}
+              </span>
+              <button
+                type="button"
+                onClick={() => setPanel('menu')}
+                title={withKeys(t('Pause menu'), 'menu')}
+                aria-keyshortcuts={ariaKeys('menu')}
+              >
+                <Menu className="btn-icon" aria-hidden={true} />
+                {t('Menu')}
+              </button>
+            </div>
+          </header>
 
-      {viewing && (
-        <div className="view-banner" role="region" aria-label={t('Viewing a save')}>
-          <span>
-            {tr('Viewing save {label} (read-only).', {
-              label: <strong>{saveName(viewing.save.label)}</strong>,
-            })}
-          </span>
-          <div className="button-row">
-            <button
-              type="button"
-              className="primary"
-              onClick={() =>
-                void run(async () => goToRoute(await commands.resumeSave(viewing.save.id)))
-              }
+          {showBudget && (
+            <div
+              className={`budget-banner ${budget.level}`}
+              role="region"
+              aria-label={t('Monthly budget')}
             >
-              {viewing.save.isRouteHead ? t('Continue') : t('Continue as new branch')}
-            </button>
-            <button type="button" onClick={() => setViewing(null)}>
-              {t('Back to current')}
-            </button>
-          </div>
-        </div>
-      )}
+              <p>
+                {joinSentences([
+                  budget.level === 'reached'
+                    ? t("You've reached your monthly budget: about {spent} of {limit}.", {
+                        spent: formatUsd(budget.spentMicroUsd),
+                        limit: formatUsd(budget.limitMicroUsd ?? 0),
+                      })
+                    : t(
+                        "You've used {percent}% of your monthly budget: about {spent} of {limit}.",
+                        {
+                          percent: budget.percent ?? 0,
+                          spent: formatUsd(budget.spentMicroUsd),
+                          limit: formatUsd(budget.limitMicroUsd ?? 0),
+                        },
+                      ),
+                  budget.paused
+                    ? t('New paid replies are paused; local and offline storytellers still work.')
+                    : '',
+                ])}
+              </p>
+              <div className="button-row">
+                <button type="button" onClick={() => navigate({ name: 'usage' })}>
+                  {t('Usage & budget')}
+                </button>
+                <button type="button" onClick={dismissBudget}>
+                  {t('Dismiss for this month')}
+                </button>
+              </div>
+            </div>
+          )}
 
-      {!viewing && <ScenePictures view={view} events={events} draft={stream?.text} />}
+          {viewing && (
+            <div className="view-banner" role="region" aria-label={t('Viewing a save')}>
+              <span>
+                {tr('Viewing save {label} (read-only).', {
+                  label: <strong>{saveName(viewing.save.label)}</strong>,
+                })}
+              </span>
+              <div className="button-row">
+                <button
+                  type="button"
+                  className="primary"
+                  onClick={() =>
+                    void run(async () => goToRoute(await commands.resumeSave(viewing.save.id)))
+                  }
+                >
+                  {viewing.save.isRouteHead ? t('Continue') : t('Continue as new branch')}
+                </button>
+                <button type="button" onClick={() => setViewing(null)}>
+                  {t('Back to current')}
+                </button>
+              </div>
+            </div>
+          )}
 
-      <div ref={narrativeHost} className="reader-body">
-        <PortraitsContext.Provider value={portraitOf}>
-          <NameColorsContext.Provider value={colorOf}>
+          {!viewing && <ScenePictures view={view} events={events} draft={stream?.text} />}
+
+          <div ref={narrativeHost} className="reader-body">
             <DiceRulesContext.Provider value={diceRules}>
               <NarrativeView
                 events={events}
@@ -680,489 +816,521 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
                 }
               />
             </DiceRulesContext.Provider>
-          </NameColorsContext.Provider>
-        </PortraitsContext.Provider>
-        <ReaderRail storyId={view.story.id} genres={view.state.state.narration?.genres} />
-      </div>
-
-      {error && (
-        <p role="alert" className="error reader-error">
-          {error}
-        </p>
-      )}
-
-      {!viewing && (
-        <div className="reader-bottom">
-          {writing && (
-            <div className="reply-bar" role="region" aria-label={t('Reply in progress')}>
-              <span className="muted small">
-                {t('{name} is writing…', { name: tKnown(view.storyteller.label) })}
-              </span>
-              <button type="button" onClick={cancelReply}>
-                {t('Stop')}
-              </button>
-            </div>
-          )}
-          {awaitingReply && !writing && (
-            <div className="reply-bar" role="region" aria-label={t('Reply needed')}>
-              <p className={replyError || lastRun ? 'error small' : 'small'}>
-                {joinSentences([
-                  replyError?.text ??
-                    (lastRun
-                      ? runErrorMessage(lastRun.errorCode)
-                      : t('This action has no reply yet.')),
-                  lastRun?.status === 'interrupted' && !replyError
-                    ? t('If it had reached the AI service, it may still have cost a little.')
-                    : '',
-                ])}
-              </p>
-              <div className="button-row">
-                <button type="button" className="primary" onClick={() => void retry()}>
-                  {lastRun ? t('Retry') : t('Write a reply')}
-                </button>
-                {failCode === 'BUDGET_OVERRIDE_REQUIRED' && (
-                  <button type="button" onClick={() => void retry(true)}>
-                    {t('Send once without a price')}
-                  </button>
-                )}
-                {(failCode === 'BUDGET_PAUSED' || failCode === 'BUDGET_OVERRIDE_REQUIRED') && (
-                  <button type="button" onClick={() => navigate({ name: 'usage' })}>
-                    {t('Usage & budget')}
-                  </button>
-                )}
-                <button type="button" onClick={() => openEdit()}>
-                  {t('Change action')}
-                </button>
-              </div>
-            </div>
-          )}
-          {view.state.state.tracking && (
-            <TrackerHud tracking={view.state.state.tracking} onOpen={() => setPanel('inventory')} />
-          )}
-          <Composer
-            value={draft}
-            onChange={(text) => setDraft(routeId, text)}
-            onSubmit={(text, roll) => void send(text, roll)}
-            disabled={busy || awaitingReply || writing}
-            placeholder={t('What do you do? (Enter to send, Shift+Enter for a new line)')}
-            playerName={player?.name ?? t('You')}
-            dice={!!view.state.state.narration?.dice}
-            diceRules={diceRules}
-            stats={player?.stats}
-            contacts={Object.values(view.state.state.characters)
-              .filter((c) => c.control !== 'player')
-              .map((c) => c.name)}
-          />
-          <div className="action-bar">
-            <button
-              type="button"
-              onClick={quickSave}
-              disabled={busy}
-              title={withKeys(t('Quick save'), 'quickSave')}
-              aria-keyshortcuts={ariaKeys('quickSave')}
-            >
-              <Save className="btn-icon" aria-hidden={true} />
-              {t('Quick save')}
-            </button>
-            <button
-              type="button"
-              onClick={() => setPanel('saves')}
-              title={withKeys(t('Save / Load'), 'saves')}
-              aria-keyshortcuts={ariaKeys('saves')}
-            >
-              <ArchiveRestore className="btn-icon" aria-hidden={true} />
-              {t('Save / Load')}
-            </button>
-            <button
-              type="button"
-              onClick={() => setPanel('end')}
-              disabled={busy || awaitingReply || writing}
-              title={withKeys(t('Recap this chapter, save, and start the next one'), 'endChapter')}
-              aria-keyshortcuts={ariaKeys('endChapter')}
-            >
-              <BookMarked className="btn-icon" aria-hidden={true} />
-              {t('End chapter')}
-            </button>
-            <button
-              type="button"
-              onClick={() => setPanel('routes')}
-              title={withKeys(t('Routes'), 'routes')}
-              aria-keyshortcuts={ariaKeys('routes')}
-            >
-              <GitBranch className="btn-icon" aria-hidden={true} />
-              {t('Routes ({n})', { n: view.routes.filter((r) => !r.hidden).length })}
-            </button>
-            <button
-              type="button"
-              onClick={() => setPanel('search')}
-              title={withKeys(t('Search this route and its bookmarks'), 'search')}
-              aria-keyshortcuts={ariaKeys('search')}
-            >
-              <Search className="btn-icon" aria-hidden={true} />
-              {t('Search')}
-            </button>
+            <ReaderRail storyId={view.story.id} genres={view.state.state.narration?.genres} />
           </div>
-        </div>
-      )}
 
-      {panel && (
-        <Dialog
-          key={panel}
-          title={t(PANEL_TITLES[panel])}
-          wide={
-            panel === 'context' ||
-            panel === 'details' ||
-            panel === 'pictures' ||
-            panel === 'memory' ||
-            panel === 'end'
-          }
-          onClose={() =>
-            setPanel(
-              panel === 'menu' ||
-                panel === 'edit' ||
-                panel === 'end' ||
-                panel === 'storyteller' ||
-                panel === 'inventory'
-                ? null
-                : 'menu',
-            )
-          }
-          initialFocusId={
-            panel === 'menu'
-              ? 'pause-resume'
-              : panel === 'edit'
-                ? 'edit-action-input'
-                : panel === 'regenerate'
-                  ? 'regenerate-confirm'
-                  : panel === 'search'
-                    ? 'search-input'
-                    : undefined
-          }
-        >
-          {panel === 'menu' && (
-            <nav className="menu-list" aria-label={t('Pause menu')}>
-              <button id="pause-resume" type="button" onClick={() => setPanel(null)}>
-                {t('Resume')}
-              </button>
-              <button
-                type="button"
-                onClick={() => setPanel('saves')}
-                aria-keyshortcuts={ariaKeys('saves')}
-              >
-                {t('Save / Load')}
-                <KeyHint id="saves" />
-              </button>
-              <button type="button" onClick={() => setPanel('chapters')}>
-                {t('Chapters')}
-              </button>
-              <button
-                type="button"
-                onClick={() => setPanel('routes')}
-                aria-keyshortcuts={ariaKeys('routes')}
-              >
-                {t('Routes')}
-                <KeyHint id="routes" />
-              </button>
-              <div className="button-row">
-                <span>{t('Text size')}</span>
-                <button
-                  type="button"
-                  aria-label={t('Smaller text')}
-                  title={withKeys(t('Smaller text'), 'smaller')}
-                  aria-keyshortcuts={ariaKeys('smaller')}
-                  onClick={() => stepTextSize(-1)}
-                >
-                  A−
-                </button>
-                <button
-                  type="button"
-                  aria-label={t('Larger text')}
-                  title={withKeys(t('Larger text'), 'larger')}
-                  aria-keyshortcuts={ariaKeys('larger')}
-                  onClick={() => stepTextSize(1)}
-                >
-                  A+
-                </button>
-              </div>
-              <button
-                type="button"
-                onClick={() => setPanel('details')}
-                disabled={awaitingReply || writing}
-                aria-describedby={awaitingReply || writing ? 'details-hint' : undefined}
-                aria-keyshortcuts={ariaKeys('details')}
-              >
-                {t('Story details')}
-                <KeyHint id="details" />
-              </button>
-              {(awaitingReply || writing) && (
-                <p id="details-hint" className="muted small">
-                  {t('Story details can change once the waiting action has its reply.')}
-                </p>
+          {error && (
+            <p role="alert" className="error reader-error">
+              {error}
+            </p>
+          )}
+
+          {!viewing && (
+            <div className="reader-bottom">
+              {writing && (
+                <div className="reply-bar" role="region" aria-label={t('Reply in progress')}>
+                  <span className="muted small typing-line">
+                    <span className="typing-dots" aria-hidden="true">
+                      <i />
+                      <i />
+                      <i />
+                    </span>
+                    {typist
+                      ? t('{name} is typing…', { name: typist })
+                      : t('{name} is writing…', { name: tKnown(view.storyteller.label) })}
+                  </span>
+                  <button type="button" onClick={cancelReply}>
+                    {t('Stop')}
+                  </button>
+                </div>
+              )}
+              {awaitingReply && !writing && (
+                <div className="reply-bar" role="region" aria-label={t('Reply needed')}>
+                  <p className={replyError || lastRun ? 'error small' : 'small'}>
+                    {joinSentences([
+                      replyError?.text ??
+                        (lastRun
+                          ? runErrorMessage(lastRun.errorCode)
+                          : t('This action has no reply yet.')),
+                      lastRun?.status === 'interrupted' && !replyError
+                        ? t('If it had reached the AI service, it may still have cost a little.')
+                        : '',
+                    ])}
+                  </p>
+                  <div className="button-row">
+                    <button type="button" className="primary" onClick={() => void retry()}>
+                      {lastRun ? t('Retry') : t('Write a reply')}
+                    </button>
+                    {failCode === 'BUDGET_OVERRIDE_REQUIRED' && (
+                      <button type="button" onClick={() => void retry(true)}>
+                        {t('Send once without a price')}
+                      </button>
+                    )}
+                    {(failCode === 'BUDGET_PAUSED' || failCode === 'BUDGET_OVERRIDE_REQUIRED') && (
+                      <button type="button" onClick={() => navigate({ name: 'usage' })}>
+                        {t('Usage & budget')}
+                      </button>
+                    )}
+                    <button type="button" onClick={() => openEdit()}>
+                      {t('Change action')}
+                    </button>
+                  </div>
+                </div>
               )}
               {view.state.state.tracking && (
-                <button type="button" onClick={() => setPanel('inventory')}>
-                  {t('Status and inventory')}
-                </button>
+                <TrackerHud
+                  tracking={view.state.state.tracking}
+                  onOpen={() => setPanel('inventory')}
+                />
               )}
-              <button type="button" onClick={() => setPanel('pictures')}>
-                {t('Pictures')}
-              </button>
-              <button type="button" onClick={() => setPanel('storyteller')}>
-                {t('Storyteller')}
-              </button>
-              <button
-                type="button"
-                onClick={() => setPanel('memory')}
-                aria-keyshortcuts={ariaKeys('memory')}
-              >
-                {t('Story memory')}
-                <KeyHint id="memory" />
-              </button>
-              <button
-                type="button"
-                onClick={() => setPanel('search')}
-                aria-keyshortcuts={ariaKeys('search')}
-              >
-                {t('Story search')}
-                <KeyHint id="search" />
-              </button>
-              <button type="button" onClick={() => setPanel('context')}>
-                {t('Preview context')}
-              </button>
-              <button type="button" onClick={() => setPanel('export')}>
-                {t('Export…')}
-              </button>
-              <button
-                type="button"
-                onClick={() => navigate({ name: 'settings' })}
-                aria-keyshortcuts={ariaKeys('settings')}
-              >
-                {t('Settings')}
-                <KeyHint id="settings" />
-              </button>
-              <button
-                type="button"
-                onClick={() => useShortcutHelp.getState().setOpen(true)}
-                aria-keyshortcuts={ariaKeys('help')}
-              >
-                {t('Keyboard shortcuts')}
-                <KeyHint id="help" />
-              </button>
-              <button type="button" onClick={() => navigate({ name: 'diagnostics' })}>
-                {t('Diagnostics')}
-              </button>
-              <button type="button" onClick={() => navigate({ name: 'library' })}>
-                {t('Back to library')}
-              </button>
-            </nav>
-          )}
-          {panel === 'saves' && (
-            <SavesPanel
-              storyId={view.story.id}
-              routeId={view.route.id}
-              onSaved={(s) =>
-                setSaveStatus(
-                  t('Saved "{label}" {time}', { label: saveName(s.label), time: timeNow() }),
-                )
-              }
-              onView={(saveId) =>
-                void run(async () => {
-                  setViewing(await commands.viewSave(saveId));
-                  setPanel(null);
-                })
-              }
-              onResume={(saveId) =>
-                void run(async () => goToRoute(await commands.resumeSave(saveId)))
-              }
-            />
-          )}
-          {panel === 'routes' && (
-            <RoutesPanel
-              storyId={view.story.id}
-              currentRouteId={view.route.id}
-              routes={view.routes}
-              onSwitch={(id) => {
-                setPanel(null);
-                navigate({ name: 'reader', routeId: id });
-              }}
-              onChanged={() => setReload((n) => n + 1)}
-            />
-          )}
-          {panel === 'chapters' && (
-            <ChaptersPanel
-              chapters={view.chapters}
-              activeEventId={chapter?.eventId ?? null}
-              onRestart={(chapterEventId) =>
-                void run(async () =>
-                  goToRoute(
-                    await commands.restartChapter({
-                      storyId: view.story.id,
-                      routeId: view.route.id,
-                      chapterEventId,
-                    }),
-                  ),
-                )
-              }
-            />
-          )}
-          {panel === 'context' && <ContextPreviewPanel routeId={view.route.id} />}
-          {panel === 'end' && (
-            <EndChapterPanel
-              view={view}
-              onCancel={() => setPanel(null)}
-              onEnded={(v, saveLabel) => {
-                setView(v);
-                setPanel(null);
-                setSaveStatus(t('Saved "{label}" {time}', { label: saveLabel, time: timeNow() }));
-              }}
-            />
-          )}
-          {panel === 'export' && <ExportPanel view={view} />}
-          {panel === 'search' && (
-            <SearchPanel
-              storyId={view.story.id}
-              routeId={view.route.id}
-              routeLabel={routeName(view.route.label)}
-              playerName={player?.name ?? t('You')}
-              last={lastSearch}
-              onSearched={setLastSearch}
-              bookmarks={bookmarks}
-              onBookmarksChanged={() => setBookmarksReload((n) => n + 1)}
-              onGo={goTo}
-            />
-          )}
-          {panel === 'pictures' && (
-            <PicturesPanel
-              view={view}
-              awaitingReply={awaitingReply || writing}
-              onChanged={(v, status) => {
-                setView(v);
-                setSaveStatus(t('{status} {time}', { status, time: timeNow() }));
-              }}
-            />
-          )}
-          {panel === 'inventory' && (
-            <InventoryPanel
-              view={view}
-              detailsDisabled={awaitingReply || writing}
-              onOpenDetails={() => setPanel('details')}
-              onChanged={(v, status) => {
-                setView(v);
-                setSaveStatus(t('{status} {time}', { status, time: timeNow() }));
-              }}
-            />
-          )}
-          {panel === 'storyteller' && (
-            <StorytellerPanel
-              storyId={view.story.id}
-              current={view.storyteller}
-              onChanged={(info) => {
-                setView((v) => (v ? { ...v, storyteller: info } : v));
-                setSaveStatus(
-                  t('Storyteller: {name} {time}', { name: tKnown(info.label), time: timeNow() }),
-                );
-              }}
-              onOpenSettings={() => navigate({ name: 'settings' })}
-              onOpenMemory={() => setPanel('memory')}
-            />
-          )}
-          {panel === 'memory' && (
-            <StoryMemoryPanel
-              view={view}
-              playerName={player?.name ?? t('You')}
-              detailsDisabled={awaitingReply || writing}
-              onChanged={(v) => {
-                setView(v);
-                setSaveStatus(t('Memory changed {time}', { time: timeNow() }));
-              }}
-              onOpenDetails={() => setPanel('details')}
-              onOpenStoryteller={() => setPanel('storyteller')}
-            />
-          )}
-          {panel === 'details' && (
-            <StoryDetailsPanel
-              view={view}
-              playerName={player?.name ?? t('You')}
-              onCancel={() => setPanel(null)}
-              onApplied={(v) => {
-                setView(v);
-                setPanel(null);
-                setSaveStatus(t('Story details changed {time}', { time: timeNow() }));
-              }}
-            />
-          )}
-          {panel === 'regenerate' && target?.kind === 'assistant' && (
-            <div className="panel">
-              <p>
-                {tr(
-                  'The storyteller writes a different reply to {action} on a {newRoute}. {route} keeps this reply and everything after it.',
-                  {
-                    action: (() => {
-                      const a = answered(target);
-                      return a?.kind === 'player' ? (
-                        <q>{plainText(a.payload.text)}</q>
-                      ) : (
-                        t('your action')
-                      );
-                    })(),
-                    newRoute: <strong>{t('new route')}</strong>,
-                    route: <strong>{routeName(view.route.label)}</strong>,
-                  },
-                )}
-              </p>
-              <div className="button-row">
-                <button type="button" onClick={() => setPanel(null)}>
-                  {t('Cancel')}
-                </button>
-                <button
-                  id="regenerate-confirm"
-                  type="button"
-                  className="primary"
-                  disabled={busy}
-                  onClick={() => void submitRegenerate()}
-                >
-                  {t('Write another reply')}
-                </button>
-              </div>
+              <Composer
+                value={draft}
+                onChange={(text) => setDraft(routeId, text)}
+                onSubmit={(text, roll) => void send(text, roll)}
+                disabled={busy || awaitingReply || writing}
+                placeholder={t('What do you do? (Enter to send, Shift+Enter for a new line)')}
+                playerName={player?.name ?? t('You')}
+                dice={!!view.state.state.narration?.dice}
+                diceRules={diceRules}
+                stats={player?.stats}
+                contacts={Object.values(view.state.state.characters)
+                  .filter((c) => c.control !== 'player')
+                  .map((c) => c.name)}
+                tools={
+                  <div className="tool-bar" role="toolbar" aria-label={t('Story tools')}>
+                    <ToolButton
+                      icon={Save}
+                      label={t('Quick save')}
+                      title={withKeys(t('Quick save'), 'quickSave')}
+                      keys={ariaKeys('quickSave')}
+                      onClick={quickSave}
+                      disabled={busy}
+                    />
+                    <ToolButton
+                      icon={ArchiveRestore}
+                      label={t('Save / Load')}
+                      title={withKeys(t('Save / Load'), 'saves')}
+                      keys={ariaKeys('saves')}
+                      onClick={() => setPanel('saves')}
+                    />
+                    <ToolButton
+                      icon={BookMarked}
+                      label={t('End chapter')}
+                      title={withKeys(
+                        t('Recap this chapter, save, and start the next one'),
+                        'endChapter',
+                      )}
+                      keys={ariaKeys('endChapter')}
+                      onClick={() => setPanel('end')}
+                      disabled={busy || awaitingReply || writing}
+                    />
+                    <ToolButton
+                      icon={GitBranch}
+                      label={t('Routes ({n})', { n: visibleRoutes })}
+                      title={withKeys(t('Routes ({n})', { n: visibleRoutes }), 'routes')}
+                      keys={ariaKeys('routes')}
+                      onClick={() => setPanel('routes')}
+                      badge={visibleRoutes}
+                    />
+                    <ToolButton
+                      icon={Search}
+                      label={t('Search')}
+                      title={withKeys(t('Search this route and its bookmarks'), 'search')}
+                      keys={ariaKeys('search')}
+                      onClick={() => setPanel('search')}
+                    />
+                  </div>
+                }
+              />
             </div>
           )}
-          {panel === 'edit' && (
-            <form
-              className="form"
-              onSubmit={(e) => {
-                e.preventDefault();
-                if (editText.trim()) void submitEdit();
-              }}
+
+          {panel && (
+            <Dialog
+              key={panel}
+              title={t(PANEL_TITLES[panel])}
+              sheet={SHEETS.has(panel)}
+              wide={
+                panel === 'context' ||
+                panel === 'details' ||
+                panel === 'pictures' ||
+                panel === 'memory' ||
+                panel === 'end'
+              }
+              onClose={() =>
+                setPanel(
+                  panel === 'menu' ||
+                    panel === 'edit' ||
+                    panel === 'end' ||
+                    panel === 'storyteller' ||
+                    panel === 'inventory'
+                    ? null
+                    : 'menu',
+                )
+              }
+              initialFocusId={
+                panel === 'menu'
+                  ? 'pause-resume'
+                  : panel === 'edit'
+                    ? 'edit-action-input'
+                    : panel === 'regenerate'
+                      ? 'regenerate-confirm'
+                      : panel === 'search'
+                        ? 'search-input'
+                        : undefined
+              }
             >
-              <label htmlFor="edit-action-input">
-                {target && target.id !== lastAction?.id
-                  ? t(
-                      'Your action. The story continues from here on a new route; {route} keeps the original and everything after it.',
-                      { route: routeName(view.route.label) },
+              {panel === 'menu' && (
+                <nav className="menu-list" aria-label={t('Pause menu')}>
+                  <button id="pause-resume" type="button" onClick={() => setPanel(null)}>
+                    <Play {...MENU_ICON} />
+                    {t('Resume')}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPanel('saves')}
+                    aria-keyshortcuts={ariaKeys('saves')}
+                  >
+                    <ArchiveRestore {...MENU_ICON} />
+                    {t('Save / Load')}
+                    <KeyHint id="saves" />
+                  </button>
+                  <button type="button" onClick={() => setPanel('chapters')}>
+                    <ListOrdered {...MENU_ICON} />
+                    {t('Chapters')}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPanel('routes')}
+                    aria-keyshortcuts={ariaKeys('routes')}
+                  >
+                    <GitBranch {...MENU_ICON} />
+                    {t('Routes')}
+                    <KeyHint id="routes" />
+                  </button>
+                  <div className="button-row">
+                    <span>
+                      <Type {...MENU_ICON} />
+                      {t('Text size')}
+                    </span>
+                    <button
+                      type="button"
+                      aria-label={t('Smaller text')}
+                      title={withKeys(t('Smaller text'), 'smaller')}
+                      aria-keyshortcuts={ariaKeys('smaller')}
+                      onClick={() => stepTextSize(-1)}
+                    >
+                      A−
+                    </button>
+                    <button
+                      type="button"
+                      aria-label={t('Larger text')}
+                      title={withKeys(t('Larger text'), 'larger')}
+                      aria-keyshortcuts={ariaKeys('larger')}
+                      onClick={() => stepTextSize(1)}
+                    >
+                      A+
+                    </button>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => openDetails()}
+                    disabled={awaitingReply || writing}
+                    aria-describedby={awaitingReply || writing ? 'details-hint' : undefined}
+                    aria-keyshortcuts={ariaKeys('details')}
+                  >
+                    <UserRoundPen {...MENU_ICON} />
+                    {t('Story details')}
+                    <KeyHint id="details" />
+                  </button>
+                  {(awaitingReply || writing) && (
+                    <p id="details-hint" className="muted small">
+                      {t('Story details can change once the waiting action has its reply.')}
+                    </p>
+                  )}
+                  {view.state.state.tracking && (
+                    <button type="button" onClick={() => setPanel('inventory')}>
+                      <Backpack {...MENU_ICON} />
+                      {t('Status and inventory')}
+                    </button>
+                  )}
+                  <button type="button" onClick={() => setPanel('pictures')}>
+                    <Images {...MENU_ICON} />
+                    {t('Pictures')}
+                  </button>
+                  <button type="button" onClick={() => setPanel('storyteller')}>
+                    <Feather {...MENU_ICON} />
+                    {t('Storyteller')}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPanel('memory')}
+                    aria-keyshortcuts={ariaKeys('memory')}
+                  >
+                    <Brain {...MENU_ICON} />
+                    {t('Story memory')}
+                    <KeyHint id="memory" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPanel('search')}
+                    aria-keyshortcuts={ariaKeys('search')}
+                  >
+                    <Search {...MENU_ICON} />
+                    {t('Story search')}
+                    <KeyHint id="search" />
+                  </button>
+                  <button type="button" onClick={() => setPanel('context')}>
+                    <ScanText {...MENU_ICON} />
+                    {t('Preview context')}
+                  </button>
+                  <button type="button" onClick={() => setPanel('export')}>
+                    <Download {...MENU_ICON} />
+                    {t('Export…')}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => navigate({ name: 'settings' })}
+                    aria-keyshortcuts={ariaKeys('settings')}
+                  >
+                    <Settings {...MENU_ICON} />
+                    {t('Settings')}
+                    <KeyHint id="settings" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => useShortcutHelp.getState().setOpen(true)}
+                    aria-keyshortcuts={ariaKeys('help')}
+                  >
+                    <Keyboard {...MENU_ICON} />
+                    {t('Keyboard shortcuts')}
+                    <KeyHint id="help" />
+                  </button>
+                  <button type="button" onClick={() => navigate({ name: 'diagnostics' })}>
+                    <Stethoscope {...MENU_ICON} />
+                    {t('Diagnostics')}
+                  </button>
+                  <button type="button" onClick={() => navigate({ name: 'library' })}>
+                    <LibraryBig {...MENU_ICON} />
+                    {t('Back to library')}
+                  </button>
+                </nav>
+              )}
+              {panel === 'saves' && (
+                <SavesPanel
+                  storyId={view.story.id}
+                  routeId={view.route.id}
+                  onSaved={(s) =>
+                    setSaveStatus(
+                      t('Saved "{label}" {time}', { label: saveName(s.label), time: timeNow() }),
                     )
-                  : t(
-                      'Your action. The story continues from here on a new route; {route} keeps the original.',
-                      { route: routeName(view.route.label) },
+                  }
+                  onView={(saveId) =>
+                    void run(async () => {
+                      setViewing(await commands.viewSave(saveId));
+                      setPanel(null);
+                    })
+                  }
+                  onResume={(saveId) =>
+                    void run(async () => goToRoute(await commands.resumeSave(saveId)))
+                  }
+                />
+              )}
+              {panel === 'routes' && (
+                <RoutesPanel
+                  storyId={view.story.id}
+                  currentRouteId={view.route.id}
+                  routes={view.routes}
+                  onSwitch={(id) => {
+                    setPanel(null);
+                    navigate({ name: 'reader', routeId: id });
+                  }}
+                  onChanged={() => setReload((n) => n + 1)}
+                />
+              )}
+              {panel === 'chapters' && (
+                <ChaptersPanel
+                  chapters={view.chapters}
+                  activeEventId={chapter?.eventId ?? null}
+                  onRestart={(chapterEventId) =>
+                    void run(async () =>
+                      goToRoute(
+                        await commands.restartChapter({
+                          storyId: view.story.id,
+                          routeId: view.route.id,
+                          chapterEventId,
+                        }),
+                      ),
+                    )
+                  }
+                />
+              )}
+              {panel === 'context' && <ContextPreviewPanel routeId={view.route.id} />}
+              {panel === 'end' && (
+                <EndChapterPanel
+                  view={view}
+                  onCancel={() => setPanel(null)}
+                  onEnded={(v, saveLabel) => {
+                    setView(v);
+                    setPanel(null);
+                    setSaveStatus(
+                      t('Saved "{label}" {time}', { label: saveLabel, time: timeNow() }),
+                    );
+                  }}
+                />
+              )}
+              {panel === 'export' && <ExportPanel view={view} />}
+              {panel === 'search' && (
+                <SearchPanel
+                  storyId={view.story.id}
+                  routeId={view.route.id}
+                  routeLabel={routeName(view.route.label)}
+                  playerName={player?.name ?? t('You')}
+                  last={lastSearch}
+                  onSearched={setLastSearch}
+                  bookmarks={bookmarks}
+                  onBookmarksChanged={() => setBookmarksReload((n) => n + 1)}
+                  onGo={goTo}
+                />
+              )}
+              {panel === 'pictures' && (
+                <PicturesPanel
+                  view={view}
+                  awaitingReply={awaitingReply || writing}
+                  onChanged={(v, status) => {
+                    setView(v);
+                    setSaveStatus(t('{status} {time}', { status, time: timeNow() }));
+                  }}
+                />
+              )}
+              {panel === 'inventory' && (
+                <InventoryPanel
+                  view={view}
+                  detailsDisabled={awaitingReply || writing}
+                  onOpenDetails={() => openDetails()}
+                  onChanged={(v, status) => {
+                    setView(v);
+                    setSaveStatus(t('{status} {time}', { status, time: timeNow() }));
+                  }}
+                />
+              )}
+              {panel === 'storyteller' && (
+                <StorytellerPanel
+                  storyId={view.story.id}
+                  current={view.storyteller}
+                  onChanged={(info) => {
+                    setView((v) => (v ? { ...v, storyteller: info } : v));
+                    setSaveStatus(
+                      t('Storyteller: {name} {time}', {
+                        name: tKnown(info.label),
+                        time: timeNow(),
+                      }),
+                    );
+                  }}
+                  onOpenSettings={() => navigate({ name: 'settings' })}
+                  onOpenMemory={() => setPanel('memory')}
+                />
+              )}
+              {panel === 'memory' && (
+                <StoryMemoryPanel
+                  view={view}
+                  playerName={player?.name ?? t('You')}
+                  detailsDisabled={awaitingReply || writing}
+                  onChanged={(v) => {
+                    setView(v);
+                    setSaveStatus(t('Memory changed {time}', { time: timeNow() }));
+                  }}
+                  onOpenDetails={() => openDetails()}
+                  onOpenStoryteller={() => setPanel('storyteller')}
+                />
+              )}
+              {panel === 'details' && (
+                <StoryDetailsPanel
+                  view={view}
+                  initialTab={detailsTab}
+                  playerName={player?.name ?? t('You')}
+                  onCancel={() => setPanel(null)}
+                  onApplied={(v) => {
+                    setView(v);
+                    setPanel(null);
+                    setSaveStatus(t('Story details changed {time}', { time: timeNow() }));
+                  }}
+                />
+              )}
+              {panel === 'regenerate' && target?.kind === 'assistant' && (
+                <div className="panel">
+                  <p>
+                    {tr(
+                      'The storyteller writes a different reply to {action} on a {newRoute}. {route} keeps this reply and everything after it.',
+                      {
+                        action: (() => {
+                          const a = answered(target);
+                          return a?.kind === 'player' ? (
+                            <q>{plainText(a.payload.text)}</q>
+                          ) : (
+                            t('your action')
+                          );
+                        })(),
+                        newRoute: <strong>{t('new route')}</strong>,
+                        route: <strong>{routeName(view.route.label)}</strong>,
+                      },
                     )}
-              </label>
-              <textarea
-                id="edit-action-input"
-                value={editText}
-                rows={4}
-                onChange={(e) => setEditText(e.target.value)}
-              />
-              <div className="button-row">
-                <button type="button" onClick={() => setPanel(null)}>
-                  {t('Cancel')}
-                </button>
-                <button type="submit" className="primary" disabled={!editText.trim() || busy}>
-                  {t('Send changed action')}
-                </button>
-              </div>
-            </form>
+                  </p>
+                  <div className="button-row">
+                    <button type="button" onClick={() => setPanel(null)}>
+                      {t('Cancel')}
+                    </button>
+                    <button
+                      id="regenerate-confirm"
+                      type="button"
+                      className="primary"
+                      disabled={busy}
+                      onClick={() => void submitRegenerate()}
+                    >
+                      {t('Write another reply')}
+                    </button>
+                  </div>
+                </div>
+              )}
+              {panel === 'edit' && (
+                <form
+                  className="form"
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    if (editText.trim()) void submitEdit();
+                  }}
+                >
+                  <label htmlFor="edit-action-input">
+                    {target && target.id !== lastAction?.id
+                      ? t(
+                          'Your action. The story continues from here on a new route; {route} keeps the original and everything after it.',
+                          { route: routeName(view.route.label) },
+                        )
+                      : t(
+                          'Your action. The story continues from here on a new route; {route} keeps the original.',
+                          { route: routeName(view.route.label) },
+                        )}
+                  </label>
+                  <textarea
+                    id="edit-action-input"
+                    value={editText}
+                    rows={4}
+                    onChange={(e) => setEditText(e.target.value)}
+                  />
+                  <div className="button-row">
+                    <button type="button" onClick={() => setPanel(null)}>
+                      {t('Cancel')}
+                    </button>
+                    <button type="submit" className="primary" disabled={!editText.trim() || busy}>
+                      {t('Send changed action')}
+                    </button>
+                  </div>
+                </form>
+              )}
+            </Dialog>
           )}
-        </Dialog>
-      )}
-    </section>
+        </section>
+      </NameColorsContext.Provider>
+    </PortraitsContext.Provider>
   );
 }

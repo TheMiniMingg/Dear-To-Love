@@ -12,7 +12,7 @@ computer. A built-in offline storyteller lets you play with neither.
 Windows, macOS and Linux. The app is in English, Simplified Chinese, Traditional Chinese,
 Japanese and Korean, and stories can be written in many more languages.
 
-![A café story told in script style, with the scene's picture and portraits above it](docs/screenshots/reader.webp)
+![A café story told in script style: where and when at the top, the scene's picture and portraits, speakers' portraits beside their lines, and the action pills and tools](docs/screenshots/reader.webp)
 
 ## Highlights
 
@@ -109,6 +109,12 @@ story can also **Send a text**, **Call** someone, **Think** a thought of your ow
   **Preview context** shows exactly what it will read next.
 - **Change the story as you go** in **Story details**: characters, the world, the narration,
   the scene and the facts it must keep to.
+- **Your library** shows each story as a card with its cover, how far it got and its last
+  line. Search, sort and pin stories, and rename, copy or change the cover of one from its
+  **…** menu. A reply keeps writing when you leave a story, and a notice (with a soft chime)
+  says when it is ready.
+- **Where and when** the story is shows above it, and panels such as **Story details** and
+  **Story memory** open beside the story instead of over it.
 - **Search and bookmarks**, and **Export** a route as text or a whole story as a
   `.storypack` to share.
 - **Keyboard shortcuts** for almost everything; press **F1** to see them.
@@ -124,11 +130,11 @@ story can also **Send a text**, **Call** someone, **Think** a thought of your ow
 
 ![A chapter opening: the chapter number, its title, an ornament and a large first letter](docs/screenshots/reader-look.webp)
 
-![The library: three stories, one still writing a reply](docs/screenshots/library.webp)
+![The library as cards: covers, how far each story got and its last line](docs/screenshots/library.webp)
 
 ![A reply that noted Mina, the silver ring and the moment you gave it, with See notes and Undo](docs/screenshots/memory-line.webp)
 
-![The notebook in Story memory: people, places, things and a timeline, each note with Change and Remove](docs/screenshots/notebook.webp)
+![The notebook in Story memory, beside the story: Mina with her portrait, a place, a thing and a timeline that marks Chapter 1](docs/screenshots/notebook.webp)
 
 ### Texts and calls
 

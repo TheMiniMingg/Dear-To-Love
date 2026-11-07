@@ -13,4 +13,21 @@ coverAssetId: string | null,
  * A reply is being written on one of its routes right now (it keeps
  * going while the player is in another story).
  */
-writing: boolean, };
+writing: boolean, 
+/**
+ * The story's genres as it was made; they pick its look.
+ */
+genres: Array<string>, 
+/**
+ * The chapter the last played route is in.
+ */
+chapter: number | null, 
+/**
+ * Actions taken on the last played route.
+ */
+turns: number, 
+/**
+ * The newest reply on the last played route (its story text), for a
+ * line of it in the library.
+ */
+lastReply: string | null, };

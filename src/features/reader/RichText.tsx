@@ -48,7 +48,8 @@ function Paragraph({ text, dropCap = false }: { text: string; dropCap?: boolean 
     );
   }
   return (
-    <p>
+    <p className="script-line">
+      <Avatar name={m[1] ?? ''} className="line-avatar" />
       <strong className="line-speaker" style={nameStyle(colorOf(m[1] ?? ''))}>
         {m[1]}
         {m[2]}
@@ -73,13 +74,14 @@ export function Prose({ text, dropCap = false }: { text: string; dropCap?: boole
   );
 }
 
-function Avatar({ name }: { name: string }) {
+/** Someone's portrait, or the first letter of their name in their colour. */
+function Avatar({ name, className = 'msg-avatar' }: { name: string; className?: string }) {
   const portrait = useContext(PortraitsContext)(name);
   const color = useContext(NameColorsContext)(name);
-  if (portrait) return <Thumb assetId={portrait} alt="" className="msg-avatar" />;
+  if (portrait) return <Thumb assetId={portrait} alt="" className={className} />;
   const initial = [...name.trim()][0]?.toUpperCase() ?? '?';
   return (
-    <span className="msg-avatar" aria-hidden="true" style={nameStyle(color)}>
+    <span className={className} aria-hidden="true" style={nameStyle(color)}>
       {initial}
     </span>
   );

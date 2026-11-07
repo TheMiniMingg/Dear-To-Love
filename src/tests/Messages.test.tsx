@@ -155,7 +155,7 @@ describe('Composer modes', () => {
         playerName="Sam"
       />,
     );
-    await userEvent.selectOptions(screen.getByLabelText('Kind of action'), 'Send a text');
+    await userEvent.click(screen.getByRole('radio', { name: 'Send a text' }));
     expect(screen.getByRole('button', { name: 'Send' })).toBeDisabled();
     await userEvent.type(screen.getByLabelText('To'), 'Mara Quill');
     await userEvent.click(screen.getByRole('button', { name: 'Send' }));
@@ -172,7 +172,7 @@ describe('Composer modes', () => {
         playerName="Sam"
       />,
     );
-    await userEvent.selectOptions(screen.getByLabelText('Kind of action'), 'Call');
+    await userEvent.click(screen.getByRole('radio', { name: 'Call' }));
     await userEvent.click(screen.getByRole('button', { name: 'Call' }));
     expect(onSubmit).toHaveBeenLastCalledWith('<call with="Mara Quill" status="ringing"/>');
   });

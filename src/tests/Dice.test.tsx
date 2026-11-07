@@ -179,7 +179,7 @@ describe('Roll dice in the composer', () => {
     expect(screen.queryByRole('option', { name: 'Roll dice' })).toBeNull();
 
     rerender(<Composer {...props} dice />);
-    await userEvent.selectOptions(screen.getByLabelText('Kind of action'), 'Roll dice');
+    await userEvent.click(screen.getByRole('radio', { name: 'Roll dice' }));
     const dice = screen.getByLabelText('Dice');
     expect(dice).toHaveValue('1d20');
     await userEvent.clear(dice);
@@ -236,7 +236,7 @@ describe('Roll dice in the composer', () => {
         diceRules={{ dice: '3d6', noStats: true }}
       />,
     );
-    await userEvent.selectOptions(screen.getByLabelText('Kind of action'), 'Roll dice');
+    await userEvent.click(screen.getByRole('radio', { name: 'Roll dice' }));
     expect(screen.getByLabelText('Dice')).toHaveValue('3d6');
     expect(screen.queryByLabelText('With')).toBeNull();
   });
