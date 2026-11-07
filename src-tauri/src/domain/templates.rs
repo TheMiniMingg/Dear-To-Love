@@ -409,7 +409,10 @@ mod tests {
             .base_state
             .narration;
         assert!(plain.message_cards);
-        assert!(plain.scene_headings, "new stories head new places and times");
+        assert!(
+            plain.scene_headings,
+            "new stories head new places and times"
+        );
         assert_eq!(plain.genres, ["Mystery", "Romance", "Slice of life"]);
         input.story_type = Some("Romance".into());
         let n = cat
