@@ -407,13 +407,16 @@ export function SettingsScreen() {
             onCancel={() => setEditing(null)}
             onSaved={(p) => {
               setEditing(null);
-              setReload((n) => n + 1);
-              // Only once the current choices are known.
-              if (editing !== 'new' || !connections) return;
-              // The first connection of each kind is put to use.
-              if (makesPictures(p)) {
-                if (pictureMaker === null) void choosePictures(p.id);
-              } else if (active === null) void choose(p.id);
+              // The first connection of each kind is put to use (only once the
+              // current choices are known), and the lists reload after that, so
+              // a reload that started first can't bring back the old choice.
+              const first =
+                editing === 'new' && connections
+                  ? makesPictures(p)
+                    ? pictureMaker === null && (() => choosePictures(p.id))
+                    : active === null && (() => choose(p.id))
+                  : false;
+              void (first ? first() : Promise.resolve()).then(() => setReload((n) => n + 1));
             }}
           />
         </Dialog>
