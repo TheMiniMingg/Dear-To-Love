@@ -65,8 +65,12 @@ They never appear in the database, logs, exports, backups or support reports.
 Models do not remember anything between requests. For every reply the app builds the request
 again, in this order:
 
-1. **The narration contract**: who the player controls, the style, point of view, length,
-   pacing, tone, other characters' inner thoughts and the story language.
+1. **The narration contract**: who the player controls (only you decide what your character
+   does, says, thinks and feels), that the storyteller plays everyone else from their own
+   personality and goals rather than a script, that the world carries on across chapters
+   with lasting consequences, that a chapter can cover a night or months, and the style,
+   point of view, length, pacing, tone, other characters' inner thoughts and the story
+   language.
 2. **MESSAGES**: how to write texts, calls, letters and posts so the reader can show them as
    cards, when that is switched on.
 3. **DICE**: how to ask for a roll and set its odds, when dice are on.
