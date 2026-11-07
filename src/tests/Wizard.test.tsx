@@ -190,6 +190,24 @@ function lastCall(cmd: string): Record<string, unknown> | undefined {
   return calls[calls.length - 1]?.[1] as Record<string, unknown> | undefined;
 }
 
+/** Opens a folded "More options" section if it is closed; -1 picks the last. */
+async function unfold(label = 'More options', index = 0, scope: HTMLElement = document.body) {
+  const all = [...scope.querySelectorAll<HTMLDetailsElement>('details.more-options')].filter((d) =>
+    d.querySelector('summary')?.textContent?.startsWith(label),
+  );
+  const d = all.at(index);
+  if (!d) throw new Error(`no "${label}" section`);
+  if (!d.open) await userEvent.click(d.querySelector('summary')!);
+  return d;
+}
+
+/** Picks an entry from a type-or-pick field's list, opened with its button. */
+async function pick(label: string, option: string) {
+  await userEvent.click(screen.getByRole('button', { name: `Choices for ${label}` }));
+  const list = screen.getByRole('listbox', { name: label });
+  await userEvent.click(within(list).getByRole('option', { name: option }));
+}
+
 describe('Create a story', () => {
   beforeEach(() => {
     saved = null;
@@ -266,16 +284,22 @@ describe('Create a story', () => {
 
   it('Guided: a whole story from presets without typing', async () => {
     render(<CreateWizardScreen />);
+    await userEvent.click(await screen.findByRole('radio', { name: 'Guided' }));
     const world = await screen.findByRole('combobox', { name: 'Start from a world' });
+    expect(world).toHaveDisplayValue('Harbor Town');
     // Arrow keys move through presets.
     world.focus();
     await userEvent.keyboard('{ArrowRight}');
     expect(world).toHaveDisplayValue('Meridian Station');
-    expect(screen.getByRole('combobox', { name: 'Setting' })).toHaveDisplayValue('Meridian');
+    expect(screen.getByRole('combobox', { name: 'Setting' })).toHaveValue('Meridian');
 
     await userEvent.click(screen.getByRole('button', { name: 'Next' }));
     const who = await screen.findByRole('combobox', { name: 'Start from a character' });
     await userEvent.selectOptions(who, 'starter:detective');
+    // The preset's personality is filled in, so its section starts open.
+    expect((await unfold()).querySelector('summary')).toHaveTextContent(
+      'More options · 1 filled in',
+    );
     await userEvent.selectOptions(
       screen.getByRole('combobox', { name: 'Add to personality from the list' }),
       'kind',
@@ -289,7 +313,6 @@ describe('Create a story', () => {
     ).toBeTruthy();
     await userEvent.selectOptions(scenario, 'starter:night');
     await userEvent.click(screen.getByRole('checkbox', { name: /Sam/ }));
-    expect(screen.queryByRole('textbox')).toBeNull();
 
     await userEvent.click(screen.getByRole('button', { name: '6. Review' }));
     expect(await screen.findByLabelText('Story summary')).toHaveTextContent('Night Shift');
@@ -304,22 +327,34 @@ describe('Create a story', () => {
     expect(useUiStore.getState().screen).toEqual({ name: 'reader', routeId: 'route-9' });
   });
 
-  it('T23: arrows, the menu and typing set the same field', async () => {
+  it('T23: arrows, the list and typing set the same field', async () => {
     render(<CreateWizardScreen />);
     await userEvent.click(await screen.findByRole('button', { name: '2. You' }));
     const pronouns = await screen.findByRole('combobox', { name: 'Pronouns' });
-    await userEvent.selectOptions(pronouns, 'he/him');
-    await userEvent.click(screen.getByRole('radio', { name: 'Custom' }));
-    const typed = screen.getByRole('textbox', { name: 'Pronouns' });
-    expect(typed).toHaveValue('he/him');
-    await userEvent.clear(typed);
-    await userEvent.type(typed, 'xe/xem');
-    await userEvent.click(screen.getByRole('radio', { name: 'Guided' }));
-    expect(screen.getByRole('combobox', { name: 'Pronouns' })).toHaveDisplayValue(
-      'Your own: xe/xem',
-    );
+    expect(pronouns).toHaveValue('');
+    // Arrow keys open the list and Enter picks.
+    pronouns.focus();
+    await userEvent.keyboard('{ArrowDown}{ArrowDown}{Enter}');
+    expect(pronouns).toHaveValue('he/him');
+    // The list, opened with its button.
+    await pick('Pronouns', 'they/them');
+    expect(pronouns).toHaveValue('they/them');
+    // Any choice can be cleared again.
+    await userEvent.click(screen.getByRole('button', { name: 'Clear Pronouns' }));
+    expect(pronouns).toHaveValue('');
+    // Typing narrows the list, or writes your own.
+    await userEvent.type(pronouns, 'him');
+    expect(
+      within(screen.getByRole('listbox', { name: 'Pronouns' }))
+        .getAllByRole('option')
+        .map((o) => o.textContent),
+    ).toEqual(['he/him']);
+    await userEvent.clear(pronouns);
+    await userEvent.type(pronouns, 'xe/xem');
     await userEvent.click(screen.getByRole('button', { name: '6. Review' }));
     expect(await screen.findByLabelText('Story summary')).toHaveTextContent('(xe/xem)');
+    await userEvent.click(screen.getByRole('button', { name: 'Create story' }));
+    expect((lastCall('create_story')?.draft as CreateStoryDraft).player.pronouns).toBe('xe/xem');
   });
 
   it('T28: saves as you go and picks up where you left off', async () => {
@@ -346,24 +381,34 @@ describe('Create a story', () => {
     expect(saved).toBeNull();
   });
 
-  it('Custom: no presets, every field written from empty', async () => {
+  it('Custom comes first, starts blank, and every field is written from empty', async () => {
     render(<CreateWizardScreen />);
-    await screen.findByRole('combobox', { name: 'Start from a world' });
-    await userEvent.click(screen.getByRole('radio', { name: 'Custom' }));
+    expect(await screen.findByRole('heading', { level: 1 })).toHaveTextContent('Custom Story');
+    expect(await screen.findByRole('radio', { name: 'Custom' })).toBeChecked();
     expect(screen.queryByRole('combobox', { name: 'Start from a world' })).toBeNull();
-    const setting = screen.getByRole('textbox', { name: /^Setting/ });
+    const setting = screen.getByRole('combobox', { name: 'Setting' });
     expect(setting).toHaveValue('');
+    expect(screen.getByRole('combobox', { name: 'Era' })).toHaveValue('');
+    const type = screen.getByRole('combobox', { name: 'Type of story' });
+    expect(type).toHaveValue('');
+    expect(screen.getByRole('switch', { name: 'RPG mode' })).not.toBeChecked();
     await userEvent.type(setting, 'A floating market');
+    await userEvent.type(type, 'Heist');
 
     await userEvent.click(screen.getByRole('button', { name: 'Next' }));
-    const name = await screen.findByRole('textbox', { name: /^Name/ });
+    const name = await screen.findByRole('combobox', { name: /^Name/ });
     expect(screen.queryByRole('combobox', { name: 'Start from a character' })).toBeNull();
     expect(name).toHaveValue('');
+    expect(screen.queryByRole('group', { name: 'Stats' })).toBeNull();
     await userEvent.type(name, 'Ivo');
+    // Age and the rest are folded away until wanted.
+    const more = await unfold();
+    expect(more.querySelector('summary')).toHaveTextContent('More options · optional');
     await userEvent.type(screen.getByRole('textbox', { name: 'Age' }), '34');
 
     await userEvent.click(screen.getByRole('button', { name: 'Next' }));
     const title = await screen.findByRole('textbox', { name: /^Title/ });
+    expect(title).toHaveValue('');
     expect(screen.queryByRole('combobox', { name: 'Start from a scenario' })).toBeNull();
     expect(screen.queryByText('Bring in a preset character')).toBeNull();
     await userEvent.type(title, 'Lanterns');
@@ -371,10 +416,23 @@ describe('Create a story', () => {
       screen.getByRole('textbox', { name: /^Starting location/ }),
       'The east pier',
     );
-    expect(screen.getByRole('textbox', { name: /^First chapter title/ })).toHaveValue('Chapter 1');
     await userEvent.click(screen.getByRole('button', { name: 'Add a character' }));
-    await userEvent.type(screen.getByRole('textbox', { name: /^Name/ }), 'Oona');
+    const oona = screen.getByRole('textbox', { name: /^Name/ });
+    await userEvent.type(oona, 'Oona');
+    await userEvent.type(screen.getByRole('textbox', { name: 'How they know you' }), 'Rival');
+    await unfold('More options', 0, oona.closest('li')!);
     await userEvent.type(screen.getByRole('textbox', { name: 'Age' }), '41');
+    await unfold('More options', -1);
+    const chapter = screen.getByRole('textbox', { name: /^First chapter title/ });
+    expect(chapter).toHaveValue('');
+    expect(chapter).toHaveAttribute('placeholder', 'Chapter 1');
+
+    await userEvent.click(screen.getByRole('button', { name: '4. Narration' }));
+    expect(await screen.findByRole('combobox', { name: 'Style' })).toHaveValue('mixed');
+    await userEvent.type(
+      screen.getByRole('textbox', { name: /^Your own style/ }),
+      'Lots of banter',
+    );
 
     await userEvent.click(screen.getByRole('button', { name: '6. Review' }));
     await userEvent.click(await screen.findByRole('button', { name: 'Create story' }));
@@ -388,37 +446,109 @@ describe('Create a story', () => {
       description: '',
       rules: [],
     });
+    expect(draft.storyType).toBe('Heist');
+    expect(draft.title).toBe('Lanterns');
     expect(draft.player).toMatchObject({ name: 'Ivo', age: '34', personality: [] });
     expect(draft.scene.location).toBe('The east pier');
     expect(draft.npcs.map((n) => [n.name, n.age])).toEqual([['Oona', '41']]);
-    expect(draft.narration.tone).toBe('');
+    expect(draft.relationships).toEqual([
+      { fromId: 'custom:npc-1', toId: '@player', label: 'Rival', status: '' },
+    ]);
+    expect(draft.firstChapterTitle).toBe('');
+    expect(draft.narration).toMatchObject({
+      tone: '',
+      style: 'mixed',
+      styleNotes: 'Lots of banter',
+    });
+    expect(draft.narration.dice).toBeUndefined();
+    expect(draft.tracking).toBeUndefined();
+  });
+
+  it('a story can begin with only a name; the rest is left open', async () => {
+    render(<CreateWizardScreen />);
+    await userEvent.click(await screen.findByRole('button', { name: '2. You' }));
+    await userEvent.type(await screen.findByRole('combobox', { name: /^Name/ }), 'Ivo');
+    await userEvent.click(screen.getByRole('button', { name: '6. Review' }));
+    const summary = await screen.findByLabelText('Story summary');
+    expect(summary).toHaveTextContent('Untitled story');
+    expect(summary).toHaveTextContent('Left open');
+    expect(summary).toHaveTextContent('Chapter 1');
+    expect(summary).toHaveTextContent('Mixed: whatever fits the moment');
+    await userEvent.click(screen.getByRole('button', { name: 'Create story' }));
+    const draft = lastCall('create_story')?.draft as CreateStoryDraft;
+    expect(draft.title).toBe('Untitled story');
+    expect(draft.world).toEqual({ era: '', setting: '', description: '', rules: [] });
+    expect(draft.scene).toEqual({ location: '', summary: '' });
+    expect(draft.player).toMatchObject({ name: 'Ivo', personality: [], goals: [] });
+    expect(draft.player.species).toBeUndefined();
+    expect(draft.player.pronouns).toBeUndefined();
+    expect(draft.npcs).toEqual([]);
+    expect(draft.storyType).toBeUndefined();
   });
 
   it('Custom before changing anything, then Guided, brings the presets back', async () => {
     render(<CreateWizardScreen />);
-    await screen.findByRole('combobox', { name: 'Start from a world' });
-    await userEvent.click(screen.getByRole('radio', { name: 'Custom' }));
-    expect(screen.getByRole('textbox', { name: /^Setting/ })).toHaveValue('');
+    expect(await screen.findByRole('combobox', { name: 'Setting' })).toHaveValue('');
     await userEvent.click(screen.getByRole('radio', { name: 'Guided' }));
     expect(screen.getByRole('combobox', { name: 'Start from a world' })).toHaveDisplayValue(
       'Harbor Town',
     );
-    expect(screen.getByRole('combobox', { name: 'Setting' })).toHaveDisplayValue('Wrenmouth');
+    expect(screen.getByRole('combobox', { name: 'Setting' })).toHaveValue('Wrenmouth');
+    // And back to Custom: blank again.
+    await userEvent.click(screen.getByRole('radio', { name: 'Custom' }));
+    expect(screen.getByRole('combobox', { name: 'Setting' })).toHaveValue('');
+  });
+
+  it('None takes back a preset world, character and opening', async () => {
+    render(<CreateWizardScreen />);
+    await userEvent.click(await screen.findByRole('radio', { name: 'Guided' }));
+    const world = await screen.findByRole('combobox', { name: 'Start from a world' });
+    await userEvent.selectOptions(world, 'None (start blank)');
+    expect(world).toHaveDisplayValue('None (start blank)');
+    expect(screen.getByRole('combobox', { name: 'Setting' })).toHaveValue('');
+    expect(screen.getByRole('combobox', { name: 'Era' })).toHaveValue('');
+
+    await userEvent.click(screen.getByRole('button', { name: 'Next' }));
+    const who = await screen.findByRole('combobox', { name: 'Start from a character' });
+    const more = await unfold();
+    expect(more.querySelector('summary')).toHaveTextContent('1 filled in');
+    await userEvent.selectOptions(who, 'None (start blank)');
+    expect(screen.getByRole('combobox', { name: /^Name/ })).toHaveValue('');
+    expect(screen.getByRole('combobox', { name: 'Pronouns' })).toHaveValue('');
+    expect(more.querySelector('summary')).toHaveTextContent('More options · optional');
+
+    await userEvent.click(screen.getByRole('button', { name: 'Next' }));
+    const scenario = await screen.findByRole('combobox', { name: 'Start from a scenario' });
+    expect(screen.getByRole('textbox', { name: /^Name/ })).toHaveValue('Mara');
+    await userEvent.selectOptions(scenario, 'None (start blank)');
+    expect(screen.getByRole('textbox', { name: /^Title/ })).toHaveValue('');
+    expect(screen.getByRole('textbox', { name: /^Starting location/ })).toHaveValue('');
+    expect(screen.queryByRole('textbox', { name: /^Name/ })).toBeNull();
+
+    await userEvent.click(screen.getByRole('button', { name: '6. Review' }));
+    await userEvent.click(await screen.findByRole('button', { name: 'Create story' }));
+    const draft = lastCall('create_story')?.draft as CreateStoryDraft;
+    expect(draft.worldTemplateId).toBeNull();
+    expect(draft.characterTemplateId).toBeNull();
+    expect(draft.scenarioTemplateId).toBeNull();
+    expect(draft.npcs).toEqual([]);
+    expect(draft.relationships).toEqual([]);
   });
 
   it('Clear all fields empties what Guided filled in', async () => {
     render(<CreateWizardScreen />);
+    await userEvent.click(await screen.findByRole('radio', { name: 'Guided' }));
     const world = await screen.findByRole('combobox', { name: 'Start from a world' });
     await userEvent.selectOptions(world, 'starter:station');
     await userEvent.click(screen.getByRole('radio', { name: 'Custom' }));
     // A preset picked in Guided carries over into Custom.
-    expect(screen.getByRole('textbox', { name: /^Setting/ })).toHaveValue('Meridian');
+    expect(screen.getByRole('combobox', { name: 'Setting' })).toHaveValue('Meridian');
     await userEvent.click(screen.getByRole('button', { name: 'Clear all fields' }));
     await userEvent.click(
       within(screen.getByRole('dialog')).getByRole('button', { name: 'Clear all fields' }),
     );
-    expect(screen.getByRole('textbox', { name: /^Setting/ })).toHaveValue('');
-    expect(screen.getByRole('textbox', { name: 'Era' })).toHaveValue('');
+    expect(screen.getByRole('combobox', { name: 'Setting' })).toHaveValue('');
+    expect(screen.getByRole('combobox', { name: 'Era' })).toHaveValue('');
     await userEvent.click(screen.getByRole('button', { name: '3. Story' }));
     expect(await screen.findByRole('textbox', { name: /^Title/ })).toHaveValue('');
   });
@@ -426,9 +556,18 @@ describe('Create a story', () => {
   it('genre, content rating, themes and limits reach the new story', async () => {
     localStorage.clear();
     render(<CreateWizardScreen />);
-    await userEvent.click(await screen.findByRole('button', { name: '4. Narration' }));
-    await userEvent.click(await screen.findByRole('checkbox', { name: 'Romance' }));
-    await userEvent.click(screen.getByRole('checkbox', { name: 'Horror' }));
+    await screen.findByRole('combobox', { name: 'Type of story' });
+    await pick('Type of story', 'Romance');
+    await userEvent.click(screen.getByRole('button', { name: '4. Narration' }));
+    await unfold('More ways to shape it');
+    await userEvent.selectOptions(
+      screen.getByRole('combobox', { name: 'Add to more genres from the list' }),
+      'Horror',
+    );
+    await userEvent.type(
+      screen.getByRole('textbox', { name: 'Add your own to more genres' }),
+      'Cozy{Enter}',
+    );
 
     // Adults only asks once whether the player is 18 or older.
     const rating = screen.getByRole('combobox', { name: 'Content rating' });
@@ -452,11 +591,12 @@ describe('Create a story', () => {
     await userEvent.type(screen.getByRole('textbox', { name: 'Hard limits' }), 'gore');
     await userEvent.click(screen.getByRole('button', { name: '6. Review' }));
     expect(await screen.findByLabelText('Story summary')).toHaveTextContent(
-      'Romance, Horror · Adults only',
+      'Romance, Horror, Cozy · Adults only',
     );
     await userEvent.click(await screen.findByRole('button', { name: 'Create story' }));
     const draft = lastCall('create_story')?.draft as CreateStoryDraft;
-    expect(draft.narration.genres).toEqual(['Romance', 'Horror']);
+    expect(draft.storyType).toBe('Romance');
+    expect(draft.narration.genres).toEqual(['Horror', 'Cozy']);
     expect(draft.narration.rating).toBe('explicit');
     expect(draft.narration.themes?.filter(Boolean)).toEqual(['slow burn', 'rivals']);
     expect(draft.narration.limits).toEqual(['gore']);
@@ -464,16 +604,18 @@ describe('Create a story', () => {
 
   it('type of story, style, thoughts, cards and language reach the new story', async () => {
     render(<CreateWizardScreen />);
-    const type = await screen.findByRole('combobox', { name: 'Type of story' });
-    await userEvent.selectOptions(type, 'Science fiction');
+    await userEvent.click(await screen.findByRole('radio', { name: 'Guided' }));
+    await screen.findByRole('combobox', { name: 'Start from a world' });
+    await pick('Type of story', 'Science fiction');
     // Only the science fiction world is offered, and it is chosen.
     const world = screen.getByRole('combobox', { name: 'Start from a world' });
     expect(world).toHaveDisplayValue('Meridian Station');
     expect(within(world).queryByRole('option', { name: 'Harbor Town' })).toBeNull();
-    await userEvent.selectOptions(type, 'School life');
+    await pick('Type of story', 'School life');
     expect(screen.getByText(/No preset world is tagged School life yet/)).toBeInTheDocument();
 
     await userEvent.click(screen.getByRole('button', { name: '4. Narration' }));
+    await unfold('More ways to shape it');
     const cards = await screen.findByRole('checkbox', {
       name: 'Show texts, calls and letters as cards',
     });
@@ -505,58 +647,118 @@ describe('Create a story', () => {
     });
   });
 
-  it('an adventure rolls dice, and the player gets stats', async () => {
+  it('RPG mode: an adventure rolls dice, and the player sets stats, bars and items', async () => {
     render(<CreateWizardScreen />);
-    const type = await screen.findByRole('combobox', { name: 'Type of story' });
-    await userEvent.selectOptions(type, 'Adventure');
+    await userEvent.click(await screen.findByRole('radio', { name: 'Guided' }));
+    await screen.findByRole('combobox', { name: 'Start from a world' });
+    await pick('Type of story', 'Adventure');
+    const rpg = screen.getByRole('switch', { name: 'RPG mode' });
+    expect(rpg).toBeChecked();
+
     await userEvent.click(screen.getByRole('button', { name: '2. You' }));
-    await userEvent.selectOptions(
-      await screen.findByRole('combobox', { name: 'Race or species' }),
-      'Lizardfolk',
-    );
     const stats = await screen.findByRole('group', { name: 'Stats' });
-    await userEvent.click(within(stats).getByRole('button', { name: 'Add a stat' }));
-    await userEvent.type(within(stats).getByLabelText('Stat 1 name'), 'Nerve');
+    expect(within(stats).getByText(/A stat is a bonus added to dice rolls/)).toBeInTheDocument();
+    // Each stat says what it is for: Strength and Fitness are not the same.
+    expect(
+      within(stats).getByRole('button', { name: /^Add Strength: Raw power/ }),
+    ).toBeInTheDocument();
+    expect(
+      within(stats).getByRole('button', { name: /^Add Fitness: Stamina and athletics/ }),
+    ).toBeInTheDocument();
+    await userEvent.click(within(stats).getByRole('button', { name: /^Add Nerve:/ }));
+    expect(within(stats).getByText(/^Courage under pressure/)).toBeInTheDocument();
+    expect(within(stats).queryByRole('button', { name: /^Add Nerve:/ })).toBeNull();
     const value = within(stats).getByLabelText('Nerve value');
     await userEvent.clear(value);
     await userEvent.type(value, '3');
+    // Health, mana and items are set up here too, starting from the usual ones.
+    expect(screen.getByLabelText('Bar 2 name')).toHaveValue('Mana');
+    await userEvent.click(
+      within(screen.getByRole('group', { name: 'Add a bar or counter' })).getByRole('button', {
+        name: '+ Stamina',
+      }),
+    );
+    await userEvent.click(screen.getByRole('button', { name: 'Add an item' }));
+    await userEvent.type(screen.getByRole('textbox', { name: 'Item 1 name' }), 'Rope');
+    await unfold();
+    await pick('Race or species', 'Lizardfolk');
 
-    await userEvent.click(screen.getByRole('button', { name: '4. Narration' }));
-    const dice = await screen.findByRole('checkbox', { name: 'Roll dice for uncertain moments' });
-    expect(dice).toBeChecked();
     await userEvent.click(screen.getByRole('button', { name: '6. Review' }));
     const summary = await screen.findByLabelText('Story summary');
     expect(summary).toHaveTextContent('Dice rolls');
     expect(summary).toHaveTextContent('Nerve 3');
+    expect(summary).toHaveTextContent('Mana 50/50');
+    expect(summary).toHaveTextContent('Stamina 100/100');
     await userEvent.click(await screen.findByRole('button', { name: 'Create story' }));
     const draft = lastCall('create_story')?.draft as CreateStoryDraft;
     expect(draft.narration.dice).toBe(true);
     expect(draft.player.stats).toEqual([{ name: 'Nerve', value: 3 }]);
     expect(draft.player.species).toBe('Lizardfolk');
+    expect(draft.tracking?.meters).toContainEqual({ name: 'Stamina', value: 100, max: 100 });
+    expect(draft.tracking?.items?.map((i) => i.name)).toEqual(['Rope']);
 
-    // Another type turns dice off again.
+    // Another type turns RPG mode off again.
     await userEvent.click(screen.getByRole('button', { name: '1. World' }));
-    await userEvent.selectOptions(
-      await screen.findByRole('combobox', { name: 'Type of story' }),
-      'Romance',
-    );
-    await userEvent.click(screen.getByRole('button', { name: '4. Narration' }));
+    await screen.findByRole('combobox', { name: 'Type of story' });
+    await pick('Type of story', 'Romance');
+    expect(screen.getByRole('switch', { name: 'RPG mode' })).not.toBeChecked();
+  });
+
+  it('RPG mode in Custom starts empty, and switched off leaves no numbers', async () => {
+    render(<CreateWizardScreen />);
+    await userEvent.click(await screen.findByRole('switch', { name: 'RPG mode' }));
+    expect(screen.getByText(/^On: you set your stats/)).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: '2. You' }));
+    const stats = await screen.findByRole('group', { name: 'Stats' });
+    expect(within(stats).queryByRole('spinbutton')).toBeNull();
+    // In RPG mode, bars and items are simply there, without a box to turn them on.
     expect(
-      await screen.findByRole('checkbox', { name: 'Roll dice for uncertain moments' }),
-    ).not.toBeChecked();
+      screen.queryByRole('checkbox', { name: 'Keep track of health, items and more' }),
+    ).toBeNull();
+    await userEvent.click(within(stats).getByRole('button', { name: '+ Your own' }));
+    await userEvent.type(within(stats).getByLabelText('Stat 1 name'), 'Cooking');
+    expect(screen.queryByRole('spinbutton', { name: /now$/ })).toBeNull();
+    await userEvent.click(
+      within(screen.getByRole('group', { name: 'Add a bar or counter' })).getByRole('button', {
+        name: '+ Health',
+      }),
+    );
+    await userEvent.click(screen.getByRole('button', { name: '6. Review' }));
+    const summary = await screen.findByLabelText('Story summary');
+    expect(summary).toHaveTextContent('Cooking 1');
+    expect(summary).toHaveTextContent('Health 100/100');
+
+    await userEvent.click(screen.getByRole('button', { name: '1. World' }));
+    await userEvent.click(await screen.findByRole('switch', { name: 'RPG mode' }));
+    await userEvent.click(screen.getByRole('button', { name: '2. You' }));
+    await screen.findByRole('combobox', { name: /^Name/ });
+    expect(screen.queryByRole('group', { name: 'Stats' })).toBeNull();
+    await userEvent.click(screen.getByRole('button', { name: '6. Review' }));
+    expect(await screen.findByLabelText('Story summary')).not.toHaveTextContent('Cooking');
+    await userEvent.click(screen.getByRole('button', { name: 'Create story' }));
+    const draft = lastCall('create_story')?.draft as CreateStoryDraft;
+    expect(draft.narration.dice).toBeUndefined();
+    expect(draft.player.stats).toBeUndefined();
+    expect(draft.tracking).toBeUndefined();
   });
 
   it('shows an example of each style and sets every feature, down to the dice', async () => {
     render(<CreateWizardScreen />);
-    await userEvent.selectOptions(
-      await screen.findByRole('combobox', { name: 'Type of story' }),
-      'Adventure',
-    );
-    await userEvent.click(screen.getByRole('button', { name: '4. Narration' }));
-    await userEvent.selectOptions(await screen.findByRole('combobox', { name: 'Style' }), 'script');
-    const example = screen.getByRole('figure', { name: 'Example of this style' });
+    // Mixed is the usual way: narration, talk, a thought and a text, each where it fits.
+    await userEvent.click(await screen.findByRole('button', { name: '4. Narration' }));
+    const style = await screen.findByRole('combobox', { name: 'Style' });
+    expect(style).toHaveValue('mixed');
+    let example = screen.getByRole('figure', { name: 'Example of this style' });
+    expect(within(example).getByText(/They actually came back/)).toBeInTheDocument();
+    expect(within(example).getByText(/did you make it/)).toBeInTheDocument();
+    expect(screen.queryByText(/A starting point, not a rule/)).toBeNull();
+    await userEvent.selectOptions(style, 'script');
+    // Any other style is where it starts, not a lock.
+    expect(screen.getByText(/A starting point, not a rule/)).toBeInTheDocument();
+    example = screen.getByRole('figure', { name: 'Example of this style' });
     expect(within(example).getByText('Theo:', { selector: 'strong' })).toBeInTheDocument();
     expect(within(example).getByRole('heading', { name: 'Café Lumen — Friday, 7:14 AM' }));
+    await unfold('More ways to shape it');
     await userEvent.selectOptions(screen.getByRole('combobox', { name: 'Tense' }), 'past');
     await userEvent.click(
       screen.getByRole('checkbox', { name: 'Let the storyteller add your small reactions' }),
@@ -568,6 +770,11 @@ describe('Create a story', () => {
       screen.getByRole('combobox', { name: 'Twists and surprises' }),
       'off',
     );
+    expect(screen.queryByRole('checkbox', { name: 'Roll dice for uncertain moments' })).toBeNull();
+
+    // Dice settings sit with RPG mode.
+    await userEvent.click(screen.getByRole('button', { name: '1. World' }));
+    await userEvent.click(await screen.findByRole('switch', { name: 'RPG mode' }));
     await userEvent.click(screen.getByText('Dice settings'));
     await userEvent.selectOptions(
       screen.getByRole('combobox', { name: 'Who asks for rolls' }),
@@ -621,16 +828,17 @@ describe('Create a story', () => {
 
     // A picture added here belongs to this story only.
     await userEvent.click(await screen.findByRole('button', { name: /Choose Your portrait/ }));
+    expect(screen.getByText(/"Your library" shares it with every story/)).toBeInTheDocument();
     openDialog.mockResolvedValue(['/p/me.png']);
-    await userEvent.click(screen.getByRole('button', { name: 'Add for this story' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Add for this story only' }));
     expect(invoke).toHaveBeenCalledWith('import_images', {
       paths: ['/p/me.png'],
       scope: { newStory: true },
     });
-    const own = await screen.findByRole('list', { name: "This story's pictures" });
+    const own = await screen.findByRole('list', { name: 'This story only' });
     expect(within(own).getByRole('button', { name: 'Me' })).toHaveAttribute('aria-pressed', 'true');
     expect(
-      within(screen.getByRole('list', { name: 'Pictures for all stories' })).getByRole('button', {
+      within(screen.getByRole('list', { name: 'Your library (any story)' })).getByRole('button', {
         name: 'Harbor',
       }),
     ).toBeTruthy();
@@ -664,6 +872,7 @@ describe('Create a story', () => {
 
   it('a portrait made from the description belongs to the new story', async () => {
     render(<CreateWizardScreen />);
+    await userEvent.click(await screen.findByRole('radio', { name: 'Guided' }));
     await userEvent.click(await screen.findByRole('button', { name: '5. Pictures' }));
     await screen.findByRole('heading', { name: 'Pictures and storyteller' });
     // Picture connections never write replies.
@@ -676,7 +885,7 @@ describe('Create a story', () => {
     const input = lastCall('make_portrait')?.input as Record<string, unknown>;
     expect(input).toMatchObject({ newStory: true, style: 'painted' });
     expect(input.storyId).toBeUndefined();
-    const own = await screen.findByRole('list', { name: "This story's pictures" });
+    const own = await screen.findByRole('list', { name: 'This story only' });
     expect(within(own).getByRole('button', { name: 'Portrait of Juno' })).toHaveAttribute(
       'aria-pressed',
       'true',

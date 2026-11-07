@@ -59,7 +59,7 @@ export const SHORTCUT_GROUPS: { title: string; items: Shortcut[] }[] = [
   {
     title: msg('In the library'),
     items: [
-      { id: 'newStory', keys: ['Mod+N'], label: msg('New story') },
+      { id: 'newStory', keys: ['Mod+N'], label: msg('Preset Story') },
       { id: 'moveStories', keys: ['ArrowUp', 'ArrowDown'], label: msg('Move between stories') },
     ],
   },

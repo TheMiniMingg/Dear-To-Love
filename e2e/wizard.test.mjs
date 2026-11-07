@@ -1,5 +1,6 @@
 // M6 + T28 in the real app: create a story in Guided mode with the keyboard
-// only (no typing), close the app halfway, reopen and finish.
+// only (no typing), close the app halfway, reopen and finish. Custom Story
+// opens in Custom mode, blank, and Guided is one arrow key away.
 import { after, test } from 'node:test';
 import assert from 'node:assert/strict';
 import { launch, makeDataDir, tabTo, textOf, waitForReply, waitForText } from './harness.mjs';
@@ -21,12 +22,17 @@ test('guided creation survives a restart', async () => {
   let b = session.browser;
 
   await waitForText(b, 'main', 'No stories yet');
-  await tabTo(b, 'Create your own');
+  await tabTo(b, 'Custom Story');
   await b.keys(['Enter']);
   await waitForText(b, 'main', 'Where does it take place?');
+  // Custom comes first and starts blank; arrow over to Guided for presets.
+  assert.doesNotMatch(await textOf(b, 'main'), /Start from a world/);
+  await tabTo(b, /-mode-custom\|/);
+  await b.keys(['ArrowRight']);
+  await waitForText(b, 'main', 'Start from a world');
 
   // Left/Right on a picker cycles presets.
-  await tabTo(b, /-select\|\|Harbor Town/);
+  await tabTo(b, /-select\|\|None \(start blank\)Harbor Town/);
   await b.keys(['ArrowRight']);
   assert.equal(await selected(b, 'Start from a world'), 'The Glass Orchard');
 
@@ -46,7 +52,7 @@ test('guided creation survives a restart', async () => {
   session = await launch(dataDir);
   b = session.browser;
   await waitForText(b, 'main', 'No stories yet');
-  await tabTo(b, 'Create your own');
+  await tabTo(b, 'Custom Story');
   await b.keys(['Enter']);
   await waitForText(b, 'main', 'Picked up your unfinished story');
   await waitForText(b, 'main', 'How does it begin?');
@@ -67,7 +73,7 @@ test('guided creation survives a restart', async () => {
   await tabTo(b, 'Back to library');
   await b.keys(['Enter']);
   await waitForText(b, 'main', 'The Memory Harvest');
-  await tabTo(b, 'Create your own');
+  await tabTo(b, 'Custom Story');
   await b.keys(['Enter']);
   await waitForText(b, 'main', 'Where does it take place?');
   assert.doesNotMatch(await textOf(b, 'main'), /Picked up your unfinished story/);

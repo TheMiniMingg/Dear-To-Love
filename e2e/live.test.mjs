@@ -53,7 +53,7 @@ test('live storyteller: stream a reply, retry a failure', async () => {
   await waitForText(b, 'main', 'is available');
 
   await (await b.$('button=Back')).click();
-  await tabTo(b, 'New story');
+  await tabTo(b, 'Preset Story');
   await b.keys(['Enter']);
   await tabTo(b, 'Start story');
   await b.keys(['Enter']);

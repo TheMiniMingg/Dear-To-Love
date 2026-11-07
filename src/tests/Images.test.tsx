@@ -82,7 +82,7 @@ describe('Images screen', () => {
     });
     openDialog.mockResolvedValue(['/p/harbor.png', '/p/mara-copy.png', '/p/notes.txt']);
     render(<ImagesScreen />);
-    await screen.findByRole('list', { name: 'For all stories' });
+    await screen.findByRole('list', { name: 'Your library (any story)' });
     await userEvent.click(screen.getByRole('button', { name: 'Add images' }));
 
     expect(invoke).toHaveBeenCalledWith('import_images', {
@@ -166,7 +166,7 @@ describe('Pictures for one story or all', () => {
       throw { code: 'NOT_FOUND', message: cmd };
     });
     render(<ImagesScreen />);
-    const shared = await screen.findByRole('list', { name: 'For all stories' });
+    const shared = await screen.findByRole('list', { name: 'Your library (any story)' });
     expect(within(shared).getByRole('button', { name: 'Harbor at dusk' })).toBeTruthy();
     const mine = screen.getByRole('list', { name: 'Only in “The Unsigned Letter”' });
     expect(within(mine).getByRole('button', { name: 'Lamp room' })).toBeTruthy();
