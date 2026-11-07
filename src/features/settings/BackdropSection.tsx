@@ -15,7 +15,12 @@ export function BackdropSection() {
   const update = useBackdrop((s) => s.update);
   const [choosing, setChoosing] = useState(false);
   return (
-    <section className="settings-section" aria-labelledby={`${id}-title`}>
+    <section
+      id="settings-backdrop"
+      className="settings-section"
+      tabIndex={-1}
+      aria-labelledby={`${id}-title`}
+    >
       <h2 id={`${id}-title`}>{t('Background picture')}</h2>
       <p className="muted">
         {t(

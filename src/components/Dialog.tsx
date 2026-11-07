@@ -47,6 +47,27 @@ export function Dialog({
     };
   }, [initialFocusId]);
 
+  // A focused button that is turned off while busy, or taken away, leaves
+  // the focus on the page itself, outside the dialog. Escape still closes
+  // the top dialog then.
+  const close = useRef(onClose);
+  useEffect(() => {
+    close.current = onClose;
+  });
+  useEffect(() => {
+    const onPageKey = (e: globalThis.KeyboardEvent) => {
+      const root = ref.current;
+      if (e.key !== 'Escape' || e.defaultPrevented || !root) return;
+      if (e.target !== document.body && e.target !== document.documentElement) return;
+      const open = document.querySelectorAll('[role="dialog"]');
+      if (open[open.length - 1] !== root) return;
+      e.preventDefault();
+      close.current();
+    };
+    document.addEventListener('keydown', onPageKey);
+    return () => document.removeEventListener('keydown', onPageKey);
+  }, []);
+
   const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
     if (e.key === 'Escape') {
       e.stopPropagation();

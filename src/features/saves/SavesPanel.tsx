@@ -20,6 +20,52 @@ const TYPE_LABEL: Record<string, string> = {
   auto: msg('Autosave'),
 };
 
+/** How many autosaves a story keeps (`AUTO_SLOTS` in the backend). */
+const AUTO_KEPT = 5;
+
+function SaveRow({
+  s,
+  onView,
+  onResume,
+  onRemove,
+}: {
+  s: SaveDto;
+  onView: (saveId: string) => void;
+  onResume: (saveId: string) => void;
+  onRemove: (s: SaveDto) => void;
+}) {
+  return (
+    <li className="item-row">
+      <div>
+        <strong>{saveName(s.label)}</strong>
+        <div className="muted small">
+          {t(TYPE_LABEL[s.saveType] ?? s.saveType)} · {routeName(s.routeLabel)} ·{' '}
+          {formatWhen(s.updatedAt)}
+          {s.isRouteHead ? ` · ${t('latest on its route')}` : ''}
+        </div>
+      </div>
+      <div className="button-row">
+        <button type="button" onClick={() => onView(s.id)}>
+          {t('View')}
+        </button>
+        <button type="button" onClick={() => onResume(s.id)}>
+          {s.isRouteHead ? t('Continue') : t('Continue as new branch')}
+        </button>
+        {s.saveType !== 'auto' && (
+          <button
+            type="button"
+            className="danger-link"
+            aria-label={t('Delete save {name}', { name: s.label })}
+            onClick={() => onRemove(s)}
+          >
+            {t('Delete')}
+          </button>
+        )}
+      </div>
+    </li>
+  );
+}
+
 export function SavesPanel({
   storyId,
   routeId,
@@ -54,6 +100,9 @@ export function SavesPanel({
       setError(errorMessage(e));
     }
   };
+
+  const mine = saves?.filter((s) => s.saveType !== 'auto') ?? [];
+  const autos = saves?.filter((s) => s.saveType === 'auto') ?? [];
 
   const remove = async (s: SaveDto) => {
     try {
@@ -91,39 +140,32 @@ export function SavesPanel({
           {error}
         </p>
       )}
-      <ul className="item-list" aria-label={t('Saves')}>
-        {saves?.length === 0 && <li className="muted">{t('No saves yet.')}</li>}
-        {saves?.map((s) => (
-          <li key={s.id} className="item-row">
-            <div>
-              <strong>{saveName(s.label)}</strong>
-              <div className="muted small">
-                {t(TYPE_LABEL[s.saveType] ?? s.saveType)} · {routeName(s.routeLabel)} ·{' '}
-                {formatWhen(s.updatedAt)}
-                {s.isRouteHead ? ` · ${t('latest on its route')}` : ''}
-              </div>
-            </div>
-            <div className="button-row">
-              <button type="button" onClick={() => onView(s.id)}>
-                {t('View')}
-              </button>
-              <button type="button" onClick={() => onResume(s.id)}>
-                {s.isRouteHead ? t('Continue') : t('Continue as new branch')}
-              </button>
-              {s.saveType !== 'auto' && (
-                <button
-                  type="button"
-                  className="danger-link"
-                  aria-label={t('Delete save {name}', { name: s.label })}
-                  onClick={() => void remove(s)}
-                >
-                  {t('Delete')}
-                </button>
+      {saves?.length === 0 && <p className="muted">{t('No saves yet.')}</p>}
+      {/* Your own saves first; the automatic ones after, since they come and go. */}
+      {[mine, autos].map(
+        (list, i) =>
+          list.length > 0 && (
+            <section key={i} className="save-group" aria-labelledby={`save-group-${i}`}>
+              <h3 id={`save-group-${i}`}>{i === 0 ? t('Your saves') : t('Autosaves')}</h3>
+              {i === 1 && (
+                <p className="muted small">
+                  {t('Made after each reply; the newest {n} are kept.', { n: AUTO_KEPT })}
+                </p>
               )}
-            </div>
-          </li>
-        ))}
-      </ul>
+              <ul className="item-list" aria-label={i === 0 ? t('Your saves') : t('Autosaves')}>
+                {list.map((s) => (
+                  <SaveRow
+                    key={s.id}
+                    s={s}
+                    onView={onView}
+                    onResume={onResume}
+                    onRemove={(x) => void remove(x)}
+                  />
+                ))}
+              </ul>
+            </section>
+          ),
+      )}
     </div>
   );
 }

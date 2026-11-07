@@ -22,6 +22,7 @@ use crate::domain::story_state::{
     Character, Control, Detail, Narration, NarrationStyle, Perspective, RollFrequency, RollOdds,
     Surprises,
 };
+use crate::domain::text::short_name;
 use crate::domain::tracking::{item_key, Item, Meter};
 
 pub const MOCK_PROVIDER_LABEL: &str = "Offline storyteller";
@@ -386,9 +387,9 @@ pub fn reply(state: &EffectiveState, action: &str, turn: usize, opens_chapter: b
             n.perspective
         },
         name: player
-            .and_then(|p| p.name.split_whitespace().next())
-            .unwrap_or("You")
-            .to_string(),
+            .map(|p| short_name(&p.name))
+            .filter(|n| !n.is_empty())
+            .unwrap_or_else(|| "You".to_string()),
         pronoun: pronoun_of(player),
     };
     let flavor = flavor(state);
@@ -988,7 +989,9 @@ impl Ctx<'_> {
         }
         let mut ideas: Vec<String> = Vec::new();
         if let Some(c) = self.npc {
-            let name = c.name.split_whitespace().next().unwrap_or("them");
+            let name = Some(short_name(&c.name))
+                .filter(|n| !n.is_empty())
+                .unwrap_or_else(|| "them".to_string());
             let about = self.seed.pick(
                 &[
                     "Ask {n} what they know",
@@ -997,7 +1000,7 @@ impl Ctx<'_> {
                 ],
                 22,
             );
-            ideas.push(about.replace("{n}", name));
+            ideas.push(about.replace("{n}", &name));
         }
         let general: &[&str] = if self.is_fight() {
             &[

@@ -4,6 +4,15 @@
   "id": "starter:salvage-pilot",
   "label": "The Salvage Pilot",
   "summary": "A hotshot pilot with a talent for flying through things that should not be flown through.",
+  "suits": [
+    "starter:arclight",
+    "starter:neon-harbor",
+    "starter:vesper-city",
+    "starter:meridian-station",
+    "starter:tallow-drift",
+    "starter:dry-country",
+    "starter:aurelia-1934"
+  ],
   "character": {
     "id": "starter:salvage-pilot",
     "name": "Jonah Petrakis",

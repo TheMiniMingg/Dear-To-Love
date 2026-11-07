@@ -4,6 +4,14 @@
   "id": "starter:court-physician",
   "label": "The Court Physician",
   "summary": "Trained in herbs and poisons; the second is why she was invited.",
+  "suits": [
+    "starter:lantern-palace",
+    "starter:ashen-throne",
+    "starter:rosaline-court",
+    "starter:velvet-court",
+    "starter:nine-rivers",
+    "starter:glass-orchard"
+  ],
   "character": {
     "id": "starter:court-physician",
     "name": "Lin Wei",

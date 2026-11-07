@@ -4,6 +4,14 @@
   "id": "starter:transfer-student",
   "label": "The Transfer Student",
   "summary": "New to campus mid-year, with one suitcase and big plans.",
+  "suits": [
+    "starter:northgate",
+    "starter:saltmarsh-lyceum",
+    "starter:rosaline-court",
+    "starter:juniper-heights",
+    "starter:larkport",
+    "starter:lumen-city"
+  ],
   "character": {
     "id": "starter:transfer-student",
     "name": "Riley Song",

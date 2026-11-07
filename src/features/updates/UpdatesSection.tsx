@@ -91,7 +91,12 @@ export function UpdatesSection() {
   };
 
   return (
-    <section className="settings-section" aria-labelledby="updates-title">
+    <section
+      id="settings-updates"
+      className="settings-section"
+      tabIndex={-1}
+      aria-labelledby="updates-title"
+    >
       <h2 id="updates-title">{t('Updates')}</h2>
       <label className="check">
         <input
@@ -176,7 +181,12 @@ export function AboutSection() {
   };
 
   return (
-    <section className="settings-section" aria-labelledby="about-title">
+    <section
+      id="settings-about"
+      className="settings-section"
+      tabIndex={-1}
+      aria-labelledby="about-title"
+    >
       <h2 id="about-title">{t('About')}</h2>
       <p>
         {info ? (

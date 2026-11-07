@@ -27,7 +27,13 @@ vi.mock('@tauri-apps/plugin-dialog', () => ({
 }));
 
 import { CreateWizardScreen } from '../features/create/CreateWizardScreen';
-import { applyCharacter, applyScenario, applyWorld } from '../features/create/WizardSteps';
+import {
+  applyCharacter,
+  applyScenario,
+  applyWorld,
+  problemText,
+} from '../features/create/WizardSteps';
+import { useLanguage } from '../i18n';
 import { useUiStore } from '../app/store';
 
 const narration = { perspective: 'second', detail: 'balanced', tone: 'Warm', pacing: 'normal' };
@@ -109,6 +115,7 @@ const catalog = {
       id: 'starter:keeper',
       label: 'The Keeper',
       summary: 'New in town.',
+      suits: ['starter:harbor'],
       character: {
         id: 'starter:keeper',
         name: 'Sam',
@@ -125,6 +132,7 @@ const catalog = {
       id: 'starter:detective',
       label: 'The Detective',
       summary: 'Notices things.',
+      suits: [],
       character: {
         id: 'starter:detective',
         name: 'Rin',
@@ -819,6 +827,31 @@ describe('Create a story', () => {
     await userEvent.click(within(alert).getByRole('button', { name: 'Go to You' }));
     const heading = await screen.findByRole('heading', { name: 'Who do you play?' });
     await waitFor(() => expect(heading).toHaveFocus());
+  });
+
+  it('names the problems in the chosen language', () => {
+    // The core's English comes through unchanged in English.
+    for (const text of [
+      'Give your character a name.',
+      'Rin is also your character. Remove them from the story or choose a different character to play.',
+      'Rin must be 18 or older in an adults-only story. Change their age or remove them.',
+      'The relationship "rivals" refers to a character who is no longer in the story.',
+      'Your character\'s id "bad" must look like namespace:name.',
+      'Rin\'s id "bad" must look like namespace:name.',
+    ])
+      expect(problemText(text)).toBe(text);
+    useLanguage.getState().setChoice('ja');
+    try {
+      expect(problemText('Give your character a name.')).toBe(
+        'キャラクターに名前を付けてください。',
+      );
+      expect(problemText('Rin is in the story twice. Remove one.')).toBe(
+        'Rin がストーリーに 2 回登場しています。片方を削除してください。',
+      );
+      expect(problemText('Something new.')).toBe('Something new.');
+    } finally {
+      useLanguage.getState().setChoice('en');
+    }
   });
 
   it('pictures for this story, a portrait and a storyteller reach the new story', async () => {

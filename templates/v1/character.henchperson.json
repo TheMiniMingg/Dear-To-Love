@@ -4,6 +4,7 @@
   "id": "starter:henchperson",
   "label": "The Henchperson",
   "summary": "A henchperson with a purple jumpsuit, a ray gun and a surprising amount of common sense.",
+  "suits": ["starter:doomspire", "starter:lumen-city"],
   "character": {
     "id": "starter:henchperson",
     "name": "Gus Pemberton",

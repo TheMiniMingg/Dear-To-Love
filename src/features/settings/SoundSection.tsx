@@ -9,7 +9,12 @@ export function SoundSection() {
   const chime = useLibraryPrefs((s) => s.chime);
   const setChime = useLibraryPrefs((s) => s.setChime);
   return (
-    <section className="settings-section" aria-labelledby={`${id}-title`}>
+    <section
+      id="settings-sound"
+      className="settings-section"
+      tabIndex={-1}
+      aria-labelledby={`${id}-title`}
+    >
       <h2 id={`${id}-title`}>{t('Sound')}</h2>
       <p className="muted">{t('What the app plays on this computer.')}</p>
       <div className="field">

@@ -4,6 +4,14 @@
   "id": "starter:disciple",
   "label": "The Wandering Disciple",
   "summary": "A young martial artist who left their sect to see the world, with a sword they have not yet earned.",
+  "suits": [
+    "starter:nine-rivers",
+    "starter:lantern-palace",
+    "starter:ember-road",
+    "starter:greywatch",
+    "starter:underhalls",
+    "starter:shattered-main"
+  ],
   "character": {
     "id": "starter:disciple",
     "name": "Lan Shuo",

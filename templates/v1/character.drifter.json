@@ -4,6 +4,15 @@
   "id": "starter:drifter",
   "label": "The Drifter",
   "summary": "Rides into every town alone and leaves the same way.",
+  "suits": [
+    "starter:dust-creek",
+    "starter:dry-country",
+    "starter:ember-road",
+    "starter:calder-falls",
+    "starter:hollow-pines",
+    "starter:brackwater",
+    "starter:juniper-heights"
+  ],
   "character": {
     "id": "starter:drifter",
     "name": "Hollis Grey",

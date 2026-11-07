@@ -93,9 +93,12 @@ describe('story shortcuts', () => {
     // Another window is open, so Ctrl+G waits.
     await userEvent.keyboard('{Control>}g{/Control}');
     expect(screen.queryByRole('dialog', { name: 'Routes' })).toBeNull();
+    // Opened with its key, the window closes back to the story.
+    await userEvent.keyboard('{Escape}');
+    expect(screen.queryByRole('dialog')).toBeNull();
     await userEvent.keyboard('{Escape}');
     expect(screen.getByRole('dialog', { name: 'Paused' })).toBeInTheDocument();
-    // From the pause menu, a shortcut goes straight to its window.
+    // From the pause menu, a shortcut goes straight to its window, and back.
     await userEvent.keyboard('{Control>}g{/Control}');
     expect(screen.getByRole('dialog', { name: 'Routes' })).toBeInTheDocument();
     fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Close' }));
