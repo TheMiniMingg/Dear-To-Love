@@ -268,6 +268,15 @@ Also in **Narration** (wizard and Story details):
   For example `<text from="Erika K." time="7:11 PM">Is that really you?</text>` becomes a text
   bubble from Erika K. Any model that follows instructions can do this; the offline storyteller
   answers your own texts and calls.
+- **Texts that read like texts**: with cards on, the storyteller is asked to write each
+  character's texts the way that person would (short, casual, often several in a row, with
+  emoji, slang or lowercase only when it suits them), to make calls sound like real speech,
+  and to let characters text or call first when they have a reason. A character with a
+  portrait shows it as their picture on the card.
+- **Show a heading when the place or time changes** (on for new stories): the storyteller
+  starts a new place or time with `<scene place="Countryside" time="7:11 PM"/>`, which the
+  reader shows as a heading, "Countryside — 7:11 PM", and exports write as
+  `[Countryside, 7:11 PM]`.
 - **Story language**: the language the story is written in, whatever language you type in.
   Summaries and chapter recaps follow it too. New stories start with the app's language
   (Settings → Language) when it is Chinese, Japanese or Korean. Not set, most models answer in

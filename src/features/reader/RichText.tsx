@@ -1,7 +1,9 @@
-import type { ReactNode } from 'react';
+import { useContext, type ReactNode } from 'react';
 import type { RollRequest } from '../../types';
+import { Thumb } from '../images/ImageGrid';
 import { RollAsk, RollResult } from './DiceCards';
 import { parseBlocks, rollRequestOf, samePerson, type Block } from './messages';
+import { PortraitsContext } from './portraits';
 import { msg, t } from '../../i18n';
 
 type Tagged = Exclude<Block, { kind: 'prose' }>;
@@ -59,6 +61,8 @@ export function Prose({ text }: { text: string }) {
 }
 
 function Avatar({ name }: { name: string }) {
+  const portrait = useContext(PortraitsContext)(name);
+  if (portrait) return <Thumb assetId={portrait} alt="" className="msg-avatar" />;
   const initial = [...name.trim()][0]?.toUpperCase() ?? '?';
   return (
     <span className="msg-avatar" aria-hidden="true">
@@ -253,6 +257,14 @@ export function RichText({
             }}
           />
         );
+      }
+      case 'scene': {
+        const heading = [a.place, a.time].filter(Boolean).join(' — ');
+        return heading ? (
+          <p key={key} className="msg-scene" role="heading" aria-level={3}>
+            {heading}
+          </p>
+        ) : null;
       }
       case 'text':
         return null;

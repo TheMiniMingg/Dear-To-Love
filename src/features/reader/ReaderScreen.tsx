@@ -38,6 +38,7 @@ import { StoryDetailsPanel } from './StoryDetailsPanel';
 import { StoryMemoryPanel } from './StoryMemoryPanel';
 import { StorytellerPanel } from './StorytellerPanel';
 import { plainText } from './messages';
+import { PortraitsContext, portraitFinder } from './portraits';
 import { intlLocale, joinSentences, msg, t, tKnown, tr } from '../../i18n';
 import { chapterHasTitle, routeName, saveName } from '../../i18n/names';
 
@@ -478,6 +479,7 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
   const chapter = view.state.activeChapter;
   const player = view.state.state.characters[view.state.state.playerCharacterId];
   const events = viewing ? viewing.history : view.history;
+  const portraitOf = portraitFinder(view);
 
   return (
     <section
@@ -601,35 +603,37 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
       {!viewing && <ScenePictures view={view} events={events} draft={stream?.text} />}
 
       <div ref={narrativeHost} className="reader-body">
-        <NarrativeView
-          events={events}
-          draft={viewing ? null : stream}
-          playerName={player?.name ?? t('You')}
-          onBranch={viewing ? undefined : (id) => void branchFrom(id)}
-          onRegenerate={viewing || writing || busy ? undefined : openRegenerate}
-          onEditAction={
-            viewing || writing || busy
-              ? undefined
-              : (id) => openEdit(view.history.find((x) => x.id === id))
-          }
-          onBookmark={viewing ? undefined : (id) => void toggleBookmark(id)}
-          bookmarked={viewing ? undefined : bookmarked}
-          focus={viewing ? null : focus}
-          onRoll={
-            viewing || busy || writing || awaitingReply
-              ? undefined
-              : (req) => void send('', req, false)
-          }
-          intro={
-            viewing
-              ? undefined
-              : {
-                  premise: view.story.description,
-                  location: view.state.state.scene.location,
-                  scene: view.state.state.scene.summary,
-                }
-          }
-        />
+        <PortraitsContext.Provider value={portraitOf}>
+          <NarrativeView
+            events={events}
+            draft={viewing ? null : stream}
+            playerName={player?.name ?? t('You')}
+            onBranch={viewing ? undefined : (id) => void branchFrom(id)}
+            onRegenerate={viewing || writing || busy ? undefined : openRegenerate}
+            onEditAction={
+              viewing || writing || busy
+                ? undefined
+                : (id) => openEdit(view.history.find((x) => x.id === id))
+            }
+            onBookmark={viewing ? undefined : (id) => void toggleBookmark(id)}
+            bookmarked={viewing ? undefined : bookmarked}
+            focus={viewing ? null : focus}
+            onRoll={
+              viewing || busy || writing || awaitingReply
+                ? undefined
+                : (req) => void send('', req, false)
+            }
+            intro={
+              viewing
+                ? undefined
+                : {
+                    premise: view.story.description,
+                    location: view.state.state.scene.location,
+                    scene: view.state.state.scene.summary,
+                  }
+            }
+          />
+        </PortraitsContext.Provider>
         <ReaderRail />
       </div>
 

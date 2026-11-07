@@ -2,7 +2,8 @@
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
-import { parseBlocks, samePerson, wrapAction } from '../features/reader/messages';
+import { parseBlocks, plainText, samePerson, wrapAction } from '../features/reader/messages';
+import { PortraitsContext } from '../features/reader/portraits';
 import { RichText } from '../features/reader/RichText';
 import { Composer } from '../features/reader/Composer';
 
@@ -103,6 +104,34 @@ describe('RichText', () => {
     );
     expect(screen.getByRole('figure', { name: 'Letter from A friend' })).toHaveTextContent(
       'Meet me at the pier.',
+    );
+  });
+
+  it('heads a new place and time, and shows a portrait as the avatar', () => {
+    render(
+      <PortraitsContext.Provider value={(name) => (samePerson(name, 'Erika K.') ? 'pic-1' : null)}>
+        <RichText
+          playerName="Sam"
+          text={
+            '<scene place="Countryside" time="7:11 PM"/>\nYour phone vibrates.\n' +
+            '<text from="Erika K." time="7:11 PM">Z...?</text>\n<scene time="Midnight"/>' +
+            '<call with="Mara" status="missed"/>'
+          }
+        />
+      </PortraitsContext.Provider>,
+    );
+    expect(screen.getByRole('heading', { name: 'Countryside — 7:11 PM' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Midnight' })).toBeInTheDocument();
+    const phone = screen.getByRole('group', { name: 'Text messages with Erika K.' });
+    expect(phone.querySelector('img.msg-avatar')).toHaveAttribute(
+      'src',
+      expect.stringContaining('pic-1'),
+    );
+    const call = screen.getByRole('group', { name: 'Call with Mara' });
+    expect(call.querySelector('img')).toBeNull();
+    expect(within(call).getByText('M')).toHaveClass('msg-avatar');
+    expect(plainText('<scene place="Countryside" time="7:11 PM"/>Hi')).toBe(
+      '[Countryside, 7:11 PM]Hi',
     );
   });
 

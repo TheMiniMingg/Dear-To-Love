@@ -1,6 +1,7 @@
 /**
  * Message tags the storyteller (and the composer) write into story text:
- * texts, calls, inner thoughts, letters, posts and dice rolls. The reader
+ * texts, calls, inner thoughts, letters, posts, dice rolls and scene
+ * headings. The reader
  * shows them as cards; anything else is prose. Mirrors `plain_message_tags`
  * in Rust.
  */
@@ -8,7 +9,7 @@ import type { RollRequest } from '../../types';
 import { t } from '../../i18n';
 import { plainStoryText } from '../../i18n/names';
 
-export type MessageTag = 'text' | 'call' | 'thought' | 'letter' | 'post' | 'roll';
+export type MessageTag = 'text' | 'call' | 'thought' | 'letter' | 'post' | 'roll' | 'scene';
 
 export type Block =
   | { kind: 'prose'; text: string }
@@ -20,7 +21,7 @@ export type Block =
       open: boolean;
     };
 
-const TAGS: MessageTag[] = ['text', 'call', 'thought', 'letter', 'post', 'roll'];
+const TAGS: MessageTag[] = ['text', 'call', 'thought', 'letter', 'post', 'roll', 'scene'];
 
 function parseAttrs(head: string): Record<string, string> {
   const out: Record<string, string> = {};
@@ -115,6 +116,9 @@ function plainLabel(kind: MessageTag, a: Record<string, string>): string {
     }
     case 'post':
       label = a.from ? `Post by ${a.from}` : 'Post';
+      break;
+    case 'scene':
+      label = a.place || 'Scene';
       break;
   }
   return a.time ? `${label}, ${a.time}` : label;

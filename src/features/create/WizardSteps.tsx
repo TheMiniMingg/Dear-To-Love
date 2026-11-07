@@ -86,7 +86,9 @@ export function applyWorld(
         world: copy(tpl.world),
         narration: {
           ...copy(tpl.narration),
-          ...(current ? tellingOf(current) : { messageCards: true, language: appStoryLanguage() }),
+          ...(current
+            ? tellingOf(current)
+            : { messageCards: true, sceneHeadings: true, language: appStoryLanguage() }),
         },
       }
     : { worldTemplateId: null };
@@ -136,6 +138,7 @@ export function blankDraft(d: CreateStoryDraft): CreateStoryDraft {
       tone: '',
       pacing: 'normal',
       messageCards: true,
+      sceneHeadings: true,
       language: appStoryLanguage(),
     },
     player: { id: '', name: '', control: 'player', personality: [], goals: [], abilities: [] },
