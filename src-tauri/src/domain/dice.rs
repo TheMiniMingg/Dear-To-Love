@@ -144,6 +144,13 @@ impl DiceSpec {
             Self::Range { .. } => 0,
         }
     }
+
+    /// The lowest and highest total a roll can make, before any stat.
+    pub fn total_bounds(self) -> (i32, i32) {
+        let (low, high) = self.face_bounds();
+        let n = self.faces() as i32;
+        (n * low + self.modifier(), n * high + self.modifier())
+    }
 }
 
 /// A roll the player makes, either answering the storyteller's request or
