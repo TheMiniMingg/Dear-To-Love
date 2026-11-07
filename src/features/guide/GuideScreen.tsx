@@ -237,7 +237,7 @@ export function GuideScreen() {
         <ol className="guide-steps">
           <li>
             {tr('In the library, choose {newStory}, pick a story and choose {start}.', {
-              newStory: <strong>{t('New story')}</strong>,
+              newStory: <strong>{t('Preset Story')}</strong>,
               start: <strong>{t('Start story')}</strong>,
             })}
           </li>
@@ -248,7 +248,7 @@ export function GuideScreen() {
           </li>
         </ol>
         <button type="button" onClick={() => navigate({ name: 'quickstart' })}>
-          {t('New story')}
+          {t('Preset Story')}
         </button>
       </Section>
 

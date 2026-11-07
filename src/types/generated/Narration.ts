@@ -62,4 +62,9 @@ manualMemory?: boolean,
 /**
  * No ideas for the player's next move under the storyteller's replies.
  */
-noSuggestions?: boolean, };
+noSuggestions?: boolean, 
+/**
+ * How the player would like it told, in their own words ("like a cozy
+ * anime, lots of banter").
+ */
+styleNotes?: string, };

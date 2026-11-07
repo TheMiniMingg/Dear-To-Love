@@ -1,7 +1,7 @@
+import { AddPictureButtons, PictureGroups } from '../images/PictureSources';
 import { useEffect, useState } from 'react';
 import { commands, errorMessage } from '../../api/commands';
 import { Dialog } from '../../components/Dialog';
-import { ImageGrid } from '../images/ImageGrid';
 import { ImportResult, useAddImages } from '../images/ImagesScreen';
 import type { AssetDto, StorySummary } from '../../types';
 import { t } from '../../i18n';
@@ -66,50 +66,20 @@ export function CoverDialog({
   return (
     <Dialog title={t('Cover for {title}', { title: story.title })} onClose={onClose} wide>
       <div className="picture-chooser">
-        <div className="button-row">
-          <button
-            type="button"
-            disabled={adding}
-            onClick={() => void add({ storyId: story.id })}
-            title={t('Only this story can use them')}
-          >
-            {adding ? t('Adding…') : t('Add for this story')}
-          </button>
-          <button
-            type="button"
-            disabled={adding}
-            onClick={() => void add()}
-            title={t('Every story can use them')}
-          >
-            {t('Add for all stories')}
-          </button>
-        </div>
+        <AddPictureButtons
+          adding={adding}
+          onAddForStory={() => void add({ storyId: story.id })}
+          onAddToLibrary={() => void add()}
+        />
         <ImportResult result={result} />
-        {own && shared && own.length + shared.length === 0 && (
-          <p className="muted">{t('No images yet. Add some from this computer first.')}</p>
-        )}
-        {own && own.length > 0 && (
-          <section className="image-group" aria-label={t("This story's pictures")}>
-            <h3 className="small-heading">{t("This story's pictures")}</h3>
-            <ImageGrid
-              images={own}
-              selectedId={pick}
-              onSelect={(a) => setPick(a.id)}
-              label={t("This story's pictures")}
-            />
-          </section>
-        )}
-        {shared && shared.length > 0 && (
-          <section className="image-group" aria-label={t('Pictures for all stories')}>
-            <h3 className="small-heading">{t('For all stories')}</h3>
-            <ImageGrid
-              images={shared}
-              selectedId={pick}
-              onSelect={(a) => setPick(a.id)}
-              label={t('Pictures for all stories')}
-            />
-          </section>
-        )}
+        <PictureGroups
+          own={own}
+          shared={shared}
+          pick={pick}
+          onPick={(a) => setPick(a.id)}
+          empty={t('No images yet. Add some from this computer first.')}
+          heading="h3"
+        />
         {error && (
           <p role="alert" className="error">
             {error}

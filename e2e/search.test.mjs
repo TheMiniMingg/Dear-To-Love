@@ -23,8 +23,8 @@ test('search a route, jump to a result, and keep bookmarks across a restart', as
   const click = async (sel) => (await b.$(sel)).click();
 
   await waitForText(b, 'main', 'No stories yet');
-  await click('button=New story');
-  await waitForText(b, 'main', 'Quick Start');
+  await click('button=Preset Story');
+  await waitForText(b, 'main', 'Start story');
   await click('button=Start story');
   await waitForText(b, '[data-testid="narrative"]', 'The Lamp Room');
   await tabTo(b, 'composer-input');

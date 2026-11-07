@@ -26,6 +26,8 @@ pub const CUSTOM_PLAYER_ID: &str = "custom:player";
 /// Most pictures and story-only images one draft may name.
 pub const MAX_DRAFT_PICTURES: usize = 64;
 pub const MAX_DRAFT_IMAGES: usize = 200;
+/// The title of a story created without one (the app shows it translated).
+pub const UNTITLED: &str = "Untitled story";
 
 /// A picture picked while creating: a slot (`cover`, `background`,
 /// `portrait:<character id>`, with `portrait:@player` for the player) and
@@ -249,13 +251,6 @@ impl CreateStoryDraft {
             );
             return out;
         }
-        if blank(&self.world.setting) {
-            add(
-                &mut out,
-                DraftStep::World,
-                "Describe where the story takes place (Setting).".into(),
-            );
-        }
         if blank(&self.player.name) {
             add(
                 &mut out,
@@ -270,19 +265,6 @@ impl CreateStoryDraft {
                 DraftStep::Character,
                 format!("Your character's id {player_id:?} must look like namespace:name."),
             );
-        }
-        if blank(&self.title) {
-            add(&mut out, DraftStep::Story, "Give the story a title.".into());
-        }
-        if blank(&self.scene.location) {
-            add(
-                &mut out,
-                DraftStep::Story,
-                "Say where the story opens.".into(),
-            );
-        }
-        if blank(&self.first_chapter_title) {
-            add(&mut out, DraftStep::Story, "Name the first chapter.".into());
         }
 
         let mut ids = BTreeSet::from([player_id.clone()]);
@@ -476,6 +458,12 @@ impl CreateStoryDraft {
                     .as_deref()
                     .map(clean_text)
                     .filter(|l| !l.is_empty()),
+                style_notes: self
+                    .narration
+                    .style_notes
+                    .as_deref()
+                    .map(clean_text)
+                    .filter(|l| !l.is_empty()),
                 ..self.narration.clone()
             },
             characters,
@@ -503,11 +491,20 @@ impl CreateStoryDraft {
                 outline: clean_text(&c.outline),
             })
             .collect();
+        // Only a name is needed to begin; the rest can be left open.
+        let or = |text: &str, fallback: &str| {
+            let text = clean_text(text);
+            if text.is_empty() {
+                fallback.to_string()
+            } else {
+                text
+            }
+        };
         Ok(CreateStoryInput {
-            title: clean_text(&self.title),
+            title: or(&self.title, UNTITLED),
             description: clean_text(&self.description),
             base_state,
-            first_chapter_title: clean_text(&self.first_chapter_title),
+            first_chapter_title: or(&self.first_chapter_title, "Chapter 1"),
             chapter_outlines,
         })
     }

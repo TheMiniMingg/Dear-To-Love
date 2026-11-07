@@ -372,7 +372,11 @@ struct Ctx<'a> {
 pub fn reply(state: &EffectiveState, action: &str, turn: usize, opens_chapter: bool) -> String {
     let n = &state.state.narration;
     let seed = Seed(format!("{turn}:{action}").into_bytes());
-    let style = n.style.unwrap_or(NarrationStyle::Narrated);
+    // Mixed reads like a narrated story with its cards, offline.
+    let style = match n.style.unwrap_or(NarrationStyle::Narrated) {
+        NarrationStyle::Mixed => NarrationStyle::Narrated,
+        s => s,
+    };
     let player = state.state.characters.get(&state.state.player_character_id);
     let person = Person {
         // A script's stage directions are always in the third person.

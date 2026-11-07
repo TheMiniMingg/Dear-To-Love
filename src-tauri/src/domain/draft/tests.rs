@@ -48,14 +48,18 @@ fn custom_draft_from_scratch() {
     let empty = messages(&d);
     assert_eq!(
         empty.iter().map(|(s, _)| *s).collect::<Vec<_>>(),
-        [
-            DraftStep::World,
-            DraftStep::Character,
-            DraftStep::Story,
-            DraftStep::Story,
-            DraftStep::Story
-        ]
+        [DraftStep::Character],
+        "only a name is needed to begin"
     );
+    // Everything else may stay blank: the story gets a plain title and
+    // first chapter, and the storyteller leaves the rest open.
+    let mut bare = d.clone();
+    bare.player.name = "Ada".into();
+    let input = bare.into_story_input().unwrap();
+    assert_eq!(input.title, UNTITLED);
+    assert_eq!(input.first_chapter_title, "Chapter 1");
+    assert!(input.base_state.world.setting.is_empty());
+    assert!(input.base_state.scene.location.is_empty());
     d.world.setting = "  A night market on a river barge ".into();
     d.world.rules = vec!["No magic".into(), "   ".into()];
     d.player.name = "Ada".into();

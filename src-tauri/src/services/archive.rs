@@ -1290,7 +1290,7 @@ pub async fn route_text(
         match &e.body {
             EventBody::ChapterStart(c) => {
                 chapters += 1;
-                let heading = format!("Chapter {}: {}", c.ordinal, c.title);
+                let heading = crate::domain::events::chapter_heading(c.ordinal, &c.title);
                 if md {
                     out.push_str(&format!("\n## {}\n", md_escape(&heading)));
                 } else {

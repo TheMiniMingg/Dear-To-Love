@@ -224,6 +224,17 @@ const MAX_PLAYER_TEXT: usize = 20_000;
 const MAX_ASSISTANT_TEXT: usize = 200_000;
 const MAX_LABEL: usize = 200;
 
+/// "Chapter 2: The Lamp Room", or only "Chapter 2" when that is all the
+/// title says (a chapter the player left unnamed is called "Chapter 2").
+pub fn chapter_heading(ordinal: u32, title: &str) -> String {
+    let title = title.trim();
+    if title.is_empty() || title == format!("Chapter {ordinal}") {
+        format!("Chapter {ordinal}")
+    } else {
+        format!("Chapter {ordinal}: {title}")
+    }
+}
+
 impl EventBody {
     pub fn kind(&self) -> EventKind {
         match self {
@@ -277,7 +288,7 @@ impl EventBody {
     /// shows only its note.
     pub fn reader_text(&self) -> Cow<'_, str> {
         match self {
-            Self::ChapterStart(p) => Cow::Owned(format!("Chapter {}: {}", p.ordinal, p.title)),
+            Self::ChapterStart(p) => Cow::Owned(chapter_heading(p.ordinal, &p.title)),
             Self::Player(p) => Cow::Owned(plain_message_tags(&p.story_text())),
             Self::Assistant(p) => Cow::Owned(plain_message_tags(&p.text)),
             Self::Edit(p) => Cow::Borrowed(p.note.as_deref().unwrap_or_default()),

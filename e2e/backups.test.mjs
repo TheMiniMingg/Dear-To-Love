@@ -49,8 +49,8 @@ test('back up everything, restore after a restart, keep the old data', async () 
     b.execute((c, a) => window.__TAURI_INTERNALS__.invoke(c, a), cmd, args);
 
   await waitForText(b, 'main', 'No stories yet');
-  await click('button=New story');
-  await waitForText(b, 'main', 'Quick Start');
+  await click('button=Preset Story');
+  await waitForText(b, 'main', 'Start story');
   await click('button=Start story');
   await waitForText(b, '[data-testid="narrative"]', 'The Lamp Room');
   const [story] = await invoke('list_stories', {});
