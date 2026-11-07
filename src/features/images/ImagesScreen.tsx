@@ -5,9 +5,16 @@ import { useUiStore } from '../../app/store';
 import { Dialog } from '../../components/Dialog';
 import type { AssetDto, AssetUsage, ImageImport, ImageScope, StorySummary } from '../../types';
 import { ImageGrid, Thumb } from './ImageGrid';
+import { joinList, msg, t } from '../../i18n';
 
 /** Kinds offered as tags. Other tags an image already has are kept. */
-export const IMAGE_KINDS = ['Portrait', 'Background', 'Cover', 'Expression', 'Outfit'] as const;
+export const IMAGE_KINDS = [
+  msg('Portrait'),
+  msg('Background'),
+  msg('Cover'),
+  msg('Expression'),
+  msg('Outfit'),
+] as const;
 
 const FORMAT: Record<string, string> = {
   'image/png': 'PNG',
@@ -61,17 +68,39 @@ export function ImportResult({ result }: { result: { text: string; problems: str
 type Group = { key: string; title: string; hint?: string; images: AssetDto[] };
 
 function quoteList(titles: string[]): string {
-  const q = titles.map((t) => `“${t}”`);
+  const q = titles.map((x) => t('“{title}”', { title: x }));
   if (q.length <= 1) return q.join('');
-  if (q.length <= 3) return `${q.slice(0, -1).join(', ')} and ${q[q.length - 1]}`;
-  return `${q.slice(0, 2).join(', ')} and ${q.length - 2} more`;
+  if (q.length <= 3) {
+    return t('{list} and {last}', { list: joinList(q.slice(0, -1)), last: q[q.length - 1]! });
+  }
+  return t('{list} and {n} more', { list: joinList(q.slice(0, 2)), n: q.length - 2 });
 }
 
 /** Who may use an image, in words. */
 export function scopeText(a: AssetDto): string {
-  if (a.shared) return 'All stories';
-  if (!a.stories.length) return 'Not in any story';
-  return `Only ${quoteList(a.stories.map((s) => s.title))}`;
+  if (a.shared) return t('All stories');
+  if (!a.stories.length) return t('Not in any story');
+  return t('Only {stories}', { stories: quoteList(a.stories.map((s) => s.title)) });
+}
+
+/**
+ * Where an image is used, from the app's core ("Portrait of Mara (story
+ * default)", "Background on route Late night"), in the chosen language.
+ */
+export function placeText(place: string): string {
+  const what = (w: string) =>
+    w === 'Cover' || w === 'Background' || w === 'A picture'
+      ? t(w)
+      : w.startsWith('Portrait of ')
+        ? t('Portrait of {name}', { name: w.slice('Portrait of '.length) })
+        : w;
+  let m = /^(.*) \(story default\)$/.exec(place);
+  if (m) return t('{what} (story default)', { what: what(m[1]!) });
+  m = /^(.*) \(story start\)$/.exec(place);
+  if (m) return t('{what} (story start)', { what: what(m[1]!) });
+  m = /^(Cover|Background|A picture|Portrait of .*?) on route (.*)$/.exec(place);
+  if (m) return t('{what} on route {route}', { what: what(m[1]!), route: m[2]! });
+  return what(place);
 }
 
 /** Shared images first, then each story's own, then images in no story. */
@@ -88,20 +117,22 @@ export function groupImages(images: AssetDto[]): Group[] {
     const key = a.stories.map((s) => s.id).join('|');
     const g = own.get(key) ?? {
       key,
-      title: `Only in ${quoteList(a.stories.map((s) => s.title))}`,
+      title: t('Only in {stories}', { stories: quoteList(a.stories.map((s) => s.title)) }),
       images: [],
     };
     g.images.push(a);
     own.set(key, g);
   }
   const groups: Group[] = [];
-  if (shared.length) groups.push({ key: 'shared', title: 'For all stories', images: shared });
+  if (shared.length) groups.push({ key: 'shared', title: t('For all stories'), images: shared });
   groups.push(...[...own.values()].sort((a, b) => a.title.localeCompare(b.title)));
   if (none.length)
     groups.push({
       key: 'none',
-      title: 'Not in any story',
-      hint: 'From deleted stories, or added for a story that was never created. Share them or delete them.',
+      title: t('Not in any story'),
+      hint: t(
+        'From deleted stories, or added for a story that was never created. Share them or delete them.',
+      ),
       images: none,
     });
   return groups;
@@ -147,20 +178,19 @@ export function ImagesScreen() {
     <section className="screen images-screen" aria-labelledby="images-title">
       <div className="screen-header">
         <button type="button" onClick={goBack}>
-          Back
+          {t('Back')}
         </button>
-        <h1 id="images-title">Images</h1>
+        <h1 id="images-title">{t('Images')}</h1>
         <div className="button-row">
           <button type="button" className="primary" disabled={adding} onClick={() => void add()}>
-            {adding ? 'Adding…' : 'Add images'}
+            {adding ? t('Adding…') : t('Add images')}
           </button>
         </div>
       </div>
       <p className="muted">
-        PNG, JPEG or WebP, up to 20 MB each. Images stay on this computer. Pictures added here can
-        be used in any story; pictures added from a story&apos;s Pictures (or while creating a
-        story) stay in that story unless you share them. Adding the same picture twice keeps one
-        copy.
+        {t(
+          "PNG, JPEG or WebP, up to 20 MB each. Images stay on this computer. Pictures added here can be used in any story; pictures added from a story's Pictures (or while creating a story) stay in that story unless you share them. Adding the same picture twice keeps one copy.",
+        )}
       </p>
       <ImportResult result={result} />
       {error && (
@@ -170,10 +200,10 @@ export function ImagesScreen() {
       )}
       {images && images.length === 0 && (
         <div className="empty-state">
-          <p>No images yet.</p>
+          <p>{t('No images yet.')}</p>
           <p className="muted">
-            Use <strong>Add images</strong> to bring in pictures for covers, scene backgrounds and
-            character portraits.
+            Use <strong>{t('Add images')}</strong> to bring in pictures for covers, scene
+            backgrounds and character portraits.
           </p>
         </div>
       )}
@@ -205,7 +235,7 @@ export function ImagesScreen() {
               }}
             />
           ) : (
-            <p className="muted image-details">Choose an image to see where it is used.</p>
+            <p className="muted image-details">{t('Choose an image to see where it is used.')}</p>
           )}
         </div>
       )}
@@ -254,7 +284,7 @@ function ImageDetails({
   const save = async () => {
     try {
       onSaved(await commands.updateImage(image.id, label, tags));
-      setStatus('Saved.');
+      setStatus(t('Saved.'));
       setError(null);
     } catch (e) {
       setError(errorMessage(e));
@@ -279,8 +309,10 @@ function ImageDetails({
       onSaved(a);
       setStatus(
         a.shared
-          ? 'Shared with all stories.'
-          : `Kept for ${quoteList(a.stories.map((st) => st.title))} only.`,
+          ? t('Shared with all stories.')
+          : t('Kept for {stories} only.', {
+              stories: quoteList(a.stories.map((st) => st.title)),
+            }),
       );
       setError(null);
       setOnlyStory('');
@@ -290,10 +322,10 @@ function ImageDetails({
   };
 
   const inHistory = usages?.some((u) => u.inHistory) ?? false;
-  const name = image.label || 'Untitled';
+  const name = image.label || t('Untitled');
 
   return (
-    <div className="image-details" aria-label={`Image: ${name}`} role="region">
+    <div className="image-details" aria-label={t('Image: {name}', { name })} role="region">
       <Thumb assetId={image.id} size="full" alt={name} className="image-preview" />
       <p className="muted small">
         {image.width} × {image.height} · {formatBytes(image.byteSize)} ·{' '}
@@ -307,7 +339,7 @@ function ImageDetails({
         }}
       >
         <div className="field">
-          <label htmlFor={`${id}-name`}>Name</label>
+          <label htmlFor={`${id}-name`}>{t('Name')}</label>
           <input
             id={`${id}-name`}
             value={label}
@@ -319,7 +351,7 @@ function ImageDetails({
           />
         </div>
         <fieldset>
-          <legend>Kind</legend>
+          <legend>{t('Kind')}</legend>
           <div className="toggle-list">
             {IMAGE_KINDS.map((k) => (
               <label key={k}>
@@ -331,14 +363,14 @@ function ImageDetails({
                     setStatus(null);
                   }}
                 />{' '}
-                {k}
+                {t(k)}
               </label>
             ))}
           </div>
         </fieldset>
         <div className="button-row">
           <button type="submit" disabled={!dirty}>
-            Save details
+            {t('Save details')}
           </button>
           {status && (
             <span role="status" className="muted small">
@@ -348,7 +380,7 @@ function ImageDetails({
         </div>
       </form>
 
-      <h2 className="small-heading">Available to</h2>
+      <h2 className="small-heading">{t('Available to')}</h2>
       <p className="small" data-testid="image-scope">
         {scopeText(image)}
       </p>
@@ -356,14 +388,14 @@ function ImageDetails({
         stories.length > 0 && (
           <div className="button-row">
             <label htmlFor={`${id}-only`} className="small">
-              Keep for one story only
+              {t('Keep for one story only')}
             </label>
             <select
               id={`${id}-only`}
               value={onlyStory}
               onChange={(e) => setOnlyStory(e.target.value)}
             >
-              <option value="">Choose a story…</option>
+              <option value="">{t('Choose a story…')}</option>
               {stories.map((st) => (
                 <option key={st.id} value={st.id}>
                   {st.title}
@@ -371,29 +403,29 @@ function ImageDetails({
               ))}
             </select>
             <button type="button" disabled={!onlyStory} onClick={() => void setScope(onlyStory)}>
-              Keep for that story
+              {t('Keep for that story')}
             </button>
           </div>
         )
       ) : (
         <div className="button-row">
           <button type="button" onClick={() => void setScope(null)}>
-            Share with all stories
+            {t('Share with all stories')}
           </button>
         </div>
       )}
       {image.shared && usages && new Set(usages.map((u) => u.storyId)).size > 0 && (
-        <p className="muted small">Stories that already show it keep it.</p>
+        <p className="muted small">{t('Stories that already show it keep it.')}</p>
       )}
 
-      <h2 className="small-heading">Used in</h2>
-      {usages === null && !error && <p className="muted small">Checking…</p>}
-      {usages?.length === 0 && <p className="muted small">Not used in any story.</p>}
+      <h2 className="small-heading">{t('Used in')}</h2>
+      {usages === null && !error && <p className="muted small">{t('Checking…')}</p>}
+      {usages?.length === 0 && <p className="muted small">{t('Not used in any story.')}</p>}
       {usages && usages.length > 0 && (
-        <ul className="usage-list" aria-label="Used in">
+        <ul className="usage-list" aria-label={t('Used in')}>
           {usages.map((u) => (
             <li key={`${u.storyId}:${u.place}`}>
-              <strong>{u.storyTitle}</strong>: {u.place}
+              <strong>{u.storyTitle}</strong>: {placeText(u.place)}
             </li>
           ))}
         </ul>
@@ -406,8 +438,10 @@ function ImageDetails({
       {usages && usages.length > 0 ? (
         <p className="muted small" id={`${id}-delete-hint`}>
           {inHistory
-            ? 'Earlier turns keep the pictures they showed, so this image stays while those stories exist.'
-            : 'To delete this image, remove it from the stories above first.'}
+            ? t(
+                'Earlier turns keep the pictures they showed, so this image stays while those stories exist.',
+              )
+            : t('To delete this image, remove it from the stories above first.')}
         </p>
       ) : null}
       <div className="button-row">
@@ -418,20 +452,20 @@ function ImageDetails({
           aria-describedby={usages && usages.length > 0 ? `${id}-delete-hint` : undefined}
           onClick={() => setConfirm(true)}
         >
-          Delete image
+          {t('Delete image')}
         </button>
       </div>
       {confirm && (
-        <Dialog title="Delete image?" onClose={() => setConfirm(false)}>
+        <Dialog title={t('Delete image?')} onClose={() => setConfirm(false)}>
           <p>
             <strong>{name}</strong> will be removed from this computer. No story uses it.
           </p>
           <div className="button-row">
             <button type="button" onClick={() => setConfirm(false)}>
-              Keep image
+              {t('Keep image')}
             </button>
             <button type="button" className="danger" onClick={() => void remove()}>
-              Delete image
+              {t('Delete image')}
             </button>
           </div>
         </Dialog>

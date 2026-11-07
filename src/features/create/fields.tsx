@@ -2,6 +2,7 @@ import { useId, useState } from 'react';
 import { isComposing } from '../../app/keyboard';
 import type { Stat } from '../../types';
 import { ArrowPicker, type PickerOption } from '../../components/ArrowPicker';
+import { t } from '../../i18n';
 
 /** Unique non-empty values, first spelling wins. */
 export function uniq(values: (string | undefined | null)[]): string[] {
@@ -26,6 +27,7 @@ export function PresetPicker({
   value,
   onChange,
   noneLabel,
+  translate = false,
 }: {
   label: string;
   presets: string[];
@@ -33,12 +35,19 @@ export function PresetPicker({
   onChange: (v: string) => void;
   /** Offer an empty choice with this label. */
   noneLabel?: string;
+  /** Show each preset in the chosen language (the value stays as it is). */
+  translate?: boolean;
 }) {
-  const options: PickerOption<string>[] = presets.map((p) => ({ value: p, label: p }));
+  const options: PickerOption<string>[] = presets.map((p) => ({
+    value: p,
+    label: translate ? t(p) : p,
+  }));
   const has = (v: string) => options.some((o) => o.value === v);
-  if (value.trim() && !has(value)) options.unshift({ value, label: `Your own: ${value}` });
+  if (value.trim() && !has(value)) {
+    options.unshift({ value, label: t('Your own: {value}', { value }) });
+  }
   if (noneLabel !== undefined && !has('')) options.unshift({ value: '', label: noneLabel });
-  if (!value.trim() && !has(value)) options.unshift({ value, label: '(not set)' });
+  if (!value.trim() && !has(value)) options.unshift({ value, label: t('(not set)') });
   return <ArrowPicker label={label} options={options} value={value} onChange={onChange} />;
 }
 
@@ -119,7 +128,7 @@ export function LinesField({
   value,
   onChange,
   rows = 3,
-  hint = 'One per line.',
+  hint = t('One per line.'),
 }: {
   label: string;
   value: string[];
@@ -133,7 +142,7 @@ export function LinesField({
       value={value.join('\n')}
       rows={rows}
       hint={hint}
-      onChange={(t) => onChange(t.split('\n'))}
+      onChange={(text) => onChange(text.split('\n'))}
     />
   );
 }
@@ -145,6 +154,7 @@ export function ToggleList({
   value,
   onChange,
   columns = false,
+  translate = false,
 }: {
   legend: string;
   presets: string[];
@@ -152,6 +162,8 @@ export function ToggleList({
   onChange: (v: string[]) => void;
   /** Lay short entries out in columns. */
   columns?: boolean;
+  /** Show each entry in the chosen language (the value stays as it is). */
+  translate?: boolean;
 }) {
   const chosen = uniq(value);
   const all = uniq([...presets, ...chosen]);
@@ -172,7 +184,7 @@ export function ToggleList({
               )
             }
           />
-          {p}
+          {translate ? t(p) : p}
         </label>
       ))}
     </fieldset>
@@ -200,7 +212,7 @@ export const STAT_NAMES = [
 export function StatsField({
   value,
   onChange,
-  hint = 'Each stat is added to the dice rolls that use it, for example Smarts 2 on a test.',
+  hint = t('Each stat is added to the dice rolls that use it, for example Smarts 2 on a test.'),
 }: {
   value: Stat[];
   onChange: (v: Stat[]) => void;
@@ -211,25 +223,25 @@ export function StatsField({
     onChange(value.map((s, j) => (j === i ? { ...s, ...patch } : s)));
   return (
     <fieldset className="field stats-field" aria-describedby={`${id}-hint`}>
-      <legend>Stats</legend>
+      <legend>{t('Stats')}</legend>
       <p id={`${id}-hint`} className="muted small">
         {hint}
       </p>
       {value.map((s, i) => (
         <div key={i} className="stat-row">
           <label htmlFor={`${id}-name-${i}`} className="visually-hidden">
-            Stat {i + 1} name
+            {t('Stat {n} name', { n: i + 1 })}
           </label>
           <input
             id={`${id}-name-${i}`}
             value={s.name}
             list={`${id}-names`}
             maxLength={60}
-            placeholder="Name, e.g. Charm"
+            placeholder={t('Name, e.g. Charm')}
             onChange={(e) => set(i, { name: e.target.value })}
           />
           <label htmlFor={`${id}-value-${i}`} className="visually-hidden">
-            {s.name.trim() || `Stat ${i + 1}`} value
+            {t('{stat} value', { stat: s.name.trim() || t('Stat {n}', { n: i + 1 }) })}
           </label>
           <input
             id={`${id}-value-${i}`}
@@ -243,10 +255,10 @@ export function StatsField({
           <button
             type="button"
             className="danger-link"
-            aria-label={`Remove stat ${s.name.trim() || i + 1}`}
+            aria-label={t('Remove stat {name}', { name: s.name.trim() || i + 1 })}
             onClick={() => onChange(value.filter((_, j) => j !== i))}
           >
-            Remove
+            {t('Remove')}
           </button>
         </div>
       ))}
@@ -257,7 +269,7 @@ export function StatsField({
       </datalist>
       {value.length < 30 && (
         <button type="button" onClick={() => onChange([...value, { name: '', value: 1 }])}>
-          Add a stat
+          {t('Add a stat')}
         </button>
       )}
     </fieldset>
@@ -302,14 +314,14 @@ export function MultiPicker({
         </p>
       )}
       {chosen.length > 0 ? (
-        <ul className="chip-list" aria-label={`Chosen ${label.toLowerCase()}`}>
+        <ul className="chip-list" aria-label={t('Chosen {label}', { label: label.toLowerCase() })}>
           {chosen.map((c) => (
             <li key={c} className="pick-chip">
               <span>{c}</span>
               <button
                 type="button"
                 className="chip-remove"
-                aria-label={`Remove ${c}`}
+                aria-label={t('Remove {name}', { name: c })}
                 onClick={() => onChange(chosen.filter((x) => x !== c))}
               >
                 ×
@@ -318,13 +330,13 @@ export function MultiPicker({
           ))}
         </ul>
       ) : (
-        <p className="muted small">None chosen yet.</p>
+        <p className="muted small">{t('None chosen yet.')}</p>
       )}
       <div className="multi-add">
         {rest.length > 0 && (
           <>
             <label htmlFor={`${id}-pick`} className="visually-hidden">
-              Add to {label.toLowerCase()} from the list
+              {t('Add to {label} from the list', { label: label.toLowerCase() })}
             </label>
             <select
               id={`${id}-pick`}
@@ -334,7 +346,7 @@ export function MultiPicker({
                 e.target.blur();
               }}
             >
-              <option value="">Add from the list…</option>
+              <option value="">{t('Add from the list…')}</option>
               {rest.map((p) => (
                 <option key={p} value={p}>
                   {p}
@@ -344,13 +356,13 @@ export function MultiPicker({
           </>
         )}
         <label htmlFor={`${id}-own`} className="visually-hidden">
-          Add your own to {label.toLowerCase()}
+          {t('Add your own to {label}', { label: label.toLowerCase() })}
         </label>
         <input
           id={`${id}-own`}
           value={own}
           maxLength={200}
-          placeholder="Or write your own"
+          placeholder={t('Or write your own')}
           onChange={(e) => setOwn(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === 'Enter' && !isComposing(e)) {
@@ -360,7 +372,7 @@ export function MultiPicker({
           }}
         />
         <button type="button" disabled={!own.trim()} onClick={addOwn}>
-          Add
+          {t('Add')}
         </button>
       </div>
     </fieldset>

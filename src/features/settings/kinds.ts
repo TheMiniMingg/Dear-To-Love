@@ -1,11 +1,12 @@
+import { msg } from '../../i18n';
 import type { AdapterKind, ProviderProfile } from '../../types';
 
 /** Short names for each kind of connection. */
 export const ADAPTER_LABELS: Record<AdapterKind, string> = {
-  openai_compatible: 'OpenAI-compatible',
+  openai_compatible: msg('OpenAI-compatible'),
   anthropic: 'Anthropic',
   ollama: 'Ollama',
-  openai_images: 'Images API',
+  openai_images: msg('Images API'),
   stable_diffusion: 'Stable Diffusion WebUI',
 };
 

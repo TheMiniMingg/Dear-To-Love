@@ -1,5 +1,6 @@
 import type { Placed } from './routeLayout';
-import { plural } from './routeLayout';
+import { turnCount } from './routeLayout';
+import { joinList, t } from '../../i18n';
 
 const NODE_W = 168;
 const NODE_H = 48;
@@ -46,14 +47,16 @@ export function RouteMap({ placed, currentRouteId, selectedId, onSelect }: Props
                   // A branch always sits below its parent, so the parent's
                   // column is free on this row.
                   <text x={mx - 6} y={ey + 4} textAnchor="end">
-                    {p.node.forkTurn === 0 ? 'at the start' : `after turn ${p.node.forkTurn}`}
+                    {p.node.forkTurn === 0
+                      ? t('at the start')
+                      : t('after turn {n}', { n: p.node.forkTurn })}
                   </text>
                 )}
               </g>
             );
           })}
         </svg>
-        <ul aria-label="Route map" className="route-map-nodes">
+        <ul aria-label={t('Route map')} className="route-map-nodes">
           {placed.map((p) => {
             const r = p.node.route;
             const at = pos.get(r.id)!;
@@ -64,13 +67,15 @@ export function RouteMap({ placed, currentRouteId, selectedId, onSelect }: Props
                   type="button"
                   className={`route-node${current ? ' current' : ''}${r.hidden ? ' hidden-route' : ''}`}
                   aria-pressed={r.id === selectedId}
-                  aria-label={`${r.label}${current ? ', current' : ''}, ${plural(p.node.turns, 'turn')}`}
+                  aria-label={joinList(
+                    [r.label, current ? t('current') : '', turnCount(p.node.turns)].filter(Boolean),
+                  )}
                   onClick={() => onSelect(r.id)}
                 >
                   <span className="route-node-label">{r.label}</span>
                   <span className="route-node-meta">
-                    {current ? 'Current · ' : ''}
-                    {plural(p.node.turns, 'turn')}
+                    {current ? `${t('Current')} · ` : ''}
+                    {turnCount(p.node.turns)}
                   </span>
                 </button>
               </li>

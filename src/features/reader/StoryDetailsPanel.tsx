@@ -7,44 +7,48 @@ import { LinesField, StatsField, TextArea, TextField } from '../create/fields';
 import { StyleFields } from '../create/StyleFields';
 import { DETAILS, PERSPECTIVES } from '../create/WizardSteps';
 import { diffState, editProblems, summarize, type ChangeLine } from './stateDiff';
+import { msg, t, tOptions, tr } from '../../i18n';
 
 type Tab = 'characters' | 'world' | 'narration' | 'scene' | 'facts';
 const TABS: [Tab, string][] = [
-  ['characters', 'Characters'],
-  ['world', 'World'],
-  ['narration', 'Narration'],
-  ['scene', 'Scene'],
-  ['facts', 'Facts'],
+  ['characters', msg('Characters')],
+  ['world', msg('World')],
+  ['narration', msg('Narration')],
+  ['scene', msg('Scene')],
+  ['facts', msg('Facts')],
 ];
 const PACINGS: { value: Pacing; label: string }[] = [
-  { value: 'fast', label: 'Fast' },
-  { value: 'normal', label: 'Normal' },
-  { value: 'slow', label: 'Slow' },
+  { value: 'fast', label: msg('Fast') },
+  { value: 'normal', label: msg('Normal') },
+  { value: 'slow', label: msg('Slow') },
 ];
 
 const copy = <T,>(v: T): T => JSON.parse(JSON.stringify(v)) as T;
 
 function excerpt(text: string, n = 80): string {
-  const t = text.replace(/\s+/g, ' ').trim();
-  return t.length > n ? `${t.slice(0, n - 1)}…` : t;
+  const s = text.replace(/\s+/g, ' ').trim();
+  return s.length > n ? `${s.slice(0, n - 1)}…` : s;
 }
 
 /** Plain words for the event the change takes effect after. */
 export function effectivePoint(e: EventDto | undefined, playerName: string): string {
-  if (!e) return 'the start of the story';
+  if (!e) return t('the start of the story');
   switch (e.kind) {
     case 'chapter_start':
-      return `the start of Chapter ${e.payload.ordinal}: ${e.payload.title}`;
+      return t('the start of Chapter {n}: {title}', {
+        n: e.payload.ordinal,
+        title: e.payload.title,
+      });
     case 'assistant':
-      return `the latest reply ("${excerpt(e.payload.text)}")`;
+      return t('the latest reply ("{text}")', { text: excerpt(e.payload.text) });
     case 'player':
-      return `${playerName}'s action ("${excerpt(e.payload.text)}")`;
+      return t('{name}\'s action ("{text}")', { name: playerName, text: excerpt(e.payload.text) });
     case 'edit':
-      return 'your last change to the story details';
+      return t('your last change to the story details');
     case 'fact_confirm':
-      return 'the last confirmed fact';
+      return t('the last confirmed fact');
     case 'checkpoint':
-      return `checkpoint ${e.payload.label}`;
+      return t('checkpoint {label}', { label: e.payload.label });
   }
 }
 
@@ -64,46 +68,51 @@ function CharacterFields({
 }) {
   return (
     <>
-      <TextField label="Name" required value={c.name} onChange={(name) => onChange({ name })} />
+      <TextField
+        label={t('Name')}
+        required
+        value={c.name}
+        onChange={(name) => onChange({ name })}
+      />
       <div className="field-row">
         <TextField
-          label="Pronouns"
+          label={t('Pronouns')}
           value={c.pronouns ?? ''}
           onChange={(pronouns) => onChange({ pronouns })}
         />
-        <TextField label="Age" value={c.age ?? ''} onChange={(age) => onChange({ age })} />
-        <TextField label="Role" value={c.role ?? ''} onChange={(role) => onChange({ role })} />
+        <TextField label={t('Age')} value={c.age ?? ''} onChange={(age) => onChange({ age })} />
+        <TextField label={t('Role')} value={c.role ?? ''} onChange={(role) => onChange({ role })} />
         <TextField
-          label="Race or species"
+          label={t('Race or species')}
           value={c.species ?? ''}
           onChange={(species) => onChange({ species })}
         />
       </div>
       <TextArea
-        label="Description"
+        label={t('Description')}
         value={c.description ?? ''}
         onChange={(description) => onChange({ description })}
       />
       <TextArea
-        label="Appearance"
+        label={t('Appearance')}
         rows={2}
         value={c.appearance ?? ''}
         onChange={(appearance) => onChange({ appearance })}
       />
       <LinesField
-        label="Personality"
+        label={t('Personality')}
         rows={2}
         value={c.personality}
         onChange={(personality) => onChange({ personality })}
       />
       <LinesField
-        label="Goals"
+        label={t('Goals')}
         rows={2}
         value={c.goals}
         onChange={(goals) => onChange({ goals })}
       />
       <LinesField
-        label="Abilities"
+        label={t('Abilities')}
         rows={2}
         value={c.abilities}
         onChange={(abilities) => onChange({ abilities })}
@@ -201,19 +210,18 @@ export function StoryDetailsPanel({
   if (review) {
     return (
       <div className="panel">
-        <dl className="facts" aria-label="Where this applies">
-          <dt>Route</dt>
-          <dd>
-            <strong>{view.route.label}</strong> only
-          </dd>
-          <dt>Takes effect</dt>
-          <dd>After {effectivePoint(head, playerName)}</dd>
+        <dl className="facts" aria-label={t('Where this applies')}>
+          <dt>{t('Route')}</dt>
+          <dd>{tr('{route} only', { route: <strong>{view.route.label}</strong> })}</dd>
+          <dt>{t('Takes effect')}</dt>
+          <dd>{t('After {point}', { point: effectivePoint(head, playerName) })}</dd>
         </dl>
         <p className="muted small">
-          Earlier turns keep the details they were written with, and other routes are not changed.
-          The storyteller uses the new details from the next reply on.
+          {t(
+            'Earlier turns keep the details they were written with, and other routes are not changed. The storyteller uses the new details from the next reply on.',
+          )}
         </p>
-        <ul className="change-list" aria-label="Changes">
+        <ul className="change-list" aria-label={t('Changes')}>
           {lines.map((l, i) => (
             <li key={i}>
               <strong>{l.what}</strong>
@@ -239,10 +247,10 @@ export function StoryDetailsPanel({
         )}
         <div className="button-row">
           <button type="button" onClick={() => setReview(false)}>
-            Back to editing
+            {t('Back to editing')}
           </button>
           <button type="button" className="primary" disabled={busy} onClick={() => void apply()}>
-            Apply from now
+            {t('Apply from now')}
           </button>
         </div>
       </div>
@@ -251,18 +259,18 @@ export function StoryDetailsPanel({
 
   return (
     <div className="panel story-details">
-      <div role="tablist" aria-label="Story details" className="tabs">
-        {TABS.map(([t, label]) => (
+      <div role="tablist" aria-label={t('Story details')} className="tabs">
+        {TABS.map(([k, label]) => (
           <button
-            key={t}
+            key={k}
             type="button"
             role="tab"
-            id={`${id}-tab-${t}`}
-            aria-selected={tab === t}
+            id={`${id}-tab-${k}`}
+            aria-selected={tab === k}
             aria-controls={`${id}-panel`}
-            onClick={() => setTab(t)}
+            onClick={() => setTab(k)}
           >
-            {label}
+            {t(label)}
           </button>
         ))}
       </div>
@@ -275,10 +283,13 @@ export function StoryDetailsPanel({
         {tab === 'characters' && current && (
           <>
             <ArrowPicker
-              label="Character"
+              label={t('Character')}
               options={chars.map((c) => ({
                 value: c.id,
-                label: `${c.name || 'Unnamed'}${c.id === edited.playerCharacterId ? ' (you)' : ''}`,
+                label:
+                  c.id === edited.playerCharacterId
+                    ? t('{name} (you)', { name: c.name || t('Unnamed') })
+                    : c.name || t('Unnamed'),
               }))}
               value={current.id}
               onChange={setWho}
@@ -286,7 +297,7 @@ export function StoryDetailsPanel({
             <CharacterFields c={current} onChange={(p) => setChar(current.id, p)} />
             <div className="button-row">
               <button type="button" onClick={addCharacter}>
-                Add a character
+                {t('Add a character')}
               </button>
               {current.id !== edited.playerCharacterId && (
                 <button
@@ -294,7 +305,9 @@ export function StoryDetailsPanel({
                   className="danger-link"
                   onClick={() => removeCharacter(current.id)}
                 >
-                  Remove {current.name || 'this character'} from the story
+                  {current.name
+                    ? t('Remove {name} from the story', { name: current.name })
+                    : t('Remove this character from the story')}
                 </button>
               )}
             </div>
@@ -303,23 +316,23 @@ export function StoryDetailsPanel({
         {tab === 'world' && (
           <>
             <TextField
-              label="Era"
+              label={t('Era')}
               value={edited.world.era}
               onChange={(era) => set({ world: { ...edited.world, era } })}
             />
             <TextField
-              label="Setting"
+              label={t('Setting')}
               value={edited.world.setting}
               onChange={(setting) => set({ world: { ...edited.world, setting } })}
             />
             <TextArea
-              label="Description"
+              label={t('Description')}
               rows={4}
               value={edited.world.description}
               onChange={(description) => set({ world: { ...edited.world, description } })}
             />
             <LinesField
-              label="Rules the storyteller follows"
+              label={t('Rules the storyteller follows')}
               value={edited.world.rules}
               onChange={(rules) => set({ world: { ...edited.world, rules } })}
             />
@@ -334,25 +347,25 @@ export function StoryDetailsPanel({
               }
             />
             <ArrowPicker
-              label="Point of view"
-              options={PERSPECTIVES}
+              label={t('Point of view')}
+              options={tOptions(PERSPECTIVES)}
               value={edited.narration.perspective}
               onChange={(perspective) => set({ narration: { ...edited.narration, perspective } })}
             />
             <ArrowPicker
-              label="Detail"
-              options={DETAILS}
+              label={t('Detail')}
+              options={tOptions(DETAILS)}
               value={edited.narration.detail}
               onChange={(detail) => set({ narration: { ...edited.narration, detail } })}
             />
             <ArrowPicker
-              label="Pacing"
-              options={PACINGS}
+              label={t('Pacing')}
+              options={tOptions(PACINGS)}
               value={edited.narration.pacing}
               onChange={(pacing) => set({ narration: { ...edited.narration, pacing } })}
             />
             <TextField
-              label="Tone"
+              label={t('Tone')}
               value={edited.narration.tone}
               onChange={(tone) => set({ narration: { ...edited.narration, tone } })}
             />
@@ -368,17 +381,17 @@ export function StoryDetailsPanel({
         {tab === 'scene' && (
           <>
             <TextField
-              label="Where"
+              label={t('Where')}
               value={edited.scene.location}
               onChange={(location) => set({ scene: { ...edited.scene, location } })}
             />
             <TextArea
-              label="What is happening"
+              label={t('What is happening')}
               value={edited.scene.summary}
               onChange={(summary) => set({ scene: { ...edited.scene, summary } })}
             />
             <LinesField
-              label="Open questions"
+              label={t('Open questions')}
               value={edited.openThreads}
               onChange={(openThreads) => set({ openThreads })}
             />
@@ -387,15 +400,16 @@ export function StoryDetailsPanel({
         {tab === 'facts' && (
           <>
             <p className="muted small">
-              Facts the storyteller must keep to, and who knows them. They are part of every prompt
-              from now on.
+              {t(
+                'Facts the storyteller must keep to, and who knows them. They are part of every prompt from now on.',
+              )}
             </p>
-            {edited.knownFacts.length === 0 && <p className="muted">No facts yet.</p>}
+            {edited.knownFacts.length === 0 && <p className="muted">{t('No facts yet.')}</p>}
             <ol className="fact-list">
               {edited.knownFacts.map((f, i) => (
                 <li key={f.id}>
                   <TextArea
-                    label={`Fact ${i + 1}`}
+                    label={t('Fact {n}', { n: i + 1 })}
                     rows={2}
                     value={f.text}
                     onChange={(text) =>
@@ -407,7 +421,7 @@ export function StoryDetailsPanel({
                     }
                   />
                   <fieldset className="field toggle-list">
-                    <legend>Who knows it</legend>
+                    <legend>{t('Who knows it')}</legend>
                     {chars.map((c) => (
                       <label key={c.id} className="check">
                         <input
@@ -428,7 +442,7 @@ export function StoryDetailsPanel({
                             })
                           }
                         />
-                        {c.name || 'Unnamed'}
+                        {c.name || t('Unnamed')}
                       </label>
                     ))}
                   </fieldset>
@@ -439,7 +453,7 @@ export function StoryDetailsPanel({
                       set({ knownFacts: edited.knownFacts.filter((x) => x.id !== f.id) })
                     }
                   >
-                    Remove fact {i + 1}
+                    {t('Remove fact {n}', { n: i + 1 })}
                   </button>
                 </li>
               ))}
@@ -463,7 +477,7 @@ export function StoryDetailsPanel({
                 })
               }
             >
-              Add a fact
+              {t('Add a fact')}
             </button>
           </>
         )}
@@ -477,7 +491,7 @@ export function StoryDetailsPanel({
       )}
       <div className="button-row">
         <button type="button" onClick={onCancel}>
-          Cancel
+          {t('Cancel')}
         </button>
         <button
           type="button"
@@ -485,7 +499,9 @@ export function StoryDetailsPanel({
           disabled={changes.length === 0 || problems.length > 0}
           onClick={() => setReview(true)}
         >
-          Review changes{changes.length > 0 ? ` (${lines.length})` : ''}
+          {changes.length > 0
+            ? t('Review changes ({n})', { n: lines.length })
+            : t('Review changes')}
         </button>
       </div>
     </div>

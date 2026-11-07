@@ -18,6 +18,7 @@ async fn story() -> (TestDb, StoryCreated) {
             perspective: None,
             detail: None,
             story_type: None,
+            language: None,
         })
         .unwrap();
     let s = create_story(&t.db, draft).await.unwrap();

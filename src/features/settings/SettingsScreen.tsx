@@ -5,7 +5,9 @@ import { Dialog } from '../../components/Dialog';
 import type { ProviderProfile, StorytellerInfo } from '../../types';
 import { AboutSection, UpdatesSection } from '../updates/UpdatesSection';
 import { ConnectionForm } from './ConnectionForm';
+import { LanguageSection } from './LanguageSection';
 import { ADAPTER_LABELS, makesPictures, pictureConnections, storyConnections } from './kinds';
+import { t, tr } from '../../i18n';
 
 type Note = { tone: 'ok' | 'warn' | 'error'; text: string };
 
@@ -61,7 +63,7 @@ export function SettingsScreen() {
 
   const test = async (p: ProviderProfile) => {
     setBusyId(p.id);
-    note(p.id, { tone: 'ok', text: 'Checking…' });
+    note(p.id, { tone: 'ok', text: t('Checking…') });
     try {
       const r = await commands.testConnection(p.id);
       note(p.id, {
@@ -77,10 +79,10 @@ export function SettingsScreen() {
 
   const sendTest = async (p: ProviderProfile) => {
     setBusyId(p.id);
-    note(p.id, { tone: 'ok', text: 'Sending a one-line test message…' });
+    note(p.id, { tone: 'ok', text: t('Sending a one-line test message…') });
     try {
       const reply = await commands.sendTestMessage(p.id);
-      note(p.id, { tone: 'ok', text: `The model replied: “${reply.trim()}”` });
+      note(p.id, { tone: 'ok', text: t('The model replied: “{reply}”', { reply: reply.trim() }) });
     } catch (e) {
       note(p.id, { tone: 'error', text: errorMessage(e) });
     } finally {
@@ -106,15 +108,15 @@ export function SettingsScreen() {
     <section className="screen" aria-labelledby="settings-title">
       <div className="screen-header">
         <button type="button" onClick={goBack}>
-          Back
+          {t('Back')}
         </button>
-        <h1 id="settings-title">Settings</h1>
+        <h1 id="settings-title">{t('Settings')}</h1>
         <div className="button-row">
           <button type="button" onClick={() => navigate({ name: 'usage' })}>
-            Usage &amp; budget
+            {t('Usage & budget')}
           </button>
           <button type="button" onClick={() => navigate({ name: 'backups' })}>
-            Backups
+            {t('Backups')}
           </button>
         </div>
       </div>
@@ -124,12 +126,14 @@ export function SettingsScreen() {
         </p>
       )}
 
+      <LanguageSection />
+
       <section className="settings-section" aria-labelledby="storyteller-title">
-        <h2 id="storyteller-title">Storyteller</h2>
+        <h2 id="storyteller-title">{t('Storyteller')}</h2>
         <p className="muted">
-          Who writes the replies in your stories. A story can pick its own storyteller instead
-          (click the storyteller&apos;s name above the story). Changing it only affects new replies;
-          what is already written stays as it is.
+          {t(
+            "Who writes the replies in your stories. A story can pick its own storyteller instead (click the storyteller's name above the story). Changing it only affects new replies; what is already written stays as it is.",
+          )}
         </p>
         <div role="radiogroup" aria-labelledby="storyteller-title" className="choice-list">
           <label className="choice">
@@ -140,9 +144,9 @@ export function SettingsScreen() {
               onChange={() => void choose(null)}
             />
             <span>
-              <strong>Offline storyteller</strong>
+              <strong>{t('Offline storyteller')}</strong>
               <span className="muted small">
-                Built in. Simple replies, works without internet, never costs anything.
+                {t('Built in. Simple replies, works without internet, never costs anything.')}
               </span>
             </span>
           </label>
@@ -157,7 +161,7 @@ export function SettingsScreen() {
               <span>
                 <strong>{c.label}</strong>
                 <span className="muted small">
-                  {c.modelId} · {c.billing === 'local' ? 'local, no API charges' : 'paid API'}
+                  {c.modelId} · {c.billing === 'local' ? t('local, no API charges') : t('paid API')}
                 </span>
               </span>
             </label>
@@ -166,10 +170,11 @@ export function SettingsScreen() {
       </section>
 
       <section className="settings-section" aria-labelledby="pictures-title">
-        <h2 id="pictures-title">Pictures</h2>
+        <h2 id="pictures-title">{t('Pictures')}</h2>
         <p className="muted">
-          Makes a character&apos;s portrait from their description, when you choose a portrait while
-          creating or reading a story. Portraits are always asked for as safe-for-work pictures.
+          {t(
+            "Makes a character's portrait from their description, when you choose a portrait while creating or reading a story. Portraits are always asked for as safe-for-work pictures.",
+          )}
         </p>
         <div role="radiogroup" aria-labelledby="pictures-title" className="choice-list">
           <label className="choice">
@@ -180,8 +185,8 @@ export function SettingsScreen() {
               onChange={() => void choosePictures(null)}
             />
             <span>
-              <strong>Don&apos;t make pictures</strong>
-              <span className="muted small">Use only pictures you add yourself.</span>
+              <strong>{t("Don't make pictures")}</strong>
+              <span className="muted small">{t('Use only pictures you add yourself.')}</span>
             </span>
           </label>
           {painters?.map((c) => (
@@ -196,7 +201,7 @@ export function SettingsScreen() {
                 <strong>{c.label}</strong>
                 <span className="muted small">
                   {c.modelId} ·{' '}
-                  {c.billing === 'local' ? 'local, no API charges' : 'paid per picture'}
+                  {c.billing === 'local' ? t('local, no API charges') : t('paid per picture')}
                 </span>
               </span>
             </label>
@@ -204,23 +209,25 @@ export function SettingsScreen() {
         </div>
         {painters && painters.length === 0 && (
           <p className="muted small">
-            To make portraits, add a picture connection (OpenAI images, or Stable Diffusion WebUI on
-            this computer) under AI connections.
+            {t(
+              'To make portraits, add a picture connection (OpenAI images, or Stable Diffusion WebUI on this computer) under AI connections.',
+            )}
           </p>
         )}
       </section>
 
       <section className="settings-section" aria-labelledby="connections-title">
         <div className="screen-header">
-          <h2 id="connections-title">AI connections</h2>
+          <h2 id="connections-title">{t('AI connections')}</h2>
           <button type="button" className="primary" onClick={() => setEditing('new')}>
-            Add connection
+            {t('Add connection')}
           </button>
         </div>
         {connections && connections.length === 0 && (
           <p className="muted">
-            No connections yet. Add one to play with an AI model from a cloud service or one running
-            on this computer.
+            {t(
+              'No connections yet. Add one to play with an AI model from a cloud service or one running on this computer.',
+            )}
           </p>
         )}
         <ul className="connection-list">
@@ -231,8 +238,12 @@ export function SettingsScreen() {
                 <div>
                   <strong>{c.label}</strong>
                   <div className="muted small">
-                    {c.modelId} · {ADAPTER_LABELS[c.adapter]} · {c.baseUrl} ·{' '}
-                    {c.hasKey ? 'key saved' : c.billing === 'local' ? 'no key needed' : 'no key'}
+                    {c.modelId} · {t(ADAPTER_LABELS[c.adapter])} · {c.baseUrl} ·{' '}
+                    {c.hasKey
+                      ? t('key saved')
+                      : c.billing === 'local'
+                        ? t('no key needed')
+                        : t('no key')}
                   </div>
                 </div>
                 <div className="button-row">
@@ -240,30 +251,34 @@ export function SettingsScreen() {
                     type="button"
                     onClick={() => void test(c)}
                     disabled={busyId === c.id}
-                    title="Checks the address and key by listing models. Free, sends no story text."
+                    title={t(
+                      'Checks the address and key by listing models. Free, sends no story text.',
+                    )}
                   >
-                    Test connection
+                    {t('Test connection')}
                   </button>
                   {!makesPictures(c) && (
                     <button
                       type="button"
                       onClick={() => void sendTest(c)}
                       disabled={busyId === c.id}
-                      title="Sends one short message to the model. Paid services may charge a tiny amount."
+                      title={t(
+                        'Sends one short message to the model. Paid services may charge a tiny amount.',
+                      )}
                     >
-                      Send test message
+                      {t('Send test message')}
                     </button>
                   )}
                   <button type="button" onClick={() => setEditing(c)}>
-                    Edit
+                    {t('Edit')}
                   </button>
                   <button
                     type="button"
                     className="danger-link"
-                    aria-label={`Delete ${c.label}`}
+                    aria-label={t('Delete {title}', { title: c.label })}
                     onClick={() => setDeleting(c)}
                   >
-                    Delete
+                    {t('Delete')}
                   </button>
                 </div>
                 {n && (
@@ -279,8 +294,9 @@ export function SettingsScreen() {
           })}
         </ul>
         <p className="muted small">
-          Usage and cost estimates are recorded for every request to a paid service. Set a spending
-          limit in your provider&apos;s own dashboard too; this app cannot see your balance.
+          {t(
+            "Usage and cost estimates are recorded for every request to a paid service. Set a spending limit in your provider's own dashboard too; this app cannot see your balance.",
+          )}
         </p>
       </section>
 
@@ -289,7 +305,9 @@ export function SettingsScreen() {
 
       {editing && (
         <Dialog
-          title={editing === 'new' ? 'Add AI connection' : `Edit ${editing.label}`}
+          title={
+            editing === 'new' ? t('Add AI connection') : t('Edit {name}', { name: editing.label })
+          }
           onClose={() => setEditing(null)}
         >
           <ConnectionForm
@@ -308,17 +326,19 @@ export function SettingsScreen() {
         </Dialog>
       )}
       {deleting && (
-        <Dialog title="Delete connection?" onClose={() => setDeleting(null)}>
+        <Dialog title={t('Delete connection?')} onClose={() => setDeleting(null)}>
           <p>
-            <strong>{deleting.label}</strong> and its saved key will be removed. Stories and their
-            replies are not affected, and past usage records are kept.
+            {tr(
+              '{name} and its saved key will be removed. Stories and their replies are not affected, and past usage records are kept.',
+              { name: <strong>{deleting.label}</strong> },
+            )}
           </p>
           <div className="button-row">
             <button type="button" onClick={() => setDeleting(null)}>
-              Keep it
+              {t('Keep it')}
             </button>
             <button type="button" className="danger" onClick={() => void doDelete(deleting)}>
-              Delete connection
+              {t('Delete connection')}
             </button>
           </div>
         </Dialog>

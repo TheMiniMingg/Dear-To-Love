@@ -1,17 +1,18 @@
 import { useEffect, useId, useState } from 'react';
 import { commands, errorMessage, formatUsd } from '../../api/commands';
 import type { BudgetMode, BudgetPolicy, BudgetStatus } from '../../types';
+import { intlLocale, msg, t, tn, tr } from '../../i18n';
 
 const LEVEL_TEXT = {
-  none: 'Under the warning level',
-  warning: 'Past the warning level',
-  reached: 'Budget reached',
+  none: msg('Under the warning level'),
+  warning: msg('Past the warning level'),
+  reached: msg('Budget reached'),
 } as const;
 
 function monthName(month: string): string {
   const [y, m] = month.split('-').map(Number);
   if (!y || !m) return month;
-  return new Date(Date.UTC(y, m - 1, 1)).toLocaleDateString([], {
+  return new Date(Date.UTC(y, m - 1, 1)).toLocaleDateString(intlLocale(), {
     month: 'long',
     year: 'numeric',
     timeZone: 'UTC',
@@ -40,13 +41,13 @@ export function BudgetSection() {
   if (!form) {
     return (
       <section className="settings-section" aria-labelledby={`${id}-budget`}>
-        <h2 id={`${id}-budget`}>Monthly budget</h2>
+        <h2 id={`${id}-budget`}>{t('Monthly budget')}</h2>
         {error ? (
           <p role="alert" className="error">
             {error}
           </p>
         ) : (
-          <p className="muted">Loading…</p>
+          <p className="muted">{t('Loading…')}</p>
         )}
       </section>
     );
@@ -78,32 +79,43 @@ export function BudgetSection() {
   const s = status;
   return (
     <section className="settings-section" aria-labelledby={`${id}-budget`}>
-      <h2 id={`${id}-budget`}>Monthly budget</h2>
+      <h2 id={`${id}-budget`}>{t('Monthly budget')}</h2>
       <p className="muted small">
-        Months follow UTC, so a new month may start in the evening or morning where you are. Only
-        paid connections count; local models are never limited.
+        {t(
+          'Months follow UTC, so a new month may start in the evening or morning where you are. Only paid connections count; local models are never limited.',
+        )}
       </p>
 
       {s?.policy.enabled && s.limitMicroUsd != null && (
-        <dl className="facts" aria-label="This month">
+        <dl className="facts" aria-label={t('This month')}>
           <dt>{monthName(s.month)}</dt>
           <dd>
-            <strong>{formatUsd(s.spentMicroUsd)}</strong> of {formatUsd(s.limitMicroUsd)}
-            {s.percent != null && ` (${s.percent}%)`} · {LEVEL_TEXT[s.level]}
-            {s.paused && <strong className="note-warn"> · Paid replies paused</strong>}
+            {tr('{spent} of {limit}', {
+              spent: <strong>{formatUsd(s.spentMicroUsd)}</strong>,
+              limit: formatUsd(s.limitMicroUsd),
+            })}
+            {s.percent != null && ` (${s.percent}%)`} · {t(LEVEL_TEXT[s.level])}
+            {s.paused && <strong className="note-warn"> · {t('Paid replies paused')}</strong>}
           </dd>
           {s.reservedMicroUsd > 0 && (
             <>
-              <dt>Held back</dt>
-              <dd>{formatUsd(s.reservedMicroUsd)} for calls in progress or with unknown cost</dd>
+              <dt>{t('Held back')}</dt>
+              <dd>
+                {t('{amount} for calls in progress or with unknown cost', {
+                  amount: formatUsd(s.reservedMicroUsd),
+                })}
+              </dd>
             </>
           )}
           {s.unknownCostRequests > 0 && (
             <>
-              <dt>Unknown cost</dt>
+              <dt>{t('Unknown cost')}</dt>
               <dd>
-                {s.unknownCostRequests} {s.unknownCostRequests === 1 ? 'call' : 'calls'} this month;
-                the real total may be higher
+                {tn(
+                  s.unknownCostRequests,
+                  '{n} call this month; the real total may be higher',
+                  '{n} calls this month; the real total may be higher',
+                )}
               </dd>
             </>
           )}
@@ -112,7 +124,7 @@ export function BudgetSection() {
 
       <form
         className="form"
-        aria-label="Budget settings"
+        aria-label={t('Budget settings')}
         onSubmit={(e) => {
           e.preventDefault();
           void save();
@@ -124,10 +136,10 @@ export function BudgetSection() {
             checked={form.enabled}
             onChange={(e) => update({ enabled: e.target.checked })}
           />
-          Use a monthly budget
+          {t('Use a monthly budget')}
         </label>
         <fieldset disabled={!form.enabled}>
-          <label htmlFor={`${id}-limit`}>Monthly budget (USD)</label>
+          <label htmlFor={`${id}-limit`}>{t('Monthly budget (USD)')}</label>
           <input
             id={`${id}-limit`}
             inputMode="decimal"
@@ -137,7 +149,7 @@ export function BudgetSection() {
             onChange={(e) => update({ monthlyLimitUsd: e.target.value })}
           />
           <label htmlFor={`${id}-threshold`}>
-            Warn me at {form.warningThresholdPercent}% of the budget
+            {t('Warn me at {percent}% of the budget', { percent: form.warningThresholdPercent })}
           </label>
           <input
             id={`${id}-threshold`}
@@ -147,14 +159,20 @@ export function BudgetSection() {
             value={form.warningThresholdPercent}
             onChange={(e) => update({ warningThresholdPercent: Number(e.target.value) })}
           />
-          <div role="radiogroup" aria-label="When the budget is reached" className="choice-list">
+          <div
+            role="radiogroup"
+            aria-label={t('When the budget is reached')}
+            className="choice-list"
+          >
             {(
               [
-                ['warn', 'Warn only', 'Show a warning; replies keep working.'],
+                ['warn', t('Warn only'), t('Show a warning; replies keep working.')],
                 [
                   'pause_new_requests',
-                  'Pause new paid replies',
-                  'Refuse a paid reply that would pass the budget. A reply already being written finishes.',
+                  t('Pause new paid replies'),
+                  t(
+                    'Refuse a paid reply that would pass the budget. A reply already being written finishes.',
+                  ),
                 ],
               ] as [BudgetMode, string, string][]
             ).map(([mode, label, hint]) => (
@@ -174,8 +192,9 @@ export function BudgetSection() {
         </fieldset>
         {form.enabled && form.mode === 'pause_new_requests' && (
           <p className="muted small">
-            The pause uses this app&apos;s estimates. Calls made outside the app, or ones the
-            service never reports, are not counted.
+            {t(
+              "The pause uses this app's estimates. Calls made outside the app, or ones the service never reports, are not counted.",
+            )}
           </p>
         )}
         {error && (
@@ -185,11 +204,11 @@ export function BudgetSection() {
         )}
         <div className="button-row">
           <button type="submit" className="primary" disabled={busy}>
-            Save budget
+            {t('Save budget')}
           </button>
           {saved && (
             <span role="status" className="muted small">
-              Saved
+              {t('Saved')}
             </span>
           )}
         </div>

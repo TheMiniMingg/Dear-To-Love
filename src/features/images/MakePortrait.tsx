@@ -9,12 +9,13 @@ import type {
   ProviderProfile,
   World,
 } from '../../types';
+import { joinSentences, msg, t } from '../../i18n';
 
 const STYLES: { value: PortraitStyle; label: string }[] = [
-  { value: 'painted', label: 'Painted' },
-  { value: 'anime', label: 'Anime' },
-  { value: 'photo', label: 'Photo' },
-  { value: 'sketch', label: 'Pencil sketch' },
+  { value: 'painted', label: msg('Painted') },
+  { value: 'anime', label: msg('Anime') },
+  { value: 'photo', label: msg('Photo') },
+  { value: 'sketch', label: msg('Pencil sketch') },
 ];
 
 type Props = {
@@ -99,13 +100,15 @@ export function MakePortrait({ character, world, storyId, onMade }: Props) {
       const asset = await commands.makePortrait(
         portraitInput(character, world, style, storyId, budgetOverride),
       );
-      setMade(`Made “${asset.label}”. It is selected below.`);
+      setMade(t('Made “{name}”. It is selected below.', { name: asset.label }));
       onMade(asset);
     } catch (e) {
       if (e instanceof CommandError && e.code === 'BUDGET_OVERRIDE_REQUIRED') {
         setNeedsOverride(true);
         setError(
-          "Your budget pauses paid requests, and the app can't price pictures, so it can't tell whether this one fits.",
+          t(
+            "Your budget pauses paid requests, and the app can't price pictures, so it can't tell whether this one fits.",
+          ),
         );
       } else if (e instanceof CommandError && e.code === 'NO_PROVIDER') {
         setError(sentence(e.message));
@@ -121,26 +124,35 @@ export function MakePortrait({ character, world, storyId, onMade }: Props) {
   if (maker === null) {
     return (
       <p className="muted small make-portrait">
-        To make a portrait from {name || 'the character'}&apos;s description instead, add a picture
-        connection in Settings and choose it under Pictures.
+        {name
+          ? t(
+              "To make a portrait from {name}'s description instead, add a picture connection in Settings and choose it under Pictures.",
+              { name },
+            )
+          : t(
+              "To make a portrait from the character's description instead, add a picture connection in Settings and choose it under Pictures.",
+            )}
       </p>
     );
   }
   return (
     <section className="make-portrait" aria-labelledby={`${id}-title`}>
       <h4 id={`${id}-title`} className="small-heading">
-        Make one from the description
+        {t('Make one from the description')}
       </h4>
       <p className="muted small">
-        Uses {maker.label} ({maker.modelId}).{' '}
-        {maker.billing === 'local'
-          ? 'It runs on your computer, with no charges.'
-          : 'One request; the service charges for each picture.'}{' '}
-        The portrait is kept for this story only, and is always asked for as a safe-for-work
-        picture.
+        {joinSentences([
+          t('Uses {name} ({model}).', { name: maker.label, model: maker.modelId }),
+          maker.billing === 'local'
+            ? t('It runs on your computer, with no charges.')
+            : t('One request; the service charges for each picture.'),
+          t(
+            'The portrait is kept for this story only, and is always asked for as a safe-for-work picture.',
+          ),
+        ])}
       </p>
       <div className="field">
-        <label htmlFor={`${id}-style`}>Style</label>
+        <label htmlFor={`${id}-style`}>{t('Style')}</label>
         <select
           id={`${id}-style`}
           value={style}
@@ -148,23 +160,23 @@ export function MakePortrait({ character, world, storyId, onMade }: Props) {
         >
           {STYLES.map((s) => (
             <option key={s.value} value={s.value}>
-              {s.label}
+              {t(s.label)}
             </option>
           ))}
         </select>
       </div>
       <div className="button-row">
         <button type="button" disabled={busy || !name} onClick={() => void make()}>
-          {busy ? 'Making the portrait…' : 'Make portrait'}
+          {busy ? t('Making the portrait…') : t('Make portrait')}
         </button>
         <button type="button" aria-expanded={showPrompt} onClick={() => setShowPrompt((v) => !v)}>
-          {showPrompt ? 'Hide what is sent' : 'Show what is sent'}
+          {showPrompt ? t('Hide what is sent') : t('Show what is sent')}
         </button>
       </div>
-      {!name && <p className="muted small">Give the character a name first.</p>}
+      {!name && <p className="muted small">{t('Give the character a name first.')}</p>}
       {busy && (
         <p role="status" className="muted small">
-          This can take a minute.
+          {t('This can take a minute.')}
         </p>
       )}
       {made && (
@@ -173,7 +185,7 @@ export function MakePortrait({ character, world, storyId, onMade }: Props) {
         </p>
       )}
       {showPrompt && prompt && (
-        <div className="portrait-prompt small" aria-label="What is sent">
+        <div className="portrait-prompt small" aria-label={t('What is sent')}>
           <p>{prompt.text}</p>
           <p className="muted">Avoid: {prompt.avoid}</p>
         </div>
@@ -183,7 +195,7 @@ export function MakePortrait({ character, world, storyId, onMade }: Props) {
           <p>{error}</p>
           {needsOverride && (
             <button type="button" disabled={busy} onClick={() => void make(true)}>
-              Make it anyway
+              {t('Make it anyway')}
             </button>
           )}
         </div>

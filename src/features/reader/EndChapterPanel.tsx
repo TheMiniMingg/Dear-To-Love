@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { CommandError, commands, errorMessage } from '../../api/commands';
 import type { ChapterRecapDraft, RouteView } from '../../types';
+import { intlLocale, joinSentences, t, tKnown } from '../../i18n';
 
 /** Longest recap the app keeps (matches the backend limit). */
 const MAX_RECAP = 6000;
@@ -29,7 +30,7 @@ type Draft =
 export function EndChapterPanel({ view, onCancel, onEnded }: Props) {
   const chapter = view.state.activeChapter;
   const ordinal = chapter?.ordinal ?? 1;
-  const title = chapter?.title ?? `Chapter ${ordinal}`;
+  const title = chapter?.title ?? t('Chapter {n}', { n: ordinal });
   const [draft, setDraft] = useState<Draft>({ status: 'writing' });
   const [attempt, setAttempt] = useState(0);
   const [recap, setRecap] = useState('');
@@ -73,11 +74,11 @@ export function EndChapterPanel({ view, onCancel, onEnded }: Props) {
     return (
       <div className="panel">
         <p role="alert" className="error">
-          Chapter {ordinal} can&apos;t end yet. {draft.message}
+          {joinSentences([t("Chapter {n} can't end yet.", { n: ordinal }), draft.message])}
         </p>
         <div className="button-row">
           <button ref={keepPlaying} type="button" onClick={onCancel}>
-            Keep playing
+            {t('Keep playing')}
           </button>
         </div>
       </div>
@@ -88,11 +89,15 @@ export function EndChapterPanel({ view, onCancel, onEnded }: Props) {
     return (
       <div className="panel">
         <p role="status" aria-live="polite">
-          {view.storyteller.label} is writing a recap of Chapter {ordinal}: {title}…
+          {t('{name} is writing a recap of Chapter {n}: {title}…', {
+            name: tKnown(view.storyteller.label),
+            n: ordinal,
+            title,
+          })}
         </p>
         <div className="button-row">
           <button id="end-chapter-first" type="button" onClick={onCancel}>
-            Keep playing
+            {t('Keep playing')}
           </button>
           <button
             type="button"
@@ -101,7 +106,7 @@ export function EndChapterPanel({ view, onCancel, onEnded }: Props) {
               setDraft({ status: 'manual' });
             }}
           >
-            Write it myself
+            {t('Write it myself')}
           </button>
         </div>
       </div>
@@ -122,7 +127,7 @@ export function EndChapterPanel({ view, onCancel, onEnded }: Props) {
         recap,
         nextTitle: nextTitle.trim() || null,
       });
-      onEnded(v, `End of Chapter ${ordinal}: ${title}`);
+      onEnded(v, t('End of Chapter {n}: {title}', { n: ordinal, title }));
     } catch (e) {
       setError(errorMessage(e));
       setSaving(false);
@@ -139,18 +144,23 @@ export function EndChapterPanel({ view, onCancel, onEnded }: Props) {
     >
       {draft.status === 'failed' && (
         <div role="alert" className="error">
-          <p>The recap couldn&apos;t be written. {draft.message}</p>
-          <p>Write your own below, or try again.</p>
+          <p>{joinSentences([t("The recap couldn't be written."), draft.message])}</p>
+          <p>{t('Write your own below, or try again.')}</p>
         </div>
       )}
       <div className="field">
         <label htmlFor="end-chapter-recap">
-          What happened in Chapter {ordinal}: {title}
+          {t('What happened in Chapter {n}: {title}', { n: ordinal, title })}
         </label>
         <p className="muted small" id="end-chapter-recap-hint">
-          {draft.status === 'ready' ? `Written by ${draft.draft.writtenBy}. ` : ''}
-          Change anything you like. The storyteller reads this recap in every later chapter on this
-          route. Leave it empty to end the chapter without one.
+          {joinSentences([
+            ...(draft.status === 'ready'
+              ? [t('Written by {name}.', { name: tKnown(draft.draft.writtenBy) })]
+              : []),
+            t(
+              'Change anything you like. The storyteller reads this recap in every later chapter on this route. Leave it empty to end the chapter without one.',
+            ),
+          ])}
         </p>
         <textarea
           id="end-chapter-recap"
@@ -163,24 +173,27 @@ export function EndChapterPanel({ view, onCancel, onEnded }: Props) {
         />
         {tooLong && (
           <p className="error small">
-            The recap can be at most {MAX_RECAP.toLocaleString()} characters (now{' '}
-            {recap.length.toLocaleString()}).
+            {t('The recap can be at most {max} characters (now {now}).', {
+              max: MAX_RECAP.toLocaleString(intlLocale()),
+              now: recap.length.toLocaleString(intlLocale()),
+            })}
           </p>
         )}
       </div>
       <div className="field">
-        <label htmlFor="end-chapter-next-title">Chapter {nextOrdinal} title</label>
+        <label htmlFor="end-chapter-next-title">{t('Chapter {n} title', { n: nextOrdinal })}</label>
         <input
           id="end-chapter-next-title"
           value={nextTitle}
           maxLength={120}
-          placeholder={`Chapter ${nextOrdinal}`}
+          placeholder={t('Chapter {n}', { n: nextOrdinal })}
           onChange={(e) => setNextTitle(e.target.value)}
         />
       </div>
       <p className="muted small">
-        Ending the chapter saves your place as &ldquo;End of Chapter {ordinal}: {title}&rdquo; in
-        Save / Load.
+        {t('Ending the chapter saves your place as “{save}” in Save / Load.', {
+          save: t('End of Chapter {n}: {title}', { n: ordinal, title }),
+        })}
       </p>
       {error && (
         <p role="alert" className="error">
@@ -189,7 +202,7 @@ export function EndChapterPanel({ view, onCancel, onEnded }: Props) {
       )}
       <div className="button-row">
         <button type="button" onClick={onCancel}>
-          Keep playing
+          {t('Keep playing')}
         </button>
         {draft.status !== 'ready' && (
           <button
@@ -200,11 +213,11 @@ export function EndChapterPanel({ view, onCancel, onEnded }: Props) {
               setAttempt((n) => n + 1);
             }}
           >
-            {draft.status === 'failed' ? 'Try again' : 'Write a recap for me'}
+            {draft.status === 'failed' ? t('Try again') : t('Write a recap for me')}
           </button>
         )}
         <button type="submit" className="primary" disabled={saving || tooLong}>
-          {saving ? 'Saving…' : `Save and start Chapter ${nextOrdinal}`}
+          {saving ? t('Saving…') : t('Save and start Chapter {n}', { n: nextOrdinal })}
         </button>
       </div>
     </form>

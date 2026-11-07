@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { commands, errorMessage } from '../../api/commands';
 import type { SaveDto } from '../../types';
+import { intlLocale, msg, t } from '../../i18n';
 
 type Props = {
   storyId: string;
@@ -11,9 +12,9 @@ type Props = {
 };
 
 const TYPE_LABEL: Record<string, string> = {
-  manual: 'Save',
-  quick: 'Quick save',
-  auto: 'Autosave',
+  manual: msg('Save'),
+  quick: msg('Quick save'),
+  auto: msg('Autosave'),
 };
 
 export function SavesPanel({ storyId, routeId, onView, onResume, onSaved }: Props) {
@@ -35,7 +36,7 @@ export function SavesPanel({ storyId, routeId, onView, onResume, onSaved }: Prop
 
   const save = async () => {
     try {
-      const s = await commands.createSave({ storyId, routeId, label: label.trim() || 'Save' });
+      const s = await commands.createSave({ storyId, routeId, label: label.trim() || t('Save') });
       setLabel('');
       onSaved(s);
       setReload((n) => n + 1);
@@ -62,16 +63,16 @@ export function SavesPanel({ storyId, routeId, onView, onResume, onSaved }: Prop
           void save();
         }}
       >
-        <label htmlFor="save-label">Save name</label>
+        <label htmlFor="save-label">{t('Save name')}</label>
         <input
           id="save-label"
           value={label}
           maxLength={120}
-          placeholder="e.g. Before the dance"
+          placeholder={t('e.g. Before the dance')}
           onChange={(e) => setLabel(e.target.value)}
         />
         <button type="submit" className="primary">
-          Save here
+          {t('Save here')}
         </button>
       </form>
       {error && (
@@ -79,33 +80,33 @@ export function SavesPanel({ storyId, routeId, onView, onResume, onSaved }: Prop
           {error}
         </p>
       )}
-      <ul className="item-list" aria-label="Saves">
-        {saves?.length === 0 && <li className="muted">No saves yet.</li>}
+      <ul className="item-list" aria-label={t('Saves')}>
+        {saves?.length === 0 && <li className="muted">{t('No saves yet.')}</li>}
         {saves?.map((s) => (
           <li key={s.id} className="item-row">
             <div>
               <strong>{s.label}</strong>
               <div className="muted small">
-                {TYPE_LABEL[s.saveType] ?? s.saveType} · {s.routeLabel} ·{' '}
-                {new Date(s.updatedAt).toLocaleString()}
-                {s.isRouteHead ? ' · latest on its route' : ''}
+                {t(TYPE_LABEL[s.saveType] ?? s.saveType)} · {s.routeLabel} ·{' '}
+                {new Date(s.updatedAt).toLocaleString(intlLocale())}
+                {s.isRouteHead ? ` · ${t('latest on its route')}` : ''}
               </div>
             </div>
             <div className="button-row">
               <button type="button" onClick={() => onView(s.id)}>
-                View
+                {t('View')}
               </button>
               <button type="button" onClick={() => onResume(s.id)}>
-                {s.isRouteHead ? 'Continue' : 'Continue as new branch'}
+                {s.isRouteHead ? t('Continue') : t('Continue as new branch')}
               </button>
               {s.saveType !== 'auto' && (
                 <button
                   type="button"
                   className="danger-link"
-                  aria-label={`Delete save ${s.label}`}
+                  aria-label={t('Delete save {name}', { name: s.label })}
                   onClick={() => void remove(s)}
                 >
-                  Delete
+                  {t('Delete')}
                 </button>
               )}
             </div>

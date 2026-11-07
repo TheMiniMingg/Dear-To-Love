@@ -3,6 +3,7 @@ import type { EventDto, RollRequest } from '../../types';
 import { RollResult } from './DiceCards';
 import { picturesOnly } from './pictures';
 import { RichText } from './RichText';
+import { t } from '../../i18n';
 
 type Props = {
   events: EventDto[];
@@ -57,9 +58,9 @@ function EventBlock({
       className="branch-button bookmark-button"
       aria-pressed={marked}
       onClick={() => onBookmark(e.id)}
-      title={marked ? 'Remove this bookmark' : 'Bookmark this place to find it again'}
+      title={marked ? t('Remove this bookmark') : t('Bookmark this place to find it again')}
     >
-      {marked ? 'Bookmarked' : 'Bookmark'}
+      {marked ? t('Bookmarked') : t('Bookmark')}
     </button>
   );
   const cls = (base: string) =>
@@ -69,10 +70,10 @@ function EventBlock({
       type="button"
       className="branch-button"
       onClick={() => onBranch(e.id)}
-      aria-label="Branch from here"
-      title="Start a new branch from this point"
+      aria-label={t('Branch from here')}
+      title={t('Start a new branch from this point')}
     >
-      Branch from here
+      {t('Branch from here')}
     </button>
   );
   const regenerate = onRegenerate && (
@@ -80,9 +81,9 @@ function EventBlock({
       type="button"
       className="branch-button"
       onClick={() => onRegenerate(e.id)}
-      title="Write a different reply on a new route; this one stays"
+      title={t('Write a different reply on a new route; this one stays')}
     >
-      Another reply
+      {t('Another reply')}
     </button>
   );
   const change = onEditAction && (
@@ -90,9 +91,9 @@ function EventBlock({
       type="button"
       className="branch-button"
       onClick={() => onEditAction(e.id)}
-      title="Change what you did, on a new route; this one stays"
+      title={t('Change what you did, on a new route; this one stays')}
     >
-      Change this action
+      {t('Change this action')}
     </button>
   );
   switch (e.kind) {
@@ -103,16 +104,16 @@ function EventBlock({
           {recap && (
             <aside
               className="chapter-recap"
-              aria-label={`Recap of Chapter ${e.payload.ordinal - 1}`}
+              aria-label={t('Recap of Chapter {n}', { n: e.payload.ordinal - 1 })}
             >
-              <p className="recap-label">Recap of Chapter {e.payload.ordinal - 1}</p>
+              <p className="recap-label">
+                {t('Recap of Chapter {n}', { n: e.payload.ordinal - 1 })}
+              </p>
               <Paragraphs text={recap} />
             </aside>
           )}
           <header className={cls('chapter-heading')} data-event-id={e.id} tabIndex={-1}>
-            <h2>
-              Chapter {e.payload.ordinal}: {e.payload.title}
-            </h2>
+            <h2>{t('Chapter {n}: {title}', { n: e.payload.ordinal, title: e.payload.title })}</h2>
             {branch}
             {bookmark}
           </header>
@@ -153,20 +154,25 @@ function EventBlock({
     case 'edit':
       return (
         <p className={cls('turn-note')} data-event-id={e.id} tabIndex={-1}>
-          {picturesOnly(e.payload.changes) ? 'Picture changed' : 'Story details changed'}
-          {e.payload.note ? `: ${e.payload.note}` : ''}.
+          {e.payload.note
+            ? picturesOnly(e.payload.changes)
+              ? t('Picture changed: {note}.', { note: e.payload.note })
+              : t('Story details changed: {note}.', { note: e.payload.note })
+            : picturesOnly(e.payload.changes)
+              ? t('Picture changed.')
+              : t('Story details changed.')}
         </p>
       );
     case 'checkpoint':
       return (
         <p className={cls('turn-note')} data-event-id={e.id} tabIndex={-1}>
-          Checkpoint: {e.payload.label}
+          {t('Checkpoint: {label}', { label: e.payload.label })}
         </p>
       );
     case 'fact_confirm':
       return (
         <p className={cls('turn-note')} data-event-id={e.id} tabIndex={-1}>
-          Fact confirmed: {e.payload.fact.text}
+          {t('Fact confirmed: {fact}', { fact: e.payload.fact.text })}
         </p>
       );
   }
@@ -211,8 +217,9 @@ export function NarrativeView({
             </div>
           )}
           <p className="intro-hint">
-            Write what you do in the box below to begin, for example &ldquo;Look around&rdquo; or
-            &ldquo;Ask who is there&rdquo;.
+            {t(
+              'Write what you do in the box below to begin, for example “Look around” or “Ask who is there”.',
+            )}
           </p>
         </>
       )}
@@ -271,7 +278,7 @@ export function NarrativeView({
         className="narrative"
         onScroll={onScroll}
         tabIndex={0}
-        aria-label="Story so far"
+        aria-label={t('Story so far')}
         data-testid="narrative"
       >
         <div className="narrative-column">
@@ -308,7 +315,7 @@ export function NarrativeView({
               {draft.text ? (
                 <RichText text={draft.text} playerName={playerName} streaming />
               ) : (
-                <p className="muted">Writing…</p>
+                <p className="muted">{t('Writing…')}</p>
               )}
             </div>
           )}
@@ -316,7 +323,7 @@ export function NarrativeView({
       </div>
       {showJump && (
         <button type="button" className="jump-latest" onClick={jump}>
-          Jump to latest
+          {t('Jump to latest')}
         </button>
       )}
     </div>

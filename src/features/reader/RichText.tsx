@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import type { RollRequest } from '../../types';
 import { RollAsk, RollResult } from './DiceCards';
 import { parseBlocks, rollRequestOf, samePerson, type Block } from './messages';
+import { msg, t } from '../../i18n';
 
 type Tagged = Exclude<Block, { kind: 'prose' }>;
 
@@ -67,11 +68,11 @@ function Avatar({ name }: { name: string }) {
 }
 
 const CALL_STATUS: Record<string, string> = {
-  ringing: 'Ringing…',
-  calling: 'Calling…',
-  connected: 'Connected',
-  ended: 'Call ended',
-  missed: 'Missed call',
+  ringing: msg('Ringing…'),
+  calling: msg('Calling…'),
+  connected: msg('Connected'),
+  ended: msg('Call ended'),
+  missed: msg('Missed call'),
 };
 
 type Group = { peer: string; texts: { sent: boolean; body: string; time: string }[] };
@@ -108,7 +109,7 @@ export function RichText({
         key={`texts-${out.length}`}
         className="msg-phone"
         role="group"
-        aria-label={`Text messages with ${g.peer || 'someone'}`}
+        aria-label={t('Text messages with {name}', { name: g.peer || t('someone') })}
       >
         {showName && g.peer && (
           <div className="msg-head">
@@ -116,17 +117,19 @@ export function RichText({
             <strong>{g.peer}</strong>
           </div>
         )}
-        {g.texts.map((t, i) => (
-          <div key={i} className={t.sent ? 'msg-bubble-row sent' : 'msg-bubble-row'}>
+        {g.texts.map((m, i) => (
+          <div key={i} className={m.sent ? 'msg-bubble-row sent' : 'msg-bubble-row'}>
             <div className="msg-bubble">
-              <span className="visually-hidden">{t.sent ? 'You sent: ' : `${g.peer}: `}</span>
-              {t.body.split('\n').map((line, j) => (
+              <span className="visually-hidden">
+                {m.sent ? t('You sent: ') : t('{name}: ', { name: g.peer })}
+              </span>
+              {m.body.split('\n').map((line, j) => (
                 <span key={j} className="msg-line">
                   {inline(line)}
                 </span>
               ))}
             </div>
-            {t.time && <span className="msg-time">{t.time}</span>}
+            {m.time && <span className="msg-time">{m.time}</span>}
           </div>
         ))}
       </div>,
@@ -138,18 +141,20 @@ export function RichText({
     const a = b.attrs;
     switch (b.kind) {
       case 'call': {
-        const who = a.with || a.from || a.to || 'Unknown caller';
+        const who = a.with || a.from || a.to || t('Unknown caller');
         const status = (a.status ?? '').toLowerCase();
         return (
           <div
             key={key}
             className={`msg-call ${status}`}
             role="group"
-            aria-label={`Call with ${who}`}
+            aria-label={t('Call with {name}', { name: who })}
           >
             <Avatar name={who} />
             <strong>{who}</strong>
-            <span className="msg-call-status">{CALL_STATUS[status] ?? a.status ?? 'Call'}</span>
+            <span className="msg-call-status">
+              {CALL_STATUS[status] ? t(CALL_STATUS[status]) : (a.status ?? t('Call'))}
+            </span>
             <span className="msg-call-icons" aria-hidden="true">
               <svg viewBox="0 0 24 24">
                 <rect x="9" y="3" width="6" height="11" rx="3" />
@@ -172,15 +177,17 @@ export function RichText({
         );
       }
       case 'thought': {
-        const who = a.who || a.from || 'Someone';
+        const who = a.who || a.from || t('Someone');
         const own = samePerson(who, playerName);
         return (
           <aside
             key={key}
             className="msg-thought"
-            aria-label={own ? 'Your thoughts' : `${who}'s thoughts`}
+            aria-label={own ? t('Your thoughts') : t("{name}'s thoughts", { name: who })}
           >
-            <span className="msg-label">{own ? 'You think' : `${who} thinks`}</span>
+            <span className="msg-label">
+              {own ? t('You think') : t('{name} thinks', { name: who })}
+            </span>
             <div className="msg-thought-body">
               <Prose text={b.body} />
             </div>
@@ -192,16 +199,21 @@ export function RichText({
           <figure
             key={key}
             className="msg-letter"
-            aria-label={a.from ? `Letter from ${a.from}` : 'Letter'}
+            aria-label={a.from ? t('Letter from {name}', { name: a.from }) : t('Letter')}
           >
             <Prose text={b.body} />
             {a.from && <figcaption>{a.from}</figcaption>}
           </figure>
         );
       case 'post': {
-        const who = a.from || 'Someone';
+        const who = a.from || t('Someone');
         return (
-          <div key={key} className="msg-post" role="group" aria-label={`Post by ${who}`}>
+          <div
+            key={key}
+            className="msg-post"
+            role="group"
+            aria-label={t('Post by {name}', { name: who })}
+          >
             <div className="msg-head">
               <Avatar name={who} />
               <strong>{who}</strong>
@@ -229,7 +241,7 @@ export function RichText({
           <RollResult
             key={key}
             roll={{
-              label: a.for || 'A roll',
+              label: a.for || t('A roll'),
               dice: a.dice ?? '',
               total,
               target: Number.isFinite(target) ? target : undefined,

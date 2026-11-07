@@ -265,11 +265,23 @@ Also in **Narration** (wizard and Story details):
   bubble from Erika K. Any model that follows instructions can do this; the offline storyteller
   answers your own texts and calls.
 - **Story language**: the language the story is written in, whatever language you type in.
-  Summaries and chapter recaps follow it too. Not set, most models answer in your language.
+  Summaries and chapter recaps follow it too. New stories start with the app's language
+  (Settings → Language) when it is Chinese, Japanese or Korean. Not set, most models answer in
+  your language.
 
 The menu next to the action box sends what you write as a **text** to someone, a **call**, or
 a **thought** of your own instead of an action. They are saved in the story as the same tags,
 so exports write them out as plain text, such as `[Text to Mara] Are you awake?`.
+
+### The app's language
+
+**Settings → Language → App language** switches every menu, button and message between
+English, Simplified Chinese, Traditional Chinese, Japanese and Korean, or follows the
+computer (the default; Taiwan and Hong Kong get Traditional Chinese). It is a setting of this
+computer, not of a story: it isn't in backups or storypacks, and changing it never changes a
+story's own language. The preset worlds, characters, races and rules are story content and
+stay in English; the storyteller writes in the story's language whatever language they are
+in. Diagnostics reports stay in English so they can be read by whoever helps you.
 
 ## Dice
 

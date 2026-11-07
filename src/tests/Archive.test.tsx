@@ -76,7 +76,7 @@ describe('Import storypack', () => {
       path: '/p/The Lamp Room.storypack',
     });
     expect(await screen.findByRole('status')).toHaveTextContent(
-      'Imported "The Lamp Room" with 2 routes. 1 new image added; 1 image was already in your library.',
+      'Imported "The Lamp Room" with 2 routes. 1 new image added. 1 image was already in your library.',
     );
     expect(await screen.findByText('The Lamp Room')).toBeVisible();
   });

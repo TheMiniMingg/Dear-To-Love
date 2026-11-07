@@ -30,8 +30,16 @@ import {
   uniq,
 } from './fields';
 import { ERAS, PERSONALITIES, RACES, ROLES, RULES, SETTINGS } from './presets';
-import { DICE_STORY_TYPES, STYLES, StyleFields, tellingOf } from './StyleFields';
+import {
+  DICE_STORY_TYPES,
+  STYLES,
+  StyleFields,
+  appStoryLanguage,
+  storyLanguageLabel,
+  tellingOf,
+} from './StyleFields';
 import { BACKGROUND_SLOT, COVER_SLOT, livePictures } from './PicturesStep';
+import { joinList, msg, t, tKnown, tn, tOptions } from '../../i18n';
 
 export type StepProps = {
   draft: CreateStoryDraft;
@@ -43,20 +51,20 @@ export type StepProps = {
 export const PLAYER = '@player';
 
 export const PERSPECTIVES: PickerOption<Perspective>[] = [
-  { value: 'second', label: 'Second person (you)' },
-  { value: 'first', label: 'First person (I)' },
-  { value: 'third', label: 'Third person (they)' },
+  { value: 'second', label: msg('Second person (you)') },
+  { value: 'first', label: msg('First person (I)') },
+  { value: 'third', label: msg('Third person (they)') },
 ];
 export const DETAILS: PickerOption<Detail>[] = [
-  { value: 'brief', label: 'Brief' },
-  { value: 'balanced', label: 'Balanced' },
-  { value: 'detailed', label: 'Detailed' },
-  { value: 'cinematic', label: 'Cinematic' },
+  { value: 'brief', label: msg('Brief') },
+  { value: 'balanced', label: msg('Balanced') },
+  { value: 'detailed', label: msg('Detailed') },
+  { value: 'cinematic', label: msg('Cinematic') },
 ];
 const PACINGS: PickerOption<Pacing>[] = [
-  { value: 'fast', label: 'Fast' },
-  { value: 'normal', label: 'Normal' },
-  { value: 'slow', label: 'Slow' },
+  { value: 'fast', label: msg('Fast') },
+  { value: 'normal', label: msg('Normal') },
+  { value: 'slow', label: msg('Slow') },
 ];
 const PRONOUNS = ['she/her', 'he/him', 'they/them'];
 
@@ -71,14 +79,14 @@ export function applyWorld(
   id: string,
   current?: Narration,
 ): Partial<CreateStoryDraft> {
-  const t = catalog.worlds.find((w) => w.id === id);
-  return t
+  const tpl = catalog.worlds.find((w) => w.id === id);
+  return tpl
     ? {
-        worldTemplateId: t.id,
-        world: copy(t.world),
+        worldTemplateId: tpl.id,
+        world: copy(tpl.world),
         narration: {
-          ...copy(t.narration),
-          ...(current ? tellingOf(current) : { messageCards: true }),
+          ...copy(tpl.narration),
+          ...(current ? tellingOf(current) : { messageCards: true, language: appStoryLanguage() }),
         },
       }
     : { worldTemplateId: null };
@@ -128,13 +136,14 @@ export function blankDraft(d: CreateStoryDraft): CreateStoryDraft {
       tone: '',
       pacing: 'normal',
       messageCards: true,
+      language: appStoryLanguage(),
     },
     player: { id: '', name: '', control: 'player', personality: [], goals: [], abilities: [] },
     npcs: [],
     relationships: [],
     scene: { location: '', summary: '' },
     openThreads: [],
-    firstChapterTitle: 'Chapter 1',
+    firstChapterTitle: t('Chapter {n}', { n: 1 }),
     chapterOutlines: [],
     pictures: [],
   };
@@ -151,7 +160,7 @@ function templateOptions<T extends { id: string; label: string; summary: string 
   current: string | null,
   ownLabel: string,
 ): PickerOption<string>[] {
-  const options = list.map((t) => ({ value: t.id, label: t.label, hint: t.summary }));
+  const options = list.map((x) => ({ value: x.id, label: x.label, hint: x.summary }));
   if (!current || !options.some((o) => o.value === current)) {
     options.unshift({ value: current ?? '', label: ownLabel, hint: '' });
   }
@@ -167,14 +176,15 @@ export function WorldStep({ draft, update, catalog, guided }: StepProps) {
   return (
     <>
       <PresetPicker
-        label="Type of story"
+        label={t('Type of story')}
         presets={STORY_TYPES}
+        translate
         value={storyType}
-        noneLabel="Any"
-        onChange={(t) => {
-          const patch: Partial<CreateStoryDraft> = { storyType: t || undefined };
+        noneLabel={t('Any')}
+        onChange={(type) => {
+          const patch: Partial<CreateStoryDraft> = { storyType: type || undefined };
           // Move to a world of that type when the current one isn't.
-          const next = catalog.worlds.filter((x) => worldFits(x.narration.genres, t));
+          const next = catalog.worlds.filter((x) => worldFits(x.narration.genres, type));
           const current = catalog.worlds.find((x) => x.id === draft.worldTemplateId);
           if (guided && current && next.length > 0 && !next.includes(current)) {
             Object.assign(patch, applyWorld(catalog, next[0]!.id, draft.narration));
@@ -182,40 +192,42 @@ export function WorldStep({ draft, update, catalog, guided }: StepProps) {
           // Adventures, fantasy and school stories roll dice; you can turn it off.
           patch.narration = {
             ...(patch.narration ?? draft.narration),
-            dice: DICE_STORY_TYPES.includes(t) || undefined,
+            dice: DICE_STORY_TYPES.includes(type) || undefined,
           };
           update(patch);
         }}
       />
       {guided && storyType && fitting.length === 0 && (
         <p className="muted small">
-          No preset world is tagged {storyType} yet, so every world is listed. The story is still a{' '}
-          {storyType} story.
+          {t(
+            'No preset world is tagged {type} yet, so every world is listed. The story is still a {type} story.',
+            { type: t(storyType) },
+          )}
         </p>
       )}
       {guided ? (
         <>
           <ArrowPicker
-            label="Start from a world"
-            options={templateOptions(worlds, draft.worldTemplateId, 'Your own world')}
+            label={t('Start from a world')}
+            options={templateOptions(worlds, draft.worldTemplateId, t('Your own world'))}
             value={draft.worldTemplateId ?? ''}
             onChange={(id) => update(applyWorld(catalog, id, draft.narration))}
           />
           <PresetPicker
-            label="Era"
+            label={t('Era')}
             presets={uniq([...catalog.worlds.map((x) => x.world.era), ...ERAS])}
             value={w.era}
             onChange={(era) => set({ era })}
           />
           <PresetPicker
-            label="Setting"
+            label={t('Setting')}
             presets={uniq([...catalog.worlds.map((x) => x.world.setting), ...SETTINGS])}
             value={w.setting}
             onChange={(setting) => set({ setting })}
           />
           {w.description && <p className="muted">{w.description}</p>}
           <MultiPicker
-            label="Rules the storyteller follows"
+            label={t('Rules the storyteller follows')}
             presets={uniq([...catalog.worlds.flatMap((x) => x.world.rules), ...RULES])}
             value={w.rules}
             onChange={(rules) => set({ rules })}
@@ -223,22 +235,22 @@ export function WorldStep({ draft, update, catalog, guided }: StepProps) {
         </>
       ) : (
         <>
-          <TextField label="Era" value={w.era} onChange={(era) => set({ era })} />
+          <TextField label={t('Era')} value={w.era} onChange={(era) => set({ era })} />
           <TextField
-            label="Setting"
+            label={t('Setting')}
             required
             value={w.setting}
             onChange={(setting) => set({ setting })}
-            hint="Where the story takes place."
+            hint={t('Where the story takes place.')}
           />
           <TextArea
-            label="Description"
+            label={t('Description')}
             value={w.description}
             rows={4}
             onChange={(description) => set({ description })}
           />
           <LinesField
-            label="Rules the storyteller follows"
+            label={t('Rules the storyteller follows')}
             value={w.rules}
             onChange={(rules) => set({ rules })}
           />
@@ -268,45 +280,45 @@ export function CharacterStep({ draft, update, catalog, guided }: StepProps) {
       {guided ? (
         <>
           <ArrowPicker
-            label="Start from a character"
+            label={t('Start from a character')}
             options={templateOptions(
               catalog.characters,
               draft.characterTemplateId,
-              'Your own character',
+              t('Your own character'),
             )}
             value={draft.characterTemplateId ?? ''}
             onChange={(id) => update(applyCharacter(catalog, id))}
           />
           <PresetPicker
-            label="Name"
+            label={t('Name')}
             presets={uniq(chars.map((c) => c.name))}
             value={p.name}
             onChange={(name) => set({ name })}
           />
           <PresetPicker
-            label="Pronouns"
+            label={t('Pronouns')}
             presets={uniq([...PRONOUNS, ...chars.map((c) => c.pronouns)])}
             value={p.pronouns ?? ''}
-            noneLabel="Not specified"
+            noneLabel={t('Not specified')}
             onChange={(pronouns) => set({ pronouns })}
           />
           <PresetPicker
-            label="Race or species"
+            label={t('Race or species')}
             presets={raceOptions(catalog)}
             value={p.species ?? ''}
-            noneLabel="Not specified"
+            noneLabel={t('Not specified')}
             onChange={(species) => set({ species: species || undefined })}
           />
           <PresetPicker
-            label="Role"
+            label={t('Role')}
             presets={roleOptions(catalog)}
             value={p.role ?? ''}
-            noneLabel="No particular role"
+            noneLabel={t('No particular role')}
             onChange={(role) => set({ role })}
           />
           {p.description && <p className="muted">{p.description}</p>}
           <MultiPicker
-            label="Personality"
+            label={t('Personality')}
             presets={personalityOptions(catalog)}
             value={p.personality}
             onChange={(personality) => set({ personality })}
@@ -317,41 +329,41 @@ export function CharacterStep({ draft, update, catalog, guided }: StepProps) {
         </>
       ) : (
         <>
-          <TextField label="Name" required value={p.name} onChange={(name) => set({ name })} />
+          <TextField label={t('Name')} required value={p.name} onChange={(name) => set({ name })} />
           <div className="field-row">
             <TextField
-              label="Pronouns"
+              label={t('Pronouns')}
               value={p.pronouns ?? ''}
               onChange={(pronouns) => set({ pronouns })}
             />
-            <TextField label="Age" value={p.age ?? ''} onChange={(age) => set({ age })} />
-            <TextField label="Role" value={p.role ?? ''} onChange={(role) => set({ role })} />
+            <TextField label={t('Age')} value={p.age ?? ''} onChange={(age) => set({ age })} />
+            <TextField label={t('Role')} value={p.role ?? ''} onChange={(role) => set({ role })} />
             <TextField
-              label="Race or species"
+              label={t('Race or species')}
               value={p.species ?? ''}
-              placeholder="Human, Orc, Lizardfolk…"
+              placeholder={t('Human, Orc, Lizardfolk…')}
               onChange={(species) => set({ species })}
             />
           </div>
           <TextArea
-            label="Description"
+            label={t('Description')}
             value={p.description ?? ''}
             onChange={(description) => set({ description })}
           />
           <TextArea
-            label="Appearance"
+            label={t('Appearance')}
             value={p.appearance ?? ''}
             rows={2}
             onChange={(appearance) => set({ appearance })}
           />
           <LinesField
-            label="Personality"
+            label={t('Personality')}
             value={p.personality}
             onChange={(personality) => set({ personality })}
           />
-          <LinesField label="Goals" value={p.goals} onChange={(goals) => set({ goals })} />
+          <LinesField label={t('Goals')} value={p.goals} onChange={(goals) => set({ goals })} />
           <LinesField
-            label="Abilities"
+            label={t('Abilities')}
             value={p.abilities}
             onChange={(abilities) => set({ abilities })}
           />
@@ -381,14 +393,14 @@ function OthersEditor({ draft, update, catalog, guided }: StepProps) {
   return (
     <>
       <fieldset className="field">
-        <legend>Others in the story</legend>
-        {draft.npcs.length === 0 && <p className="muted small">Nobody else yet.</p>}
+        <legend>{t('Others in the story')}</legend>
+        {draft.npcs.length === 0 && <p className="muted small">{t('Nobody else yet.')}</p>}
         <ul className="npc-list">
           {draft.npcs.map((c, i) => (
             <li key={c.id} className="npc-card">
               {guided ? (
                 <span>
-                  <strong>{c.name || 'Unnamed'}</strong>
+                  <strong>{c.name || t('Unnamed')}</strong>
                   {(c.species || c.role) && (
                     <span className="muted">, {[c.species, c.role].filter(Boolean).join(' ')}</span>
                   )}
@@ -396,28 +408,28 @@ function OthersEditor({ draft, update, catalog, guided }: StepProps) {
               ) : (
                 <div className="field-row">
                   <TextField
-                    label="Name"
+                    label={t('Name')}
                     required
                     value={c.name}
                     onChange={(name) => setNpc(i, { name })}
                   />
                   <TextField
-                    label="Pronouns"
+                    label={t('Pronouns')}
                     value={c.pronouns ?? ''}
                     onChange={(pronouns) => setNpc(i, { pronouns })}
                   />
                   <TextField
-                    label="Age"
+                    label={t('Age')}
                     value={c.age ?? ''}
                     onChange={(age) => setNpc(i, { age })}
                   />
                   <TextField
-                    label="Role"
+                    label={t('Role')}
                     value={c.role ?? ''}
                     onChange={(role) => setNpc(i, { role })}
                   />
                   <TextField
-                    label="Race or species"
+                    label={t('Race or species')}
                     value={c.species ?? ''}
                     onChange={(species) => setNpc(i, { species })}
                   />
@@ -425,7 +437,7 @@ function OthersEditor({ draft, update, catalog, guided }: StepProps) {
               )}
               {!guided && (
                 <TextArea
-                  label="Description"
+                  label={t('Description')}
                   rows={2}
                   value={c.description ?? ''}
                   onChange={(description) => setNpc(i, { description })}
@@ -434,10 +446,12 @@ function OthersEditor({ draft, update, catalog, guided }: StepProps) {
               <button
                 type="button"
                 className="danger-link"
-                aria-label={`Remove ${c.name || 'this character'}`}
+                aria-label={
+                  c.name ? t('Remove {name}', { name: c.name }) : t('Remove this character')
+                }
                 onClick={() => remove(c.id)}
               >
-                Remove
+                {t('Remove')}
               </button>
             </li>
           ))}
@@ -462,33 +476,33 @@ function OthersEditor({ draft, update, catalog, guided }: StepProps) {
               })
             }
           >
-            Add a character
+            {t('Add a character')}
           </button>
         )}
       </fieldset>
       {guided && extras.length > 0 && (
         <fieldset className="field toggle-list">
-          <legend>Bring in a preset character</legend>
-          {extras.map((t) => {
-            const on = draft.npcs.some((c) => c.id === t.character.id);
+          <legend>{t('Bring in a preset character')}</legend>
+          {extras.map((x) => {
+            const on = draft.npcs.some((c) => c.id === x.character.id);
             return (
-              <label key={t.id} className="check">
+              <label key={x.id} className="check">
                 <input
                   type="checkbox"
                   checked={on}
                   onChange={(e) =>
                     e.target.checked
                       ? update({
-                          npcs: [...draft.npcs, { ...copy(t.character), control: 'npc' }],
+                          npcs: [...draft.npcs, { ...copy(x.character), control: 'npc' }],
                         })
-                      : remove(t.character.id)
+                      : remove(x.character.id)
                   }
                 />
                 <span>
-                  {t.character.name}
-                  {(t.character.species || t.character.role) && (
+                  {x.character.name}
+                  {(x.character.species || x.character.role) && (
                     <span className="muted">
-                      , {[t.character.species, t.character.role].filter(Boolean).join(' ')}
+                      , {[x.character.species, x.character.role].filter(Boolean).join(' ')}
                     </span>
                   )}
                 </span>
@@ -512,30 +526,30 @@ function OutlinesEditor({
     onChange(value.map((c, j) => (j === i ? { ...c, ...patch } : c)));
   return (
     <fieldset className="field">
-      <legend>Chapter plan (optional)</legend>
+      <legend>{t('Chapter plan (optional)')}</legend>
       <p className="muted small">
-        Used when you start the next chapter. Chapters without a plan get a plain title.
+        {t('Used when you start the next chapter. Chapters without a plan get a plain title.')}
       </p>
       <ol className="outline-list">
         {value.map((c, i) => (
           <li key={i} className="field-row">
             <TextField
-              label={`Chapter ${i + 1} title`}
+              label={t('Chapter {n} title', { n: i + 1 })}
               value={c.title}
               onChange={(title) => set(i, { title })}
             />
             <TextField
-              label="What happens"
+              label={t('What happens')}
               value={c.outline}
               onChange={(outline) => set(i, { outline })}
             />
             <button
               type="button"
               className="danger-link"
-              aria-label={`Remove chapter ${i + 1}`}
+              aria-label={t('Remove chapter {n}', { n: i + 1 })}
               onClick={() => onChange(value.filter((_, j) => j !== i))}
             >
-              Remove
+              {t('Remove')}
             </button>
           </li>
         ))}
@@ -545,7 +559,7 @@ function OutlinesEditor({
         className="add-button"
         onClick={() => onChange([...value, { title: '', outline: '' }])}
       >
-        Add a chapter
+        {t('Add a chapter')}
       </button>
     </fieldset>
   );
@@ -556,12 +570,12 @@ export function StoryStep(props: StepProps) {
   const options = fittingScenarios(catalog, draft.worldTemplateId);
   const current = draft.scenarioTemplateId;
   const offWorld = current !== null && !options.some((s) => s.id === current);
-  const pickerOptions = templateOptions(options, current, 'Your own story');
+  const pickerOptions = templateOptions(options, current, t('Your own story'));
   if (offWorld) {
     const s = catalog.scenarios.find((x) => x.id === current);
     pickerOptions[0] = {
       value: current,
-      label: `${s?.label ?? 'Current story'} (written for another world)`,
+      label: t('{name} (written for another world)', { name: s?.label ?? t('Current story') }),
       hint: '',
     };
   }
@@ -570,61 +584,61 @@ export function StoryStep(props: StepProps) {
       {guided ? (
         <>
           <ArrowPicker
-            label="Start from a scenario"
+            label={t('Start from a scenario')}
             options={pickerOptions}
             value={current ?? ''}
             onChange={(id) => update(applyScenario(catalog, id))}
           />
           <dl className="facts">
-            <dt>Title</dt>
-            <dd>{draft.title || '(not set)'}</dd>
-            <dt>Opens at</dt>
-            <dd>{draft.scene.location || '(not set)'}</dd>
+            <dt>{t('Title')}</dt>
+            <dd>{draft.title || t('(not set)')}</dd>
+            <dt>{t('Opens at')}</dt>
+            <dd>{draft.scene.location || t('(not set)')}</dd>
             {draft.scene.summary && (
               <>
-                <dt>Scene</dt>
+                <dt>{t('Scene')}</dt>
                 <dd>{draft.scene.summary}</dd>
               </>
             )}
-            <dt>First chapter</dt>
-            <dd>{draft.firstChapterTitle || '(not set)'}</dd>
+            <dt>{t('First chapter')}</dt>
+            <dd>{draft.firstChapterTitle || t('(not set)')}</dd>
           </dl>
         </>
       ) : (
         <>
           <TextField
-            label="Title"
+            label={t('Title')}
             required
             value={draft.title}
             onChange={(title) => update({ title })}
           />
           <TextArea
-            label="Description"
+            label={t('Description')}
             value={draft.description}
             rows={2}
             onChange={(description) => update({ description })}
           />
           <TextField
-            label="Starting location"
+            label={t('Starting location')}
             required
             value={draft.scene.location}
             onChange={(location) => update({ scene: { ...draft.scene, location } })}
-            hint="Where you are when the story begins."
+            hint={t('Where you are when the story begins.')}
           />
           <TextArea
-            label="Opening scene"
+            label={t('Opening scene')}
             value={draft.scene.summary}
             onChange={(summary) => update({ scene: { ...draft.scene, summary } })}
-            hint="What is happening as the story begins. The storyteller picks up from here."
+            hint={t('What is happening as the story begins. The storyteller picks up from here.')}
           />
           <TextField
-            label="First chapter title"
+            label={t('First chapter title')}
             required
             value={draft.firstChapterTitle}
             onChange={(firstChapterTitle) => update({ firstChapterTitle })}
           />
           <LinesField
-            label="Open questions"
+            label={t('Open questions')}
             value={draft.openThreads}
             rows={2}
             onChange={(openThreads) => update({ openThreads })}
@@ -647,39 +661,39 @@ export function NarrationStep({ draft, update, catalog, guided }: StepProps) {
     <>
       <StyleFields narration={n} onChange={set} typeLanguage={!guided} />
       <ArrowPicker
-        label="Point of view"
-        options={PERSPECTIVES}
+        label={t('Point of view')}
+        options={tOptions(PERSPECTIVES)}
         value={n.perspective}
         onChange={(perspective) => set({ perspective })}
       />
       <ArrowPicker
-        label="Detail"
-        options={DETAILS}
+        label={t('Detail')}
+        options={tOptions(DETAILS)}
         value={n.detail}
         onChange={(detail) => set({ detail })}
       />
       <ArrowPicker
-        label="Pacing"
-        options={PACINGS}
+        label={t('Pacing')}
+        options={tOptions(PACINGS)}
         value={n.pacing}
         onChange={(pacing) => set({ pacing })}
       />
       {guided ? (
         <PresetPicker
-          label="Tone"
+          label={t('Tone')}
           presets={uniq(catalog.worlds.map((w) => w.narration.tone))}
           value={n.tone}
           onChange={(tone) => set({ tone })}
         />
       ) : (
         <TextField
-          label="Tone"
+          label={t('Tone')}
           value={n.tone}
           onChange={(tone) => set({ tone })}
-          placeholder="Warm, gently mysterious"
+          placeholder={t('Warm, gently mysterious')}
         />
       )}
-      <h2>What kind of story</h2>
+      <h2>{t('What kind of story')}</h2>
       <ContentFields
         narration={n}
         onChange={set}
@@ -692,18 +706,18 @@ export function NarrationStep({ draft, update, catalog, guided }: StepProps) {
 
 /** "Romance, Comedy · Mature", or '' when nothing is set. */
 export function storyKind(genres: string[] | undefined, rating: ContentRating | undefined): string {
-  const g = uniq(genres ?? []).join(', ');
-  const r = rating ? RATING_LABELS[rating] : '';
+  const g = joinList(uniq(genres ?? []).map((x) => t(x)));
+  const r = rating ? t(RATING_LABELS[rating]) : '';
   return [g, r].filter(Boolean).join(' · ');
 }
 
 const STEP_NAMES: Record<DraftStep, string> = {
-  world: 'World',
-  character: 'You',
-  story: 'Story',
-  narration: 'Narration',
-  pictures: 'Pictures',
-  review: 'Review',
+  world: msg('World'),
+  character: msg('You'),
+  story: msg('Story'),
+  narration: msg('Narration'),
+  pictures: msg('Pictures'),
+  review: msg('Review'),
 };
 
 /** "Cover, background and 2 portraits", or '' when none are picked. */
@@ -711,13 +725,16 @@ export function picturesText(draft: CreateStoryDraft): string {
   const slots = livePictures(draft).map((p) => p.slot);
   const portraits = slots.filter((s) => s.startsWith('portrait:')).length;
   const parts = [
-    slots.includes(COVER_SLOT) && 'cover',
-    slots.includes(BACKGROUND_SLOT) && 'background',
-    portraits > 0 && (portraits === 1 ? '1 portrait' : `${portraits} portraits`),
+    slots.includes(COVER_SLOT) && t('cover'),
+    slots.includes(BACKGROUND_SLOT) && t('background'),
+    portraits > 0 && tn(portraits, '{n} portrait', '{n} portraits'),
   ].filter((x): x is string => !!x);
   if (!parts.length) return '';
   const last = parts[parts.length - 1] ?? '';
-  const text = parts.length === 1 ? last : `${parts.slice(0, -1).join(', ')} and ${last}`;
+  const text =
+    parts.length === 1
+      ? last
+      : t('{list} and {last}', { list: joinList(parts.slice(0, -1)), last });
   return text.charAt(0).toUpperCase() + text.slice(1);
 }
 
@@ -733,19 +750,19 @@ export function ReviewStep({
   /** Who will write the replies, in words. */
   storytellerLabel?: string;
 }) {
-  const others = draft.npcs.map((c) => c.name || 'Unnamed').join(', ');
+  const others = joinList(draft.npcs.map((c) => c.name || t('Unnamed')));
   return (
     <>
       {problems && problems.length > 0 && (
         <div className="problems" role="alert">
-          <p>Fix these before creating the story:</p>
+          <p>{t('Fix these before creating the story:')}</p>
           <ul>
             {problems.map((p, i) => (
               <li key={i}>
                 {p.message}{' '}
                 {p.step !== 'review' && (
                   <button type="button" className="link-button" onClick={() => onGoTo(p.step)}>
-                    Go to {STEP_NAMES[p.step]}
+                    {t('Go to {step}', { step: t(STEP_NAMES[p.step]) })}
                   </button>
                 )}
               </li>
@@ -753,17 +770,17 @@ export function ReviewStep({
           </ul>
         </div>
       )}
-      <dl className="facts" aria-label="Story summary">
-        <dt>Title</dt>
-        <dd>{draft.title || '(not set)'}</dd>
-        <dt>World</dt>
+      <dl className="facts" aria-label={t('Story summary')}>
+        <dt>{t('Title')}</dt>
+        <dd>{draft.title || t('(not set)')}</dd>
+        <dt>{t('World')}</dt>
         <dd>
-          {draft.world.setting || '(not set)'}
+          {draft.world.setting || t('(not set)')}
           {draft.world.era && <span className="muted"> · {draft.world.era}</span>}
         </dd>
-        <dt>You play</dt>
+        <dt>{t('You play')}</dt>
         <dd>
-          {draft.player.name || '(not set)'}
+          {draft.player.name || t('(not set)')}
           {(draft.player.species || draft.player.role) &&
             `, ${[draft.player.species, draft.player.role].filter(Boolean).join(' ')}`}
           {draft.player.pronouns && <span className="muted"> ({draft.player.pronouns})</span>}
@@ -773,56 +790,58 @@ export function ReviewStep({
               {(draft.player.stats ?? [])
                 .filter((st) => st.name.trim())
                 .map((st) => `${st.name.trim()} ${st.value}`)
-                .join(', ')}
+                .join(t(', '))}
             </span>
           )}
         </dd>
-        <dt>Also here</dt>
-        <dd>{others || 'Nobody else yet'}</dd>
-        <dt>Opens at</dt>
-        <dd>{draft.scene.location || '(not set)'}</dd>
-        <dt>First chapter</dt>
-        <dd>{draft.firstChapterTitle || '(not set)'}</dd>
-        <dt>Narration</dt>
+        <dt>{t('Also here')}</dt>
+        <dd>{others || t('Nobody else yet')}</dd>
+        <dt>{t('Opens at')}</dt>
+        <dd>{draft.scene.location || t('(not set)')}</dd>
+        <dt>{t('First chapter')}</dt>
+        <dd>{draft.firstChapterTitle || t('(not set)')}</dd>
+        <dt>{t('Narration')}</dt>
         <dd>
-          {STYLES.find((st) => st.value === (draft.narration.style ?? 'narrated'))?.label} ·{' '}
-          {PERSPECTIVES.find((p) => p.value === draft.narration.perspective)?.label} ·{' '}
-          {DETAILS.find((d) => d.value === draft.narration.detail)?.label}
+          {t(STYLES.find((st) => st.value === (draft.narration.style ?? 'narrated'))?.label ?? '')}{' '}
+          · {t(PERSPECTIVES.find((p) => p.value === draft.narration.perspective)?.label ?? '')} ·{' '}
+          {t(DETAILS.find((d) => d.value === draft.narration.detail)?.label ?? '')}
           {draft.narration.tone && ` · ${draft.narration.tone}`}
-          {draft.narration.language && ` · in ${draft.narration.language}`}
-          {draft.narration.dice && ' · dice rolls'}
+          {draft.narration.language &&
+            ` · ${t('in {language}', { language: storyLanguageLabel(draft.narration.language) })}`}
+          {draft.narration.dice && ` · ${t('dice rolls')}`}
         </dd>
-        <dt>Kind of story</dt>
+        <dt>{t('Kind of story')}</dt>
         <dd>
           {storyKind(
             withStoryType(draft.narration.genres, draft.storyType ?? ''),
             draft.narration.rating,
-          ) || 'Not set'}
+          ) || t('Not set')}
         </dd>
-        {(draft.narration.themes ?? []).some((t) => t.trim()) && (
+        {(draft.narration.themes ?? []).some((x) => x.trim()) && (
           <>
-            <dt>Themes</dt>
-            <dd>{uniq(draft.narration.themes ?? []).join(', ')}</dd>
+            <dt>{t('Themes')}</dt>
+            <dd>{joinList(uniq(draft.narration.themes ?? []))}</dd>
           </>
         )}
-        {(draft.narration.limits ?? []).some((t) => t.trim()) && (
+        {(draft.narration.limits ?? []).some((x) => x.trim()) && (
           <>
-            <dt>Hard limits</dt>
-            <dd>{uniq(draft.narration.limits ?? []).join(', ')}</dd>
+            <dt>{t('Hard limits')}</dt>
+            <dd>{joinList(uniq(draft.narration.limits ?? []))}</dd>
           </>
         )}
-        <dt>Pictures</dt>
-        <dd>{picturesText(draft) || 'None yet'}</dd>
+        <dt>{t('Pictures')}</dt>
+        <dd>{picturesText(draft) || t('None yet')}</dd>
         {storytellerLabel && (
           <>
-            <dt>Storyteller</dt>
-            <dd>{storytellerLabel}</dd>
+            <dt>{t('Storyteller')}</dt>
+            <dd>{tKnown(storytellerLabel)}</dd>
           </>
         )}
       </dl>
       <p className="muted small">
-        Once you create it, this becomes the story&apos;s starting point. Your choices here are kept
-        until then, even if you close the app.
+        {t(
+          "Once you create it, this becomes the story's starting point. Your choices here are kept until then, even if you close the app.",
+        )}
       </p>
     </>
   );

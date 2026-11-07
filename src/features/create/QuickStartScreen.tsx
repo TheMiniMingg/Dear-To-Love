@@ -5,6 +5,8 @@ import { ArrowPicker } from '../../components/ArrowPicker';
 import type { Detail, Perspective, TemplateCatalog } from '../../types';
 import { STORY_TYPES, withStoryType, worldFits } from './ContentFields';
 import { DETAILS, PERSPECTIVES, fittingScenarios } from './WizardSteps';
+import { joinList, t, tOptions } from '../../i18n';
+import { appStoryLanguage, storyLanguageLabel } from './StyleFields';
 
 /** Quick Start: pick presets with arrows or menus. No typing required. */
 export function QuickStartScreen() {
@@ -48,9 +50,9 @@ export function QuickStartScreen() {
   };
   const fitting = catalog?.worlds.filter((w) => worldFits(w.narration.genres, storyType)) ?? [];
   const worlds = fitting.length > 0 ? fitting : (catalog?.worlds ?? []);
-  const chooseType = (t: string) => {
-    setStoryType(t);
-    const next = catalog?.worlds.filter((w) => worldFits(w.narration.genres, t)) ?? [];
+  const chooseType = (type: string) => {
+    setStoryType(type);
+    const next = catalog?.worlds.filter((w) => worldFits(w.narration.genres, type)) ?? [];
     if (next.length > 0 && !next.some((w) => w.id === worldId)) chooseWorld(next[0]!.id);
   };
   const world = catalog?.worlds.find((w) => w.id === worldId);
@@ -58,6 +60,8 @@ export function QuickStartScreen() {
   const character = catalog?.characters.find((c) => c.id === characterId);
   const effectivePerspective = perspective ?? world?.narration.perspective ?? 'second';
   const effectiveDetail = detail ?? world?.narration.detail ?? 'balanced';
+
+  const storyLanguage = appStoryLanguage();
 
   const start = async () => {
     setBusy(true);
@@ -70,6 +74,7 @@ export function QuickStartScreen() {
         perspective: effectivePerspective,
         detail: effectiveDetail,
         storyType: storyType || undefined,
+        language: storyLanguage,
       });
       navigate({ name: 'reader', routeId: created.mainRouteId });
     } catch (e) {
@@ -82,9 +87,9 @@ export function QuickStartScreen() {
     <section className="screen" aria-labelledby="qs-title">
       <div className="screen-header">
         <button type="button" onClick={() => navigate({ name: 'library' })}>
-          Back
+          {t('Back')}
         </button>
-        <h1 id="qs-title">Quick Start</h1>
+        <h1 id="qs-title">{t('Quick Start')}</h1>
       </div>
       {error && (
         <p role="alert" className="error">
@@ -95,22 +100,24 @@ export function QuickStartScreen() {
         <div className="quickstart-grid">
           <div className="picker-column">
             <ArrowPicker
-              label="Type of story"
+              label={t('Type of story')}
               options={[
-                { value: '', label: 'Any' },
-                ...STORY_TYPES.map((t) => ({ value: t, label: t })),
+                { value: '', label: t('Any') },
+                ...STORY_TYPES.map((type) => ({ value: type, label: t(type) })),
               ]}
               value={storyType}
               onChange={chooseType}
             />
             {storyType && fitting.length === 0 && (
               <p className="muted small">
-                No preset world is tagged {storyType} yet, so every world is listed. The story is
-                still a {storyType} story.
+                {t(
+                  'No preset world is tagged {type} yet, so every world is listed. The story is still a {type} story.',
+                  { type: t(storyType) },
+                )}
               </p>
             )}
             <ArrowPicker
-              label="World"
+              label={t('World')}
               options={worlds.map((w) => ({
                 value: w.id,
                 label: w.label,
@@ -120,7 +127,7 @@ export function QuickStartScreen() {
               onChange={chooseWorld}
             />
             <ArrowPicker
-              label="Scenario"
+              label={t('Scenario')}
               options={scenarios.map((s) => ({
                 value: s.id,
                 label: s.label,
@@ -130,7 +137,7 @@ export function QuickStartScreen() {
               onChange={setScenarioId}
             />
             <ArrowPicker
-              label="Your character"
+              label={t('Your character')}
               options={catalog.characters.map((c) => ({
                 value: c.id,
                 label: c.label,
@@ -140,37 +147,45 @@ export function QuickStartScreen() {
               onChange={setCharacterId}
             />
             <ArrowPicker
-              label="Narration"
-              options={PERSPECTIVES}
+              label={t('Narration')}
+              options={tOptions(PERSPECTIVES)}
               value={effectivePerspective}
               onChange={setPerspective}
             />
             <ArrowPicker
-              label="Detail"
-              options={DETAILS}
+              label={t('Detail')}
+              options={tOptions(DETAILS)}
               value={effectiveDetail}
               onChange={setDetail}
             />
           </div>
-          <aside className="preview" aria-label="Story preview">
+          <aside className="preview" aria-label={t('Story preview')}>
             <h2>{scenario?.title}</h2>
             <p>{scenario?.description}</p>
             <dl>
-              <dt>Setting</dt>
+              <dt>{t('Setting')}</dt>
               <dd>{world?.world.setting}</dd>
-              <dt>You play</dt>
+              <dt>{t('You play')}</dt>
               <dd>
                 {character?.character.name}
                 {character?.character.role ? `, ${character.character.role}` : ''}
               </dd>
-              <dt>First chapter</dt>
+              <dt>{t('First chapter')}</dt>
               <dd>{scenario?.firstChapterTitle}</dd>
-              <dt>Tone</dt>
+              <dt>{t('Tone')}</dt>
               <dd>{world?.narration.tone}</dd>
               {(storyType || (world?.narration.genres?.length ?? 0) > 0) && (
                 <>
-                  <dt>Genre</dt>
-                  <dd>{withStoryType(world?.narration.genres, storyType).join(', ')}</dd>
+                  <dt>{t('Genre')}</dt>
+                  <dd>
+                    {joinList(withStoryType(world?.narration.genres, storyType).map((g) => t(g)))}
+                  </dd>
+                </>
+              )}
+              {storyLanguage && (
+                <>
+                  <dt>{t('Story language')}</dt>
+                  <dd>{storyLanguageLabel(storyLanguage)}</dd>
                 </>
               )}
             </dl>
@@ -180,7 +195,7 @@ export function QuickStartScreen() {
               disabled={busy || !worldId || !scenarioId || !characterId}
               onClick={() => void start()}
             >
-              {busy ? 'Creating…' : 'Start story'}
+              {busy ? t('Creating…') : t('Start story')}
             </button>
           </aside>
         </div>

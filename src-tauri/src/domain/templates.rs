@@ -163,6 +163,11 @@ pub struct QuickStartInput {
     #[serde(default)]
     #[ts(optional)]
     pub story_type: Option<String>,
+    /// The language to write the story in, e.g. "Japanese". The app sends
+    /// its own language; unset keeps the world's (usually none).
+    #[serde(default)]
+    #[ts(optional)]
+    pub language: Option<String>,
 }
 
 pub(crate) fn check_id(id: &str) -> AppResult<()> {
@@ -315,6 +320,11 @@ impl TemplateCatalog {
         if let Some(d) = input.detail {
             narration.detail = d;
         }
+        if let Some(l) = input.language.as_deref().map(str::trim) {
+            if !l.is_empty() {
+                narration.language = Some(l.to_string());
+            }
+        }
         Ok(CreateStoryDraft {
             draft_schema_version: DRAFT_SCHEMA_VERSION,
             world_template_id: Some(world.id.clone()),
@@ -365,6 +375,7 @@ mod tests {
             perspective: None,
             detail: None,
             story_type: None,
+            language: None,
         }
     }
 
@@ -427,6 +438,26 @@ mod tests {
     }
 
     #[test]
+    fn a_chosen_language_is_written_into_the_story() {
+        let cat = TemplateCatalog::bundled();
+        let mut input = starter();
+        assert_eq!(
+            cat.resolve_quick_start(&input)
+                .unwrap()
+                .base_state
+                .narration
+                .language,
+            None
+        );
+        input.language = Some(" Japanese ".into());
+        let d = cat.resolve_quick_start(&input).unwrap();
+        assert_eq!(d.base_state.narration.language.as_deref(), Some("Japanese"));
+        input.language = Some("   ".into());
+        let d = cat.resolve_quick_start(&input).unwrap();
+        assert_eq!(d.base_state.narration.language, None);
+    }
+
+    #[test]
     fn conflicting_character_ids_are_refused() {
         let mut cat = TemplateCatalog::bundled();
         let mut npc_as_player = cat.scenarios[0].npcs[0].clone();
@@ -465,6 +496,7 @@ mod tests {
                         perspective: None,
                         detail: None,
                         story_type: None,
+                        language: None,
                     };
                     let story = cat.resolve_quick_start(&input).unwrap_or_else(|e| {
                         panic!("{} + {} + {}: {}", w.id, s.id, c.id, e.message)

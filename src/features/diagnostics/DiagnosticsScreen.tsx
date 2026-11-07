@@ -1,8 +1,16 @@
 import { useEffect, useState } from 'react';
 import { CommandError, commands } from '../../api/commands';
 import { useUiStore } from '../../app/store';
-import type { DiagnosticCheck } from '../../types';
+import type { CheckStatus, DiagnosticCheck } from '../../types';
 import { ReportDialog } from './ReportDialog';
+import { msg, t } from '../../i18n';
+
+const STATUS: Record<CheckStatus, string> = {
+  PASS: msg('PASS'),
+  WARN: msg('WARN'),
+  FAIL: msg('FAIL'),
+  SKIPPED: msg('SKIPPED'),
+};
 
 export function DiagnosticsScreen() {
   const goBack = useUiStore((s) => s.goBack);
@@ -41,30 +49,32 @@ export function DiagnosticsScreen() {
     <section className="screen" aria-labelledby="diagnostics-title">
       <div className="screen-header">
         <button type="button" onClick={goBack}>
-          Back
+          {t('Back')}
         </button>
-        <h1 id="diagnostics-title">Diagnostics</h1>
+        <h1 id="diagnostics-title">{t('Diagnostics')}</h1>
         <button type="button" onClick={() => runAgain(false)} disabled={running}>
-          {running ? 'Running…' : 'Run again'}
+          {running ? t('Running…') : t('Run again')}
         </button>
         <button type="button" onClick={() => runAgain(true)} disabled={running}>
-          Run deep check
+          {t('Run deep check')}
         </button>
         <button
           type="button"
           onClick={() => setReporting(true)}
           disabled={running}
-          title="A report to copy into a support request. No story text, keys or paths."
+          title={t('A report to copy into a support request. No story text, keys or paths.')}
         >
-          Copy report…
+          {t('Copy report…')}
         </button>
       </div>
-      {error && <p role="alert">Diagnostics could not run: {error}</p>}
+      {error && <p role="alert">{t('Diagnostics could not run: {error}', { error })}</p>}
       {checks && (
         <ul className="check-list">
           {checks.map((c) => (
             <li key={c.id} className="check-row">
-              <span className={`status-badge status-${c.status.toLowerCase()}`}>{c.status}</span>
+              <span className={`status-badge status-${c.status.toLowerCase()}`}>
+                {t(STATUS[c.status])}
+              </span>
               <div>
                 <strong>{c.label}</strong>
                 <div>{c.summary}</div>

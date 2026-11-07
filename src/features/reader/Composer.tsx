@@ -2,6 +2,7 @@ import { useId, useRef, useState, type KeyboardEvent } from 'react';
 import { isComposing } from '../../app/keyboard';
 import type { RollRequest, Stat } from '../../types';
 import { DICE_PATTERN, rollFromComposer, wrapAction, type ComposeMode } from './messages';
+import { msg, t } from '../../i18n';
 
 /** The longest action the app accepts. */
 const MAX_ACTION = 20_000;
@@ -27,18 +28,18 @@ type Props = {
 type Mode = ComposeMode | 'roll';
 
 const MODES: { value: Mode; label: string }[] = [
-  { value: 'act', label: 'Do or say' },
-  { value: 'text', label: 'Send a text' },
-  { value: 'call', label: 'Call' },
-  { value: 'think', label: 'Think' },
-  { value: 'roll', label: 'Roll dice' },
+  { value: 'act', label: msg('Do or say') },
+  { value: 'text', label: msg('Send a text') },
+  { value: 'call', label: msg('Call') },
+  { value: 'think', label: msg('Think') },
+  { value: 'roll', label: msg('Roll dice') },
 ];
 
 const PLACEHOLDERS: Record<Exclude<Mode, 'act'>, string> = {
-  text: 'Your message (Enter to send)',
-  call: 'What you say when they pick up, or leave empty to just call',
-  think: 'What goes through your head (Enter to send)',
-  roll: 'What you try, for example: climb the wall (optional)',
+  text: msg('Your message (Enter to send)'),
+  call: msg('What you say when they pick up, or leave empty to just call'),
+  think: msg('What goes through your head (Enter to send)'),
+  roll: msg('What you try, for example: climb the wall (optional)'),
 };
 
 const DICE = ['1d20', '1d6', '2d6', '1d100', '1d4', '1d8', '1d10', '1d12', '0-100'];
@@ -55,7 +56,7 @@ export function Composer({
   disabled,
   placeholder,
   contacts = [],
-  playerName = 'You',
+  playerName = t('You'),
   dice = false,
   stats = [],
 }: Props) {
@@ -97,24 +98,24 @@ export function Composer({
     >
       <div className="composer-mode">
         <label htmlFor={`${id}-mode`} className="visually-hidden">
-          Kind of action
+          {t('Kind of action')}
         </label>
         <select id={`${id}-mode`} value={mode} onChange={(e) => setMode(e.target.value as Mode)}>
           {MODES.filter((m) => dice || m.value !== 'roll').map((m) => (
             <option key={m.value} value={m.value}>
-              {m.label}
+              {t(m.label)}
             </option>
           ))}
         </select>
         {needsTo && (
           <>
-            <label htmlFor={`${id}-to`}>{mode === 'text' ? 'To' : 'Who'}</label>
+            <label htmlFor={`${id}-to`}>{mode === 'text' ? t('To') : t('Who')}</label>
             <input
               id={`${id}-to`}
               value={to}
               list={`${id}-contacts`}
               maxLength={80}
-              placeholder="Name"
+              placeholder={t('Name')}
               onChange={(e) => setTo(e.target.value)}
             />
             <datalist id={`${id}-contacts`}>
@@ -126,7 +127,7 @@ export function Composer({
         )}
         {mode === 'roll' && (
           <>
-            <label htmlFor={`${id}-dice`}>Dice</label>
+            <label htmlFor={`${id}-dice`}>{t('Dice')}</label>
             <input
               id={`${id}-dice`}
               className="roll-dice-input"
@@ -134,7 +135,7 @@ export function Composer({
               list={`${id}-dice-list`}
               maxLength={24}
               aria-invalid={!DICE_PATTERN.test(roll.dice)}
-              title="Dice such as 1d20 or 2d6+1, or a range such as 40-100"
+              title={t('Dice such as 1d20 or 2d6+1, or a range such as 40-100')}
               onChange={(e) => setRoll({ ...roll, dice: e.target.value })}
             />
             <datalist id={`${id}-dice-list`}>
@@ -144,13 +145,13 @@ export function Composer({
             </datalist>
             {stats.some((s) => s.name.trim()) && (
               <>
-                <label htmlFor={`${id}-stat`}>With</label>
+                <label htmlFor={`${id}-stat`}>{t('With')}</label>
                 <select
                   id={`${id}-stat`}
                   value={roll.stat}
                   onChange={(e) => setRoll({ ...roll, stat: e.target.value })}
                 >
-                  <option value="">No stat</option>
+                  <option value="">{t('No stat')}</option>
                   {stats
                     .filter((s) => s.name.trim())
                     .map((s) => (
@@ -162,21 +163,21 @@ export function Composer({
                 </select>
               </>
             )}
-            <label htmlFor={`${id}-target`}>Need</label>
+            <label htmlFor={`${id}-target`}>{t('Need')}</label>
             <input
               id={`${id}-target`}
               className="roll-target-input"
               type="number"
               inputMode="numeric"
               value={roll.target}
-              placeholder="Any"
+              placeholder={t('Any')}
               onChange={(e) => setRoll({ ...roll, target: e.target.value })}
             />
           </>
         )}
       </div>
       <label htmlFor="composer-input" className="visually-hidden">
-        What do you do?
+        {t('What do you do?')}
       </label>
       <textarea
         id="composer-input"
@@ -184,18 +185,18 @@ export function Composer({
         value={value}
         rows={2}
         maxLength={MAX_ACTION}
-        placeholder={mode === 'act' ? placeholder : PLACEHOLDERS[mode]}
+        placeholder={mode === 'act' ? placeholder : t(PLACEHOLDERS[mode])}
         onChange={(e) => onChange(e.target.value)}
         onKeyDown={onKeyDown}
         aria-describedby={disabled ? 'composer-busy' : undefined}
       />
       {disabled && (
         <span id="composer-busy" className="visually-hidden">
-          Sending is paused until the current reply finishes.
+          {t('Sending is paused until the current reply finishes.')}
         </span>
       )}
       <button type="submit" className="primary" disabled={!ready}>
-        {mode === 'call' ? 'Call' : mode === 'roll' ? 'Roll' : 'Send'}
+        {mode === 'call' ? t('Call') : mode === 'roll' ? t('Roll') : t('Send')}
       </button>
     </form>
   );

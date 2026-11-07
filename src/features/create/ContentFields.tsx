@@ -3,53 +3,54 @@ import { ArrowPicker, type PickerOption } from '../../components/ArrowPicker';
 import { Dialog } from '../../components/Dialog';
 import type { Character, ContentRating, Narration } from '../../types';
 import { LinesField, ToggleList, uniq } from './fields';
+import { msg, t, tOptions } from '../../i18n';
 
 /** Genres offered as checkboxes; any other genre can be typed in Custom mode. */
 export const GENRES = [
-  'Romance',
-  'Fantasy',
-  'Science fiction',
-  'Mystery',
-  'Horror',
-  'Thriller',
-  'Adventure',
-  'Comedy',
-  'Drama',
-  'Historical',
-  'Slice of life',
-  'Noir',
-  'Supernatural',
-  'Dark romance',
-  'Erotica',
-  'School life',
-  'Action',
-  'Cyberpunk',
-  'Post-apocalyptic',
-  'Superhero',
-  'Western',
-  'Dating sim',
+  msg('Romance'),
+  msg('Fantasy'),
+  msg('Science fiction'),
+  msg('Mystery'),
+  msg('Horror'),
+  msg('Thriller'),
+  msg('Adventure'),
+  msg('Comedy'),
+  msg('Drama'),
+  msg('Historical'),
+  msg('Slice of life'),
+  msg('Noir'),
+  msg('Supernatural'),
+  msg('Dark romance'),
+  msg('Erotica'),
+  msg('School life'),
+  msg('Action'),
+  msg('Cyberpunk'),
+  msg('Post-apocalyptic'),
+  msg('Superhero'),
+  msg('Western'),
+  msg('Dating sim'),
 ];
 
 /** The first choice when making a story; it leads the story's genres. */
 export const STORY_TYPES = [
-  'Romance',
-  'Adventure',
-  'Fantasy',
-  'Mystery',
-  'Horror',
-  'Science fiction',
-  'Comedy',
-  'Drama',
-  'Slice of life',
-  'School life',
-  'Thriller',
-  'Historical',
-  'Action',
-  'Cyberpunk',
-  'Post-apocalyptic',
-  'Superhero',
-  'Western',
-  'Dating sim',
+  msg('Romance'),
+  msg('Adventure'),
+  msg('Fantasy'),
+  msg('Mystery'),
+  msg('Horror'),
+  msg('Science fiction'),
+  msg('Comedy'),
+  msg('Drama'),
+  msg('Slice of life'),
+  msg('School life'),
+  msg('Thriller'),
+  msg('Historical'),
+  msg('Action'),
+  msg('Cyberpunk'),
+  msg('Post-apocalyptic'),
+  msg('Superhero'),
+  msg('Western'),
+  msg('Dating sim'),
 ];
 
 /** True when a world template is tagged with this story type. */
@@ -68,24 +69,34 @@ export function withStoryType(genres: string[] | undefined, storyType: string): 
 type RatingChoice = ContentRating | '';
 
 export const RATINGS: PickerOption<RatingChoice>[] = [
-  { value: '', label: 'Not set', hint: 'The storyteller decides, within its own rules.' },
-  { value: 'general', label: 'All ages', hint: 'Nothing graphic. Romance stays off the page.' },
+  {
+    value: '',
+    label: msg('Not set'),
+    hint: msg('The storyteller decides, within its own rules.'),
+  },
+  {
+    value: 'general',
+    label: msg('All ages'),
+    hint: msg('Nothing graphic. Romance stays off the page.'),
+  },
   {
     value: 'mature',
-    label: 'Mature',
-    hint: 'Violence, horror, strong language and sexual situations, without explicit sex.',
+    label: msg('Mature'),
+    hint: msg('Violence, horror, strong language and sexual situations, without explicit sex.'),
   },
   {
     value: 'explicit',
-    label: 'Adults only (explicit)',
-    hint: 'Anything between adults, written openly, including kinks and fetishes you list below.',
+    label: msg('Adults only (explicit)'),
+    hint: msg(
+      'Anything between adults, written openly, including kinks and fetishes you list below.',
+    ),
   },
 ];
 
 export const RATING_LABELS: Record<ContentRating, string> = {
-  general: 'All ages',
-  mature: 'Mature',
-  explicit: 'Adults only',
+  general: msg('All ages'),
+  mature: msg('Mature'),
+  explicit: msg('Adults only'),
 };
 
 const ADULT_CONFIRMED_KEY = 'dtl.adultConfirmed';
@@ -182,12 +193,12 @@ export function namesAMinor(age: string | undefined | null): boolean {
 
 /** Characters who cannot be in an adults-only story, by name. */
 export function minorsIn(characters: Character[]): string[] {
-  return characters.filter((c) => namesAMinor(c.age)).map((c) => c.name.trim() || 'Unnamed');
+  return characters.filter((c) => namesAMinor(c.age)).map((c) => c.name.trim() || t('Unnamed'));
 }
 
 /** Trimmed, non-empty entries; undefined when nothing is left. */
 export function cleanOptionalList(list: string[] | undefined): string[] | undefined {
-  const out = (list ?? []).map((t) => t.trim()).filter(Boolean);
+  const out = (list ?? []).map((x) => x.trim()).filter(Boolean);
   return out.length ? out : undefined;
 }
 
@@ -221,58 +232,65 @@ export function ContentFields({
     <>
       {pickGenres ? (
         <ToggleList
-          legend="Genre"
+          legend={t('Genre')}
           columns
+          translate
           presets={uniq([...GENRES, ...genrePresets])}
           value={narration.genres ?? []}
           onChange={(genres) => onChange({ genres })}
         />
       ) : (
         <LinesField
-          label="Genre"
+          label={t('Genre')}
           rows={2}
           value={narration.genres ?? []}
-          hint="One per line, such as Romance or Horror. Any genre works."
+          hint={t('One per line, such as Romance or Horror. Any genre works.')}
           onChange={(genres) => onChange({ genres })}
         />
       )}
       <ArrowPicker
-        label="Content rating"
-        options={RATINGS}
+        label={t('Content rating')}
+        options={tOptions(RATINGS)}
         value={rating}
         onChange={chooseRating}
       />
       <LinesField
-        label="Themes and elements you want"
+        label={t('Themes and elements you want')}
         rows={2}
         value={narration.themes ?? []}
         hint={
           rating === 'explicit'
-            ? 'One per line: tropes, dynamics, kinks or fetishes the storyteller should weave in. Every character involved is an adult.'
-            : 'One per line, such as slow burn, found family or a rivalry.'
+            ? t(
+                'One per line: tropes, dynamics, kinks or fetishes the storyteller should weave in. Every character involved is an adult.',
+              )
+            : t('One per line, such as slow burn, found family or a rivalry.')
         }
         onChange={(themes) => onChange({ themes })}
       />
       <LinesField
-        label="Hard limits"
+        label={t('Hard limits')}
         rows={2}
         value={narration.limits ?? []}
-        hint="One per line. The storyteller never writes these, even if the story drifts toward them."
+        hint={t(
+          'One per line. The storyteller never writes these, even if the story drifts toward them.',
+        )}
         onChange={(limits) => onChange({ limits })}
       />
       {asking && (
-        <Dialog title="Adults only" onClose={() => setAsking(false)}>
+        <Dialog title={t('Adults only')} onClose={() => setAsking(false)}>
           <p>
-            Adults-only stories can contain explicit sexual content. They are only for players who
-            are 18 or older, and every character in them must be an adult.
+            {t(
+              'Adults-only stories can contain explicit sexual content. They are only for players who are 18 or older, and every character in them must be an adult.',
+            )}
           </p>
           <p className="muted small">
-            Whether a model writes explicit scenes also depends on the provider you connect. Local
-            models (Ollama, LM Studio) follow your settings; some hosted services refuse.
+            {t(
+              'Whether a model writes explicit scenes also depends on the provider you connect. Local models (Ollama, LM Studio) follow your settings; some hosted services refuse.',
+            )}
           </p>
           <div className="button-row">
             <button type="button" onClick={() => setAsking(false)}>
-              Cancel
+              {t('Cancel')}
             </button>
             <button
               type="button"
@@ -283,7 +301,7 @@ export function ContentFields({
                 onChange({ rating: 'explicit' });
               }}
             >
-              I am 18 or older
+              {t('I am 18 or older')}
             </button>
           </div>
         </Dialog>

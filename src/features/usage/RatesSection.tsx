@@ -1,6 +1,7 @@
 import { useEffect, useId, useState } from 'react';
 import { commands, errorMessage } from '../../api/commands';
 import type { RateCardView } from '../../types';
+import { t } from '../../i18n';
 
 type Draft = { input: string; output: string; cached: string };
 
@@ -22,7 +23,7 @@ function RateRow({ view, onSaved }: { view: RateCardView; onSaved: (v: RateCardV
   if (view.billing === 'local') {
     return (
       <li>
-        <strong>{name}</strong> <span className="muted">Local model: $0 API charge.</span>
+        <strong>{name}</strong> <span className="muted">{t('Local model: $0 API charge.')}</span>
       </li>
     );
   }
@@ -52,13 +53,20 @@ function RateRow({ view, onSaved }: { view: RateCardView; onSaved: (v: RateCardV
         <strong>{name}</strong>
         {card ? (
           <span>
-            ${card.inputUsdPerMillion} in · ${card.outputUsdPerMillion} out
-            {card.cachedInputUsdPerMillion != null &&
-              ` · $${card.cachedInputUsdPerMillion} cached`}{' '}
-            <span className="muted small">per 1M tokens</span>
+            {card.cachedInputUsdPerMillion != null
+              ? t('${in} in · ${out} out · ${cached} cached', {
+                  in: card.inputUsdPerMillion,
+                  out: card.outputUsdPerMillion,
+                  cached: card.cachedInputUsdPerMillion,
+                })
+              : t('${in} in · ${out} out', {
+                  in: card.inputUsdPerMillion,
+                  out: card.outputUsdPerMillion,
+                })}{' '}
+            <span className="muted small">{t('per 1M tokens')}</span>
           </span>
         ) : (
-          <span className="note-warn">No prices: costs show as unknown.</span>
+          <span className="note-warn">{t('No prices: costs show as unknown.')}</span>
         )}
         {!editing && (
           <button
@@ -68,14 +76,14 @@ function RateRow({ view, onSaved }: { view: RateCardView; onSaved: (v: RateCardV
               setEditing(true);
             }}
           >
-            {card ? 'Change prices' : 'Add prices'}
+            {card ? t('Change prices') : t('Add prices')}
           </button>
         )}
       </div>
       {editing && (
         <form
           className="form rate-form"
-          aria-label={`Prices for ${name}`}
+          aria-label={t('Prices for {name}', { name })}
           onSubmit={(e) => {
             e.preventDefault();
             void save();
@@ -83,7 +91,7 @@ function RateRow({ view, onSaved }: { view: RateCardView; onSaved: (v: RateCardV
         >
           <div className="field-row">
             <label htmlFor={`${id}-in`}>
-              Input, USD per 1M tokens
+              {t('Input, USD per 1M tokens')}
               <input
                 id={`${id}-in`}
                 inputMode="decimal"
@@ -93,7 +101,7 @@ function RateRow({ view, onSaved }: { view: RateCardView; onSaved: (v: RateCardV
               />
             </label>
             <label htmlFor={`${id}-out`}>
-              Output, USD per 1M tokens
+              {t('Output, USD per 1M tokens')}
               <input
                 id={`${id}-out`}
                 inputMode="decimal"
@@ -103,7 +111,7 @@ function RateRow({ view, onSaved }: { view: RateCardView; onSaved: (v: RateCardV
               />
             </label>
             <label htmlFor={`${id}-cached`}>
-              Cached input (optional)
+              {t('Cached input (optional)')}
               <input
                 id={`${id}-cached`}
                 inputMode="decimal"
@@ -113,9 +121,9 @@ function RateRow({ view, onSaved }: { view: RateCardView; onSaved: (v: RateCardV
             </label>
           </div>
           <p className="muted small">
-            Copy these from your provider&apos;s pricing page. New prices apply to requests from now
-            on; past requests keep the prices they were estimated with. Without a cached price,
-            cached tokens are counted at the input price and marked approximate.
+            {t(
+              "Copy these from your provider's pricing page. New prices apply to requests from now on; past requests keep the prices they were estimated with. Without a cached price, cached tokens are counted at the input price and marked approximate.",
+            )}
           </p>
           {error && (
             <p role="alert" className="error">
@@ -124,10 +132,10 @@ function RateRow({ view, onSaved }: { view: RateCardView; onSaved: (v: RateCardV
           )}
           <div className="button-row">
             <button type="button" onClick={() => setEditing(false)}>
-              Cancel
+              {t('Cancel')}
             </button>
             <button type="submit" className="primary" disabled={busy}>
-              Save prices
+              {t('Save prices')}
             </button>
           </div>
         </form>
@@ -151,17 +159,18 @@ export function RatesSection({ onChanged }: { onChanged: () => void }) {
 
   return (
     <section className="settings-section" aria-labelledby={`${id}-rates`}>
-      <h2 id={`${id}-rates`}>Prices</h2>
+      <h2 id={`${id}-rates`}>{t('Prices')}</h2>
       <p className="muted small">
-        Each connection&apos;s current model. Prices are what you pay your provider per million
-        tokens; the app never looks them up for you.
+        {t(
+          "Each connection's current model. Prices are what you pay your provider per million tokens; the app never looks them up for you.",
+        )}
       </p>
       {error && (
         <p role="alert" className="error">
           {error}
         </p>
       )}
-      {rates && rates.length === 0 && <p className="muted">No AI connections yet.</p>}
+      {rates && rates.length === 0 && <p className="muted">{t('No AI connections yet.')}</p>}
       {rates && rates.length > 0 && (
         <ul className="rate-list">
           {rates.map((r) => (

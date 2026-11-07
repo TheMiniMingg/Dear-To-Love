@@ -1,10 +1,11 @@
 import { useId } from 'react';
 import type { ProviderProfile, StorytellerChoice } from '../../types';
 import { storyConnections } from './kinds';
+import { t, tKnown } from '../../i18n';
 
 /** Short description of one connection: "story-model · paid API". */
 export function connectionDetail(c: ProviderProfile): string {
-  return `${c.modelId} · ${c.billing === 'local' ? 'local, no API charges' : 'paid API'}`;
+  return `${c.modelId} · ${c.billing === 'local' ? t('local, no API charges') : t('paid API')}`;
 }
 
 const key = (c: StorytellerChoice | null): string =>
@@ -20,7 +21,7 @@ export function StorytellerPicker({
   onChange,
   connections,
   appLabel,
-  legend = 'Who writes the replies',
+  legend,
   disabled = false,
 }: {
   value: StorytellerChoice | null;
@@ -53,17 +54,21 @@ export function StorytellerPicker({
   );
   return (
     <fieldset className="choice-list storyteller-picker">
-      <legend>{legend}</legend>
-      {option(null, 'Same as the app', `Whatever Settings uses; now ${appLabel}.`)}
+      <legend>{legend ?? t('Who writes the replies')}</legend>
+      {option(
+        null,
+        t('Same as the app'),
+        t('Whatever Settings uses; now {name}.', { name: tKnown(appLabel) }),
+      )}
       {option(
         { kind: 'offline' },
-        'Offline storyteller',
-        'Built in. Simple replies, works without internet, never costs anything.',
+        t('Offline storyteller'),
+        t('Built in. Simple replies, works without internet, never costs anything.'),
       )}
       {writers.map((c) => option({ kind: 'connection', id: c.id }, c.label, connectionDetail(c)))}
       {missing && (
         <p className="muted small" role="status">
-          The connection this story used was removed. Pick another one.
+          {t('The connection this story used was removed. Pick another one.')}
         </p>
       )}
     </fieldset>

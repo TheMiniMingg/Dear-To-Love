@@ -3,6 +3,12 @@
 import { open } from '@tauri-apps/plugin-dialog';
 import type { ImageImport } from '../types';
 import { sentence } from './commands';
+import { joinSentences, t, tKnown, tn } from '../i18n';
+
+const errorText = (e: string) => {
+  const known = tKnown(e);
+  return known === e ? sentence(e) : known;
+};
 
 type Internals = { convertFileSrc?: (path: string, protocol: string) => string };
 
@@ -19,10 +25,10 @@ export function imageUrl(assetId: string, size: 'thumb' | 'full' = 'thumb'): str
 /** Ask for image files. Returns `[]` when the picker is closed. */
 export async function pickImageFiles(): Promise<string[]> {
   const picked = await open({
-    title: 'Add images',
+    title: t('Add images'),
     multiple: true,
     directory: false,
-    filters: [{ name: 'Images (PNG, JPEG, WebP)', extensions: ['png', 'jpg', 'jpeg', 'webp'] }],
+    filters: [{ name: t('Images (PNG, JPEG, WebP)'), extensions: ['png', 'jpg', 'jpeg', 'webp'] }],
   });
   if (!picked) return [];
   return Array.isArray(picked) ? picked : [picked];
@@ -34,17 +40,24 @@ export function describeImports(results: ImageImport[]): { text: string; problem
   const reused = results.filter((r) => r.asset && r.alreadyInLibrary).length;
   const problems = results
     .filter((r) => r.error)
-    .map((r) => `${r.fileName || 'A file'}: ${sentence(r.error ?? '')}`);
+    .map((r) =>
+      t('{file}: {problem}', {
+        file: r.fileName || t('A file'),
+        problem: errorText(r.error ?? ''),
+      }),
+    );
   const parts: string[] = [];
-  if (added) parts.push(`Added ${added} ${added === 1 ? 'image' : 'images'}.`);
+  if (added) parts.push(tn(added, 'Added {n} image.', 'Added {n} images.'));
   if (reused)
     parts.push(
-      reused === 1
-        ? '1 was already in your library and is reused.'
-        : `${reused} were already in your library and are reused.`,
+      tn(
+        reused,
+        '{n} was already in your library and is reused.',
+        '{n} were already in your library and are reused.',
+      ),
     );
-  if (!added && !reused) parts.push('No images were added.');
-  return { text: parts.join(' '), problems };
+  if (!added && !reused) parts.push(t('No images were added.'));
+  return { text: joinSentences(parts), problems };
 }
 
 export function formatBytes(n: number): string {

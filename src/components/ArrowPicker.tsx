@@ -1,4 +1,5 @@
 import { useId, type KeyboardEvent } from 'react';
+import { t } from '../i18n';
 
 export type PickerOption<T extends string> = { value: T; label: string; hint?: string };
 
@@ -50,7 +51,7 @@ export function ArrowPicker<T extends string>({ label, options, value, onChange 
         <button
           type="button"
           className="icon-button"
-          aria-label={`Previous ${label}`}
+          aria-label={t('Previous {label}', { label })}
           onClick={() => step(-1)}
           disabled={options.length < 2}
           tabIndex={-1}
@@ -61,7 +62,7 @@ export function ArrowPicker<T extends string>({ label, options, value, onChange 
           id={`${id}-select`}
           value={current?.value ?? ''}
           aria-describedby={current?.hint ? `${id}-hint` : undefined}
-          title="Left and right arrows change this"
+          title={t('Left and right arrows change this')}
           onChange={(e) => onChange(e.target.value as T)}
         >
           {options.map((o) => (
@@ -73,7 +74,7 @@ export function ArrowPicker<T extends string>({ label, options, value, onChange 
         <button
           type="button"
           className="icon-button"
-          aria-label={`Next ${label}`}
+          aria-label={t('Next {label}', { label })}
           onClick={() => step(1)}
           disabled={options.length < 2}
           tabIndex={-1}

@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- **The app in Chinese, Japanese and Korean.** **Settings → Language → App language** shows
+  every menu, button and message in Simplified Chinese (简体中文), Traditional Chinese
+  (繁體中文), Japanese (日本語) or Korean (한국어), or follows the computer's language (the
+  default). Dates and numbers follow the language, each language uses its own system fonts,
+  and new stories start with the story language set to the app's, which **Style** can
+  change. Story presets and templates stay in English; the storyteller writes in the story's
+  language either way.
 - **Story memory.** A new **Story memory** panel in the pause menu shows what the storyteller
   remembers beyond the newest turns: the summary of earlier turns (which turns it covers and
   which connection wrote it), the recaps of ended chapters, and the facts, relationships and

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { imageUrl } from '../../api/images';
 import type { AssetDto } from '../../types';
+import { t } from '../../i18n';
 
 /** A library thumbnail that says so when its file is missing. */
 export function Thumb({
@@ -18,7 +19,7 @@ export function Thumb({
   if (broken === assetId) {
     return (
       <span className={`thumb-missing ${className ?? ''}`} role="img" aria-label={alt}>
-        Picture missing
+        {t('Picture missing')}
       </span>
     );
   }
@@ -56,7 +57,7 @@ export function ImageGrid({
             onClick={() => onSelect(a)}
           >
             <Thumb assetId={a.id} alt="" />
-            <span className="image-name">{a.label || 'Untitled'}</span>
+            <span className="image-name">{a.label || t('Untitled')}</span>
           </button>
         </li>
       ))}

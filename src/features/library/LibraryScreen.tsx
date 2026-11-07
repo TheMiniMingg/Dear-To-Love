@@ -7,10 +7,11 @@ import { isEditableTarget, moveRovingFocus } from '../../app/keyboard';
 import { Dialog } from '../../components/Dialog';
 import { Thumb } from '../images/ImageGrid';
 import type { StorySummary } from '../../types';
+import { intlLocale, t, tn, tr } from '../../i18n';
 
 function formatDate(iso: string): string {
   const d = new Date(iso);
-  return Number.isNaN(d.getTime()) ? iso : d.toLocaleString();
+  return Number.isNaN(d.getTime()) ? iso : d.toLocaleString(intlLocale());
 }
 
 export function LibraryScreen() {
@@ -94,33 +95,33 @@ export function LibraryScreen() {
   return (
     <section className="screen" aria-labelledby="library-title">
       <div className="screen-header">
-        <h1 id="library-title">Your stories</h1>
+        <h1 id="library-title">{t('Your stories')}</h1>
         <div className="button-row">
           <button type="button" onClick={() => navigate({ name: 'create' })}>
-            Create your own
+            {t('Create your own')}
           </button>
           <button
             type="button"
             className="primary"
             onClick={() => navigate({ name: 'quickstart' })}
           >
-            New story
+            {t('New story')}
           </button>
         </div>
       </div>
       <div className="button-row library-tools">
         <button type="button" onClick={() => navigate({ name: 'settings' })}>
-          Settings
+          {t('Settings')}
         </button>
         <button type="button" onClick={() => navigate({ name: 'images' })}>
-          Images
+          {t('Images')}
         </button>
         <button type="button" disabled={importing} onClick={() => void importPack()}>
-          Import storypack
+          {t('Import storypack')}
         </button>
       </div>
       <div aria-live="polite">
-        {importing && <p className="muted">Importing…</p>}
+        {importing && <p className="muted">{t('Importing…')}</p>}
         {status && <p role="status">{status}</p>}
       </div>
       {error && (
@@ -130,13 +131,16 @@ export function LibraryScreen() {
       )}
       {stories && stories.length === 0 && (
         <div className="empty-state">
-          <p>No stories yet.</p>
+          <p>{t('No stories yet.')}</p>
           <p className="muted">
-            Start one with <strong>New story</strong> to pick from presets, or{' '}
-            <strong>Create your own</strong> to set up the world, your character and the opening
-            step by step. You can play offline with the built-in storyteller before connecting an AI
-            model. A story someone shared as a storypack comes in with{' '}
-            <strong>Import storypack</strong>.
+            {tr(
+              'Start one with {newStory} to pick from presets, or {createOwn} to set up the world, your character and the opening step by step. You can play offline with the built-in storyteller before connecting an AI model. A story someone shared as a storypack comes in with {importPack}.',
+              {
+                newStory: <strong>{t('New story')}</strong>,
+                createOwn: <strong>{t('Create your own')}</strong>,
+                importPack: <strong>{t('Import storypack')}</strong>,
+              },
+            )}
           </p>
         </div>
       )}
@@ -154,34 +158,38 @@ export function LibraryScreen() {
                 <span className="story-title">{s.title}</span>
                 {s.description && <span className="muted">{s.description}</span>}
                 <span className="muted small">
-                  {s.routeCount} {s.routeCount === 1 ? 'route' : 'routes'} · last played{' '}
-                  {formatDate(s.updatedAt)}
+                  {t('{routes} · last played {when}', {
+                    routes: tn(s.routeCount, '{n} route', '{n} routes'),
+                    when: formatDate(s.updatedAt),
+                  })}
                 </span>
               </span>
             </button>
             <button
               type="button"
               className="danger-link"
-              aria-label={`Delete ${s.title}`}
+              aria-label={t('Delete {title}', { title: s.title })}
               onClick={() => setConfirmDelete(s)}
             >
-              Delete
+              {t('Delete')}
             </button>
           </div>
         ))}
       </div>
       {confirmDelete && (
-        <Dialog title="Delete story?" onClose={() => setConfirmDelete(null)}>
+        <Dialog title={t('Delete story?')} onClose={() => setConfirmDelete(null)}>
           <p>
-            <strong>{confirmDelete.title}</strong> and all of its routes and saves will be deleted
-            from this computer. This cannot be undone.
+            {tr(
+              '{title} and all of its routes and saves will be deleted from this computer. This cannot be undone.',
+              { title: <strong>{confirmDelete.title}</strong> },
+            )}
           </p>
           <div className="button-row">
             <button type="button" onClick={() => setConfirmDelete(null)}>
-              Keep story
+              {t('Keep story')}
             </button>
             <button type="button" className="danger" onClick={() => void doDelete(confirmDelete)}>
-              Delete story
+              {t('Delete story')}
             </button>
           </div>
         </Dialog>

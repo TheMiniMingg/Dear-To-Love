@@ -13,6 +13,7 @@ import type {
   StorytellerInfo,
 } from '../../types';
 import type { StepProps } from './WizardSteps';
+import { t } from '../../i18n';
 
 /** Stands for the player character in a draft (as in relationships). */
 const PLAYER = '@player';
@@ -26,17 +27,19 @@ type Slot = { slot: string; name: string; hint: string };
 /** The pictures a draft can have: cover, background, then each character. */
 export function draftSlots(draft: CreateStoryDraft): Slot[] {
   return [
-    { slot: COVER_SLOT, name: 'Cover', hint: 'Shown in your library.' },
-    { slot: BACKGROUND_SLOT, name: 'Scene background', hint: 'Shown above the story.' },
+    { slot: COVER_SLOT, name: t('Cover'), hint: t('Shown in your library.') },
+    { slot: BACKGROUND_SLOT, name: t('Scene background'), hint: t('Shown above the story.') },
     {
       slot: portraitOf(PLAYER),
-      name: `Your portrait${draft.player.name.trim() ? ` (${draft.player.name.trim()})` : ''}`,
-      hint: 'You, as the story shows you.',
+      name: draft.player.name.trim()
+        ? t('Your portrait ({name})', { name: draft.player.name.trim() })
+        : t('Your portrait'),
+      hint: t('You, as the story shows you.'),
     },
     ...draft.npcs.map((c) => ({
       slot: portraitOf(c.id),
-      name: `Portrait of ${c.name.trim() || 'Unnamed'}`,
-      hint: c.role?.trim() || c.species?.trim() || 'Someone in the story.',
+      name: t('Portrait of {name}', { name: c.name.trim() || t('Unnamed') }),
+      hint: c.role?.trim() || c.species?.trim() || t('Someone in the story.'),
     })),
   ];
 }
@@ -128,17 +131,17 @@ export function PicturesStep({ draft, update }: StepProps) {
             type="button"
             disabled={adding}
             onClick={() => void add({ newStory: true })}
-            title="Only this story can use them"
+            title={t('Only this story can use them')}
           >
-            {adding ? 'Adding…' : 'Add for this story'}
+            {adding ? t('Adding…') : t('Add for this story')}
           </button>
           <button
             type="button"
             disabled={adding}
             onClick={() => void add()}
-            title="Every story can use them"
+            title={t('Every story can use them')}
           >
-            Add for all stories
+            {t('Add for all stories')}
           </button>
         </div>
         <ImportResult result={result} />
@@ -146,33 +149,33 @@ export function PicturesStep({ draft, update }: StepProps) {
           <MakePortrait character={portrayed} world={draft.world} onMade={(a) => added([a])} />
         )}
         {ownImages && sharedImages && ownImages.length + sharedImages.length === 0 && (
-          <p className="muted">No pictures yet. Add some from this computer.</p>
+          <p className="muted">{t('No pictures yet. Add some from this computer.')}</p>
         )}
         {ownImages && ownImages.length > 0 && (
-          <section className="image-group" aria-label="This story's pictures">
-            <h4 className="small-heading">This story&apos;s pictures</h4>
+          <section className="image-group" aria-label={t("This story's pictures")}>
+            <h4 className="small-heading">{t("This story's pictures")}</h4>
             <ImageGrid
               images={ownImages}
               selectedId={pick}
               onSelect={(a) => setPick(a.id)}
-              label="This story's pictures"
+              label={t("This story's pictures")}
             />
           </section>
         )}
         {sharedImages && sharedImages.length > 0 && (
-          <section className="image-group" aria-label="Pictures for all stories">
-            <h4 className="small-heading">For all stories</h4>
+          <section className="image-group" aria-label={t('Pictures for all stories')}>
+            <h4 className="small-heading">{t('For all stories')}</h4>
             <ImageGrid
               images={sharedImages}
               selectedId={pick}
               onSelect={(a) => setPick(a.id)}
-              label="Pictures for all stories"
+              label={t('Pictures for all stories')}
             />
           </section>
         )}
         <div className="button-row">
           <button type="button" onClick={() => setChoosing(null)}>
-            Back
+            {t('Back')}
           </button>
           <button
             type="button"
@@ -184,7 +187,7 @@ export function PicturesStep({ draft, update }: StepProps) {
               setChoosing(null);
             }}
           >
-            Use this picture
+            {t('Use this picture')}
           </button>
         </div>
       </div>
@@ -194,11 +197,12 @@ export function PicturesStep({ draft, update }: StepProps) {
   return (
     <div className="pictures-step" ref={rootRef}>
       <p className="muted">
-        All optional. Pictures you add here belong to this story only; pictures from your library
-        can be used in any story. You can change all of this later from the story&apos;s menu.
+        {t(
+          "All optional. Pictures you add here belong to this story only; pictures from your library can be used in any story. You can change all of this later from the story's menu.",
+        )}
       </p>
-      <h3 className="small-heading">Pictures</h3>
-      <ul className="picture-list" aria-label="Pictures">
+      <h3 className="small-heading">{t('Pictures')}</h3>
+      <ul className="picture-list" aria-label={t('Pictures')}>
         {draftSlots(draft).map((s) => {
           const id = chosen(s.slot);
           const has = known(id);
@@ -209,36 +213,36 @@ export function PicturesStep({ draft, update }: StepProps) {
                   <Thumb assetId={id} alt={s.name} />
                 ) : (
                   <span className="thumb-empty" aria-hidden="true">
-                    None
+                    {t('None')}
                   </span>
                 )}
               </div>
               <div className="picture-text">
                 <strong>{s.name}</strong>
                 <span className="muted small">
-                  {id && images && !has ? 'That picture is no longer in your library.' : s.hint}
+                  {id && images && !has ? t('That picture is no longer in your library.') : s.hint}
                 </span>
               </div>
               <div className="button-row">
                 <button
                   type="button"
                   data-slot={s.slot}
-                  aria-label={`Choose ${s.name}`}
+                  aria-label={t('Choose {name}', { name: s.name })}
                   onClick={() => {
                     lastSlot.current = s.slot;
                     setPick(has ? (id ?? null) : null);
                     setChoosing(s);
                   }}
                 >
-                  Choose…
+                  {t('Choose…')}
                 </button>
                 {id && (
                   <button
                     type="button"
-                    aria-label={`Remove ${s.name}`}
+                    aria-label={t('Remove {name}', { name: s.name })}
                     onClick={() => setPicture(s.slot, null)}
                   >
-                    Remove
+                    {t('Remove')}
                   </button>
                 )}
               </div>
@@ -247,7 +251,7 @@ export function PicturesStep({ draft, update }: StepProps) {
         })}
       </ul>
 
-      <h3 className="small-heading">Storyteller</h3>
+      <h3 className="small-heading">{t('Storyteller')}</h3>
       {connections && app ? (
         <StorytellerPicker
           value={draft.storyteller ?? null}
@@ -256,10 +260,10 @@ export function PicturesStep({ draft, update }: StepProps) {
           onChange={(c) => update({ storyteller: c ?? undefined })}
         />
       ) : (
-        !error && <p className="muted small">Loading…</p>
+        !error && <p className="muted small">{t('Loading…')}</p>
       )}
       <p className="muted small">
-        To use your own AI model or API key, add a connection in Settings first.
+        {t('To use your own AI model or API key, add a connection in Settings first.')}
       </p>
       {error && (
         <p role="alert" className="error">

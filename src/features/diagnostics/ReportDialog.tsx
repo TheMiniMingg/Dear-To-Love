@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { save } from '@tauri-apps/plugin-dialog';
 import { commands, errorMessage } from '../../api/commands';
 import { Dialog } from '../../components/Dialog';
+import { t } from '../../i18n';
 
 type Note = { tone: 'ok' | 'error'; text: string };
 
@@ -9,9 +10,9 @@ type Note = { tone: 'ok' | 'error'; text: string };
 export async function pickReportTarget(today = new Date()): Promise<string | null> {
   const day = today.toISOString().slice(0, 10);
   return save({
-    title: 'Save diagnostics report',
+    title: t('Save diagnostics report'),
     defaultPath: `Dear to Love diagnostics ${day}.txt`,
-    filters: [{ name: 'Text file', extensions: ['txt'] }],
+    filters: [{ name: t('Text file'), extensions: ['txt'] }],
   });
 }
 
@@ -61,10 +62,12 @@ export function ReportDialog({ deep, onClose }: { deep: boolean; onClose: () => 
     const ok = await copyText(report, area.current);
     setNote(
       ok
-        ? { tone: 'ok', text: 'Copied. Paste it into your message or issue.' }
+        ? { tone: 'ok', text: t('Copied. Paste it into your message or issue.') }
         : {
             tone: 'error',
-            text: 'Copying did not work here. Select the text and copy it, or save it as a file.',
+            text: t(
+              'Copying did not work here. Select the text and copy it, or save it as a file.',
+            ),
           },
     );
   };
@@ -75,25 +78,25 @@ export function ReportDialog({ deep, onClose }: { deep: boolean; onClose: () => 
       const path = await pickReportTarget();
       if (!path) return;
       const name = await commands.saveDiagnosticsReport(path, report);
-      setNote({ tone: 'ok', text: `Saved ${name}.` });
+      setNote({ tone: 'ok', text: t('Saved {file}.', { file: name }) });
     } catch (e) {
       setNote({ tone: 'error', text: errorMessage(e) });
     }
   };
 
   return (
-    <Dialog title="Diagnostics report" onClose={onClose} wide>
+    <Dialog title={t('Diagnostics report')} onClose={onClose} wide>
       <p className="muted small">
-        For a support request or a bug report. It lists versions, counts and check results. It has
-        no story text, titles, API keys or file paths, and nothing is sent until you paste or attach
-        it yourself.
+        {t(
+          'For a support request or a bug report. It lists versions, counts and check results. It has no story text, titles, API keys or file paths, and nothing is sent until you paste or attach it yourself.',
+        )}
       </p>
-      {report === null && !note && <p role="status">Running the checks…</p>}
+      {report === null && !note && <p role="status">{t('Running the checks…')}</p>}
       {report !== null && (
         <textarea
           ref={area}
           className="report-text"
-          aria-label="Report text"
+          aria-label={t('Report text')}
           readOnly
           rows={14}
           value={report}
@@ -101,10 +104,10 @@ export function ReportDialog({ deep, onClose }: { deep: boolean; onClose: () => 
       )}
       <div className="button-row">
         <button type="button" onClick={onClose}>
-          Close
+          {t('Close')}
         </button>
         <button type="button" disabled={report === null} onClick={() => void saveFile()}>
-          Save as file…
+          {t('Save as file…')}
         </button>
         <button
           type="button"
@@ -112,7 +115,7 @@ export function ReportDialog({ deep, onClose }: { deep: boolean; onClose: () => 
           disabled={report === null}
           onClick={() => void copy()}
         >
-          Copy report
+          {t('Copy report')}
         </button>
       </div>
       {note && (

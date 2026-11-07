@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { commands, errorMessage } from '../../api/commands';
 import type { BookmarkDto, EventKind, SearchHit, SearchResults } from '../../types';
+import { joinSentences, t, tn } from '../../i18n';
 
 /** Who or what a place in the story is, for the result lines. */
 export function placeLabel(
@@ -8,25 +9,36 @@ export function placeLabel(
   playerName: string,
 ): string {
   const what: Record<EventKind, string> = {
-    chapter_start: 'Chapter start',
+    chapter_start: t('Chapter start'),
     player: playerName,
-    assistant: 'Story',
-    edit: 'Story details',
-    checkpoint: 'Checkpoint',
-    fact_confirm: 'Fact',
+    assistant: t('Story'),
+    edit: t('Story details'),
+    checkpoint: t('Checkpoint'),
+    fact_confirm: t('Fact'),
   };
   const chapter =
     p.chapterOrdinal !== null && p.kind !== 'chapter_start'
-      ? `Chapter ${p.chapterOrdinal}${p.chapterTitle ? `: ${p.chapterTitle}` : ''} · `
+      ? `${
+          p.chapterTitle
+            ? t('Chapter {n}: {title}', { n: p.chapterOrdinal, title: p.chapterTitle })
+            : t('Chapter {n}', { n: p.chapterOrdinal })
+        } · `
       : '';
   return `${chapter}${what[p.kind]}`;
 }
 
 function summary(r: SearchResults, routeLabel: string): string {
-  if (r.total === 0) return `Nothing on ${routeLabel} matches “${r.query}”.`;
-  const places = r.total === 1 ? '1 place' : `${r.total} places`;
-  const shown = r.hits.length < r.total ? ` Showing the first ${r.hits.length}.` : '';
-  return `${places} on ${routeLabel} ${r.total === 1 ? 'matches' : 'match'} “${r.query}”.${shown}`;
+  const vars = { route: routeLabel, query: r.query };
+  if (r.total === 0) return t('Nothing on {route} matches “{query}”.', vars);
+  const found = tn(
+    r.total,
+    '{n} place on {route} matches “{query}”.',
+    '{n} places on {route} match “{query}”.',
+    vars,
+  );
+  return r.hits.length < r.total
+    ? joinSentences([found, t('Showing the first {n}.', { n: r.hits.length })])
+    : found;
 }
 
 type Props = {
@@ -103,15 +115,15 @@ export function SearchPanel({
           type="search"
           value={query}
           maxLength={200}
-          placeholder="Words from the story"
+          placeholder={t('Words from the story')}
           onChange={(e) => setQuery(e.target.value)}
         />
         <button type="submit" className="primary" disabled={busy || !query.trim()}>
-          Search
+          {t('Search')}
         </button>
       </form>
       <p className="muted small">
-        Searches what happened on this route only. Other branches have their own history.
+        {t('Searches what happened on this route only. Other branches have their own history.')}
       </p>
       {error && (
         <p role="alert" className="error">
@@ -119,11 +131,11 @@ export function SearchPanel({
         </p>
       )}
       <div aria-live="polite">
-        {busy && <p className="muted">Searching…</p>}
+        {busy && <p className="muted">{t('Searching…')}</p>}
         {results && !busy && <p role="status">{summary(results, routeLabel)}</p>}
       </div>
       {results && results.hits.length > 0 && (
-        <ol className="search-results" aria-label="Search results">
+        <ol className="search-results" aria-label={t('Search results')}>
           {results.hits.map((h) => (
             <li key={h.eventId}>
               <button type="button" className="search-hit" onClick={() => onGo(h.eventId)}>
@@ -143,7 +155,7 @@ export function SearchPanel({
         <h3 id="bookmarks-title">Bookmarks on {routeLabel}</h3>
         {bookmarks.length === 0 ? (
           <p className="muted">
-            No bookmarks yet. Choose Bookmark under any part of the story to mark it.
+            {t('No bookmarks yet. Choose Bookmark under any part of the story to mark it.')}
           </p>
         ) : (
           <ul className="item-list" aria-labelledby="bookmarks-title">
@@ -158,7 +170,7 @@ export function SearchPanel({
                     }}
                   >
                     <label htmlFor={`bookmark-name-${b.id}`} className="visually-hidden">
-                      Bookmark name
+                      {t('Bookmark name')}
                     </label>
                     <input
                       id={`bookmark-name-${b.id}`}
@@ -168,10 +180,10 @@ export function SearchPanel({
                       onChange={(e) => setRenaming({ id: b.id, label: e.target.value })}
                     />
                     <button type="submit" className="primary" disabled={!renaming.label.trim()}>
-                      Save name
+                      {t('Save name')}
                     </button>
                     <button type="button" onClick={() => setRenaming(null)}>
-                      Cancel
+                      {t('Cancel')}
                     </button>
                   </form>
                 ) : (
@@ -187,25 +199,25 @@ export function SearchPanel({
                     <div className="button-row">
                       <button
                         type="button"
-                        aria-label={`Go to bookmark ${b.label}`}
+                        aria-label={t('Go to bookmark {name}', { name: b.label })}
                         onClick={() => onGo(b.eventId)}
                       >
-                        Go to
+                        {t('Go to')}
                       </button>
                       <button
                         type="button"
-                        aria-label={`Rename bookmark ${b.label}`}
+                        aria-label={t('Rename bookmark {name}', { name: b.label })}
                         onClick={() => setRenaming({ id: b.id, label: b.label })}
                       >
-                        Rename
+                        {t('Rename')}
                       </button>
                       <button
                         type="button"
                         className="danger-link"
-                        aria-label={`Remove bookmark ${b.label}`}
+                        aria-label={t('Remove bookmark {name}', { name: b.label })}
                         onClick={() => void change(() => commands.deleteBookmark(storyId, b.id))}
                       >
-                        Remove
+                        {t('Remove')}
                       </button>
                     </div>
                   </>
