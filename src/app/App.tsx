@@ -9,6 +9,7 @@ import { QuickStartScreen } from '../features/create/QuickStartScreen';
 import { ReaderScreen } from '../features/reader/ReaderScreen';
 import { SettingsScreen } from '../features/settings/SettingsScreen';
 import { UsageScreen } from '../features/usage/UsageScreen';
+import { ShortcutsDialog } from '../components/ShortcutsDialog';
 import { StatusFooter } from '../components/StatusFooter';
 import { Backdrop } from './Backdrop';
 import { useBackdrop } from './backdropStore';
@@ -40,6 +41,7 @@ export function App() {
         {screen.name === 'backups' && <BackupsScreen />}
       </main>
       <StatusFooter />
+      <ShortcutsDialog />
     </div>
   );
 }

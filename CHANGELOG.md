@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- **Keyboard shortcuts.** Most things in a story now have a key: Ctrl+L for Save / Load,
+  Ctrl+B to bookmark the latest reply, Ctrl+G for routes, Ctrl+I for story details,
+  Ctrl+Shift+M for story memory, Ctrl+E to end the chapter, Ctrl+P for picture view, Ctrl+=
+  and Ctrl+- for text size and Ctrl+J to jump back to the latest and write, alongside Ctrl+S,
+  Ctrl+F, Esc and the arrow keys. Ctrl+N starts a new story from the library and Ctrl+,
+  opens Settings. **F1** (or **Shortcuts** beside the story) lists them all; buttons and the
+  pause menu show their keys. On a Mac they use ⌘.
 - **Picture view.** With a background or portraits chosen, the reader shows a stage above
   the story, like a visual novel: the scene's background with the portrait of the character
   the story is with, and their name. When someone new appears in a reply, or returns after a

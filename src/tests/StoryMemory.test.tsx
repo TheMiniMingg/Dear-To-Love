@@ -59,7 +59,7 @@ async function openMemory(memory: StoryMemory | Error, view = withState(fakeRout
     }
   });
   render(<ReaderScreen routeId="route-1" />);
-  await userEvent.click(await screen.findByRole('button', { name: /Open menu/ }));
+  await userEvent.click(await screen.findByRole('button', { name: 'Menu' }));
   await userEvent.click(screen.getByRole('button', { name: 'Story memory' }));
   return screen.findByRole('dialog', { name: 'Story memory' });
 }

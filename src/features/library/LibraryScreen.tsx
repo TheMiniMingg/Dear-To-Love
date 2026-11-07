@@ -3,7 +3,8 @@ import { describeImport, pickStorypackFile } from '../../api/archive';
 import { describeRestoreResult } from '../../api/backups';
 import { commands, errorMessage } from '../../api/commands';
 import { useUiStore } from '../../app/store';
-import { isEditableTarget, moveRovingFocus } from '../../app/keyboard';
+import { isComposing, isEditableTarget, moveRovingFocus } from '../../app/keyboard';
+import { ariaKeys, isShortcut, withKeys } from '../../app/shortcuts';
 import { Dialog } from '../../components/Dialog';
 import { Thumb } from '../images/ImageGrid';
 import type { StorySummary } from '../../types';
@@ -63,6 +64,17 @@ export function LibraryScreen() {
     }
   };
 
+  // Ctrl/Cmd+N starts a new story from anywhere on this screen.
+  useEffect(() => {
+    const onKey = (e: globalThis.KeyboardEvent) => {
+      if (isComposing(e) || e.defaultPrevented || !isShortcut(e, 'newStory')) return;
+      e.preventDefault();
+      if (!document.querySelector('[role="dialog"]')) navigate({ name: 'quickstart' });
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [navigate]);
+
   const doDelete = async (s: StorySummary) => {
     try {
       await commands.deleteStory(s.id);
@@ -101,13 +113,20 @@ export function LibraryScreen() {
             type="button"
             className="primary"
             onClick={() => navigate({ name: 'quickstart' })}
+            title={withKeys(t('New story'), 'newStory')}
+            aria-keyshortcuts={ariaKeys('newStory')}
           >
             {t('New story')}
           </button>
         </div>
       </div>
       <div className="button-row library-tools">
-        <button type="button" onClick={() => navigate({ name: 'settings' })}>
+        <button
+          type="button"
+          onClick={() => navigate({ name: 'settings' })}
+          title={withKeys(t('Settings'), 'settings')}
+          aria-keyshortcuts={ariaKeys('settings')}
+        >
           {t('Settings')}
         </button>
         <button type="button" onClick={() => navigate({ name: 'images' })}>

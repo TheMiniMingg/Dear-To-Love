@@ -221,7 +221,7 @@ describe('Pictures in the reader', () => {
     await screen.findByLabelText('What do you do?');
     expect(screen.queryByRole('group', { name: 'Scene pictures' })).toBeNull();
 
-    await userEvent.click(screen.getByRole('button', { name: /Open menu/ }));
+    await userEvent.click(screen.getByRole('button', { name: 'Menu' }));
     await userEvent.click(await screen.findByRole('button', { name: 'Pictures' }));
     const dialog = await screen.findByRole('dialog', { name: 'Pictures' });
     const rows = within(dialog).getByRole('list', { name: 'Pictures' });
