@@ -58,4 +58,9 @@ quietPhones?: boolean, diceRules?: DiceRules,
  * The storyteller does not keep memory notes; only the player writes
  * them.
  */
-manualMemory?: boolean, };
+manualMemory?: boolean, 
+/**
+ * How the player would like it told, in their own words ("like a cozy
+ * anime, lots of banter").
+ */
+styleNotes?: string, };

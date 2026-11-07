@@ -20,10 +20,10 @@ test('keyboard-only: quick start, play, save, load as branch, reopen', async () 
   const b = session.browser;
 
   await waitForText(b, 'main', 'No stories yet');
-  await tabTo(b, 'New story');
+  await tabTo(b, 'Preset Story');
   await b.keys(['Enter']);
 
-  await waitForText(b, 'main', 'Quick Start');
+  await waitForText(b, 'main', 'Start story');
   await tabTo(b, 'Start story');
   await b.keys(['Enter']);
 
@@ -124,5 +124,5 @@ test('keyboard-only: quick start, play, save, load as branch, reopen', async () 
   session = await launch(dataDir);
   const b3 = session.browser;
   await waitForText(b3, 'main', 'ルート 2 本');
-  await waitForText(b3, 'body', '新しいストーリー');
+  await waitForText(b3, 'body', 'プリセットストーリー');
 });

@@ -41,8 +41,8 @@ test('make a portrait from a description and show it', async () => {
   // Picture connections never write stories.
   await assert.rejects(invoke('set_storyteller', { profileId: conn.id }));
 
-  await click('button=New story');
-  await waitForText(b, 'main', 'Quick Start');
+  await click('button=Preset Story');
+  await waitForText(b, 'main', 'Start story');
   await click('button=Start story');
   await waitForText(b, '[data-testid="narrative"]', 'The Lamp Room');
 
@@ -58,7 +58,7 @@ test('make a portrait from a description and show it', async () => {
   await waitForText(b, '[role="dialog"]', 'Uses Fake pictures (gpt-image-1)');
   await click('button=Make portrait');
   await waitForText(b, '[role="dialog"]', 'It is selected below', 20000);
-  await waitForText(b, '[aria-label="This story\'s pictures"]', 'Portrait of');
+  await waitForText(b, '[aria-label="This story only"]', 'Portrait of');
   await click('button=Use this picture');
   await waitForText(b, '[role="dialog"]', 'Chosen on Main.');
 

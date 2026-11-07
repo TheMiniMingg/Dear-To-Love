@@ -3,4 +3,4 @@
 /**
  * How the storyteller tells the story. Unset means `Narrated`.
  */
-export type NarrationStyle = "narrated" | "thoughts" | "script" | "messages" | "roleplay" | "adventure";
+export type NarrationStyle = "narrated" | "thoughts" | "script" | "messages" | "roleplay" | "adventure" | "mixed";

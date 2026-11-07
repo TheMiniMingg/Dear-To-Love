@@ -65,11 +65,12 @@ async function freshDraft(catalog: TemplateCatalog): Promise<CreateStoryDraft> {
 }
 
 /**
- * Create a story step by step. Guided mode needs no typing (arrows,
- * menus and checkboxes) and starts from presets; Custom mode has no
- * presets and lets you type every field. Both edit the same draft, which
- * is saved as you go and restored on reopen. Switching to Custom before
- * changing anything empties the fields; anything picked in Guided first
+ * Custom Story: create a story step by step. Custom mode (first) starts
+ * blank, and every field can be typed or picked from a list; Guided starts
+ * from a preset world, character and opening. Only a name is needed;
+ * anything left open is for the story to decide. Both edit the same draft,
+ * which is saved as you go and restored on reopen. Switching to Guided
+ * before changing anything brings the presets in; anything written first
  * carries over.
  */
 export function CreateWizardScreen() {
@@ -77,7 +78,7 @@ export function CreateWizardScreen() {
   const id = useId();
   const [catalog, setCatalog] = useState<TemplateCatalog | null>(null);
   const [draft, setDraft] = useState<CreateStoryDraft | null>(null);
-  const [mode, setMode] = useState<WizardMode>('guided');
+  const [mode, setMode] = useState<WizardMode>('custom');
   const [step, setStep] = useState<DraftStep>('world');
   const [restoredAt, setRestoredAt] = useState<string | null>(null);
   const [problems, setProblems] = useState<DraftProblem[] | null>(null);
@@ -125,7 +126,7 @@ export function CreateWizardScreen() {
           const d = await freshDraft(cat);
           if (cancelled) return;
           setUntouched(d);
-          setDraft(d);
+          setDraft(blankDraft(d));
         }
       })
       .catch((e: unknown) => {
@@ -243,7 +244,14 @@ export function CreateWizardScreen() {
     if (timer.current) clearTimeout(timer.current);
     pending.current = null;
     try {
-      const created = await commands.createStory(draft);
+      // A story without a title gets one in the chosen language, and stats
+      // only count in RPG mode.
+      const ready: CreateStoryDraft = {
+        ...draft,
+        title: draft.title.trim() || t('Untitled story'),
+        player: draft.narration.dice ? draft.player : { ...draft.player, stats: undefined },
+      };
+      const created = await commands.createStory(ready);
       setDirty(false);
       navigate({ name: 'reader', routeId: created.mainRouteId });
     } catch (e) {
@@ -264,12 +272,13 @@ export function CreateWizardScreen() {
         <button type="button" onClick={() => navigate({ name: 'library' })}>
           {t('Back')}
         </button>
-        <h1 id={`${id}-title`}>{t('Create a story')}</h1>
+        <h1 id={`${id}-title`}>{t('Custom Story')}</h1>
         <div role="radiogroup" aria-label={t('How to fill it in')} className="segmented">
-          {(['guided', 'custom'] as WizardMode[]).map((m) => (
+          {(['custom', 'guided'] as WizardMode[]).map((m) => (
             <label key={m}>
               <input
                 type="radio"
+                id={`${id}-mode-${m}`}
                 name={`${id}-mode`}
                 checked={mode === m}
                 onChange={() => changeMode(m)}
@@ -281,9 +290,9 @@ export function CreateWizardScreen() {
       </div>
       <p className="muted small">
         {guided
-          ? t('Choose everything with arrows, menus and checkboxes. Nothing to type.')
+          ? t('Start from a preset world, character and opening, then change anything you like.')
           : t(
-              'Write everything yourself; no presets needed. To build on a preset instead, pick it in Guided first and it carries over.',
+              'Starts blank. Type your own or pick from the lists; only your name is needed, and anything you leave empty is for the story to decide. For presets, choose Guided.',
             )}{' '}
         {!guided && draft && (
           <button type="button" className="link-button" onClick={() => setConfirmClear(true)}>

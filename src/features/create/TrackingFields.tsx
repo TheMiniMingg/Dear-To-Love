@@ -18,6 +18,18 @@ const METER_NAMES = [
   msg('Experience'),
 ];
 
+/** Bars and counters a click away, with where they start. */
+const QUICK: { name: string; value: number; max?: number }[] = [
+  { name: msg('Health'), value: 100, max: 100 },
+  { name: msg('Mana'), value: 50, max: 50 },
+  { name: msg('Stamina'), value: 100, max: 100 },
+  { name: msg('Gold'), value: 10 },
+  { name: msg('Experience'), value: 0 },
+  { name: msg('Affection'), value: 20, max: 100 },
+  { name: msg('Trust'), value: 50, max: 100 },
+  { name: msg('Sanity'), value: 100, max: 100 },
+];
+
 const ROMANCE = ['Romance', 'Dating sim', 'Dark romance', 'Erotica'];
 const MAGIC = ['Fantasy', 'Adventure', 'Supernatural'];
 const FUTURE = ['Science fiction', 'Cyberpunk', 'Post-apocalyptic'];
@@ -87,15 +99,22 @@ export function TrackingFields({
   tracking,
   onChange,
   genres,
+  alwaysOn = false,
 }: {
   tracking: Tracking | undefined;
   onChange: (tracking: Tracking | undefined) => void;
   /** The story's kind, for what a story starts tracking with. */
   genres: string[];
+  /** RPG mode: the fields without the box that turns them on. */
+  alwaysOn?: boolean;
 }) {
   const id = useId();
-  const on = !!tracking;
-  const tr = tracking ?? { meters: [] };
+  const on = alwaysOn || !!tracking;
+  const tr = tracking ?? { meters: [], inventory: alwaysOn || undefined, items: [] };
+  const quick = QUICK.filter(
+    (q) =>
+      !tr.meters.some((m) => !m.who && m.name.trim().toLowerCase() === t(q.name).toLowerCase()),
+  );
   const items = tr.items ?? [];
   const setMeter = (i: number, patch: Partial<Meter>) =>
     onChange({ ...tr, meters: tr.meters.map((m, j) => (j === i ? { ...m, ...patch } : m)) });
@@ -105,24 +124,26 @@ export function TrackingFields({
     Math.min(max, Math.max(min, Math.trunc(Number(v) || 0)));
   return (
     <>
-      <div className="field">
-        <label className="check">
-          <input
-            type="checkbox"
-            checked={on}
-            aria-describedby={`${id}-hint`}
-            onChange={(e) => onChange(e.target.checked ? defaultTracking(genres) : undefined)}
-          />
-          {t('Keep track of health, items and more')}
-        </label>
-        <p id={`${id}-hint`} className="muted small check-hint">
-          {t(
-            'Like an RPG: bars, counters and an inventory the storyteller updates as things happen.',
-          )}
-        </p>
-      </div>
+      {!alwaysOn && (
+        <div className="field">
+          <label className="check">
+            <input
+              type="checkbox"
+              checked={on}
+              aria-describedby={`${id}-hint`}
+              onChange={(e) => onChange(e.target.checked ? defaultTracking(genres) : undefined)}
+            />
+            {t('Keep track of health, items and more')}
+          </label>
+          <p id={`${id}-hint`} className="muted small check-hint">
+            {t(
+              'Like an RPG: bars, counters and an inventory the storyteller updates as things happen.',
+            )}
+          </p>
+        </div>
+      )}
       {on && (
-        <div className="sub-options tracking-fields">
+        <div className={alwaysOn ? 'tracking-fields' : 'sub-options tracking-fields'}>
           <fieldset className="field">
             <legend>{t('Bars and counters')}</legend>
             <p className="muted small">
@@ -192,6 +213,25 @@ export function TrackingFields({
                 <option key={n} value={t(n)} />
               ))}
             </datalist>
+            {tr.meters.length < MAX_METERS && quick.length > 0 && (
+              <div className="stat-picks" role="group" aria-label={t('Add a bar or counter')}>
+                {quick.map((q) => (
+                  <button
+                    key={q.name}
+                    type="button"
+                    className="pick-button"
+                    onClick={() =>
+                      onChange({
+                        ...tr,
+                        meters: [...tr.meters, { name: t(q.name), value: q.value, max: q.max }],
+                      })
+                    }
+                  >
+                    + {t(q.name)}
+                  </button>
+                ))}
+              </div>
+            )}
             {tr.meters.length < MAX_METERS && (
               <div className="button-row">
                 <button

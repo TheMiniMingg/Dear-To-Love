@@ -48,8 +48,8 @@ test('export a storypack and text, import it as a new story', async () => {
     b.execute((c, a) => window.__TAURI_INTERNALS__.invoke(c, a), cmd, args);
 
   await waitForText(b, 'main', 'No stories yet');
-  await click('button=New story');
-  await waitForText(b, 'main', 'Quick Start');
+  await click('button=Preset Story');
+  await waitForText(b, 'main', 'Start story');
   await click('button=Start story');
   await waitForText(b, '[data-testid="narrative"]', 'The Lamp Room');
   await tabTo(b, 'composer-input');

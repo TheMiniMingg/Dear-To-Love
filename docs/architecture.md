@@ -6,7 +6,7 @@ React screens -> src/api/commands.ts (typed invoke wrappers)
    zh-Hant, ja and ko; see ADR 0021)
   -> Rust commands/      input validation, typed AppError
   -> Rust domain/draft   CreateStoryDraft: one validator for every way to
-                         create a story (Quick Start, Guided, Custom)
+                         create a story (Preset Story, Guided, Custom)
   -> Rust db/stories     story rows, main route, first chapter
   -> Rust db/drafts      the creation wizard's saved draft
   -> Rust db/timeline    event graph, route heads, forks, chapters
@@ -42,7 +42,7 @@ React screens -> src/api/commands.ts (typed invoke wrappers)
 
 ```text
 templates/v1/*.json  -> TemplateCatalog (4 worlds, 4 scenarios, 6 characters)
-Quick Start          -> compose_draft -> CreateStoryDraft -> into_story_input
+Preset Story         -> compose_draft -> CreateStoryDraft -> into_story_input
 Guided / Custom      -> CreateStoryDraft edited in the wizard, saved as
                         app_preferences.wizard_draft -> create_story
 ```

@@ -1,6 +1,7 @@
+import { AddPictureButtons, PictureGroups } from '../images/PictureSources';
 import { useEffect, useId, useRef, useState } from 'react';
 import { commands, errorMessage } from '../../api/commands';
-import { ImageGrid, Thumb } from '../images/ImageGrid';
+import { Thumb } from '../images/ImageGrid';
 import { ImportResult, useAddImages } from '../images/ImagesScreen';
 import { MakePortrait } from '../images/MakePortrait';
 import type { AssetDto, RouteView } from '../../types';
@@ -151,24 +152,11 @@ export function PicturesPanel({ view, awaitingReply, onChanged }: Props) {
         <h3 className="small-heading" tabIndex={-1}>
           {t('Choose: {name}', { name })}
         </h3>
-        <div className="button-row">
-          <button
-            type="button"
-            disabled={adding}
-            onClick={() => void add({ storyId })}
-            title={t('Only this story can use them')}
-          >
-            {adding ? t('Adding…') : t('Add for this story')}
-          </button>
-          <button
-            type="button"
-            disabled={adding}
-            onClick={() => void add()}
-            title={t('Every story can use them')}
-          >
-            {t('Add for all stories')}
-          </button>
-        </div>
+        <AddPictureButtons
+          adding={adding}
+          onAddForStory={() => void add({ storyId })}
+          onAddToLibrary={() => void add()}
+        />
         <ImportResult result={result} />
         {portrayed && (
           <MakePortrait
@@ -181,31 +169,13 @@ export function PicturesPanel({ view, awaitingReply, onChanged }: Props) {
             }}
           />
         )}
-        {ownImages && sharedImages && ownImages.length + sharedImages.length === 0 && (
-          <p className="muted">{t('No images yet. Add some from this computer first.')}</p>
-        )}
-        {ownImages && ownImages.length > 0 && (
-          <section className="image-group" aria-label={t("This story's pictures")}>
-            <h4 className="small-heading">{t("This story's pictures")}</h4>
-            <ImageGrid
-              images={ownImages}
-              selectedId={pick}
-              onSelect={(a) => setPick(a.id)}
-              label={t("This story's pictures")}
-            />
-          </section>
-        )}
-        {sharedImages && sharedImages.length > 0 && (
-          <section className="image-group" aria-label={t('Pictures for all stories')}>
-            <h4 className="small-heading">{t('For all stories')}</h4>
-            <ImageGrid
-              images={sharedImages}
-              selectedId={pick}
-              onSelect={(a) => setPick(a.id)}
-              label={t('Pictures for all stories')}
-            />
-          </section>
-        )}
+        <PictureGroups
+          own={ownImages}
+          shared={sharedImages}
+          pick={pick}
+          onPick={(a) => setPick(a.id)}
+          empty={t('No images yet. Add some from this computer first.')}
+        />
         {routeScoped && (
           <fieldset className="choice-list">
             <legend>{t('Use it')}</legend>

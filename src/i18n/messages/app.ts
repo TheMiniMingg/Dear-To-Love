@@ -5,8 +5,6 @@ import type { Messages } from './types';
 export const app: Messages = {
   // Library
   'Your stories': ['你的故事', '你的故事', 'あなたのストーリー', '내 스토리'],
-  'Create your own': ['自己创建', '自己建立', '自分で作る', '직접 만들기'],
-  'New story': ['新故事', '新故事', '新しいストーリー', '새 스토리'],
   Settings: ['设置', '設定', '設定', '설정'],
   Images: ['图片', '圖片', '画像', '이미지'],
   'Importing…': ['正在导入…', '正在匯入…', '読み込み中…', '가져오는 중…'],
@@ -16,13 +14,6 @@ export const app: Messages = {
     'まだストーリーがありません。',
     '아직 스토리가 없습니다.',
   ],
-  'Start one with {newStory} to pick from presets, or {createOwn} to set up the world, your character and the opening step by step. You can play offline with the built-in storyteller before connecting an AI model. A story someone shared as a storypack comes in with {importPack}.':
-    [
-      '用{newStory}从预设中挑选开始，或用{createOwn}一步步设定世界、你的角色和开场。在连接 AI 模型之前，也可以用内置的讲述者离线游玩。别人分享的故事包可以用{importPack}导入。',
-      '用{newStory}從預設中挑選開始，或用{createOwn}一步步設定世界、你的角色和開場。在連線 AI 模型之前，也可以用內建的講述者離線遊玩。別人分享的故事包可以用{importPack}匯入。',
-      '{newStory}でプリセットから選んで始めるか、{createOwn}で世界・自分のキャラクター・オープニングを順に設定しましょう。AI モデルをつなぐ前でも、内蔵の語り手でオフラインで遊べます。共有されたストーリーパックは{importPack}から読み込めます。',
-      '{newStory}로 프리셋에서 골라 시작하거나, {createOwn}로 세계와 내 캐릭터, 시작 장면을 차례로 설정하세요. AI 모델을 연결하기 전에도 내장 이야기꾼으로 오프라인에서 즐길 수 있습니다. 누군가 공유한 스토리팩은 {importPack}로 가져옵니다.',
-    ],
   'Delete {title}': ['删除“{title}”', '刪除「{title}」', '「{title}」を削除', '"{title}" 삭제'],
   Delete: ['删除', '刪除', '削除', '삭제'],
   'Delete story?': [
@@ -727,4 +718,51 @@ export const app: Messages = {
   ],
   'Rename story': ['重命名故事', '重新命名故事', 'ストーリーの名前を変更', '스토리 이름 바꾸기'],
   'added {when}': ['{when}添加', '{when}新增', '追加：{when}', '{when} 추가'],
+  'Preset Story': ['预设故事', '預設故事', 'プリセットストーリー', '프리셋 스토리'],
+  'Custom Story': ['自定义故事', '自訂故事', 'カスタムストーリー', '커스텀 스토리'],
+  'Your library (any story)': [
+    '你的图库（任何故事都能用）',
+    '你的圖庫（任何故事都能用）',
+    'ライブラリ（どのストーリーでも使える）',
+    '내 라이브러리 (모든 스토리에서 사용)',
+  ],
+  'Only this story can use it': [
+    '只有这个故事能使用',
+    '只有這個故事能使用',
+    'このストーリーだけが使えます',
+    '이 스토리에서만 쓸 수 있습니다',
+  ],
+  'Add for this story only': [
+    '仅为此故事添加',
+    '僅為此故事新增',
+    'このストーリーだけに追加',
+    '이 스토리에만 추가',
+  ],
+  'Kept in Images; any story can use it': [
+    '保存在“图片”中，任何故事都能使用',
+    '保存在「圖片」中，任何故事都能使用',
+    '「画像」に保存され、どのストーリーでも使えます',
+    "'이미지'에 보관되어 어떤 스토리에서든 쓸 수 있습니다",
+  ],
+  'Add to your library (any story)': [
+    '添加到你的图库（任何故事都能用）',
+    '新增到你的圖庫（任何故事都能用）',
+    'ライブラリに追加（どのストーリーでも使える）',
+    '내 라이브러리에 추가 (모든 스토리에서 사용)',
+  ],
+  'This story only': ['仅限此故事', '僅限此故事', 'このストーリーのみ', '이 스토리만'],
+  'Start one with {newStory} to pick a ready-made story, or {createOwn} to make your own from a blank page, filling in only what you want. You can play offline with the built-in storyteller before connecting an AI model. A story someone shared as a storypack comes in with {importPack}.':
+    [
+      '用{newStory}挑选现成的故事，或用{createOwn}从空白开始创作，只填你想填的内容。在连接 AI 模型之前，也可以用内置的讲述者离线游玩。别人分享的故事包可以用{importPack}导入。',
+      '用{newStory}挑選現成的故事，或用{createOwn}從空白開始創作，只填你想填的內容。在連線 AI 模型之前，也可以用內建的講述者離線遊玩。別人分享的故事包可以用{importPack}匯入。',
+      '{newStory}で既成のストーリーを選ぶか、{createOwn}で白紙から自分のストーリーを作りましょう。入力するのは好きなところだけで大丈夫です。AI モデルをつなぐ前でも、内蔵の語り手でオフラインで遊べます。共有されたストーリーパックは{importPack}から読み込めます。',
+      '{newStory}로 준비된 스토리를 고르거나, {createOwn}로 빈 페이지에서 원하는 것만 채워 나만의 스토리를 만드세요. AI 모델을 연결하기 전에도 내장 이야기꾼으로 오프라인에서 즐길 수 있습니다. 누군가 공유한 스토리팩은 {importPack}로 가져옵니다.',
+    ],
+  'Add a picture from this computer. "This story only" keeps it for this story alone. "Your library" shares it with every story, so you can use it again anywhere.':
+    [
+      '从这台电脑添加图片。“仅限此故事”只给这个故事用。“你的图库”会共享给所有故事，在哪里都能再用。',
+      '從這台電腦新增圖片。「僅限此故事」只給這個故事用。「你的圖庫」會共享給所有故事，在哪裡都能再用。',
+      'このコンピューターから画像を追加します。「このストーリーのみ」はこのストーリーだけで使います。「ライブラリ」はすべてのストーリーで共有され、どこでも使い回せます。',
+      "이 컴퓨터에서 이미지를 추가합니다. '이 스토리만'은 이 스토리에서만 씁니다. '내 라이브러리'는 모든 스토리와 공유되어 어디서든 다시 쓸 수 있습니다.",
+    ],
 };

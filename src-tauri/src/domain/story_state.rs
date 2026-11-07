@@ -105,6 +105,9 @@ pub enum NarrationStyle {
     /// Like a classic text adventure: where you are, what you can see and
     /// do, and what happened when you tried.
     Adventure,
+    /// No one way: narration, dialogue, thoughts and messages, each where
+    /// the moment suits it.
+    Mixed,
 }
 
 /// Present or past tense. Unset leaves it to the model.
@@ -274,6 +277,11 @@ pub struct Narration {
     #[serde(default, skip_serializing_if = "is_false")]
     #[ts(as = "Option<bool>", optional)]
     pub manual_memory: bool,
+    /// How the player would like it told, in their own words ("like a cozy
+    /// anime, lots of banter").
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub style_notes: Option<String>,
 }
 
 fn is_false(b: &bool) -> bool {
@@ -303,6 +311,7 @@ impl Default for Narration {
             quiet_phones: false,
             dice_rules: None,
             manual_memory: false,
+            style_notes: None,
         }
     }
 }
@@ -517,6 +526,9 @@ impl StoryStateV1 {
             &self.scene.summary,
         ] {
             check_text("text field", text)?;
+        }
+        if let Some(notes) = &self.narration.style_notes {
+            check_text("style notes", notes)?;
         }
         check_list("world rules", &self.world.rules)?;
         check_list("open threads", &self.open_threads)?;

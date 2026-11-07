@@ -180,7 +180,7 @@ with **Export… → Storypack** to keep a copy), and remove unused pictures und
 
 ## Story templates
 
-Templates are the starting points offered by **Quick Start** and the creation wizard. There are
+Templates are the starting points offered by **Preset Story** and the creation wizard. There are
 three kinds, and any mix works:
 
 - **Worlds**: setting, era, description, rules, and narration defaults including genres.
@@ -231,7 +231,7 @@ and 27 characters to play, from a new lighthouse keeper to an elf hedge mage, a 
 pirate quartermaster and a duke's daughter with a terrible reputation. Scenarios marked ★
 start with **Keep track of health, items and more** turned on, with bars, counters and items
 written for them (the party's health and mana in Greywatch, the ship's hull in the Tallow
-Drift, each vampire house's favor in the Velvet Court). Quick Start and the wizard show what
+Drift, each vampire house's favor in the Velvet Court). Preset Story and the wizard show what
 a scenario tracks before you start, and you can change or remove any of it.
 
 ### How templates are made
@@ -283,12 +283,24 @@ build a story from every world, scenario and character combination.
 
 ### Your own stories
 
-**New story → Create your own** walks through World, You, Story, Narration and Review.
-**Guided** builds a whole story from presets without typing. **Custom** has no presets: it
-starts from empty fields and you write your own world, character, starting location, opening
-scene and everyone else in the story. To build on a preset, pick it in Guided and then switch
-to Custom; what you picked carries over, and **Clear all fields** empties it again. The
-half-made story is saved as you go. Everything a template sets can also be changed later, per route, in
+**Custom Story** walks through World, You, Story, Narration, Pictures and Review. It opens
+in **Custom**: every field starts empty and takes your own words or a pick from a list (the
+type of story, setting, era, name, pronouns, role, species, tone and more), and × clears it
+again. Only your name is needed. **Guided** starts from presets instead (a world, a character
+and an opening, chosen with arrows and menus), and **None (start blank)** takes one back.
+Switching to Custom before changing anything starts blank again; after a change, what you
+picked carries over, and **Clear all fields** empties it. Fields most people can skip are
+folded under **More options**, which opens by itself when something in it is filled in.
+**RPG mode**, a switch on the World step, turns on dice and sets up stats, bars (health,
+mana and so on) and starting items under You; switched off, the story has no numbers and
+stats are left out. The half-made story is saved as you go.
+
+Anything left empty is left open, and the storyteller is told so. A world with nothing in it
+reads `Left open by the player: let it take shape from the opening and from what they do.`,
+and after the characters comes `Anything not given here (looks, age, species and so on) is
+left open: don't bring it up unless the story needs it or the player does, and once it is
+said, keep to it.` A story without a title is called _Untitled story_, and an unnamed first
+chapter _Chapter 1_. Everything a template sets can also be changed later, per route, in
 **Story details**.
 
 ## How the AI knows what kind of story it is
@@ -314,16 +326,19 @@ Hard limits, never write these even if the story drifts toward them: cheating
 
 You set these in the wizard's **Narration** step, or later in **Story details → Narration**:
 
-- **Genre**: any number, from the list or (in Custom) typed in. Anything works.
+- **Genre**: the type of story plus any number of **More genres**, from the list or typed
+  in. Anything works.
 - **Content rating**: _Not set_ (the model decides), _All ages_, _Mature_ (violence, horror,
   strong language, sex without explicit detail) or _Adults only_ (explicit).
 - **Themes and elements you want**: tropes, dynamics, settings, and in adults-only stories
   kinks and fetishes. The storyteller weaves them in when they fit.
 - **Hard limits**: things that must never be written.
 
-The world's rules, the tone and the chapter plan steer the story too.
+The world's rules, the tone and the chapter plan steer the story too. The plan is only a
+guide: the storyteller is told to follow the story when it goes another way, and to drop or
+rework the plan.
 
-**Type of story** is the first choice in Quick Start and in the wizard. It narrows the preset
+**Type of story** is the first choice in Preset Story and in the wizard. It narrows the preset
 worlds to ones made for that type and leads the story's genres. A type with no preset world
 yet (such as _School life_) still makes that kind of story from any world.
 
@@ -333,11 +348,16 @@ Also in **Narration** (wizard and Story details). Under the **Style** picker, a 
 shows how the chosen style reads, drawn the way the reader draws it, with a heading, a thought
 or a text card when those are on.
 
-- **Style**: _Narrated_ (a narrator and dialogue), _Script_ (`Name: "line"`, with short stage
+- **Style**: _Mixed_ (the usual for a custom story: narration, dialogue, thoughts and
+  messages, each where the moment suits it), _Narrated_ (a narrator and dialogue), _Script_ (`Name: "line"`, with short stage
   directions in italics), _Roleplay chat_ (actions in italics, dialogue in quotes and short
   replies), _Thoughts and dialogue, no narrator_ (only what the characters say and think, with
   at most a short line of action), _Messages_ (told mostly through texts, calls, letters and
-  posts) or _Text adventure_ (where you are, what you can see and the ways onward).
+  posts) or _Text adventure_ (where you are, what you can see and the ways onward). Any
+  style but Mixed is a starting point, not a rule: the storyteller is told it can shift for
+  a moment (a text exchange, a letter, a private thought) and come back. **Your own style**
+  describes it in your own words (`like a cozy anime, lots of banter`), sent as
+  `How the player would like it told: …`.
 - **Point of view** ("You open the door.", "I open the door." or "Sam opens the door.") and
   **Tense** (present, past, or not set to let the storyteller choose).
 - **Detail** and **Pacing**: how long each reply is and how fast events move.

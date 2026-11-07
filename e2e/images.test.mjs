@@ -24,8 +24,8 @@ test('add an image, use it on a route, and keep it while used', async () => {
   const click = async (sel) => (await b.$(sel)).click();
 
   await waitForText(b, 'main', 'No stories yet');
-  await click('button=New story');
-  await waitForText(b, 'main', 'Quick Start');
+  await click('button=Preset Story');
+  await waitForText(b, 'main', 'Start story');
   await click('button=Start story');
   await waitForText(b, '[data-testid="narrative"]', 'The Lamp Room');
 
@@ -85,8 +85,8 @@ test('add an image, use it on a route, and keep it while used', async () => {
   await waitForText(b, '[role="dialog"]', 'Portrait of');
   await click('[aria-label="Choose Background"]');
   await waitForText(b, '[role="dialog"]', 'Harbor at dusk');
-  await waitForText(b, '[aria-label="This story\'s pictures"]', 'Lamp room');
-  assert.match(await textOf(b, '[aria-label="Pictures for all stories"]'), /Harbor at dusk/);
+  await waitForText(b, '[aria-label="This story only"]', 'Lamp room');
+  assert.match(await textOf(b, '[aria-label="Your library (any story)"]'), /Harbor at dusk/);
   await click('//div[@role="dialog"]//button[.//span[normalize-space()="Harbor at dusk"]]');
   await click('button=Use this picture');
   await waitForText(b, '[role="dialog"]', 'Chosen on Main.');
@@ -109,7 +109,7 @@ test('add an image, use it on a route, and keep it while used', async () => {
   await waitForText(b, 'main', 'Your stories');
   await click('button=Images');
   await waitForText(b, 'main', 'Harbor at dusk');
-  await waitForText(b, '[aria-label="For all stories"]', 'Harbor at dusk');
+  await waitForText(b, '[aria-label="Your library (any story)"]', 'Harbor at dusk');
   await waitForText(b, '[aria-label="Only in “The Unsigned Letter”"]', 'Lamp room');
   await click('//button[.//span[normalize-space()="Harbor at dusk"]]');
   await waitForText(b, '[aria-label="Used in"]', 'Background on route Main');

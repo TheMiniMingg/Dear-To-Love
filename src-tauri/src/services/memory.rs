@@ -179,7 +179,10 @@ pub fn transcript(chunk: &[EventRow], player_name: &str, max_chars: usize) -> Ap
                 clip(&p.story_text(), max_chars)
             )),
             EventBody::Assistant(a) => out.push(format!("Narrator: {}", clip(&a.text, max_chars))),
-            EventBody::ChapterStart(c) => out.push(format!("[Chapter {}: {}]", c.ordinal, c.title)),
+            EventBody::ChapterStart(c) => out.push(format!(
+                "[{}]",
+                crate::domain::events::chapter_heading(c.ordinal, &c.title)
+            )),
             _ => {}
         }
     }
