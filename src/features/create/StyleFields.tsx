@@ -18,6 +18,11 @@ import { joinList, locale, msg, t, tOptions, type Locale } from '../../i18n';
 
 export const STYLES: PickerOption<NarrationStyle>[] = [
   {
+    value: 'mixed',
+    label: msg('Mixed: whatever fits the moment'),
+    hint: msg('Narration, dialogue, thoughts and messages, each where it suits the scene.'),
+  },
+  {
     value: 'narrated',
     label: msg('Narrated'),
     hint: msg('A narrator describes what happens, with dialogue.'),
@@ -51,6 +56,9 @@ export const STYLES: PickerOption<NarrationStyle>[] = [
 
 /** A few lines in each style, so the choice is easy to picture. */
 const EXAMPLES: Record<NarrationStyle, string> = {
+  mixed: msg(
+    'Rain streaks the café window. Mina looks up from the counter, flour on her cheek.\n\nMina: "You\'re late."',
+  ),
   narrated: msg(
     'Rain streaks the café window. Behind the counter, Mina looks up, flour on her cheek.\n\n"You\'re late," she says, but she\'s already smiling.',
   ),
@@ -178,6 +186,7 @@ export function tellingOf(n: Narration): Partial<Narration> {
     sceneHeadings: n.sceneHeadings,
     autopilot: n.autopilot,
     manualMemory: n.manualMemory,
+    styleNotes: n.styleNotes,
     surprises: n.surprises,
     language: n.language,
     dice: n.dice,
@@ -316,26 +325,18 @@ export function StyleExample({ narration }: { narration: Narration }) {
 }
 
 /**
- * How the story reads: style (with an example), language, point of view,
- * tense, detail and pacing. Used by the wizard's Narration step and by
- * Story details.
+ * The style: a picker with an example, a word that it is a starting point
+ * and not a rule, and a box for the player's own wishes.
  */
-export function StyleFields({
+export function StylePicker({
   narration,
   onChange,
-  typeLanguage = false,
 }: {
   narration: Narration;
   onChange: (patch: Partial<Narration>) => void;
-  /** Custom mode: type any language instead of picking one. */
-  typeLanguage?: boolean;
 }) {
   const id = useId();
   const style = narration.style ?? 'narrated';
-  const language = narration.language ?? '';
-  const languages = LANGUAGES.some((l) => l.value === language)
-    ? LANGUAGES
-    : [...LANGUAGES, { value: language, label: t('Your own: {value}', { value: language }) }];
   return (
     <>
       <ArrowPicker
@@ -344,7 +345,51 @@ export function StyleFields({
         value={style}
         onChange={(s) => onChange({ style: s === 'narrated' ? undefined : s })}
       />
+      {style !== 'mixed' && (
+        <p className="muted small">
+          {t(
+            'A starting point, not a rule: the storyteller can switch for a moment, such as a text exchange or a private thought, then come back.',
+          )}
+        </p>
+      )}
       <StyleExample narration={narration} />
+      <div className="field">
+        <label htmlFor={`${id}-notes`}>{t('Your own style (optional)')}</label>
+        <textarea
+          id={`${id}-notes`}
+          rows={2}
+          maxLength={600}
+          value={narration.styleNotes ?? ''}
+          placeholder={t('For example: like a cozy anime, lots of banter, short replies')}
+          aria-describedby={`${id}-notes-hint`}
+          onChange={(e) => onChange({ styleNotes: e.target.value || undefined })}
+        />
+        <p id={`${id}-notes-hint`} className="muted small">
+          {t('Describe how you would like it told, in your own words. The storyteller follows it.')}
+        </p>
+      </div>
+    </>
+  );
+}
+
+/** Language, point of view, tense, detail and pacing. */
+export function TellingFields({
+  narration,
+  onChange,
+  typeLanguage = false,
+}: {
+  narration: Narration;
+  onChange: (patch: Partial<Narration>) => void;
+  /** Type any language instead of picking one. */
+  typeLanguage?: boolean;
+}) {
+  const id = useId();
+  const language = narration.language ?? '';
+  const languages = LANGUAGES.some((l) => l.value === language)
+    ? LANGUAGES
+    : [...LANGUAGES, { value: language, label: t('Your own: {value}', { value: language }) }];
+  return (
+    <>
       {typeLanguage ? (
         <div className="field">
           <label htmlFor={`${id}-language`}>{t('Story language')}</label>
@@ -398,8 +443,30 @@ export function StyleFields({
   );
 }
 
+/**
+ * How the story reads: style (with an example), language, point of view,
+ * tense, detail and pacing. Used by Story details.
+ */
+export function StyleFields({
+  narration,
+  onChange,
+  typeLanguage = false,
+}: {
+  narration: Narration;
+  onChange: (patch: Partial<Narration>) => void;
+  /** Type any language instead of picking one. */
+  typeLanguage?: boolean;
+}) {
+  return (
+    <>
+      <StylePicker narration={narration} onChange={onChange} />
+      <TellingFields narration={narration} onChange={onChange} typeLanguage={typeLanguage} />
+    </>
+  );
+}
+
 /** Dice, folded away until opened: who asks, which dice, how often and the odds. */
-function DiceSettings({
+export function DiceSettings({
   rules,
   onChange,
 }: {
@@ -499,9 +566,12 @@ function DiceSettings({
 export function FeatureFields({
   narration,
   onChange,
+  dice = true,
 }: {
   narration: Narration;
   onChange: (patch: Partial<Narration>) => void;
+  /** Offer dice here; the wizard has its own RPG mode switch for them. */
+  dice?: boolean;
 }) {
   const style = narration.style ?? 'narrated';
   const cards = style === 'messages' || !!narration.messageCards;
@@ -558,13 +628,15 @@ export function FeatureFields({
         value={narration.surprises ?? 'sometimes'}
         onChange={(s) => onChange({ surprises: s === 'sometimes' ? undefined : s })}
       />
-      <Check
-        label={t('Roll dice for uncertain moments')}
-        hint={t('The storyteller sets the odds from the story, and the app rolls fairly.')}
-        checked={!!narration.dice}
-        onChange={(on) => onChange({ dice: on || undefined })}
-      />
-      {narration.dice && (
+      {dice && (
+        <Check
+          label={t('Roll dice for uncertain moments')}
+          hint={t('The storyteller sets the odds from the story, and the app rolls fairly.')}
+          checked={!!narration.dice}
+          onChange={(on) => onChange({ dice: on || undefined })}
+        />
+      )}
+      {dice && narration.dice && (
         <DiceSettings
           rules={narration.diceRules}
           onChange={(diceRules) => onChange({ diceRules })}

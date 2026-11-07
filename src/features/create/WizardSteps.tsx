@@ -1,3 +1,5 @@
+import { useId } from 'react';
+import { Swords } from 'lucide-react';
 import { ArrowPicker, type PickerOption } from '../../components/ArrowPicker';
 import type {
   Character,
@@ -7,6 +9,7 @@ import type {
   DraftProblem,
   DraftStep,
   Narration,
+  Relationship,
   TemplateCatalog,
   World,
 } from '../../types';
@@ -18,22 +21,26 @@ import {
   worldFits,
 } from './ContentFields';
 import {
+  ComboField,
   LinesField,
+  MoreOptions,
   MultiPicker,
-  PresetPicker,
   StatsField,
   TextArea,
   TextField,
+  countFilled,
   uniq,
 } from './fields';
 import { ERAS, PERSONALITIES, RACES, ROLES, RULES, SETTINGS } from './presets';
 import {
   DETAILS,
   DICE_STORY_TYPES,
+  DiceSettings,
   FeatureFields,
   PERSPECTIVES,
   STYLES,
-  StyleFields,
+  StylePicker,
+  TellingFields,
   appStoryLanguage,
   featureList,
   labelOf,
@@ -41,7 +48,7 @@ import {
   tellingOf,
 } from './StyleFields';
 import { BACKGROUND_SLOT, COVER_SLOT, livePictures } from './PicturesStep';
-import { TrackingFields, trackingSummary } from './TrackingFields';
+import { TrackingFields, defaultTracking, trackingSummary } from './TrackingFields';
 import { joinList, msg, t, tKnown, tn } from '../../i18n';
 
 export type StepProps = {
@@ -78,7 +85,8 @@ export function applyWorld(
             : { messageCards: true, sceneHeadings: true, language: appStoryLanguage() }),
         },
       }
-    : { worldTemplateId: null };
+    : // None: the world it filled in goes; how the story is told stays.
+      { worldTemplateId: null, world: { era: '', setting: '', description: '', rules: [] } };
 }
 
 /**
@@ -101,7 +109,21 @@ export function applyScenario(
     : untouched
       ? { tracking: undefined }
       : {};
-  if (!s) return { scenarioTemplateId: null, ...tracking };
+  if (!s) {
+    // None: what the scenario filled in goes.
+    return {
+      scenarioTemplateId: null,
+      ...tracking,
+      title: '',
+      description: '',
+      scene: { location: '', summary: '' },
+      npcs: [],
+      relationships: [],
+      openThreads: [],
+      firstChapterTitle: '',
+      chapterOutlines: [],
+    };
+  }
   return {
     ...tracking,
     scenarioTemplateId: s.id,
@@ -120,13 +142,22 @@ export function applyCharacter(catalog: TemplateCatalog, id: string): Partial<Cr
   const c = catalog.characters.find((x) => x.id === id);
   return c
     ? { characterTemplateId: c.id, player: { ...copy(c.character), control: 'player' } }
-    : { characterTemplateId: null };
+    : { characterTemplateId: null, player: blankPlayer() };
 }
+
+const blankPlayer = (): Character => ({
+  id: '',
+  name: '',
+  control: 'player',
+  personality: [],
+  goals: [],
+  abilities: [],
+});
 
 /**
  * The same draft with every field emptied, for Custom mode: no world,
- * character or scenario preset, default narration, and a first chapter
- * simply called "Chapter 1".
+ * character or scenario preset, nothing written in, and the usual way of
+ * telling it (mixed styles, cards and headings) until changed.
  */
 export function blankDraft(d: CreateStoryDraft): CreateStoryDraft {
   return {
@@ -142,18 +173,23 @@ export function blankDraft(d: CreateStoryDraft): CreateStoryDraft {
       detail: 'balanced',
       tone: '',
       pacing: 'normal',
+      style: 'mixed',
+      // Mixed uses thoughts and messages where they fit, so both start on.
+      innerThoughts: true,
       messageCards: true,
       sceneHeadings: true,
       language: appStoryLanguage(),
     },
-    player: { id: '', name: '', control: 'player', personality: [], goals: [], abilities: [] },
+    player: blankPlayer(),
     npcs: [],
     relationships: [],
     scene: { location: '', summary: '' },
     openThreads: [],
-    firstChapterTitle: t('Chapter {n}', { n: 1 }),
+    firstChapterTitle: '',
     chapterOutlines: [],
     pictures: [],
+    storyType: undefined,
+    tracking: undefined,
   };
 }
 
@@ -163,19 +199,107 @@ export function fittingScenarios(catalog: TemplateCatalog, worldId: string | nul
   );
 }
 
+/** The presets, with "None" first so a preset can always be taken back. */
 function templateOptions<T extends { id: string; label: string; summary: string }>(
   list: T[],
   current: string | null,
-  ownLabel: string,
+  noneHint: string,
 ): PickerOption<string>[] {
   const options = list.map((x) => ({ value: x.id, label: x.label, hint: x.summary }));
-  if (!current || !options.some((o) => o.value === current)) {
-    options.unshift({ value: current ?? '', label: ownLabel, hint: '' });
+  if (current && !options.some((o) => o.value === current)) {
+    options.unshift({ value: current, label: t('Your own'), hint: '' });
   }
+  options.unshift({ value: '', label: t('None (start blank)'), hint: noneHint });
   return options;
 }
 
-export function WorldStep({ draft, update, catalog, guided }: StepProps) {
+/** The story's kind, typed or picked; in Guided it also moves to a fitting world. */
+function StoryTypeField({ draft, update, catalog, guided }: StepProps) {
+  const storyType = draft.storyType ?? '';
+  return (
+    <ComboField
+      label={t('Type of story')}
+      options={STORY_TYPES}
+      translate
+      value={storyType}
+      placeholder={t('Any: type your own or pick one')}
+      hint={t('Romance, horror, a cozy mystery… anything works.')}
+      onChange={(type) => {
+        const patch: Partial<CreateStoryDraft> = { storyType: type || undefined };
+        if (guided) {
+          // Move to a world of that type when the current one isn't.
+          const next = catalog.worlds.filter((x) => worldFits(x.narration.genres, type));
+          const current = catalog.worlds.find((x) => x.id === draft.worldTemplateId);
+          if (current && next.length > 0 && !next.includes(current)) {
+            Object.assign(patch, applyWorld(catalog, next[0]!.id, draft.narration));
+          }
+          // Adventures, fantasy and school stories start in RPG mode; you can turn it off.
+          const dice = DICE_STORY_TYPES.includes(type);
+          patch.narration = { ...(patch.narration ?? draft.narration), dice: dice || undefined };
+          if (dice && !draft.tracking) {
+            patch.tracking = defaultTracking(withStoryType(draft.narration.genres, type));
+          }
+        }
+        update(patch);
+      }}
+    />
+  );
+}
+
+/**
+ * RPG mode: stats, dice, health, mana and items. Off, the story has no
+ * numbers. Its stats and bars are set up under You.
+ */
+function RpgModeField({ draft, update, guided }: StepProps) {
+  const id = useId();
+  const n = draft.narration;
+  const on = !!n.dice;
+  const toggle = (next: boolean) => {
+    const genres = withStoryType(n.genres, draft.storyType ?? '');
+    update({
+      narration: { ...n, dice: next || undefined },
+      // Something to fill in under You; Guided starts with the usual bars.
+      // Off, the story has no numbers: its bars and items go too.
+      tracking: next
+        ? (draft.tracking ??
+          (guided ? defaultTracking(genres) : { meters: [], inventory: true, items: [] }))
+        : undefined,
+    });
+  };
+  return (
+    <div className="field rpg-mode">
+      <label className="check switch">
+        <input
+          type="checkbox"
+          role="switch"
+          checked={on}
+          aria-describedby={`${id}-hint`}
+          onChange={(e) => toggle(e.target.checked)}
+        />
+        <Swords aria-hidden={true} size={17} />
+        {t('RPG mode')}
+      </label>
+      <p id={`${id}-hint`} className="muted small check-hint">
+        {on
+          ? t(
+              'On: you set your stats, health, mana and items under You, and the app rolls dice for risky moments.',
+            )
+          : t(
+              'Stats, dice rolls, health, mana and items, like a tabletop game. Leave it off for a story without numbers.',
+            )}
+      </p>
+      {on && (
+        <DiceSettings
+          rules={n.diceRules}
+          onChange={(diceRules) => update({ narration: { ...n, diceRules } })}
+        />
+      )}
+    </div>
+  );
+}
+
+export function WorldStep(props: StepProps) {
+  const { draft, update, catalog, guided } = props;
   const w = draft.world;
   const set = (patch: Partial<World>) => update({ world: { ...w, ...patch } });
   const storyType = draft.storyType ?? '';
@@ -183,28 +307,7 @@ export function WorldStep({ draft, update, catalog, guided }: StepProps) {
   const worlds = fitting.length > 0 ? fitting : catalog.worlds;
   return (
     <>
-      <PresetPicker
-        label={t('Type of story')}
-        presets={STORY_TYPES}
-        translate
-        value={storyType}
-        noneLabel={t('Any')}
-        onChange={(type) => {
-          const patch: Partial<CreateStoryDraft> = { storyType: type || undefined };
-          // Move to a world of that type when the current one isn't.
-          const next = catalog.worlds.filter((x) => worldFits(x.narration.genres, type));
-          const current = catalog.worlds.find((x) => x.id === draft.worldTemplateId);
-          if (guided && current && next.length > 0 && !next.includes(current)) {
-            Object.assign(patch, applyWorld(catalog, next[0]!.id, draft.narration));
-          }
-          // Adventures, fantasy and school stories roll dice; you can turn it off.
-          patch.narration = {
-            ...(patch.narration ?? draft.narration),
-            dice: DICE_STORY_TYPES.includes(type) || undefined,
-          };
-          update(patch);
-        }}
-      />
+      <StoryTypeField {...props} />
       {guided && storyType && fitting.length === 0 && (
         <p className="muted small">
           {t(
@@ -213,57 +316,52 @@ export function WorldStep({ draft, update, catalog, guided }: StepProps) {
           )}
         </p>
       )}
-      {guided ? (
-        <>
-          <ArrowPicker
-            label={t('Start from a world')}
-            options={templateOptions(worlds, draft.worldTemplateId, t('Your own world'))}
-            value={draft.worldTemplateId ?? ''}
-            onChange={(id) => update(applyWorld(catalog, id, draft.narration))}
-          />
-          <PresetPicker
-            label={t('Era')}
-            presets={uniq([...catalog.worlds.map((x) => x.world.era), ...ERAS])}
-            value={w.era}
-            onChange={(era) => set({ era })}
-          />
-          <PresetPicker
-            label={t('Setting')}
-            presets={uniq([...catalog.worlds.map((x) => x.world.setting), ...SETTINGS])}
-            value={w.setting}
-            onChange={(setting) => set({ setting })}
-          />
-          {w.description && <p className="muted">{w.description}</p>}
-          <MultiPicker
-            label={t('Rules the storyteller follows')}
-            presets={uniq([...catalog.worlds.flatMap((x) => x.world.rules), ...RULES])}
-            value={w.rules}
-            onChange={(rules) => set({ rules })}
-          />
-        </>
-      ) : (
-        <>
-          <TextField label={t('Era')} value={w.era} onChange={(era) => set({ era })} />
-          <TextField
-            label={t('Setting')}
-            required
-            value={w.setting}
-            onChange={(setting) => set({ setting })}
-            hint={t('Where the story takes place.')}
-          />
-          <TextArea
-            label={t('Description')}
-            value={w.description}
-            rows={4}
-            onChange={(description) => set({ description })}
-          />
-          <LinesField
-            label={t('Rules the storyteller follows')}
-            value={w.rules}
-            onChange={(rules) => set({ rules })}
-          />
-        </>
+      {guided && (
+        <ArrowPicker
+          label={t('Start from a world')}
+          options={templateOptions(
+            worlds,
+            draft.worldTemplateId,
+            t('Write your own world below, or leave it open.'),
+          )}
+          value={draft.worldTemplateId ?? ''}
+          onChange={(id) => update(applyWorld(catalog, id, draft.narration))}
+        />
       )}
+      <ComboField
+        label={t('Setting')}
+        options={uniq([...catalog.worlds.map((x) => x.world.setting), ...SETTINGS])}
+        value={w.setting}
+        placeholder={t('Where it takes place: type your own or pick one')}
+        hint={t('Leave it empty and the story finds its own place.')}
+        onChange={(setting) => set({ setting })}
+      />
+      <ComboField
+        label={t('Era')}
+        options={uniq([...ERAS, ...catalog.worlds.map((x) => x.world.era)])}
+        value={w.era}
+        placeholder={t('When it takes place: type your own or pick one')}
+        onChange={(era) => set({ era })}
+      />
+      <RpgModeField {...props} />
+      <MoreOptions filled={countFilled(w.description, w.rules)}>
+        <TextArea
+          label={t('About this world')}
+          value={w.description}
+          rows={4}
+          hint={t(
+            'History, magic, technology, the mood of the place: anything the storyteller should know.',
+          )}
+          onChange={(description) => set({ description })}
+        />
+        <MultiPicker
+          label={t('Rules the storyteller follows')}
+          presets={uniq([...catalog.worlds.flatMap((x) => x.world.rules), ...RULES])}
+          value={w.rules}
+          hint={t('Things that are always true here. Pick from the list or write your own.')}
+          onChange={(rules) => set({ rules })}
+        />
+      </MoreOptions>
     </>
   );
 }
@@ -279,105 +377,137 @@ const roleOptions = (catalog: TemplateCatalog) =>
 const personalityOptions = (catalog: TemplateCatalog) =>
   uniq([...allCharacters(catalog).flatMap((c) => c.personality), ...PERSONALITIES]);
 
+/**
+ * Age, role, species, about, looks, personality, goals and abilities: the
+ * same fields for you and for everyone else.
+ */
+function PersonDetails({
+  c,
+  set,
+  catalog,
+  you,
+}: {
+  c: Character;
+  set: (patch: Partial<Character>) => void;
+  catalog: TemplateCatalog;
+  /** The player's own character (asks "about you"). */
+  you: boolean;
+}) {
+  return (
+    <>
+      <div className="field-row">
+        <TextField label={t('Age')} value={c.age ?? ''} onChange={(age) => set({ age })} />
+        <ComboField
+          label={t('Race or species')}
+          options={raceOptions(catalog)}
+          value={c.species ?? ''}
+          placeholder={t('Leave empty if it does not matter')}
+          onChange={(species) => set({ species: species || undefined })}
+        />
+      </div>
+      <TextArea
+        label={you ? t('About you') : t('About them')}
+        value={c.description ?? ''}
+        rows={3}
+        hint={
+          you
+            ? t('Your story so far, what you want, what you hide.')
+            : t('Their story so far, what they want, what they hide.')
+        }
+        onChange={(description) => set({ description })}
+      />
+      <MultiPicker
+        label={t('Personality')}
+        presets={personalityOptions(catalog)}
+        value={c.personality}
+        onChange={(personality) => set({ personality })}
+      />
+      <LinesField
+        label={t('Goals')}
+        value={c.goals}
+        rows={3}
+        onChange={(goals) => set({ goals })}
+      />
+      <LinesField
+        label={t('Abilities')}
+        value={c.abilities}
+        rows={3}
+        onChange={(abilities) => set({ abilities })}
+      />
+    </>
+  );
+}
+
+const personFilled = (c: Character) =>
+  countFilled(c.age, c.species, c.description, c.personality, c.goals, c.abilities);
+
 export function CharacterStep({ draft, update, catalog, guided }: StepProps) {
   const p = draft.player;
   const set = (patch: Partial<Character>) => update({ player: { ...p, ...patch } });
-  const chars = catalog.characters.map((c) => c.character);
+  const rpg = !!draft.narration.dice;
   return (
     <>
-      {guided ? (
-        <>
-          <ArrowPicker
-            label={t('Start from a character')}
-            options={templateOptions(
-              catalog.characters,
-              draft.characterTemplateId,
-              t('Your own character'),
-            )}
-            value={draft.characterTemplateId ?? ''}
-            onChange={(id) => update(applyCharacter(catalog, id))}
-          />
-          <PresetPicker
-            label={t('Name')}
-            presets={uniq(chars.map((c) => c.name))}
-            value={p.name}
-            onChange={(name) => set({ name })}
-          />
-          <PresetPicker
-            label={t('Pronouns')}
-            presets={uniq([...PRONOUNS, ...chars.map((c) => c.pronouns)])}
-            value={p.pronouns ?? ''}
-            noneLabel={t('Not specified')}
-            onChange={(pronouns) => set({ pronouns })}
-          />
-          <PresetPicker
-            label={t('Race or species')}
-            presets={raceOptions(catalog)}
-            value={p.species ?? ''}
-            noneLabel={t('Not specified')}
-            onChange={(species) => set({ species: species || undefined })}
-          />
-          <PresetPicker
-            label={t('Role')}
-            presets={roleOptions(catalog)}
-            value={p.role ?? ''}
-            noneLabel={t('No particular role')}
-            onChange={(role) => set({ role })}
-          />
-          {p.description && <p className="muted">{p.description}</p>}
-          <MultiPicker
-            label={t('Personality')}
-            presets={personalityOptions(catalog)}
-            value={p.personality}
-            onChange={(personality) => set({ personality })}
-          />
-          {draft.narration.dice && (
-            <StatsField value={p.stats ?? []} onChange={(stats) => set({ stats })} />
+      {guided && (
+        <ArrowPicker
+          label={t('Start from a character')}
+          options={templateOptions(
+            catalog.characters,
+            draft.characterTemplateId,
+            t('Make your own character below.'),
           )}
-        </>
-      ) : (
-        <>
-          <TextField label={t('Name')} required value={p.name} onChange={(name) => set({ name })} />
-          <div className="field-row">
-            <TextField
-              label={t('Pronouns')}
-              value={p.pronouns ?? ''}
-              onChange={(pronouns) => set({ pronouns })}
-            />
-            <TextField label={t('Age')} value={p.age ?? ''} onChange={(age) => set({ age })} />
-            <TextField label={t('Role')} value={p.role ?? ''} onChange={(role) => set({ role })} />
-            <TextField
-              label={t('Race or species')}
-              value={p.species ?? ''}
-              placeholder={t('Human, Orc, Lizardfolk…')}
-              onChange={(species) => set({ species })}
-            />
-          </div>
-          <TextArea
-            label={t('Description')}
-            value={p.description ?? ''}
-            onChange={(description) => set({ description })}
-          />
-          <TextArea
-            label={t('Appearance')}
-            value={p.appearance ?? ''}
-            rows={2}
-            onChange={(appearance) => set({ appearance })}
-          />
-          <LinesField
-            label={t('Personality')}
-            value={p.personality}
-            onChange={(personality) => set({ personality })}
-          />
-          <LinesField label={t('Goals')} value={p.goals} onChange={(goals) => set({ goals })} />
-          <LinesField
-            label={t('Abilities')}
-            value={p.abilities}
-            onChange={(abilities) => set({ abilities })}
-          />
-          <StatsField value={p.stats ?? []} onChange={(stats) => set({ stats })} />
-        </>
+          value={draft.characterTemplateId ?? ''}
+          onChange={(id) => update(applyCharacter(catalog, id))}
+        />
       )}
+      <div className="field-row">
+        <ComboField
+          label={t('Name')}
+          required
+          options={guided ? uniq(catalog.characters.map((c) => c.character.name)) : []}
+          value={p.name}
+          placeholder={t('What you are called')}
+          onChange={(name) => set({ name })}
+        />
+        <ComboField
+          label={t('Pronouns')}
+          options={uniq([...PRONOUNS, ...catalog.characters.map((c) => c.character.pronouns)])}
+          value={p.pronouns ?? ''}
+          placeholder={t('Not specified')}
+          onChange={(pronouns) => set({ pronouns: pronouns || undefined })}
+        />
+        <ComboField
+          label={t('Role')}
+          options={roleOptions(catalog)}
+          value={p.role ?? ''}
+          placeholder={t('No particular role')}
+          onChange={(role) => set({ role: role || undefined })}
+        />
+      </div>
+      <TextArea
+        label={t('Appearance')}
+        value={p.appearance ?? ''}
+        rows={3}
+        hint={t('How you look, if it matters. Leave it empty and it stays open.')}
+        onChange={(appearance) => set({ appearance })}
+      />
+      {rpg && (
+        <section className="rpg-section" aria-labelledby="rpg-you">
+          <h3 id="rpg-you" className="small-heading">
+            <Swords aria-hidden={true} size={16} /> {t('RPG mode')}
+          </h3>
+          <StatsField value={p.stats ?? []} onChange={(stats) => set({ stats })} />
+          <h4 className="small-heading">{t('Health, mana and items')}</h4>
+          <TrackingFields
+            alwaysOn
+            tracking={draft.tracking}
+            onChange={(tracking) => update({ tracking })}
+            genres={withStoryType(draft.narration.genres, draft.storyType ?? '')}
+          />
+        </section>
+      )}
+      <MoreOptions filled={personFilled(p)}>
+        <PersonDetails c={p} set={set} catalog={catalog} you />
+      </MoreOptions>
     </>
   );
 }
@@ -387,6 +517,24 @@ function nextNpcId(npcs: Character[]): string {
     const id = `custom:npc-${n}`;
     if (!npcs.some((c) => c.id === id)) return id;
   }
+}
+
+/** How someone knows the player: their relationship's label, '' for none. */
+function toYou(relationships: Relationship[], id: string): string {
+  return (
+    relationships.find(
+      (r) => (r.fromId === id && r.toId === PLAYER) || (r.fromId === PLAYER && r.toId === id),
+    )?.label ?? ''
+  );
+}
+
+function withToYou(relationships: Relationship[], id: string, label: string): Relationship[] {
+  const i = relationships.findIndex(
+    (r) => (r.fromId === id && r.toId === PLAYER) || (r.fromId === PLAYER && r.toId === id),
+  );
+  if (!label.trim()) return i < 0 ? relationships : relationships.filter((_, j) => j !== i);
+  if (i < 0) return [...relationships, { fromId: id, toId: PLAYER, label, status: '' }];
+  return relationships.map((r, j) => (j === i ? { ...r, label } : r));
 }
 
 function OthersEditor({ draft, update, catalog, guided }: StepProps) {
@@ -402,55 +550,58 @@ function OthersEditor({ draft, update, catalog, guided }: StepProps) {
     <>
       <fieldset className="field">
         <legend>{t('Others in the story')}</legend>
-        {draft.npcs.length === 0 && <p className="muted small">{t('Nobody else yet.')}</p>}
+        <p className="muted small">
+          {t('Optional. The storyteller brings in new people as the story needs them.')}
+        </p>
         <ul className="npc-list">
           {draft.npcs.map((c, i) => (
             <li key={c.id} className="npc-card">
-              {guided ? (
-                <span>
-                  <strong>{c.name || t('Unnamed')}</strong>
-                  {(c.species || c.role) && (
-                    <span className="muted">, {[c.species, c.role].filter(Boolean).join(' ')}</span>
-                  )}
-                </span>
-              ) : (
+              <div className="field-row">
+                <TextField
+                  label={t('Name')}
+                  required
+                  value={c.name}
+                  onChange={(name) => setNpc(i, { name })}
+                />
+                <ComboField
+                  label={t('Role')}
+                  options={roleOptions(catalog)}
+                  value={c.role ?? ''}
+                  placeholder={t('No particular role')}
+                  onChange={(role) => setNpc(i, { role: role || undefined })}
+                />
+                <TextField
+                  label={t('How they know you')}
+                  value={toYou(draft.relationships, c.id)}
+                  placeholder={t('Best friend, rival, new neighbor…')}
+                  onChange={(label) =>
+                    update({ relationships: withToYou(draft.relationships, c.id, label) })
+                  }
+                />
+              </div>
+              <MoreOptions filled={personFilled(c) + countFilled(c.pronouns, c.appearance)}>
                 <div className="field-row">
-                  <TextField
-                    label={t('Name')}
-                    required
-                    value={c.name}
-                    onChange={(name) => setNpc(i, { name })}
-                  />
-                  <TextField
+                  <ComboField
                     label={t('Pronouns')}
+                    options={PRONOUNS}
                     value={c.pronouns ?? ''}
-                    onChange={(pronouns) => setNpc(i, { pronouns })}
-                  />
-                  <TextField
-                    label={t('Age')}
-                    value={c.age ?? ''}
-                    onChange={(age) => setNpc(i, { age })}
-                  />
-                  <TextField
-                    label={t('Role')}
-                    value={c.role ?? ''}
-                    onChange={(role) => setNpc(i, { role })}
-                  />
-                  <TextField
-                    label={t('Race or species')}
-                    value={c.species ?? ''}
-                    onChange={(species) => setNpc(i, { species })}
+                    placeholder={t('Not specified')}
+                    onChange={(pronouns) => setNpc(i, { pronouns: pronouns || undefined })}
                   />
                 </div>
-              )}
-              {!guided && (
                 <TextArea
-                  label={t('Description')}
+                  label={t('Appearance')}
+                  value={c.appearance ?? ''}
                   rows={2}
-                  value={c.description ?? ''}
-                  onChange={(description) => setNpc(i, { description })}
+                  onChange={(appearance) => setNpc(i, { appearance })}
                 />
-              )}
+                <PersonDetails
+                  c={c}
+                  set={(patch) => setNpc(i, patch)}
+                  catalog={catalog}
+                  you={false}
+                />
+              </MoreOptions>
               <button
                 type="button"
                 className="danger-link"
@@ -464,29 +615,27 @@ function OthersEditor({ draft, update, catalog, guided }: StepProps) {
             </li>
           ))}
         </ul>
-        {!guided && (
-          <button
-            type="button"
-            className="add-button"
-            onClick={() =>
-              update({
-                npcs: [
-                  ...draft.npcs,
-                  {
-                    id: nextNpcId(draft.npcs),
-                    name: '',
-                    control: 'npc',
-                    personality: [],
-                    goals: [],
-                    abilities: [],
-                  },
-                ],
-              })
-            }
-          >
-            {t('Add a character')}
-          </button>
-        )}
+        <button
+          type="button"
+          className="add-button"
+          onClick={() =>
+            update({
+              npcs: [
+                ...draft.npcs,
+                {
+                  id: nextNpcId(draft.npcs),
+                  name: '',
+                  control: 'npc',
+                  personality: [],
+                  goals: [],
+                  abilities: [],
+                },
+              ],
+            })
+          }
+        >
+          {t('Add a character')}
+        </button>
       </fieldset>
       {guided && extras.length > 0 && (
         <fieldset className="field toggle-list">
@@ -536,7 +685,9 @@ function OutlinesEditor({
     <fieldset className="field">
       <legend>{t('Chapter plan (optional)')}</legend>
       <p className="muted small">
-        {t('Used when you start the next chapter. Chapters without a plan get a plain title.')}
+        {t(
+          'A rough guide for where the story could go. If the story heads somewhere else, the storyteller follows the story instead, and you can rename each next chapter when one ends.',
+        )}
       </p>
       <ol className="outline-list">
         {value.map((c, i) => (
@@ -578,10 +729,15 @@ export function StoryStep(props: StepProps) {
   const options = fittingScenarios(catalog, draft.worldTemplateId);
   const current = draft.scenarioTemplateId;
   const offWorld = current !== null && !options.some((s) => s.id === current);
-  const pickerOptions = templateOptions(options, current, t('Your own story'));
+  const pickerOptions = templateOptions(
+    options,
+    current,
+    t('Write your own opening below, or leave it to the storyteller.'),
+  );
   if (offWorld) {
     const s = catalog.scenarios.find((x) => x.id === current);
-    pickerOptions[0] = {
+    const i = pickerOptions.findIndex((o) => o.value === current);
+    pickerOptions[i] = {
       value: current,
       label: t('{name} (written for another world)', { name: s?.label ?? t('Current story') }),
       hint: '',
@@ -589,81 +745,66 @@ export function StoryStep(props: StepProps) {
   }
   return (
     <>
-      {guided ? (
-        <>
-          <ArrowPicker
-            label={t('Start from a scenario')}
-            options={pickerOptions}
-            value={current ?? ''}
-            onChange={(id) => update(applyScenario(catalog, id, draft))}
-          />
-          <dl className="facts">
-            <dt>{t('Title')}</dt>
-            <dd>{draft.title || t('(not set)')}</dd>
-            <dt>{t('Opens at')}</dt>
-            <dd>{draft.scene.location || t('(not set)')}</dd>
-            {draft.scene.summary && (
-              <>
-                <dt>{t('Scene')}</dt>
-                <dd>{draft.scene.summary}</dd>
-              </>
-            )}
-            <dt>{t('First chapter')}</dt>
-            <dd>{draft.firstChapterTitle || t('(not set)')}</dd>
-            {draft.tracking && (
-              <>
-                <dt>{t('Tracking')}</dt>
-                <dd>{trackingSummary(draft.tracking, true) || t('(none)')}</dd>
-              </>
-            )}
-          </dl>
-        </>
-      ) : (
-        <>
-          <TextField
-            label={t('Title')}
-            required
-            value={draft.title}
-            onChange={(title) => update({ title })}
-          />
-          <TextArea
-            label={t('Description')}
-            value={draft.description}
-            rows={2}
-            onChange={(description) => update({ description })}
-          />
-          <TextField
-            label={t('Starting location')}
-            required
-            value={draft.scene.location}
-            onChange={(location) => update({ scene: { ...draft.scene, location } })}
-            hint={t('Where you are when the story begins.')}
-          />
-          <TextArea
-            label={t('Opening scene')}
-            value={draft.scene.summary}
-            onChange={(summary) => update({ scene: { ...draft.scene, summary } })}
-            hint={t('What is happening as the story begins. The storyteller picks up from here.')}
-          />
-          <TextField
-            label={t('First chapter title')}
-            required
-            value={draft.firstChapterTitle}
-            onChange={(firstChapterTitle) => update({ firstChapterTitle })}
-          />
-          <LinesField
-            label={t('Open questions')}
-            value={draft.openThreads}
-            rows={2}
-            onChange={(openThreads) => update({ openThreads })}
-          />
-          <OutlinesEditor
-            value={draft.chapterOutlines}
-            onChange={(chapterOutlines) => update({ chapterOutlines })}
-          />
-        </>
+      {guided && (
+        <ArrowPicker
+          label={t('Start from a scenario')}
+          options={pickerOptions}
+          value={current ?? ''}
+          onChange={(id) => update(applyScenario(catalog, id, draft))}
+        />
       )}
+      <TextField
+        label={t('Title')}
+        value={draft.title}
+        placeholder={t('Untitled story')}
+        onChange={(title) => update({ title })}
+      />
+      <TextField
+        label={t('Starting location')}
+        value={draft.scene.location}
+        onChange={(location) => update({ scene: { ...draft.scene, location } })}
+        hint={t('Where you are when the story begins. Leave it empty and the storyteller picks.')}
+      />
+      <TextArea
+        label={t('Opening scene')}
+        value={draft.scene.summary}
+        rows={4}
+        onChange={(summary) => update({ scene: { ...draft.scene, summary } })}
+        hint={t('What is happening as the story begins. The storyteller picks up from here.')}
+      />
       <OthersEditor {...props} />
+      <MoreOptions
+        filled={
+          countFilled(draft.description, draft.openThreads) +
+          (draft.firstChapterTitle.trim() ? 1 : 0) +
+          (draft.chapterOutlines.length ? 1 : 0)
+        }
+      >
+        <TextArea
+          label={t('What the story is about')}
+          value={draft.description}
+          rows={3}
+          hint={t('A line or two for the library and the storyteller.')}
+          onChange={(description) => update({ description })}
+        />
+        <TextField
+          label={t('First chapter title')}
+          value={draft.firstChapterTitle}
+          placeholder={t('Chapter {n}', { n: 1 })}
+          onChange={(firstChapterTitle) => update({ firstChapterTitle })}
+        />
+        <LinesField
+          label={t('Open threads')}
+          value={draft.openThreads}
+          rows={3}
+          hint={t('Mysteries, promises and goals to follow up. One per line.')}
+          onChange={(openThreads) => update({ openThreads })}
+        />
+        <OutlinesEditor
+          value={draft.chapterOutlines}
+          onChange={(chapterOutlines) => update({ chapterOutlines })}
+        />
+      </MoreOptions>
     </>
   );
 }
@@ -671,38 +812,39 @@ export function StoryStep(props: StepProps) {
 export function NarrationStep({ draft, update, catalog, guided }: StepProps) {
   const n = draft.narration;
   const set = (patch: Partial<typeof n>) => update({ narration: { ...n, ...patch } });
+  const rpg = !!n.dice;
   return (
     <>
-      <StyleFields narration={n} onChange={set} typeLanguage={!guided} />
-      {guided ? (
-        <PresetPicker
+      <StylePicker narration={n} onChange={set} />
+      <MoreOptions
+        label={t('More ways to shape it')}
+        filled={countFilled(n.tone, n.themes, n.limits) + (n.rating ? 1 : 0)}
+      >
+        <ComboField
           label={t('Tone')}
-          presets={uniq(catalog.worlds.map((w) => w.narration.tone))}
+          options={uniq(catalog.worlds.map((w) => w.narration.tone))}
           value={n.tone}
-          onChange={(tone) => set({ tone })}
-        />
-      ) : (
-        <TextField
-          label={t('Tone')}
-          value={n.tone}
-          onChange={(tone) => set({ tone })}
           placeholder={t('Warm, gently mysterious')}
+          onChange={(tone) => set({ tone })}
         />
-      )}
-      <h2>{t('Features')}</h2>
-      <FeatureFields narration={n} onChange={set} />
-      <TrackingFields
-        tracking={draft.tracking}
-        onChange={(tracking) => update({ tracking })}
-        genres={withStoryType(n.genres, draft.storyType ?? '')}
-      />
-      <h2>{t('What kind of story')}</h2>
-      <ContentFields
-        narration={n}
-        onChange={set}
-        pickGenres={guided}
-        genrePresets={catalog.worlds.flatMap((w) => w.narration.genres ?? [])}
-      />
+        <TellingFields narration={n} onChange={set} typeLanguage={!guided} />
+        <h3 className="small-heading">{t('Features')}</h3>
+        <FeatureFields narration={n} onChange={set} dice={false} />
+        {!rpg && (
+          <TrackingFields
+            tracking={draft.tracking}
+            onChange={(tracking) => update({ tracking })}
+            genres={withStoryType(n.genres, draft.storyType ?? '')}
+          />
+        )}
+        <h3 className="small-heading">{t('What kind of story')}</h3>
+        <ContentFields
+          narration={n}
+          onChange={set}
+          pickGenres={false}
+          genrePresets={catalog.worlds.flatMap((w) => w.narration.genres ?? [])}
+        />
+      </MoreOptions>
     </>
   );
 }
@@ -775,10 +917,10 @@ export function ReviewStep({
       )}
       <dl className="facts" aria-label={t('Story summary')}>
         <dt>{t('Title')}</dt>
-        <dd>{draft.title || t('(not set)')}</dd>
+        <dd>{draft.title.trim() || t('Untitled story')}</dd>
         <dt>{t('World')}</dt>
         <dd>
-          {draft.world.setting || t('(not set)')}
+          {draft.world.setting || t('Left open')}
           {draft.world.era && <span className="muted"> · {draft.world.era}</span>}
         </dd>
         <dt>{t('You play')}</dt>
@@ -787,7 +929,7 @@ export function ReviewStep({
           {(draft.player.species || draft.player.role) &&
             `, ${[draft.player.species, draft.player.role].filter(Boolean).join(' ')}`}
           {draft.player.pronouns && <span className="muted"> ({draft.player.pronouns})</span>}
-          {(draft.player.stats ?? []).some((st) => st.name.trim()) && (
+          {draft.narration.dice && (draft.player.stats ?? []).some((st) => st.name.trim()) && (
             <span className="muted">
               {' · '}
               {(draft.player.stats ?? [])
@@ -800,9 +942,9 @@ export function ReviewStep({
         <dt>{t('Also here')}</dt>
         <dd>{others || t('Nobody else yet')}</dd>
         <dt>{t('Opens at')}</dt>
-        <dd>{draft.scene.location || t('(not set)')}</dd>
+        <dd>{draft.scene.location || t('Left open')}</dd>
         <dt>{t('First chapter')}</dt>
-        <dd>{draft.firstChapterTitle || t('(not set)')}</dd>
+        <dd>{draft.firstChapterTitle.trim() || t('Chapter {n}', { n: 1 })}</dd>
         <dt>{t('Narration')}</dt>
         <dd>
           {labelOf(STYLES, draft.narration.style ?? 'narrated')} ·{' '}
@@ -811,6 +953,9 @@ export function ReviewStep({
           {draft.narration.tone && ` · ${draft.narration.tone}`}
           {draft.narration.language &&
             ` · ${t('in {language}', { language: storyLanguageLabel(draft.narration.language) })}`}
+          {draft.narration.styleNotes?.trim() && (
+            <span className="muted"> · “{draft.narration.styleNotes.trim()}”</span>
+          )}
         </dd>
         <dt>{t('Features')}</dt>
         <dd>{joinList(featureList(draft.narration)) || t('(none)')}</dd>
@@ -850,7 +995,7 @@ export function ReviewStep({
       </dl>
       <p className="muted small">
         {t(
-          "Once you create it, this becomes the story's starting point. Your choices here are kept until then, even if you close the app.",
+          "Once you create it, this becomes the story's starting point. Anything left open is for the story to decide. Your choices here are kept until then, even if you close the app.",
         )}
       </p>
     </>

@@ -36,7 +36,7 @@ use crate::domain::tracking::Tracking;
 use crate::errors::{AppError, AppResult, ErrorCode};
 use crate::services::tokens::{estimate_message, estimate_messages, estimate_text};
 
-pub const PROMPT_SCHEMA_VERSION: u32 = 8;
+pub const PROMPT_SCHEMA_VERSION: u32 = 9;
 /// Newest messages (excluding the latest action) placed before the summary
 /// competes for room.
 pub const MIN_RECENT_MESSAGES: usize = 4;
@@ -534,6 +534,33 @@ fn system_prompt_with(state: &EffectiveState, frame: &StoryFrame, notes: &NotesP
              things worth a closer look, and answer what {player_name} tries plainly and \
              with dry wit.\n"
         )),
+        NarrationStyle::Mixed => out.push_str(&format!(
+            "- Tell each moment the way that suits it, in {person}: narration for places and \
+             action, dialogue for talk, {}messages when people text or call. Mix them \
+             freely.\n",
+            // Thoughts only when the player wants to see them.
+            if s.narration.inner_thoughts {
+                "other characters' inner thoughts when they matter, and "
+            } else {
+                "and "
+            }
+        )),
+    }
+    if style != NarrationStyle::Mixed {
+        out.push_str(
+            "- That is the story's usual way of telling, not a rule: when a moment calls for \
+             something else (a text exchange, a letter, a private thought, quick dialogue), \
+             shift for it, then come back.\n",
+        );
+    }
+    if let Some(notes) = s
+        .narration
+        .style_notes
+        .as_deref()
+        .map(str::trim)
+        .filter(|n| !n.is_empty())
+    {
+        out.push_str(&format!("- How the player would like it told: {notes}\n"));
     }
     match s.narration.tense {
         Some(Tense::Present) => out.push_str("- Write in the present tense.\n"),
@@ -665,14 +692,21 @@ fn system_prompt_with(state: &EffectiveState, frame: &StoryFrame, notes: &NotesP
     }
 
     out.push_str("\nWORLD\n");
+    let mut world_given = !s.world.rules.is_empty();
     for (label, value) in [
         ("Setting", &s.world.setting),
         ("Era", &s.world.era),
         ("About", &s.world.description),
     ] {
         if !value.trim().is_empty() {
+            world_given = true;
             out.push_str(&format!("{label}: {}\n", value.trim()));
         }
+    }
+    if !world_given {
+        out.push_str(
+            "Left open by the player: let it take shape from the opening and from what they do.\n",
+        );
     }
     for rule in &s.world.rules {
         out.push_str(&format!("Rule: {rule}\n"));
@@ -721,6 +755,10 @@ fn system_prompt_with(state: &EffectiveState, frame: &StoryFrame, notes: &NotesP
         }
         out.push('\n');
     }
+    out.push_str(
+        "Anything not given here (looks, age, species and so on) is left open: don't bring it \
+         up unless the story needs it or the player does, and once it is said, keep to it.\n",
+    );
 
     let name_of = |id: &str| -> String {
         if id == "@player" {
@@ -734,12 +772,17 @@ fn system_prompt_with(state: &EffectiveState, frame: &StoryFrame, notes: &NotesP
     if !s.relationships.is_empty() {
         out.push_str("\nRELATIONSHIPS\n");
         for r in &s.relationships {
+            let status = r.status.trim();
             out.push_str(&format!(
-                "- {} → {}: {} ({})\n",
+                "- {} → {}: {}{}\n",
                 name_of(&r.from_id),
                 name_of(&r.to_id),
                 r.label,
-                r.status
+                if status.is_empty() {
+                    String::new()
+                } else {
+                    format!(" ({status})")
+                }
             ));
         }
     }
@@ -793,12 +836,16 @@ fn system_prompt_with(state: &EffectiveState, frame: &StoryFrame, notes: &NotesP
 
     out.push_str("\nNOW\n");
     if let Some(ch) = &state.active_chapter {
-        out.push_str(&format!("Chapter {}: {}\n", ch.ordinal, ch.title));
+        out.push_str(&crate::domain::events::chapter_heading(
+            ch.ordinal, &ch.title,
+        ));
+        out.push('\n');
     }
     if let Some(plan) = frame.chapter_outline.as_deref().map(str::trim) {
         if !plan.is_empty() {
             out.push_str(&format!(
-                "Chapter plan (a direction to steer toward, not a script): {plan}\n"
+                "Chapter plan (only a guide: if the story has gone another way, follow the \
+                 story and drop or rework the plan): {plan}\n"
             ));
         }
     }

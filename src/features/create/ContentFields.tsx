@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { ArrowPicker, type PickerOption } from '../../components/ArrowPicker';
 import { Dialog } from '../../components/Dialog';
 import type { Character, ContentRating, Narration } from '../../types';
-import { LinesField, ToggleList, uniq } from './fields';
+import { LinesField, MultiPicker, ToggleList, uniq } from './fields';
 import { msg, t, tOptions } from '../../i18n';
 
 /** Genres offered as checkboxes; any other genre can be typed in Custom mode. */
@@ -240,11 +240,12 @@ export function ContentFields({
           onChange={(genres) => onChange({ genres })}
         />
       ) : (
-        <LinesField
-          label={t('Genre')}
-          rows={2}
+        <MultiPicker
+          label={t('More genres')}
+          translate
+          presets={uniq([...GENRES, ...genrePresets])}
           value={narration.genres ?? []}
-          hint={t('One per line, such as Romance or Horror. Any genre works.')}
+          hint={t('Pick from the list or write your own. Any genre works.')}
           onChange={(genres) => onChange({ genres })}
         />
       )}
@@ -256,7 +257,7 @@ export function ContentFields({
       />
       <LinesField
         label={t('Themes and elements you want')}
-        rows={2}
+        rows={3}
         value={narration.themes ?? []}
         hint={
           rating === 'explicit'
@@ -269,7 +270,7 @@ export function ContentFields({
       />
       <LinesField
         label={t('Hard limits')}
-        rows={2}
+        rows={3}
         value={narration.limits ?? []}
         hint={t(
           'One per line. The storyteller never writes these, even if the story drifts toward them.',

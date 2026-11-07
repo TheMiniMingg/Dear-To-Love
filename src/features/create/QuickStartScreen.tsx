@@ -9,7 +9,7 @@ import { joinList, t, tOptions } from '../../i18n';
 import { DETAILS, PERSPECTIVES, appStoryLanguage, storyLanguageLabel } from './StyleFields';
 import { trackingSummary } from './TrackingFields';
 
-/** Quick Start: pick presets with arrows or menus. No typing required. */
+/** Preset Story: pick a ready-made story with arrows or menus. No typing required. */
 export function QuickStartScreen() {
   const navigate = useUiStore((s) => s.navigate);
   const [catalog, setCatalog] = useState<TemplateCatalog | null>(null);
@@ -90,7 +90,7 @@ export function QuickStartScreen() {
         <button type="button" onClick={() => navigate({ name: 'library' })}>
           {t('Back')}
         </button>
-        <h1 id="qs-title">{t('Quick Start')}</h1>
+        <h1 id="qs-title">{t('Preset Story')}</h1>
       </div>
       {error && (
         <p role="alert" className="error">

@@ -69,8 +69,9 @@ checks in **Settings → Updates** to be told when a new release is out.
 
 ## Getting started
 
-1. **New story** opens Quick Start. Pick a type of story, a world, a scenario and who you
-   play with the arrows, then **Start story**.
+1. **Preset Story** opens a ready-made story. Pick a type of story, a world, a scenario and
+   who you play with the arrows, then **Start story**. To make your own instead, choose
+   **Custom Story**.
 2. Write what you do and press Enter. Without any setup, the built-in offline storyteller
    answers, so you can try everything first.
 3. When you want a real AI storyteller, open the **Setup guide** (in the library, in
@@ -78,7 +79,7 @@ checks in **Settings → Updates** to be told when a new release is out.
    walks through each one with buttons to its key and model pages, and fills in a new
    connection for you.
 
-![Quick Start with the Greywatch dungeon raid](docs/screenshots/quickstart.webp)
+![Preset Story with the Greywatch dungeon raid](docs/screenshots/quickstart.webp)
 
 ## Playing
 
@@ -165,7 +166,7 @@ can track things too, such as affection or a gift you were given.
 
 ## Stories to start from
 
-Quick Start includes 33 worlds, each with at least one scenario, and 27 characters to play.
+Preset Story includes 33 worlds, each with at least one scenario, and 27 characters to play.
 Scenarios marked ★ start with health, items and more already set up.
 
 <details>
@@ -211,16 +212,34 @@ Scenarios marked ★ start with health, items and more already set up.
 
 ## Make your own story
 
-**Create your own** walks through six steps: world, you, the story, narration, pictures and
-review. **Guided** needs no typing: everything is arrows, menus and checkboxes over presets
-(more than 40 races and peoples, 60 roles, 45 personality traits, eras, settings and world
-rules). **Custom** starts from empty fields, so you write everything yourself. The draft is
-saved as you go.
+**Custom Story** walks through six steps: world, you, the story, narration, pictures and
+review. It opens in **Custom**, with every field empty. Each one takes your own words or a
+pick from a list (more than 40 races and peoples, 60 roles, 45 personality traits, eras,
+settings and world rules), and the × clears it again. Only your name is needed: anything
+you leave empty is for the story to decide, and the storyteller doesn't bring up what you
+left out (your species, say) unless the story needs it or you do. Fields most people can
+skip are folded under **More options**. **Guided** starts from a preset world, character
+and opening instead, chosen with arrows and menus, and **None** takes a preset back. The
+draft is saved as you go.
+
+![Custom Story: type your own or pick from the list](docs/screenshots/create.webp)
+
+**RPG mode** is a switch on the first step for stats, health, mana, items and dice rolls.
+Each stat says what it is for (Strength is raw power; Fitness is stamina and athletics) and
+adds to the rolls that use it; common bars such as Health and Mana are one click away. Leave
+it off for a story without numbers.
+
+![RPG mode: stats that explain themselves, bars and starting items](docs/screenshots/rpg-mode.webp)
+
+A **chapter plan** is optional, and only a guide: if the story heads somewhere else, the
+storyteller follows the story, and you can rename each next chapter when one ends.
 
 ### Ways to tell a story
 
 Pick a style and an example shows how the story will read:
 
+- **Mixed** (the usual): narration, dialogue, thoughts and messages, each where the moment
+  suits it.
 - **Narrated**: a narrator describes what happens, with dialogue.
 - **Script**: like a play, with `Name: "line"` and stage directions in italics.
 - **Roleplay chat**: actions in italics and short replies, like roleplaying in a chat.
@@ -228,17 +247,21 @@ Pick a style and an example shows how the story will read:
 - **Messages**: told mostly through texts, calls, letters and posts.
 - **Text adventure**: where you are, what you see and the ways onward.
 
-Then choose the point of view (you, I, or they), past or present tense, how much detail, the
-pacing, the tone and the story's language.
+A style is where the story starts, not a lock: the storyteller can switch for a moment (a
+text exchange, a private thought) and come back. Describe the style you want in your own
+words too (`like a cozy anime, lots of banter`), and the storyteller follows it. Under
+**More ways to shape it**, choose the point of view (you, I, or they), past or present
+tense, how much detail, the pacing, the tone and the story's language.
 
-![The style picker set to Script, with an example](docs/screenshots/styles.webp)
+![The style picker on Mixed, with an example and the style in your own words](docs/screenshots/styles.webp)
 
 ### Every feature is a checkbox
 
 **Features** turns each part on or off: other characters' inner thoughts, texts and calls as
 cards, characters texting you first, place and time headings, small reactions written for
-you, how often twists come, dice, and tracking. Long options only open when their box is
-checked. **Dice settings** go down to the dice every roll uses (or the storyteller's choice),
+you, how often twists come, and tracking. Long options only open when their box is
+checked. **Dice settings**, under RPG mode, go down to the dice every roll uses (or the
+storyteller's choice),
 who asks for rolls, how often, generous, fair or tough odds, whether stats count, critical
 rolls, and whether you see the number needed before rolling. The app rolls fairly and
 enforces those rules itself.

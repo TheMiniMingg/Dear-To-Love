@@ -13,8 +13,8 @@ test('an adventure asks for a roll and the app rolls it', async () => {
   const b = session.browser;
 
   await waitForText(b, 'main', 'No stories yet');
-  await (await b.$('button=New story')).click();
-  await waitForText(b, 'main', 'Quick Start');
+  await (await b.$('button=Preset Story')).click();
+  await waitForText(b, 'main', 'Start story');
   const type = await b.$("//label[normalize-space()='Type of story']/following::select[1]");
   await type.selectByVisibleText('Adventure');
   await (await b.$('button=Start story')).click();

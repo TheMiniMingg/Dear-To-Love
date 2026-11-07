@@ -185,17 +185,17 @@ export function LibraryScreen() {
         <div className="button-row">
           <button type="button" onClick={() => navigate({ name: 'create' })}>
             <PenLine {...ICON} />
-            {t('Create your own')}
+            {t('Custom Story')}
           </button>
           <button
             type="button"
             className="primary"
             onClick={() => navigate({ name: 'quickstart' })}
-            title={withKeys(t('New story'), 'newStory')}
+            title={withKeys(t('Preset Story'), 'newStory')}
             aria-keyshortcuts={ariaKeys('newStory')}
           >
             <Sparkles {...ICON} />
-            {t('New story')}
+            {t('Preset Story')}
           </button>
         </div>
       </div>
@@ -236,10 +236,10 @@ export function LibraryScreen() {
           <p>{t('No stories yet.')}</p>
           <p className="muted">
             {tr(
-              'Start one with {newStory} to pick from presets, or {createOwn} to set up the world, your character and the opening step by step. You can play offline with the built-in storyteller before connecting an AI model. A story someone shared as a storypack comes in with {importPack}.',
+              'Start one with {newStory} to pick a ready-made story, or {createOwn} to make your own from a blank page, filling in only what you want. You can play offline with the built-in storyteller before connecting an AI model. A story someone shared as a storypack comes in with {importPack}.',
               {
-                newStory: <strong>{t('New story')}</strong>,
-                createOwn: <strong>{t('Create your own')}</strong>,
+                newStory: <strong>{t('Preset Story')}</strong>,
+                createOwn: <strong>{t('Custom Story')}</strong>,
                 importPack: <strong>{t('Import storypack')}</strong>,
               },
             )}

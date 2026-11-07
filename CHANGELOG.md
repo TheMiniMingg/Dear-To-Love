@@ -52,6 +52,31 @@
   in one click. A reply keeps writing when you leave and open another story; the library marks
   the story with "Writing a reply…" until it is in. Each story still opens where you left it,
   with your unsent text kept.
+- **Preset Story and Custom Story.** The library's two buttons are now **Preset Story** (a
+  ready-made story; it was New story) and **Custom Story** (it was Create your own). Custom
+  Story opens in Custom with every field empty. Guided is one click away, and **None (start
+  blank)** takes back a preset world, character or opening.
+- **Type your own or pick one.** The type of story, setting, era, name, pronouns, role,
+  species and tone each take your own words or a pick from a list, and × clears them. Only
+  your name is needed to begin: the title becomes _Untitled story_, the first chapter
+  _Chapter 1_, and the storyteller is told not to bring up anything you left out (your
+  species, say) unless the story needs it or you do.
+- **Shorter pages.** Fields most people can skip are folded under **More options**, which
+  says how many are filled in. Text boxes are taller and grow as you write. Everyone else in
+  the story is a card with a name, a role and how they know you.
+- **RPG mode.** A switch on the first step for stats, dice, health, mana and items, all set
+  up under You. Each stat says what it is for (Strength is raw power; Fitness is stamina and
+  athletics), and the usual stats and bars are one click away. Off, the story has no numbers.
+- **A style that isn't locked.** The new **Mixed** style, the usual for a custom story, tells
+  each moment the way that suits it: narration, dialogue, thoughts and messages. Any other
+  style is a starting point the storyteller can step out of for a moment, and **Your own
+  style** describes how you'd like it told in your own words.
+- **The chapter plan is only a guide.** The storyteller is told to follow the story when it
+  goes another way, and to drop or rework the plan. A chapter without its own name is called
+  just "Chapter 2" in the request and in exports, not "Chapter 2: Chapter 2".
+- **Clearer picture buttons.** **Add for this story only** keeps a picture with the story;
+  **Add to your library (any story)** shares it with every story. The two groups of
+  pictures are named the same way.
 - **Fix: item pictures.** Choosing or making a picture for an inventory item stopped with a
   database error, so it was never saved. The database is upgraded (schema 7) to keep item
   pictures; as with every upgrade, a copy of the old database is saved first.

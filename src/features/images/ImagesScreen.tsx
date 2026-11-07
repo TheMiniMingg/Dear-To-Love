@@ -128,7 +128,8 @@ export function groupImages(images: AssetDto[]): Group[] {
     own.set(key, g);
   }
   const groups: Group[] = [];
-  if (shared.length) groups.push({ key: 'shared', title: t('For all stories'), images: shared });
+  if (shared.length)
+    groups.push({ key: 'shared', title: t('Your library (any story)'), images: shared });
   groups.push(...[...own.values()].sort((a, b) => a.title.localeCompare(b.title)));
   if (none.length)
     groups.push({

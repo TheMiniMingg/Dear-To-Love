@@ -206,8 +206,14 @@ fn premise_chapter_plan_and_content_settings_reach_the_storyteller() {
         "{plain}"
     );
     assert!(plain.contains(
-        "Chapter plan (a direction to steer toward, not a script): Arrive, find the letter."
+        "Chapter plan (only a guide: if the story has gone another way, follow the story and \
+         drop or rework the plan): Arrive, find the letter."
     ));
+    assert!(plain.contains("Anything not given here (looks, age, species and so on) is left open"));
+    assert!(
+        !plain.contains("Left open by the player"),
+        "the world is set"
+    );
     assert!(
         !plain.contains("Content:") && !plain.contains("under 18"),
         "unset rating says nothing"
@@ -297,6 +303,26 @@ fn narration_style_thoughts_messages_and_language_reach_the_storyteller() {
         "\nSCENE HEADINGS\nWhen the story moves to a new place or a new time, start that part \
          with a heading the app shows above it: <scene place=\"Countryside\" time=\"7:11 PM\"/>."
     ));
+
+    assert!(p.contains("- That is the story's usual way of telling, not a rule"));
+    s.state.narration.style = Some(NarrationStyle::Mixed);
+    s.state.narration.style_notes = Some("  Like a cozy anime, lots of banter ".into());
+    let p = system_prompt(&s, &frame());
+    assert!(p.contains("- Tell each moment the way that suits it, in second person"));
+    assert!(!p.contains("not a rule"), "mixed is never one way");
+    assert!(p.contains("- How the player would like it told: Like a cozy anime, lots of banter\n"));
+    // Thoughts come into the mix only when the player shows them.
+    let thoughts_were = s.state.narration.inner_thoughts;
+    s.state.narration.inner_thoughts = false;
+    let p = system_prompt(&s, &frame());
+    assert!(p.contains("dialogue for talk, and messages when people text or call"));
+    assert!(!p.contains("inner thoughts"));
+    s.state.narration.inner_thoughts = true;
+    assert!(system_prompt(&s, &frame()).contains(
+        "dialogue for talk, other characters' inner thoughts when they matter, and messages"
+    ));
+    s.state.narration.inner_thoughts = thoughts_were;
+    s.state.narration.style_notes = None;
 
     s.state.narration.style = Some(NarrationStyle::Thoughts);
     let p = system_prompt(&s, &frame());
@@ -652,4 +678,42 @@ fn a_brief_keeps_whole_sentences_and_cuts_one_long_one() {
     let b = brief(&long);
     assert!(b.ends_with('…'));
     assert!(b.chars().count() <= BRIEF_RECAP_CHARS);
+}
+
+#[test]
+fn a_world_left_blank_is_left_open() {
+    let mut s = state();
+    s.state.world = crate::domain::story_state::World::default();
+    let p = system_prompt(&s, &frame());
+    assert!(p.contains(
+        "\nWORLD\nLeft open by the player: let it take shape from the opening and from what \
+         they do.\n"
+    ));
+}
+
+#[test]
+fn an_unnamed_chapter_and_a_bare_relationship_read_plainly() {
+    use crate::domain::replay::ActiveChapter;
+    use crate::domain::story_state::Relationship;
+    let mut s = state();
+    s.active_chapter = Some(ActiveChapter {
+        event_id: "e1".into(),
+        chapter_instance_id: "c1".into(),
+        title: "Chapter 1".into(),
+        ordinal: 1,
+    });
+    s.state.relationships = vec![Relationship {
+        from_id: "@player".into(),
+        to_id: "@player".into(),
+        label: "Rival".into(),
+        status: " ".into(),
+        source_event_id: None,
+    }];
+    let p = system_prompt(&s, &frame());
+    assert!(p.contains("\nNOW\nChapter 1\n"), "{p}");
+    assert!(!p.contains("Chapter 1: Chapter 1"));
+    assert!(p.contains(": Rival\n") && !p.contains("Rival ("), "{p}");
+
+    s.active_chapter.as_mut().unwrap().title = "Low Tide".into();
+    assert!(system_prompt(&s, &frame()).contains("\nNOW\nChapter 1: Low Tide\n"));
 }
