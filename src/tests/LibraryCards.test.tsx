@@ -3,7 +3,7 @@
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { EventDto, StorySummary } from '../types';
+import type { StorySummary } from '../types';
 
 const invoke = vi.fn();
 vi.mock('@tauri-apps/api/core', () => ({
@@ -17,7 +17,6 @@ import { arrange, useLibraryPrefs } from '../app/library';
 import { useUiStore } from '../app/store';
 import { LibraryScreen } from '../features/library/LibraryScreen';
 import { lastLine } from '../features/reader/messages';
-import { currentScene } from '../features/reader/scene';
 import { formatAgo } from '../i18n';
 
 const story = (id: string, title: string, more: Partial<StorySummary> = {}): StorySummary => ({
@@ -37,16 +36,6 @@ const story = (id: string, title: string, more: Partial<StorySummary> = {}): Sto
   lastReply: null,
   ...more,
 });
-
-const event = (id: string, more: Partial<EventDto>): EventDto =>
-  ({
-    id,
-    originRouteId: 'route-1',
-    parentEventId: null,
-    generationRunId: null,
-    createdAt: '2026-11-06T00:00:00Z',
-    ...more,
-  }) as EventDto;
 
 beforeEach(() => {
   invoke.mockReset();
@@ -176,39 +165,6 @@ describe('Story cards', () => {
 });
 
 describe('Small helpers', () => {
-  it('says where and when the story is, from the newest scene heading', () => {
-    const events = [
-      event('e1', {
-        kind: 'assistant',
-        payload: { text: '<scene place="Harbor" time="Dawn"/>\n\nGulls.' },
-      }),
-      event('e2', { kind: 'player', payload: { text: 'I walk on.' } }),
-      event('e3', {
-        kind: 'assistant',
-        payload: { text: '<scene place="The lighthouse" time="Noon"/>\n\nThe lamp.' },
-      }),
-      event('e4', { kind: 'assistant', payload: { text: 'No heading here.' } }),
-    ];
-    expect(currentScene(events, 'Wrenmouth')).toEqual({ place: 'The lighthouse', time: 'Noon' });
-    // A change in Story details wins over older headings.
-    const edited = [
-      ...events,
-      event('e5', {
-        kind: 'edit',
-        payload: {
-          changes: [
-            {
-              op: 'setScene',
-              scene: { location: 'The pier', summary: '', participantIds: [] },
-            },
-          ],
-        },
-      }),
-    ] as EventDto[];
-    expect(currentScene(edited, 'The pier')).toEqual({ place: 'The pier', time: '' });
-    expect(currentScene([], '  Wrenmouth ')).toEqual({ place: 'Wrenmouth', time: '' });
-  });
-
   it('finds the last line of a reply without its markup', () => {
     expect(lastLine('First.\n\n*She **smiles**.*')).toBe('She smiles.');
     expect(lastLine('Hello.\n\n<text from="Mina">see you at six</text>')).toBe(

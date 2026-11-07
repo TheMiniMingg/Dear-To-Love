@@ -1,5 +1,14 @@
 import { useId, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
-import { Cloud, Dices, Drama, Phone, Send, Smartphone, type LucideIcon } from 'lucide-react';
+import {
+  Cloud,
+  Dices,
+  Drama,
+  Lightbulb,
+  Phone,
+  Send,
+  Smartphone,
+  type LucideIcon,
+} from 'lucide-react';
 import { isComposing } from '../../app/keyboard';
 import type { DiceRules, RollRequest, Stat } from '../../types';
 import { isDice, rollFromComposer, wrapAction, type ComposeMode } from './messages';
@@ -28,6 +37,11 @@ type Props = {
   diceRules?: DiceRules;
   /** Buttons shown at the end of the row of kinds (the reader's toolbar). */
   tools?: ReactNode;
+  /**
+   * The storyteller's ideas for what to do next. Shown above the box while
+   * it is empty; picking one puts it in the box to send or change.
+   */
+  ideas?: string[];
 };
 
 type Mode = ComposeMode | 'roll';
@@ -67,6 +81,7 @@ export function Composer({
   stats = [],
   diceRules = {},
   tools,
+  ideas = [],
 }: Props) {
   const ref = useRef<HTMLTextAreaElement>(null);
   const id = useId();
@@ -90,6 +105,17 @@ export function Composer({
     }
     onSubmit(wrapAction(mode, value, { to, player: playerName }));
   };
+  const pickIdea = (idea: string) => {
+    onChange(idea);
+    // After React puts the words in, so the caret lands at their end.
+    requestAnimationFrame(() => {
+      const el = ref.current;
+      if (!el) return;
+      el.focus();
+      el.setSelectionRange(el.value.length, el.value.length);
+    });
+  };
+  const showIdeas = !disabled && mode === 'act' && !value.trim() && ideas.length > 0;
   const onKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey && !isComposing(e)) {
       e.preventDefault();
@@ -104,6 +130,22 @@ export function Composer({
         submit();
       }}
     >
+      {showIdeas && (
+        <div className="next-moves" role="group" aria-label={t('Ideas for what to do next')}>
+          <Lightbulb className="next-moves-icon" aria-hidden={true} size={15} />
+          {ideas.map((idea) => (
+            <button
+              key={idea}
+              type="button"
+              className="next-move"
+              title={t('Put this in the box, to send or change')}
+              onClick={() => pickIdea(idea)}
+            >
+              {idea}
+            </button>
+          ))}
+        </div>
+      )}
       <div className="composer-mode">
         <fieldset className="mode-pills">
           <legend className="visually-hidden">{t('Kind of action')}</legend>

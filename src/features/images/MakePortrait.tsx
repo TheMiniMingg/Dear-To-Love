@@ -3,14 +3,15 @@ import { CommandError, commands, errorMessage, sentence } from '../../api/comman
 import type {
   AssetDto,
   Character,
+  PictureDraft,
   PortraitInput,
   PortraitStyle,
-  Prompt,
   ProviderProfile,
   World,
 } from '../../types';
 import { joinSentences, msg, t } from '../../i18n';
 import { pictureName } from '../../i18n/names';
+import { ownPrompt, PictureDescription } from './PictureDescription';
 
 /** Picture styles, for portraits and item pictures. */
 export const PICTURE_STYLES: { value: PortraitStyle; label: string }[] = [
@@ -34,6 +35,7 @@ function portraitInput(
   style: PortraitStyle,
   storyId: string | undefined,
   budgetOverride = false,
+  own: string | null = null,
 ): PortraitInput {
   return {
     character,
@@ -41,13 +43,15 @@ function portraitInput(
     style,
     ...(storyId ? { storyId } : { newStory: true }),
     ...(budgetOverride ? { budgetOverride: true } : {}),
+    ...ownPrompt(own),
   };
 }
 
 /**
  * "Make one from the description": asks the picture connection (Settings ->
  * Pictures) for a portrait of the character. The picture is kept for this
- * story only. Shows exactly what is sent, on request.
+ * story only. Shows what is sent on request, and the player can change
+ * the description first.
  */
 export function MakePortrait({ character, world, storyId, onMade }: Props) {
   const id = useId();
@@ -55,7 +59,8 @@ export function MakePortrait({ character, world, storyId, onMade }: Props) {
   const [maker, setMaker] = useState<ProviderProfile | null | undefined>(undefined);
   const [style, setStyle] = useState<PortraitStyle>('painted');
   const [showPrompt, setShowPrompt] = useState(false);
-  const [prompt, setPrompt] = useState<Prompt | null>(null);
+  const [prompt, setPrompt] = useState<PictureDraft | null>(null);
+  const [own, setOwn] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [needsOverride, setNeedsOverride] = useState(false);
@@ -100,7 +105,7 @@ export function MakePortrait({ character, world, storyId, onMade }: Props) {
     setMade(null);
     try {
       const asset = await commands.makePortrait(
-        portraitInput(character, world, style, storyId, budgetOverride),
+        portraitInput(character, world, style, storyId, budgetOverride, own),
       );
       setMade(t('Made “{name}”. It is selected below.', { name: pictureName(asset.label) }));
       onMade(asset);
@@ -172,9 +177,12 @@ export function MakePortrait({ character, world, storyId, onMade }: Props) {
           {busy ? t('Making the portrait…') : t('Make portrait')}
         </button>
         <button type="button" aria-expanded={showPrompt} onClick={() => setShowPrompt((v) => !v)}>
-          {showPrompt ? t('Hide what is sent') : t('Show what is sent')}
+          {showPrompt ? t('Hide what is sent') : t('See or change what is sent')}
         </button>
       </div>
+      {!showPrompt && own !== null && (
+        <p className="muted small">{t('Your own description is used.')}</p>
+      )}
       {!name && <p className="muted small">{t('Give the character a name first.')}</p>}
       {busy && (
         <p role="status" className="muted small">
@@ -186,12 +194,7 @@ export function MakePortrait({ character, world, storyId, onMade }: Props) {
           {made}
         </p>
       )}
-      {showPrompt && prompt && (
-        <div className="portrait-prompt small" aria-label={t('What is sent')}>
-          <p>{prompt.text}</p>
-          <p className="muted">Avoid: {prompt.avoid}</p>
-        </div>
-      )}
+      {showPrompt && prompt && <PictureDescription draft={prompt} own={own} onOwn={setOwn} />}
       {error && (
         <div role="alert" className="error">
           <p>{error}</p>

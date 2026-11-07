@@ -58,6 +58,7 @@ import { EndChapterPanel } from './EndChapterPanel';
 import { ExportPanel } from './ExportPanel';
 import { InventoryPanel, TrackerHud } from './InventoryPanel';
 import { NarrativeView } from './NarrativeView';
+import { joinCast } from './NewCharacterCard';
 import { PicturesPanel } from './PicturesPanel';
 import { ReaderRail } from './ReaderRail';
 import { ScenePictures } from './ScenePictures';
@@ -65,14 +66,13 @@ import { usePictureView } from './stage';
 import { StoryDetailsPanel, type DetailsTab } from './StoryDetailsPanel';
 import { StoryMemoryPanel } from './StoryMemoryPanel';
 import { StorytellerPanel } from './StorytellerPanel';
-import { standingNotes } from './notes';
-import { parseBlocks, plainText } from './messages';
-import { currentScene } from './scene';
+import { standingNotes, standingThreads } from './notes';
+import { nextMoves, parseBlocks, plainText, type NewCharacter } from './messages';
 import { NameColorsContext, nameColorFinder } from './nameColors';
 import { PortraitsContext, portraitFinder } from './portraits';
 import { DiceRulesContext } from './DiceCards';
 import { intlLocale, joinList, joinSentences, msg, t, tKnown, tr } from '../../i18n';
-import { chapterHasTitle, routeName, saveName } from '../../i18n/names';
+import { chapterHasTitle, chapterHeading, routeName, saveName } from '../../i18n/names';
 
 type Panel =
   | null
@@ -179,6 +179,18 @@ function ToolButton({
 }
 
 const POLL_MS = 1500;
+/**
+ * Where and when the story is ("The pier, Dawn"), or the chapter when the
+ * story has not said: a name to start a save from.
+ */
+function placeName(view: RouteView): string {
+  const scene = view.state.state.scene;
+  const where = [scene.location.trim(), scene.time?.trim() ?? ''].filter(Boolean);
+  if (where.length) return joinList(where).slice(0, 120);
+  const chapter = view.state.activeChapter;
+  return chapter ? chapterHeading(chapter.ordinal, chapter.title).slice(0, 120) : '';
+}
+
 /** Usual dice, kept as one object so the cards don't redraw for nothing. */
 const NO_RULES: DiceRules = {};
 
@@ -381,6 +393,15 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
   const awaitingReply = !!view?.awaitingReply;
   const writing = stream !== null;
   const lastAction = view?.history[view.history.length - 1];
+  // The storyteller's ideas for the next move, from the reply the story
+  // stands at: none once the player acts or a chapter begins.
+  const lastTurn = view?.history.findLast((e) =>
+    ['player', 'assistant', 'chapter_start'].includes(e.kind),
+  );
+  const ideas =
+    lastTurn?.kind === 'assistant' && !view?.state.state.narration?.noSuggestions
+      ? nextMoves(lastTurn.payload.text)
+      : [];
 
   /** Send an action. A roll from a dice card leaves the typed draft alone. */
   const send = (text: string = draft, roll?: RollRequest, fromComposer = true) =>
@@ -479,9 +500,16 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
     run(async () => {
       if (!view) return;
       const reply = view.history.find((e) => e.id === eventId);
+      const s = view.state.state;
       const names =
         reply?.kind === 'assistant'
-          ? standingNotes(reply.payload.text, view.state.state.notes ?? []).map((c) => c.name)
+          ? [
+              ...standingNotes(reply.payload.text, s.notes ?? []).map((c) => c.name),
+              ...standingThreads(reply.payload.text, {
+                open: s.openThreads,
+                done: s.doneThreads ?? [],
+              }).map((c) => c.text),
+            ]
           : [];
       const v = await commands.undoReplyNotes({
         storyId: view.story.id,
@@ -493,6 +521,25 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
       setView(v);
       setSaveStatus(t('Memory changed {time}', { time: timeNow() }));
     });
+
+  /** Adds someone a reply brought in to the cast; throws when that fails. */
+  const addToCast = async (c: NewCharacter) => {
+    if (!view) return;
+    try {
+      const v = await commands.editStoryDetails({
+        storyId: view.story.id,
+        routeId: view.route.id,
+        expectedHeadId: view.state.headEventId,
+        changes: joinCast(view.state.state, c),
+        note: t('added {name} to the cast', { name: c.name.trim() }),
+      });
+      setView(v);
+      setSaveStatus(t('{name} joined the cast {time}', { name: c.name.trim(), time: timeNow() }));
+    } catch (e) {
+      if (e instanceof CommandError && e.code === 'HEAD_CHANGED') setReload((n) => n + 1);
+      throw e;
+    }
+  };
 
   const toggleBookmark = async (eventId: string) => {
     if (!view) return;
@@ -626,7 +673,10 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
   const portraitOf = portraitFinder(view);
   const colorOf = nameColorFinder(view);
   const diceRules = view.state.state.narration?.diceRules ?? NO_RULES;
-  const scene = currentScene(events, view.state.state.scene.location);
+  // Where and when: the scene as the story keeps it, which follows the
+  // storyteller's scene marks (and what the player set in Story details).
+  const sceneNow = (viewing ?? view).state.state.scene;
+  const scene = { place: sceneNow.location.trim(), time: sceneNow.time?.trim() ?? '' };
   const typist = stream ? texting(stream.text, player?.name ?? '') : null;
   const visibleRoutes = view.routes.filter((r) => !r.hidden).length;
 
@@ -799,6 +849,21 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
                 }
                 keepsNotes={!view.state.state.narration?.manualMemory}
                 currentNotes={view.state.state.notes ?? []}
+                currentThreads={{
+                  open: view.state.state.openThreads,
+                  done: view.state.state.doneThreads ?? [],
+                }}
+                sceneHeadings={!!view.state.state.narration?.sceneHeadings}
+                newcomers={
+                  viewing || writing || busy || awaitingReply
+                    ? undefined
+                    : {
+                        storyId: view.story.id,
+                        cast: Object.values(view.state.state.characters).map((c) => c.name),
+                        adultsOnly: view.state.state.narration?.rating === 'explicit',
+                        onAdd: addToCast,
+                      }
+                }
                 onOpenNotes={viewing ? undefined : () => setPanel('memory')}
                 onUndoNotes={
                   viewing || writing || busy || awaitingReply
@@ -888,6 +953,7 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
                 onChange={(text) => setDraft(routeId, text)}
                 onSubmit={(text, roll) => void send(text, roll)}
                 disabled={busy || awaitingReply || writing}
+                ideas={ideas}
                 placeholder={t('What do you do? (Enter to send, Shift+Enter for a new line)')}
                 playerName={player?.name ?? t('You')}
                 dice={!!view.state.state.narration?.dice}
@@ -1120,6 +1186,7 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
                 <SavesPanel
                   storyId={view.story.id}
                   routeId={view.route.id}
+                  suggestedName={placeName(view)}
                   onSaved={(s) =>
                     setSaveStatus(
                       t('Saved "{label}" {time}', { label: saveName(s.label), time: timeNow() }),

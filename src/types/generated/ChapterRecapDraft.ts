@@ -9,6 +9,11 @@ export type ChapterRecapDraft = { chapterOrdinal: number, chapterTitle: string, 
  */
 writtenBy: string, nextOrdinal: number, nextTitle: string, 
 /**
+ * The storyteller suggested `next_title` from how the chapter ended
+ * (not the outline's title or the plain "Chapter N").
+ */
+nextTitleSuggested: boolean, 
+/**
  * The route head the recap was written for.
  */
 headEventId: string, };

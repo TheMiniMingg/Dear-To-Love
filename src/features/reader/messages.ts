@@ -20,7 +20,10 @@ export type MessageTag =
   | 'meter'
   | 'item'
   | 'remember'
-  | 'forget';
+  | 'forget'
+  | 'thread'
+  | 'character'
+  | 'next';
 
 export type Block =
   | { kind: 'prose'; text: string }
@@ -44,18 +47,43 @@ const TAGS: MessageTag[] = [
   'item',
   'remember',
   'forget',
+  'thread',
+  'character',
+  'next',
 ];
 
 /**
- * Tags only the app (a roll) or the storyteller (bars, items and memory
- * notes) may write.
+ * Tags written beside the story, not in it: memory notes, open threads, new
+ * characters and ideas for the next move. The reader shows them under the
+ * reply or by the composer.
  */
-export const APP_TAGS: MessageTag[] = ['roll', 'meter', 'item', 'remember', 'forget'];
+export const ASIDE_TAGS: MessageTag[] = ['remember', 'forget', 'thread', 'character', 'next'];
+const isAside = (kind: Block['kind']) => (ASIDE_TAGS as string[]).includes(kind);
 
+/**
+ * Tags only the app (a roll) or the storyteller (bars, items, memory notes,
+ * threads, new characters and next moves) may write.
+ */
+export const APP_TAGS: MessageTag[] = [
+  'roll',
+  'meter',
+  'item',
+  'remember',
+  'forget',
+  'thread',
+  'character',
+  'next',
+];
+
+/** `key="value"` pairs; a bare word (`<thread done>`) counts as `word="yes"`. */
 function parseAttrs(head: string): Record<string, string> {
   const out: Record<string, string> = {};
   for (const m of head.matchAll(/([A-Za-z_-]+)\s*=\s*"([^"]*)"/g)) {
     out[m[1]!.toLowerCase()] = m[2]!.trim();
+  }
+  const bare = head.replace(/[A-Za-z_-]+\s*=\s*"[^"]*"/g, ' ');
+  for (const m of bare.matchAll(/(?:^|[\s/])([A-Za-z_-]+)(?=[\s/]|$)/g)) {
+    out[m[1]!.toLowerCase()] ??= 'yes';
   }
   return out;
 }
@@ -163,6 +191,9 @@ function plainLabel(kind: MessageTag, a: Record<string, string>): string {
     }
     case 'remember':
     case 'forget':
+    case 'thread':
+    case 'character':
+    case 'next':
       label = '';
       break;
   }
@@ -177,9 +208,9 @@ export function plainText(text: string): string {
   let words = '';
   let afterNote = false;
   for (const b of parseBlocks(text)) {
-    if (b.kind === 'remember' || b.kind === 'forget') {
-      // Memory notes are not part of the story's text: drop each with the
-      // line break that set it apart.
+    if (isAside(b.kind)) {
+      // Notes, threads, new characters and next moves are not part of the
+      // story's text: drop each with the line break that set it apart.
       words = words.replace(/[ \t]+$/, '');
       afterNote = true;
       continue;
@@ -283,6 +314,62 @@ export function noteChanges(text: string): NoteChange[] {
     out.push({ forget: b.kind === 'forget', kind, name, text: words });
   }
   return out;
+}
+
+/** One open thread a reply opens or settles (`<thread>`, `<thread done>`). */
+export type ThreadChange = { done: boolean; text: string };
+
+const SETTLED = ['done', 'yes', 'true', 'resolved', 'settled', 'closed'];
+
+/** The thread tags of a finished reply, as `threads::scan` in Rust reads them. */
+export function threadChanges(text: string): ThreadChange[] {
+  const out: ThreadChange[] = [];
+  for (const b of parseBlocks(text)) {
+    if (b.kind !== 'thread' || b.open) continue;
+    const words = clip(b.body, 200);
+    if (!words) continue;
+    const settled = (v?: string) => !!v && SETTLED.includes(v.toLowerCase());
+    out.push({ done: settled(b.attrs.done) || settled(b.attrs.status), text: words });
+  }
+  return out;
+}
+
+/** Someone new a reply brings in (`<character name role pronouns age>looks</character>`). */
+export type NewCharacter = {
+  name: string;
+  role: string;
+  pronouns: string;
+  age: string;
+  appearance: string;
+};
+
+/** The new characters a finished reply suggests, once each. */
+export function newCharacters(text: string): NewCharacter[] {
+  const out: NewCharacter[] = [];
+  for (const b of parseBlocks(text)) {
+    if (b.kind !== 'character' || b.open) continue;
+    const name = clip(b.attrs.name ?? '', 80);
+    if (!name || out.some((c) => samePerson(c.name, name))) continue;
+    out.push({
+      name,
+      role: clip(b.attrs.role ?? '', 80),
+      pronouns: clip(b.attrs.pronouns ?? '', 40),
+      age: clip(b.attrs.age ?? '', 40),
+      appearance: clip(b.body, 800),
+    });
+  }
+  return out;
+}
+
+/** Ideas for the player's next move a finished reply ends with (`<next>`). */
+export function nextMoves(text: string): string[] {
+  const out: string[] = [];
+  for (const b of parseBlocks(text)) {
+    if (b.kind !== 'next' || b.open) continue;
+    const idea = clip(b.body.replace(/^\*+|\*+$/g, ''), 120);
+    if (idea && !out.some((o) => o.toLowerCase() === idea.toLowerCase())) out.push(idea);
+  }
+  return out.slice(0, 4);
 }
 
 /** True when `text` contains at least one message tag. */

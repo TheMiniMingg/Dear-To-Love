@@ -61,6 +61,7 @@ const draft = {
   writtenBy: 'the offline storyteller',
   nextOrdinal: 2,
   nextTitle: 'Low Tide',
+  nextTitleSuggested: false,
   headEventId: 'ev-3',
 };
 
@@ -100,6 +101,8 @@ describe('End chapter', () => {
     expect(box).toHaveFocus();
     expect(within(dialog).getByText(/Written by the offline storyteller/)).toBeInTheDocument();
     expect(within(dialog).getByLabelText('Chapter 2 title')).toHaveValue('Low Tide');
+    // The outline's title: nothing says the storyteller thought of it.
+    expect(within(dialog).queryByText(/suggests this from how the chapter ended/)).toBeNull();
 
     await userEvent.clear(box);
     await userEvent.type(box, 'Sam found a gull crest, the same as on the ferry office door.');
@@ -117,6 +120,18 @@ describe('End chapter', () => {
     const recap = screen.getByRole('complementary', { name: 'Recap of Chapter 1' });
     expect(recap).toHaveTextContent('the same as on the ferry office door');
     expect(screen.getByRole('heading', { name: 'Chapter 2: Low Tide' })).toBeInTheDocument();
+  });
+
+  it("says when the next title is the storyteller's idea, until it is changed", async () => {
+    backend(async () => ({ ...draft, nextTitle: 'The Ferry', nextTitleSuggested: true }));
+    const dialog = await openEndChapter();
+    const title = await within(dialog).findByLabelText('Chapter 2 title');
+    expect(title).toHaveValue('The Ferry');
+    expect(title).toHaveAccessibleDescription(
+      'The storyteller suggests this from how the chapter ended. Change it if you like.',
+    );
+    await userEvent.type(title, ' at Dawn');
+    expect(within(dialog).queryByText(/suggests this from how the chapter ended/)).toBeNull();
   });
 
   it('explains why a chapter with no reply cannot end yet', async () => {

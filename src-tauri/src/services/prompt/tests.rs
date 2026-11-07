@@ -297,6 +297,10 @@ fn narration_style_thoughts_messages_and_language_reach_the_storyteller() {
     s.state.narration.scene_headings = false;
     let p = system_prompt(&s, &frame());
     assert!(!p.contains("SCENE HEADINGS"), "only when asked");
+    assert!(
+        p.contains("\nWHERE AND WHEN\n") && p.contains("does not show it"),
+        "the app still follows the place and time"
+    );
     s.state.narration.scene_headings = true;
     let p = system_prompt(&s, &frame());
     assert!(p.contains(
@@ -576,10 +580,31 @@ fn memory_notes_reach_the_storyteller_grouped_by_kind() {
     let p = system_prompt(&s, &frame());
     assert!(p.contains("- Erika: Z's girlfriend."));
     assert!(!p.contains("MEMORY NOTES") && !p.contains("<remember"));
+    assert!(!p.contains("OPEN THREADS") && !p.contains("<character"));
 
     s.state.narration.manual_memory = false;
     let p = system_prompt(&s, &frame());
     assert!(p.contains("- Write notes in Japanese.\n"));
+    assert!(p.contains("\nOPEN THREADS\n") && p.contains("<thread done>"));
+    assert!(p.contains("\nNEW CHARACTERS\n") && p.contains("<character name=\"Rowan Ellis\""));
+    assert!(p.contains("Write threads and cards in Japanese.\n"));
+}
+
+#[test]
+fn next_moves_the_time_and_open_threads_reach_the_storyteller() {
+    let mut s = state();
+    s.state.scene.time = "  Midnight ".into();
+    s.state.open_threads = vec!["Find the sender".into()];
+    let p = system_prompt(&s, &frame());
+    assert!(p.contains("Time: Midnight\n"));
+    assert!(p.contains("Open threads: Find the sender\n"));
+    assert!(p.contains("\nNEXT MOVES\n"));
+    assert!(p.contains("<next>Ask Mina about the sketches</next>"));
+    s.state.narration.no_suggestions = true;
+    let p = system_prompt(&s, &frame());
+    assert!(!p.contains("NEXT MOVES") && !p.contains("<next>"));
+    s.state.scene.time.clear();
+    assert!(!system_prompt(&s, &frame()).contains("Time:"));
 }
 
 #[test]

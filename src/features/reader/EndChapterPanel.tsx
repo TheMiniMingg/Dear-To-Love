@@ -114,6 +114,11 @@ export function EndChapterPanel({ view, onCancel, onEnded }: Props) {
   }
 
   const nextOrdinal = draft.status === 'ready' ? draft.draft.nextOrdinal : ordinal + 1;
+  // Only while the box still holds what the storyteller suggested.
+  const suggestedTitle =
+    draft.status === 'ready' &&
+    draft.draft.nextTitleSuggested &&
+    nextTitle.trim() === draft.draft.nextTitle.trim();
   const tooLong = recap.length > MAX_RECAP;
 
   const end = async () => {
@@ -187,8 +192,14 @@ export function EndChapterPanel({ view, onCancel, onEnded }: Props) {
           value={nextTitle}
           maxLength={120}
           placeholder={t('Chapter {n}', { n: nextOrdinal })}
+          aria-describedby={suggestedTitle ? 'end-chapter-next-title-hint' : undefined}
           onChange={(e) => setNextTitle(e.target.value)}
         />
+        {suggestedTitle && (
+          <p id="end-chapter-next-title-hint" className="muted small">
+            {t('The storyteller suggests this from how the chapter ended. Change it if you like.')}
+          </p>
+        )}
       </div>
       <p className="muted small">
         {t('Ending the chapter saves your place as “{save}” in Save / Load.', {

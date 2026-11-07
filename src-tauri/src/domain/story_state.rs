@@ -3,8 +3,9 @@
 //! `stories.base_state_json` holds the original configuration. Events from
 //! the route history (`chapter_start`, `edit`, `fact_confirm`) modify the
 //! effective state from that event forward. Narrative prose never silently
-//! changes these fields: only the storyteller's bar, item and memory note
-//! tags do, and the reader shows each of those where it happens.
+//! changes these fields: only the storyteller's tags do (bars, items, memory
+//! notes, open threads and scene headings), and the reader shows each of
+//! those where it happens.
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -34,6 +35,10 @@ pub struct StoryStateV1 {
     pub known_facts: Vec<KnownFact>,
     pub scene: Scene,
     pub open_threads: Vec<String>,
+    /// Threads settled along the way, newest last: the quest log's done list.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[ts(as = "Option<Vec<String>>", optional)]
+    pub done_threads: Vec<String>,
     /// Optional asset ids by slot (e.g. `"cover"`, `"background"`).
     pub visual_refs: BTreeMap<String, String>,
     /// Bars, counters and an inventory, when the story keeps them.
@@ -272,11 +277,15 @@ pub struct Narration {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
     pub dice_rules: Option<DiceRules>,
-    /// The storyteller does not keep memory notes; only the player writes
-    /// them.
+    /// The storyteller does not keep memory notes or open threads; only the
+    /// player writes them.
     #[serde(default, skip_serializing_if = "is_false")]
     #[ts(as = "Option<bool>", optional)]
     pub manual_memory: bool,
+    /// No ideas for the player's next move under the storyteller's replies.
+    #[serde(default, skip_serializing_if = "is_false")]
+    #[ts(as = "Option<bool>", optional)]
+    pub no_suggestions: bool,
     /// How the player would like it told, in their own words ("like a cozy
     /// anime, lots of banter").
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -311,6 +320,7 @@ impl Default for Narration {
             quiet_phones: false,
             dice_rules: None,
             manual_memory: false,
+            no_suggestions: false,
             style_notes: None,
         }
     }
@@ -420,9 +430,14 @@ pub struct KnownFact {
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[ts(export)]
 pub struct Scene {
+    /// Where the story is; follows the storyteller's scene headings.
     pub location: String,
     pub summary: String,
     pub participant_ids: Vec<String>,
+    /// When it is ("Monday, 7:40 AM"); follows the scene headings too.
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    #[ts(as = "Option<String>", optional)]
+    pub time: String,
 }
 
 impl StoryStateV1 {
@@ -524,6 +539,7 @@ impl StoryStateV1 {
             &self.narration.tone,
             &self.scene.location,
             &self.scene.summary,
+            &self.scene.time,
         ] {
             check_text("text field", text)?;
         }
@@ -532,6 +548,7 @@ impl StoryStateV1 {
         }
         check_list("world rules", &self.world.rules)?;
         check_list("open threads", &self.open_threads)?;
+        check_list("settled threads", &self.done_threads)?;
         check_list("genres", &self.narration.genres)?;
         check_list("themes", &self.narration.themes)?;
         check_list("limits", &self.narration.limits)?;
@@ -759,8 +776,10 @@ pub fn sample_lighthouse() -> StoryStateV1 {
             location: "The lighthouse stairs".into(),
             summary: "Night. The lamp is lit, but nobody climbed the stairs.".into(),
             participant_ids: vec!["pc".into()],
+            time: String::new(),
         },
         open_threads: vec!["Who lit the lamp?".into()],
+        done_threads: Vec::new(),
         visual_refs: BTreeMap::new(),
         tracking: None,
         notes: Vec::new(),

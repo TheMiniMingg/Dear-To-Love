@@ -18,4 +18,9 @@ newStory?: boolean,
 /**
  * The player allowed one request the budget can't price.
  */
-budgetOverride?: boolean, };
+budgetOverride?: boolean, 
+/**
+ * The portrait's description as the player wrote it, in place of the
+ * drafted one. The safe-for-work sentence is added all the same.
+ */
+prompt?: string, };
