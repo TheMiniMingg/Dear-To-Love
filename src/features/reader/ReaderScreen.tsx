@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import {
   CommandError,
   commands,
@@ -393,7 +393,9 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
   // and with any other window open only Quick save works. Escape opens the
   // pause menu (windows handle their own Escape first) and Up/Down scroll.
   const onKey = useRef<(e: KeyboardEvent) => void>(() => undefined);
-  useEffect(() => {
+  // Updated as each render commits, so a key pressed right after the story
+  // loads already sees it.
+  useLayoutEffect(() => {
     onKey.current = (e: KeyboardEvent) => {
       if (isComposing(e) || e.defaultPrevented || !view) return;
       // The Keyboard shortcuts window is on top: leave the story alone.
