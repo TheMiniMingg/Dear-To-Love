@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, type ReactNode, type KeyboardEvent } from 'react';
+import { X } from 'lucide-react';
 import { t } from '../i18n';
 
 type Props = {
@@ -69,7 +70,7 @@ export function Dialog({ title, onClose, children, initialFocusId, wide = false 
         <div className="dialog-header">
           <h2 id={titleId}>{title}</h2>
           <button type="button" className="icon-button" aria-label={t('Close')} onClick={onClose}>
-            ×
+            <X aria-hidden={true} size={18} strokeWidth={2} />
           </button>
         </div>
         <div className="dialog-body">{children}</div>

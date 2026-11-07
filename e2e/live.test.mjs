@@ -94,7 +94,15 @@ test('live storyteller: stream a reply, retry a failure', async () => {
   await (await b.$('button=Save and start Chapter 2')).click();
   await waitForText(b, '[data-testid="narrative"]', 'Recap of Chapter 1');
   await waitForText(b, '[data-testid="narrative"]', 'a boat moved with no lights.');
-  await waitForText(b, '[data-testid="narrative"]', 'Chapter 2: Low Tide');
+  await waitForText(b, '[data-testid="narrative"]', 'Low Tide');
+  assert.equal(
+    await b.execute(() =>
+      [...document.querySelectorAll('.chapter-heading h2')]
+        .map((h) => h.getAttribute('aria-label'))
+        .pop(),
+    ),
+    'Chapter 2: Low Tide',
+  );
   await waitForText(b, 'header', 'Saved "End of Chapter 1: The Lamp Room"');
   await typeInto(b, '#composer-input', 'Walk to the harbor');
   await b.keys(['Enter']);

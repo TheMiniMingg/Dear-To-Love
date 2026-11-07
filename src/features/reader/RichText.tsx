@@ -3,6 +3,7 @@ import type { RollRequest } from '../../types';
 import { Thumb } from '../images/ImageGrid';
 import { RollAsk, RollResult } from './DiceCards';
 import { APP_TAGS, parseBlocks, rollRequestOf, samePerson, type Block } from './messages';
+import { NameColorsContext, nameStyle } from './nameColors';
 import { PortraitsContext } from './portraits';
 import { msg, t } from '../../i18n';
 
@@ -30,13 +31,25 @@ function inline(text: string): ReactNode[] {
 const SPEAKER =
   /^((?:\p{Lu}[\p{L}\p{M}'’.-]*)(?: \p{Lu}[\p{L}\p{M}'’.-]*){0,2}|[^\s\p{Ll}\p{Lu}:：]{1,12})([:：])\s*(?=["“「『*(（])/u;
 
-/** A paragraph, with a leading speaker name ("Mara: \"…\"") in bold. */
-function Paragraph({ text }: { text: string }) {
+/** A paragraph that opens with a letter of the Latin alphabet, which a drop cap suits. */
+const LATIN_START = /^[*_]*\p{Script=Latin}/u;
+
+/**
+ * A paragraph, with a leading speaker name ("Mara: \"…\"") in bold and in
+ * that character's colour. `dropCap` enlarges the first letter (the opening
+ * of a chapter) when the paragraph starts with one.
+ */
+function Paragraph({ text, dropCap = false }: { text: string; dropCap?: boolean }) {
+  const colorOf = useContext(NameColorsContext);
   const m = SPEAKER.exec(text);
-  if (!m) return <p>{inline(text)}</p>;
+  if (!m) {
+    return (
+      <p className={dropCap && LATIN_START.test(text) ? 'drop-cap' : undefined}>{inline(text)}</p>
+    );
+  }
   return (
     <p>
-      <strong className="line-speaker">
+      <strong className="line-speaker" style={nameStyle(colorOf(m[1] ?? ''))}>
         {m[1]}
         {m[2]}
       </strong>{' '}
@@ -45,8 +58,8 @@ function Paragraph({ text }: { text: string }) {
   );
 }
 
-/** Prose split into paragraphs at blank lines. */
-export function Prose({ text }: { text: string }) {
+/** Prose split into paragraphs at blank lines; `dropCap` marks the first. */
+export function Prose({ text, dropCap = false }: { text: string; dropCap?: boolean }) {
   return (
     <>
       {text
@@ -54,7 +67,7 @@ export function Prose({ text }: { text: string }) {
         .map((p) => p.trim())
         .filter(Boolean)
         .map((p, i) => (
-          <Paragraph key={i} text={p} />
+          <Paragraph key={i} text={p} dropCap={dropCap && i === 0} />
         ))}
     </>
   );
@@ -62,10 +75,11 @@ export function Prose({ text }: { text: string }) {
 
 function Avatar({ name }: { name: string }) {
   const portrait = useContext(PortraitsContext)(name);
+  const color = useContext(NameColorsContext)(name);
   if (portrait) return <Thumb assetId={portrait} alt="" className="msg-avatar" />;
   const initial = [...name.trim()][0]?.toUpperCase() ?? '?';
   return (
-    <span className="msg-avatar" aria-hidden="true">
+    <span className="msg-avatar" aria-hidden="true" style={nameStyle(color)}>
       {initial}
     </span>
   );
@@ -92,6 +106,7 @@ export function RichText({
   streaming = false,
   onRoll,
   rolls = true,
+  dropCap = false,
 }: {
   text: string;
   playerName: string;
@@ -103,7 +118,12 @@ export function RichText({
    * left out.
    */
   rolls?: boolean;
+  /** The first reply of a chapter: a drop cap when it opens with prose. */
+  dropCap?: boolean;
 }) {
+  const colorOf = useContext(NameColorsContext);
+  // Only a scene heading may come before the paragraph that gets the drop cap.
+  let capFree = dropCap;
   const blocks = parseBlocks(text, streaming).filter(
     (b) => rolls || !(APP_TAGS as string[]).includes(b.kind),
   );
@@ -137,7 +157,9 @@ export function RichText({
         {showName && g.peer && (
           <div className="msg-head">
             <Avatar name={g.peer} />
-            <strong>{g.peer}</strong>
+            <strong className="msg-name" style={nameStyle(colorOf(g.peer))}>
+              {g.peer}
+            </strong>
           </div>
         )}
         {g.texts.map((m, i) => (
@@ -174,7 +196,9 @@ export function RichText({
             aria-label={t('Call with {name}', { name: who })}
           >
             <Avatar name={who} />
-            <strong>{who}</strong>
+            <strong className="msg-name" style={nameStyle(colorOf(who))}>
+              {who}
+            </strong>
             <span className="msg-call-status">
               {CALL_STATUS[status] ? t(CALL_STATUS[status]) : (a.status ?? t('Call'))}
             </span>
@@ -239,7 +263,9 @@ export function RichText({
           >
             <div className="msg-head">
               <Avatar name={who} />
-              <strong>{who}</strong>
+              <strong className="msg-name" style={nameStyle(colorOf(who))}>
+                {who}
+              </strong>
               {a.time && <span className="msg-time">{a.time}</span>}
             </div>
             <Prose text={b.body} />
@@ -306,7 +332,8 @@ export function RichText({
       if (!b.text.trim()) return;
       flush();
       lastPeer = '';
-      out.push(<Prose key={i} text={b.text} />);
+      out.push(<Prose key={i} text={b.text} dropCap={capFree} />);
+      capFree = false;
       return;
     }
     if (b.kind === 'text') {
@@ -319,6 +346,7 @@ export function RichText({
     }
     flush();
     lastPeer = '';
+    if (b.kind !== 'scene') capFree = false;
     out.push(card(b, i));
   });
   flush();

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { ArchiveRestore, BookMarked, GitBranch, Menu, Save, Search } from 'lucide-react';
 import {
   CommandError,
   commands,
@@ -7,6 +8,7 @@ import {
   runErrorMessage,
 } from '../../api/commands';
 import { useUiStore } from '../../app/store';
+import { useStoryLook } from '../../app/look';
 import { isComposing, isEditableTarget } from '../../app/keyboard';
 import { ariaKeys, isShortcut, useShortcutHelp, withKeys } from '../../app/shortcuts';
 import { Dialog } from '../../components/Dialog';
@@ -41,6 +43,7 @@ import { StoryMemoryPanel } from './StoryMemoryPanel';
 import { StorytellerPanel } from './StorytellerPanel';
 import { standingNotes } from './notes';
 import { plainText } from './messages';
+import { NameColorsContext, nameColorFinder } from './nameColors';
 import { PortraitsContext, portraitFinder } from './portraits';
 import { DiceRulesContext } from './DiceCards';
 import { intlLocale, joinList, joinSentences, msg, t, tKnown, tr } from '../../i18n';
@@ -481,6 +484,8 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
     return () => window.removeEventListener('keydown', listener);
   }, []);
 
+  useStoryLook(view?.story.id ?? null, view?.state.state.narration?.genres);
+
   if (!view) {
     return (
       <section className="screen">
@@ -508,6 +513,7 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
   const player = view.state.state.characters[view.state.state.playerCharacterId];
   const events = viewing ? viewing.history : view.history;
   const portraitOf = portraitFinder(view);
+  const colorOf = nameColorFinder(view);
   const diceRules = view.state.state.narration?.diceRules ?? NO_RULES;
 
   return (
@@ -566,6 +572,7 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
             title={withKeys(t('Pause menu'), 'menu')}
             aria-keyshortcuts={ariaKeys('menu')}
           >
+            <Menu className="btn-icon" aria-hidden={true} />
             {t('Menu')}
           </button>
         </div>
@@ -633,45 +640,49 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
 
       <div ref={narrativeHost} className="reader-body">
         <PortraitsContext.Provider value={portraitOf}>
-          <DiceRulesContext.Provider value={diceRules}>
-            <NarrativeView
-              events={events}
-              draft={viewing ? null : stream}
-              playerName={player?.name ?? t('You')}
-              onBranch={viewing ? undefined : (id) => void branchFrom(id)}
-              onRegenerate={viewing || writing || busy ? undefined : openRegenerate}
-              onEditAction={
-                viewing || writing || busy
-                  ? undefined
-                  : (id) => openEdit(view.history.find((x) => x.id === id))
-              }
-              onBookmark={viewing ? undefined : (id) => void toggleBookmark(id)}
-              bookmarked={viewing ? undefined : bookmarked}
-              focus={viewing ? null : focus}
-              onRoll={
-                viewing || busy || writing || awaitingReply
-                  ? undefined
-                  : (req) => void send('', req, false)
-              }
-              keepsNotes={!view.state.state.narration?.manualMemory}
-              currentNotes={view.state.state.notes ?? []}
-              onOpenNotes={viewing ? undefined : () => setPanel('memory')}
-              onUndoNotes={
-                viewing || writing || busy || awaitingReply ? undefined : (id) => void undoNotes(id)
-              }
-              intro={
-                viewing
-                  ? undefined
-                  : {
-                      premise: view.story.description,
-                      location: view.state.state.scene.location,
-                      scene: view.state.state.scene.summary,
-                    }
-              }
-            />
-          </DiceRulesContext.Provider>
+          <NameColorsContext.Provider value={colorOf}>
+            <DiceRulesContext.Provider value={diceRules}>
+              <NarrativeView
+                events={events}
+                draft={viewing ? null : stream}
+                playerName={player?.name ?? t('You')}
+                onBranch={viewing ? undefined : (id) => void branchFrom(id)}
+                onRegenerate={viewing || writing || busy ? undefined : openRegenerate}
+                onEditAction={
+                  viewing || writing || busy
+                    ? undefined
+                    : (id) => openEdit(view.history.find((x) => x.id === id))
+                }
+                onBookmark={viewing ? undefined : (id) => void toggleBookmark(id)}
+                bookmarked={viewing ? undefined : bookmarked}
+                focus={viewing ? null : focus}
+                onRoll={
+                  viewing || busy || writing || awaitingReply
+                    ? undefined
+                    : (req) => void send('', req, false)
+                }
+                keepsNotes={!view.state.state.narration?.manualMemory}
+                currentNotes={view.state.state.notes ?? []}
+                onOpenNotes={viewing ? undefined : () => setPanel('memory')}
+                onUndoNotes={
+                  viewing || writing || busy || awaitingReply
+                    ? undefined
+                    : (id) => void undoNotes(id)
+                }
+                intro={
+                  viewing
+                    ? undefined
+                    : {
+                        premise: view.story.description,
+                        location: view.state.state.scene.location,
+                        scene: view.state.state.scene.summary,
+                      }
+                }
+              />
+            </DiceRulesContext.Provider>
+          </NameColorsContext.Provider>
         </PortraitsContext.Provider>
-        <ReaderRail />
+        <ReaderRail storyId={view.story.id} genres={view.state.state.narration?.genres} />
       </div>
 
       {error && (
@@ -750,6 +761,7 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
               title={withKeys(t('Quick save'), 'quickSave')}
               aria-keyshortcuts={ariaKeys('quickSave')}
             >
+              <Save className="btn-icon" aria-hidden={true} />
               {t('Quick save')}
             </button>
             <button
@@ -758,6 +770,7 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
               title={withKeys(t('Save / Load'), 'saves')}
               aria-keyshortcuts={ariaKeys('saves')}
             >
+              <ArchiveRestore className="btn-icon" aria-hidden={true} />
               {t('Save / Load')}
             </button>
             <button
@@ -767,6 +780,7 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
               title={withKeys(t('Recap this chapter, save, and start the next one'), 'endChapter')}
               aria-keyshortcuts={ariaKeys('endChapter')}
             >
+              <BookMarked className="btn-icon" aria-hidden={true} />
               {t('End chapter')}
             </button>
             <button
@@ -775,6 +789,7 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
               title={withKeys(t('Routes'), 'routes')}
               aria-keyshortcuts={ariaKeys('routes')}
             >
+              <GitBranch className="btn-icon" aria-hidden={true} />
               {t('Routes ({n})', { n: view.routes.filter((r) => !r.hidden).length })}
             </button>
             <button
@@ -783,6 +798,7 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
               title={withKeys(t('Search this route and its bookmarks'), 'search')}
               aria-keyshortcuts={ariaKeys('search')}
             >
+              <Search className="btn-icon" aria-hidden={true} />
               {t('Search')}
             </button>
           </div>

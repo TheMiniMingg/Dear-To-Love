@@ -10,6 +10,7 @@ import { diffState, editProblems, summarize, type ChangeLine } from './stateDiff
 import { msg, t, tr } from '../../i18n';
 import { chapterHasTitle, routeName } from '../../i18n/names';
 import { plainText } from './messages';
+import { castColors, NAME_COLORS, nameStyle } from './nameColors';
 
 type Tab = 'characters' | 'world' | 'narration' | 'scene' | 'facts';
 const TABS: [Tab, string][] = [
@@ -57,11 +58,93 @@ function unusedId(prefix: string, taken: (id: string) => boolean): string {
   }
 }
 
+const COLOR_NAMES = [
+  msg('Rose'),
+  msg('Violet'),
+  msg('Indigo'),
+  msg('Sky'),
+  msg('Teal'),
+  msg('Green'),
+  msg('Amber'),
+  msg('Orange'),
+  msg('Cocoa'),
+  msg('Plum'),
+];
+
+/**
+ * The colour of a character's name in the story: picked from the name
+ * unless you choose one.
+ */
+function NameColorField({
+  value,
+  auto,
+  onChange,
+}: {
+  value: string | undefined;
+  /** The colour picked for them, or null for the theme's accent. */
+  auto: string | null;
+  onChange: (color: string | undefined) => void;
+}) {
+  const id = useId();
+  const own = value?.toLowerCase();
+  const custom = own && !NAME_COLORS.some((x) => x === own) ? own : undefined;
+  return (
+    <fieldset className="field name-colors" aria-describedby={`${id}-hint`}>
+      <legend>{t('Name color')}</legend>
+      <div className="swatches">
+        <label className="swatch swatch-auto" title={t('Automatic')}>
+          <input
+            type="radio"
+            name={id}
+            checked={!own}
+            onChange={() => onChange(undefined)}
+            aria-label={t('Automatic')}
+          />
+          <span className="swatch-dot" style={nameStyle(auto)} aria-hidden="true">
+            A
+          </span>
+        </label>
+        {NAME_COLORS.map((color, i) => (
+          <label key={color} className="swatch" title={t(COLOR_NAMES[i] ?? '')}>
+            <input
+              type="radio"
+              name={id}
+              checked={own === color}
+              onChange={() => onChange(color)}
+              aria-label={t(COLOR_NAMES[i] ?? '')}
+            />
+            <span className="swatch-dot" style={nameStyle(color)} aria-hidden="true" />
+          </label>
+        ))}
+        <label className="swatch swatch-custom" title={t('Your own color')}>
+          <input
+            type="color"
+            value={custom ?? auto ?? NAME_COLORS[0]}
+            onChange={(e) => onChange(e.target.value.toLowerCase())}
+            aria-label={t('Your own color')}
+          />
+          <span
+            className="swatch-dot"
+            style={nameStyle(custom ?? null)}
+            data-custom={custom ? '' : undefined}
+            aria-hidden="true"
+          />
+        </label>
+      </div>
+      <p id={`${id}-hint`} className="muted small">
+        {t('Their name shows in this color in the story. Automatic picks one from the name.')}
+      </p>
+    </fieldset>
+  );
+}
+
 function CharacterFields({
   c,
+  autoColor,
   onChange,
 }: {
   c: Character;
+  autoColor: string | null;
   onChange: (patch: Partial<Character>) => void;
 }) {
   return (
@@ -116,6 +199,7 @@ function CharacterFields({
         onChange={(abilities) => onChange({ abilities })}
       />
       <StatsField value={c.stats ?? []} onChange={(stats) => onChange({ stats })} />
+      <NameColorField value={c.color} auto={autoColor} onChange={(color) => onChange({ color })} />
     </>
   );
 }
@@ -292,7 +376,16 @@ export function StoryDetailsPanel({
               value={current.id}
               onChange={setWho}
             />
-            <CharacterFields c={current} onChange={(p) => setChar(current.id, p)} />
+            <CharacterFields
+              c={current}
+              autoColor={
+                castColors(
+                  chars.map((x) => (x.id === current.id ? { ...x, color: undefined } : x)),
+                  edited.playerCharacterId,
+                ).get(current.id) ?? null
+              }
+              onChange={(p) => setChar(current.id, p)}
+            />
             <div className="button-row">
               <button type="button" onClick={addCharacter}>
                 {t('Add a character')}

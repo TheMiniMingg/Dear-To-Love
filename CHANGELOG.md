@@ -2,6 +2,21 @@
 
 ## Unreleased
 
+- **A new look.** Stories are set in Literata, a book font, and the rest of the app in Inter;
+  both come with the app, so they look the same on every computer. Chapters open like a
+  book's, with the chapter number, a large title, an ornament and a large first letter.
+  Buttons, cards, dialogs and settings have depth, on/off options are switches, lists to
+  pick from are pills, and the main buttons have icons. Things fade in gently, and not at all
+  when the computer asks for less motion.
+- **Themes.** **Settings → Look** chooses Rose (light or dark with your computer), Midnight
+  or Parchment. With **Give each story a look that fits its genre** on, each story takes the
+  look of its genre: Midnight for horror, mysteries and science fiction, Parchment for
+  fantasy and history, Rose for romance. **Look** beside the story chooses another for that
+  story. Looks are a setting of this computer.
+- **Name colors.** Each character's name shows in their own color in the story, on script
+  lines and on text, call and post cards, picked from the name so it never changes. Choose
+  another under **Name color** in **Story details**; it is only for the screen and is never
+  sent to the storyteller.
 - **Story memory that keeps itself up to date.** As it writes, the storyteller notes what
   must stay true: people (where things stand with them), places, things that matter, a
   timeline of events with their chapters, and other facts. Every later reply reads the notes,
