@@ -971,6 +971,59 @@ impl Ctx<'_> {
             }
             _ => {}
         }
+        if let Some(next) = self.next_moves() {
+            parts.push(next);
+        }
         parts.join("\n\n")
+    }
+
+    /// Two or three ideas for the player's next move, unless they are off.
+    fn next_moves(&self) -> Option<String> {
+        if self.n.no_suggestions {
+            return None;
+        }
+        let mut ideas: Vec<String> = Vec::new();
+        if let Some(c) = self.npc {
+            let name = c.name.split_whitespace().next().unwrap_or("them");
+            let about = self.seed.pick(
+                &[
+                    "Ask {n} what they know",
+                    "Ask {n} what is wrong",
+                    "Tell {n} the truth",
+                ],
+                22,
+            );
+            ideas.push(about.replace("{n}", name));
+        }
+        let general: &[&str] = if self.is_fight() {
+            &[
+                "Fall back and catch my breath",
+                "Press the attack",
+                "Look for a way out",
+            ]
+        } else {
+            &[
+                "Look around more carefully",
+                "Wait and listen",
+                "Move on",
+                "Check my things",
+                "Follow the nearest sound",
+            ]
+        };
+        let start = self.seed.byte(23) as usize % general.len();
+        let want = if self.npc.is_some() { 3 } else { 2 };
+        for i in 0..general.len() {
+            if ideas.len() >= want {
+                break;
+            }
+            ideas.push(general[(start + i) % general.len()].to_string());
+        }
+        Some(
+            ideas
+                .iter()
+                .map(|i| format!("<next>{i}</next>"))
+                .collect::<Vec<_>>()
+                .join("\n"),
+        )
     }
 }

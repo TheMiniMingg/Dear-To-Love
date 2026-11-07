@@ -173,6 +173,10 @@ pub enum StateEdit {
     SetOpenThreads {
         open_threads: Vec<String>,
     },
+    /// The quest log's settled threads, newest last.
+    SetDoneThreads {
+        done_threads: Vec<String>,
+    },
     SetVisualRef {
         slot: String,
         asset_id: Option<String>,

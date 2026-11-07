@@ -55,7 +55,11 @@ autopilot?: boolean,
  */
 quietPhones?: boolean, diceRules?: DiceRules, 
 /**
- * The storyteller does not keep memory notes; only the player writes
- * them.
+ * The storyteller does not keep memory notes or open threads; only the
+ * player writes them.
  */
-manualMemory?: boolean, };
+manualMemory?: boolean, 
+/**
+ * No ideas for the player's next move under the storyteller's replies.
+ */
+noSuggestions?: boolean, };

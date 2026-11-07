@@ -71,6 +71,7 @@ export type { NormalizedUsage } from './generated/NormalizedUsage';
 export type { NoteKind } from './generated/NoteKind';
 export type { Pacing } from './generated/Pacing';
 export type { Perspective } from './generated/Perspective';
+export type { PictureDraft } from './generated/PictureDraft';
 export type { PlayerPayload } from './generated/PlayerPayload';
 export type { PortraitInput } from './generated/PortraitInput';
 export type { PortraitStyle } from './generated/PortraitStyle';

@@ -5,8 +5,9 @@
 //! assistant prose never silently changes structured fields; the
 //! exceptions are tags in the storyteller's replies, which the reader shows
 //! where they happen: `<meter>` and `<item>` in a story that keeps bars and
-//! items (`tracking`), and the `<remember>` and `<forget>` memory notes
-//! unless the player keeps the notes themselves (`manual_memory`).
+//! items (`tracking`), `<scene>` headings (where and when the story is),
+//! and the `<remember>` and `<forget>` memory notes and `<thread>` open
+//! threads unless the player keeps those themselves (`manual_memory`).
 
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
@@ -15,6 +16,8 @@ use ts_rs::TS;
 use super::events::{EventBody, StateEdit};
 use super::notes::{self, MAX_NOTES};
 use super::story_state::{KnownFact, StoryStateV1};
+use super::text::latest_scene;
+use super::threads;
 use crate::errors::{AppError, AppResult};
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
@@ -71,9 +74,24 @@ impl EffectiveState {
                         .unwrap_or_default();
                     tracking.apply_reply(&p.text, player);
                 }
+                if let Some((place, time)) = latest_scene(&p.text) {
+                    let scene = &mut self.state.scene;
+                    if let Some(place) = place {
+                        // The situation written for the old place no longer holds.
+                        if !place.eq_ignore_ascii_case(scene.location.trim()) {
+                            scene.summary.clear();
+                        }
+                        scene.location = place;
+                    }
+                    if let Some(time) = time {
+                        scene.time = time;
+                    }
+                }
                 if !self.state.narration.manual_memory {
                     let chapter = self.active_chapter.as_ref().map(|c| c.ordinal);
                     notes::apply_reply(&mut self.state.notes, &p.text, chapter, event_id);
+                    let s = &mut self.state;
+                    threads::apply_reply(&mut s.open_threads, &mut s.done_threads, &p.text);
                 }
             }
             EventBody::Player(_) | EventBody::Checkpoint(_) => {}
@@ -160,6 +178,7 @@ fn apply_edit(
         StateEdit::RemoveFact { fact_id } => state.known_facts.retain(|f| &f.id != fact_id),
         StateEdit::SetScene { scene } => state.scene = scene.clone(),
         StateEdit::SetOpenThreads { open_threads } => state.open_threads = open_threads.clone(),
+        StateEdit::SetDoneThreads { done_threads } => state.done_threads = done_threads.clone(),
         StateEdit::SetTracking { tracking } => state.tracking = tracking.clone(),
         StateEdit::UpsertNote { note } => {
             let exists = state.notes.iter().any(|n| n.is(note.kind, &note.name));
@@ -452,5 +471,78 @@ mod tests {
         )
         .unwrap();
         assert_eq!(s.state.notes.len(), 1);
+    }
+
+    #[test]
+    fn replies_keep_the_scene_and_the_quest_log_up_to_date() {
+        use crate::domain::events::AssistantPayload;
+        let reply = |text: &str| {
+            EventBody::Assistant(AssistantPayload {
+                text: text.into(),
+                finish_reason: None,
+                provider_label: None,
+                model_id: None,
+            })
+        };
+        let mut s = EffectiveState::new(lighthouse());
+        // Same place, new time: the situation still holds.
+        s.apply(
+            "a1",
+            &reply("<scene place=\"the lighthouse STAIRS\" time=\"Midnight\"/>\n\nWind."),
+        )
+        .unwrap();
+        assert_eq!(s.state.scene.location, "the lighthouse STAIRS");
+        assert_eq!(s.state.scene.time, "Midnight");
+        assert!(s.state.scene.summary.starts_with("Night."));
+        // A new place clears it; a heading with the time only keeps the place.
+        s.apply(
+            "a2",
+            &reply(
+                "<scene place=\"The harbor\" time=\"Dawn\"/>\nGulls.\n\
+                 <thread>Find who rowed out</thread><thread done>Who lit the lamp</thread>",
+            ),
+        )
+        .unwrap();
+        assert_eq!(
+            (s.state.scene.location.as_str(), s.state.scene.time.as_str()),
+            ("The harbor", "Dawn")
+        );
+        assert!(s.state.scene.summary.is_empty());
+        assert_eq!(s.state.open_threads, vec!["Find who rowed out"]);
+        assert_eq!(s.state.done_threads, vec!["Who lit the lamp?"]);
+        s.apply("a3", &reply("<scene time=\"Noon\"/>Later."))
+            .unwrap();
+        assert_eq!(
+            (s.state.scene.location.as_str(), s.state.scene.time.as_str()),
+            ("The harbor", "Noon")
+        );
+
+        // The player ticks a thread by hand.
+        s.apply(
+            "e1",
+            &edit(vec![
+                StateEdit::SetOpenThreads {
+                    open_threads: vec![],
+                },
+                StateEdit::SetDoneThreads {
+                    done_threads: vec!["Who lit the lamp?".into(), "Find who rowed out".into()],
+                },
+            ]),
+        )
+        .unwrap();
+        assert_eq!(s.state.done_threads.len(), 2);
+
+        // Kept by hand, replies leave the log alone; the scene still follows.
+        let mut narration = s.state.narration.clone();
+        narration.manual_memory = true;
+        s.apply("e2", &edit(vec![StateEdit::SetNarration { narration }]))
+            .unwrap();
+        s.apply(
+            "a4",
+            &reply("<scene place=\"The pier\"/><thread>Something new</thread>"),
+        )
+        .unwrap();
+        assert!(s.state.open_threads.is_empty());
+        assert_eq!(s.state.scene.location, "The pier");
     }
 }

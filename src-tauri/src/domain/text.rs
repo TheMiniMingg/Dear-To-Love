@@ -56,11 +56,97 @@ mod tests {
 }
 
 /// Tags the storyteller uses for texts, calls, thoughts, letters, posts,
-/// dice rolls, headings, bars, items and memory notes.
-const MESSAGE_TAGS: [&str; 11] = [
-    "text", "call", "thought", "letter", "post", "roll", "scene", "meter", "item", "remember",
+/// dice rolls, headings, bars, items, memory notes, open threads, new
+/// characters and ideas for the player's next move.
+const MESSAGE_TAGS: [&str; 14] = [
+    "text",
+    "call",
+    "thought",
+    "letter",
+    "post",
+    "roll",
+    "scene",
+    "meter",
+    "item",
+    "remember",
     "forget",
+    "thread",
+    "character",
+    "next",
 ];
+
+/// Tags that are about the story, not part of its text.
+const ASIDE_TAGS: [&str; 5] = ["remember", "forget", "thread", "character", "next"];
+
+/// One finished tag found by [`scan_tags`].
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct FoundTag<'a> {
+    pub name: &'static str,
+    /// What sits between the name and `>`, attributes and all.
+    pub head: &'a str,
+    pub attrs: Vec<(String, String)>,
+    /// The words between the opening and closing tags; empty for `<x/>`.
+    pub body: &'a str,
+}
+
+impl FoundTag<'_> {
+    /// The value of `key`, trimmed, when it is there and not empty.
+    pub fn attr(&self, key: &str) -> Option<&str> {
+        self.attrs
+            .iter()
+            .find(|(k, _)| k.eq_ignore_ascii_case(key))
+            .map(|(_, v)| v.trim())
+            .filter(|v| !v.is_empty())
+    }
+}
+
+/// The finished `names` tags in `text`, in order. A tag still being written
+/// (no `>` or no closing tag yet) ends the scan.
+pub(crate) fn scan_tags<'a>(text: &'a str, names: &[&'static str]) -> Vec<FoundTag<'a>> {
+    let mut out = Vec::new();
+    let mut rest = text;
+    while let Some(i) = rest.find('<') {
+        let after = &rest[i + 1..];
+        let name = names.iter().copied().find(|t| {
+            after.starts_with(t) && after[t.len()..].starts_with([' ', '/', '>', '\n', '\t'])
+        });
+        let Some(name) = name else {
+            rest = after;
+            continue;
+        };
+        let Some(end) = after.find('>') else { break };
+        let head = &after[name.len()..end];
+        let tail = &after[end + 1..];
+        let (body, next) = if head.trim_end().ends_with('/') {
+            ("", tail)
+        } else {
+            let close = format!("</{name}>");
+            match tail.find(&close) {
+                Some(j) => (tail[..j].trim(), &tail[j + close.len()..]),
+                None => break,
+            }
+        };
+        out.push(FoundTag {
+            name,
+            head,
+            attrs: tag_attrs(head),
+            body,
+        });
+        rest = next;
+    }
+    out
+}
+
+/// Where and when the last `<scene place="…" time="…"/>` heading in a reply
+/// puts the story; `None` when it has none (or one with neither).
+pub fn latest_scene(text: &str) -> Option<(Option<String>, Option<String>)> {
+    let one_line = |s: &str| s.split_whitespace().collect::<Vec<_>>().join(" ");
+    scan_tags(text, &["scene"]).iter().rev().find_map(|t| {
+        let place = t.attr("place").map(one_line).filter(|s| !s.is_empty());
+        let time = t.attr("time").map(one_line).filter(|s| !s.is_empty());
+        (place.is_some() || time.is_some()).then_some((place, time))
+    })
+}
 
 /// `key="value"` pairs from inside a tag.
 pub(crate) fn tag_attrs(head: &str) -> Vec<(String, String)> {
@@ -84,7 +170,8 @@ pub(crate) fn tag_attrs(head: &str) -> Vec<(String, String)> {
 
 /// Message tags written out as plain text, for exports and offline
 /// summaries: `<text from="Erika">Hi</text>` becomes `[Text from Erika] Hi`.
-/// Memory notes are left out (they are not part of the story's text).
+/// Memory notes, open threads, new characters and next-move ideas are left
+/// out (they are not part of the story's text).
 /// Anything that is not a known tag is left as it is.
 pub fn plain_message_tags(text: &str) -> String {
     let mut out = String::new();
@@ -119,7 +206,7 @@ pub fn plain_message_tags(text: &str) -> String {
                 None => (tail.trim(), ""),
             }
         };
-        if matches!(*tag, "remember" | "forget") {
+        if ASIDE_TAGS.contains(tag) {
             // Drop the note and the line break that set it apart.
             let trimmed = out.trim_end_matches([' ', '\t']).len();
             out.truncate(trimmed);
@@ -214,17 +301,27 @@ pub fn plain_message_tags(text: &str) -> String {
 }
 
 /// Tags only the app and the storyteller may write: a roll is the app's,
-/// and bars, items and memory notes change only through the storyteller's
-/// replies.
-const APP_TAGS: [&str; 5] = ["roll", "meter", "item", "remember", "forget"];
+/// and bars, items, memory notes, threads, new characters and next-move
+/// ideas come only from the storyteller's replies.
+const APP_TAGS: [&str; 8] = [
+    "roll",
+    "meter",
+    "item",
+    "remember",
+    "forget",
+    "thread",
+    "character",
+    "next",
+];
 
-/// The text has a roll, meter, item or memory note tag in it.
+/// The text has a roll, meter, item, memory note or other storyteller-only
+/// tag in it.
 pub fn has_app_tags(text: &str) -> bool {
     APP_TAGS.iter().any(|t| text.contains(&format!("<{t}")))
 }
 
-/// The text without `<roll …>`, `<meter …>`, `<item …>`, `<remember …>` and
-/// `<forget …>` tags. Only the app rolls dice and only the storyteller
+/// The text without `<roll …>`, `<meter …>`, `<item …>`, `<remember …>`,
+/// `<forget …>`, `<thread …>`, `<character …>` and `<next …>` tags. Only the app rolls dice and only the storyteller
 /// changes bars, items and notes, so such a tag typed into an action is
 /// dropped instead of reading as real.
 pub fn strip_app_tags(text: &str) -> String {
@@ -269,7 +366,41 @@ pub fn strip_app_tags(text: &str) -> String {
 
 #[cfg(test)]
 mod message_tag_tests {
-    use super::{plain_message_tags, strip_app_tags};
+    use super::{latest_scene, plain_message_tags, strip_app_tags};
+
+    #[test]
+    fn threads_new_characters_and_next_moves_are_left_out() {
+        assert_eq!(
+            plain_message_tags(
+                "She waves.\n<thread>Find the sender</thread>\n\
+                 <character name=\"Rowan\" role=\"barista\">Tall.</character>\n\
+                 <next>Wave back</next><next>Leave</next>"
+            ),
+            "She waves.\n"
+        );
+        assert_eq!(
+            strip_app_tags("Go <thread done>Pay Kip</thread><next>Run</next>"),
+            "Go"
+        );
+        assert_eq!(strip_app_tags("my threadbare coat"), "my threadbare coat");
+    }
+
+    #[test]
+    fn the_last_scene_heading_says_where_and_when() {
+        assert_eq!(latest_scene("No heading."), None);
+        assert_eq!(
+            latest_scene(
+                "<scene place=\"Harbor\" time=\"Dawn\"/>Gulls.\n\
+                 <scene place=\"  The   pier \"/>Later."
+            ),
+            Some((Some("The pier".into()), None))
+        );
+        assert_eq!(
+            latest_scene("<scene place=\"\" time=\"Noon\"/>"),
+            Some((None, Some("Noon".into())))
+        );
+        assert_eq!(latest_scene("<scene place=\" \"/>"), None);
+    }
 
     #[test]
     fn memory_notes_are_left_out_of_plain_text() {

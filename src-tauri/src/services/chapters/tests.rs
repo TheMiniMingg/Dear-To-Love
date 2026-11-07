@@ -251,6 +251,64 @@ async fn a_live_storyteller_writes_the_recap_from_this_chapter_only() {
     assert!(prompt.contains("Chapter 2, Low Tide: Sam went to the ferry; Mara avoided them.\n"));
 }
 
+#[test]
+fn the_recap_can_end_with_a_title_for_the_next_chapter() {
+    assert_eq!(
+        split_next_title("Sam left.\nMara stayed.\n\nNext chapter: \"The Ferry at Dawn\""),
+        (
+            "Sam left.\nMara stayed.".into(),
+            Some("The Ferry at Dawn".into())
+        )
+    );
+    assert_eq!(
+        split_next_title("Sam left.\n**Next chapter:** Low Water"),
+        ("Sam left.".into(), Some("Low Water".into()))
+    );
+    assert_eq!(
+        split_next_title("Sam left.\nnext chapter: 「潮」"),
+        ("Sam left.".into(), Some("潮".into()))
+    );
+    // No title line, or an empty one: the recap stays whole.
+    assert_eq!(
+        split_next_title("Sam left.\nMara stayed."),
+        ("Sam left.\nMara stayed.".into(), None)
+    );
+    assert_eq!(
+        split_next_title("Sam left.\nNext chapter:"),
+        ("Sam left.".into(), None)
+    );
+}
+
+#[tokio::test]
+async fn a_live_storyteller_suggests_the_next_title_unless_the_outline_has_one() {
+    let env = Env::new().await;
+    env.act("Walk down to the ferry.").await;
+    env.reply("Mara is coiling rope.").await;
+    let reply = || {
+        Reply::sse_text(
+            &["Sam went to the ferry.\n\nNext chapter: The Crossing"],
+            Some(r#"{"prompt_tokens":300,"completion_tokens":12}"#),
+        )
+    };
+    let server = serve(vec![reply(), reply()]).await;
+    env.connect(&server).await;
+    // The outline names chapter 2: it is kept, and no title is asked for.
+    let draft = draft_recap(&env.env(), &env.route()).await.unwrap();
+    assert_eq!(draft.recap, "Sam went to the ferry.");
+    assert_eq!(draft.next_title, "Low Tide");
+    assert!(!server.requests()[0].body.contains("Next chapter: "));
+
+    // Without one, the storyteller's title is the one offered.
+    sqlx::query("DELETE FROM chapter_outlines")
+        .execute(env.db().writer())
+        .await
+        .unwrap();
+    let draft = draft_recap(&env.env(), &env.route()).await.unwrap();
+    assert_eq!(draft.recap, "Sam went to the ferry.");
+    assert_eq!(draft.next_title, "The Crossing");
+    assert!(server.requests()[1].body.contains("Next chapter: "));
+}
+
 #[tokio::test]
 async fn an_empty_recap_still_ends_the_chapter_and_a_moved_route_is_refused() {
     let env = Env::new().await;

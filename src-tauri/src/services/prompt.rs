@@ -36,7 +36,7 @@ use crate::domain::tracking::Tracking;
 use crate::errors::{AppError, AppResult, ErrorCode};
 use crate::services::tokens::{estimate_message, estimate_messages, estimate_text};
 
-pub const PROMPT_SCHEMA_VERSION: u32 = 8;
+pub const PROMPT_SCHEMA_VERSION: u32 = 9;
 /// Newest messages (excluding the latest action) placed before the summary
 /// competes for room.
 pub const MIN_RECENT_MESSAGES: usize = 4;
@@ -307,6 +307,40 @@ fn notes_contract(language: Option<&str>) -> String {
     );
     if let Some(language) = language.map(str::trim).filter(|l| !l.is_empty()) {
         out.push_str(&format!("- Write notes in {language}.\n"));
+    }
+    out
+}
+
+/// Open threads and new characters, when the storyteller keeps the notes.
+fn threads_contract(language: Option<&str>) -> String {
+    let mut out = String::from(
+        "\nOPEN THREADS\nThe app keeps a short log of open threads: promises, mysteries, goals \
+         and plans the story has not settled. When one begins, add it at the end of your reply: \
+         <thread>Find out who sent the letter</thread>. When it is settled, write it again with \
+         the same words: <thread done>Find out who sent the letter</thread>. Only threads that \
+         matter for what comes next: at most one or two in a reply, often none.\n\
+         \nNEW CHARACTERS\nWhen someone new with a name joins the story and is not among the \
+         CHARACTERS above, end that reply with a card for them, once: <character \
+         name=\"Rowan Ellis\" role=\"barista\" pronouns=\"he/him\" age=\"30s\">How they look \
+         and come across, in one or two sentences.</character> The player chooses whether to \
+         add them to the cast.\n",
+    );
+    if let Some(language) = language.map(str::trim).filter(|l| !l.is_empty()) {
+        out.push_str(&format!("Write threads and cards in {language}.\n"));
+    }
+    out
+}
+
+/// Ideas for the player's next move, unless the story turned them off.
+fn next_moves_contract(player_name: &str, language: Option<&str>) -> String {
+    let mut out = format!(
+        "\nNEXT MOVES\nEnd every reply with two or three short ideas for what {player_name} \
+         could do next, each in its own tag: <next>Ask Mina about the sketches</next>. Write \
+         them as {player_name}'s actions, under ten words each, different from each other and \
+         true to the moment. The app shows them as buttons; they are not part of the story.\n"
+    );
+    if let Some(language) = language.map(str::trim).filter(|l| !l.is_empty()) {
+        out.push_str(&format!("Write them in {language}.\n"));
     }
     out
 }
@@ -610,6 +644,13 @@ fn system_prompt_with(state: &EffectiveState, frame: &StoryFrame, notes: &NotesP
              Leave out whichever of the two stays the same, and use the story's own places. \
              No heading while the scene goes on.\n",
         );
+    } else {
+        out.push_str(
+            "\nWHERE AND WHEN\nWhen the story moves to a new place or a new time, mark it where \
+             that part starts: <scene place=\"Countryside\" time=\"7:11 PM\"/>. The app keeps \
+             track of it and does not show it. Leave out whichever of the two stays the same, and \
+             use the story's own places. No mark while the scene goes on.\n",
+        );
     }
     if s.narration.dice {
         out.push_str(&dice_rules(s.narration.dice_rules.as_ref(), player_name));
@@ -619,6 +660,13 @@ fn system_prompt_with(state: &EffectiveState, frame: &StoryFrame, notes: &NotesP
     }
     if !s.narration.manual_memory {
         out.push_str(&notes_contract(s.narration.language.as_deref()));
+        out.push_str(&threads_contract(s.narration.language.as_deref()));
+    }
+    if !s.narration.no_suggestions {
+        out.push_str(&next_moves_contract(
+            player_name,
+            s.narration.language.as_deref(),
+        ));
     }
 
     let n = &s.narration;
@@ -804,6 +852,9 @@ fn system_prompt_with(state: &EffectiveState, frame: &StoryFrame, notes: &NotesP
     }
     if !s.scene.location.trim().is_empty() {
         out.push_str(&format!("Location: {}\n", s.scene.location.trim()));
+    }
+    if !s.scene.time.trim().is_empty() {
+        out.push_str(&format!("Time: {}\n", s.scene.time.trim()));
     }
     if !s.scene.summary.trim().is_empty() {
         out.push_str(&format!("Situation: {}\n", s.scene.summary.trim()));

@@ -17,6 +17,7 @@ use crate::db::Database;
 use crate::domain::events::{EditPayload, EventBody, StateEdit};
 use crate::domain::notes::{self, MemoryNote, NoteKind, NoteTag};
 use crate::domain::provider::{Billing, StorytellerChoice};
+use crate::domain::threads;
 use crate::domain::visuals::VisualSlot;
 use crate::errors::{AppError, AppResult};
 use crate::services::mock_storyteller::MOCK_PROVIDER_LABEL;
@@ -282,12 +283,56 @@ pub async fn undo_reply_notes(
         });
         names.push(name.clone());
     }
+    // Threads it opened or settled go back to where they stood, unless they
+    // moved again since.
+    let thread_tags = threads::scan(&reply.text);
+    let (mut open, mut done) = (now.open_threads.clone(), now.done_threads.clone());
+    let mut seen: Vec<String> = Vec::new();
+    for tag in &thread_tags {
+        let text = tag.text();
+        if seen.contains(&threads::thread_key(text)) {
+            continue;
+        }
+        seen.push(threads::thread_key(text));
+        let was = threads::standing(&before.open_threads, &before.done_threads, text);
+        let wrote = threads::standing(&after.open_threads, &after.done_threads, text);
+        if was == wrote || threads::standing(&open, &done, text) != wrote {
+            continue;
+        }
+        // Named in the undo note with the words the log shows.
+        let (from_open, from_done) = (
+            threads::take(&mut open, text),
+            threads::take(&mut done, text),
+        );
+        let shown = from_open
+            .or(from_done)
+            .map_or_else(|| text.to_string(), |(_, words)| words);
+        let back = |list: &mut Vec<String>, from: &[String]| {
+            if let Some((i, words)) = threads::find(from, text) {
+                list.insert(i.min(list.len()), words.clone());
+            }
+        };
+        match was {
+            Some(false) => back(&mut open, &before.open_threads),
+            Some(true) => back(&mut done, &before.done_threads),
+            None => {}
+        }
+        names.push(shown);
+    }
+    if open != now.open_threads {
+        changes.push(StateEdit::SetOpenThreads { open_threads: open });
+    }
+    if done != now.done_threads {
+        changes.push(StateEdit::SetDoneThreads { done_threads: done });
+    }
     if changes.is_empty() {
-        return Err(AppError::invalid_input(if keys.is_empty() {
-            "this reply wrote no memory notes"
-        } else {
-            "these memory notes have changed since this reply; change them in Story memory"
-        }));
+        return Err(AppError::invalid_input(
+            if keys.is_empty() && thread_tags.is_empty() {
+                "this reply wrote no memory notes or threads"
+            } else {
+                "what this reply noted has changed since; change it in Story memory"
+            },
+        ));
     }
     edit_details(
         db,
