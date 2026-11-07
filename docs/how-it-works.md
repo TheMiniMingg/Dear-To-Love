@@ -276,7 +276,7 @@ or a text card when those are on.
   messages as tags and the reader shows them as a phone screen, a call, a letter or a post.
   For example `<text from="Erika K." time="7:11 PM">Is that really you?</text>` becomes a text
   bubble from Erika K. Any model that follows instructions can do this; the offline storyteller
-  answers your own texts and calls. **Characters can text or call you first** (on) lets them
+  answers your texts and calls in kind, and now and then texts you first. **Characters can text or call you first** (on) lets them
   start a conversation when they have a reason; off, only you do.
 - **Texts that read like texts**: with cards on, the storyteller is asked to write each
   character's texts the way that person would (short, casual, often several in a row, with
@@ -389,6 +389,39 @@ object alone, safe for work), kept for this story.
 Each route keeps its own numbers: going back, branching or asking for another reply gives
 the values from that point of the story. **Story details** changes them by hand, from now on
 on that route, like any other detail.
+
+## Playing offline
+
+The built-in **offline storyteller** needs no AI service and no internet, and costs nothing.
+It is for trying the app out and for a quick game when no model is at hand. Its replies are
+short and made from prepared lines, so they never know your world the way a model does, but
+they follow the story:
+
+- **The kind of story.** Fantasy, science fiction and cyberpunk, horror and mystery, romance
+  and slice of life, and adventure each have their own scenes: torchlight and runes, neon and
+  drones, creaking floorboards, coffee and late light, open country and distant thunder. It
+  goes by the genres first, then by the era.
+- **What you do.** Looking around turns up clues, moving on finds a new place, fighting,
+  casting a spell, resting, buying and searching each get their own outcome.
+- **The characters.** Someone in the scene answers when you talk to them, and reacts when you
+  do something, in a voice that fits their personality: cheerful, wry, shy, gruff or plain.
+- **Texts and calls.** Your texts get replies the way that character texts (several short
+  messages, lowercase or emoji when it suits them), and calls sound like calls, with pauses.
+  With cards on, someone texts you first now and then, unless **Characters can text or call
+  you first** is off. There are no phones in fantasy or adventure worlds.
+- **Your settings.** Each style (a script with stage directions in the third person, roleplay
+  chat, thoughts and dialogue, messages, a text adventure with the ways onward), the point of
+  view, detail, place headings, inner thoughts and how often twists come. It always writes in
+  English and in the present tense.
+- **Dice.** It asks for a roll when you try something risky, as often as **Dice settings**
+  say, with the story's own dice and odds, and never when only you ask for rolls. A critical
+  roll gets a spectacular success or a disaster.
+- **Health, items and more.** In a story that keeps track, a lost fight costs health, a won
+  one pays gold or experience, a spell costs mana, rest brings some back, buying costs money,
+  searching sometimes turns up an item that suits the world, using a potion heals, and
+  talking warms a character up.
+
+Every reply depends only on the story and your action, so asking again gives the same reply.
 
 ## Adult and explicit stories
 

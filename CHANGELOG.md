@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- **A richer offline storyteller.** Playing without an AI service now feels like the kind of
+  story you chose: fantasy, science fiction and cyberpunk, horror and mystery, romance and
+  slice of life, and adventure each have their own scenes, twists and things to find. The
+  characters answer and react in a voice that fits their personality, text back in short
+  bursts the way they would, sound like people on calls, and now and then text you first. It
+  follows the story's style (including a proper script with stage directions), point of view,
+  detail, headings, thoughts and twists, the dice settings, and keeps health, gold, mana,
+  items and affection changing as you play.
 - **Health, items and more, like an RPG.** **Keep track of health, items and more** (in the
   wizard's Narration step and Story details) gives a story bars such as Health 80/100,
   counters such as Gold 35, and an inventory. It starts with what suits the story (Health,
