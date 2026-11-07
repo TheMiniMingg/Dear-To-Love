@@ -157,7 +157,12 @@ checks in **Settings → Updates** to be told when a new release is out.
 
 ## Connect an AI
 
-Open **Settings → AI connections → Add connection**:
+The app has a **Setup guide** (in the library, in Settings and at the bottom of every screen)
+that walks you through this: which kind of service to choose, step-by-step instructions for
+each one with buttons that open its key and model pages, and **Set it up here**, which opens
+a new connection with the service filled in.
+
+Or open **Settings → AI connections → Add connection** yourself:
 
 | Choice                                                                                                                                              | What you need                                                            | Cost          |
 | --------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ | ------------- |

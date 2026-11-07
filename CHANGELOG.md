@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- **Setup guide.** A new **Setup guide** (in the library, Settings and the footer) explains,
+  step by step, how to play right away, which kind of AI service to choose, and how to
+  connect each one: the AI labs, hosted open models, programs on your computer (Ollama, LM
+  Studio, Jan, KoboldCpp, llama.cpp, text-generation-webui, vLLM) and the picture
+  connections. Each service has buttons for its key and model pages, which open in your
+  browser, and **Set it up here** opens a new connection with the service filled in. It also
+  covers testing, keeping costs in check, where keys are kept and the usual problems.
 - **Keyboard shortcuts.** Most things in a story now have a key: Ctrl+L for Save / Load,
   Ctrl+B to bookmark the latest reply, Ctrl+G for routes, Ctrl+I for story details,
   Ctrl+Shift+M for story memory, Ctrl+E to end the chapter, Ctrl+P for picture view, Ctrl+=

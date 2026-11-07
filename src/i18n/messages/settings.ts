@@ -504,4 +504,372 @@ export const settings: Messages = {
     'ライブラリの画像',
     '라이브러리의 이미지',
   ],
+  'Setup guide': ['设置指南', '設定指南', 'セットアップガイド', '설정 가이드'],
+  'Play right away': ['马上开始玩', '馬上開始玩', 'すぐに遊ぶ', '바로 플레이하기'],
+  'Choose where replies come from': [
+    '选择回复的来源',
+    '選擇回覆的來源',
+    '返答をどこで作るか選ぶ',
+    '답변을 만들 곳 고르기',
+  ],
+  'Connect a service': ['连接一个服务', '連線一個服務', 'サービスに接続する', '서비스 연결하기'],
+  'Test it and start playing': [
+    '测试并开始玩',
+    '測試並開始玩',
+    'テストして遊び始める',
+    '테스트하고 플레이 시작하기',
+  ],
+  'Character portraits (optional)': [
+    '角色肖像（可选）',
+    '角色肖像（可選）',
+    'キャラクターの肖像（任意）',
+    '캐릭터 초상화(선택)',
+  ],
+  'Keep costs in check': ['控制费用', '控制費用', '費用を抑える', '비용 관리하기'],
+  'Your keys stay on this computer': [
+    '你的密钥只保存在这台电脑上',
+    '你的金鑰只儲存在這台電腦上',
+    'キーはこのコンピューターだけに保存されます',
+    '키는 이 컴퓨터에만 보관됩니다',
+  ],
+  'If something goes wrong': ['遇到问题时', '遇到問題時', 'うまくいかないとき', '문제가 생겼을 때'],
+  'free, on this computer': [
+    '免费，在这台电脑上运行',
+    '免費，在這台電腦上執行',
+    '無料、このコンピューターで動作',
+    '무료, 이 컴퓨터에서 실행',
+  ],
+  'API key, paid per picture': [
+    '需要 API 密钥，按张付费',
+    '需要 API 金鑰，按張付費',
+    'API キーが必要、画像ごとに有料',
+    'API 키 필요, 이미지당 유료',
+  ],
+  'API key, paid per use': [
+    '需要 API 密钥，按用量付费',
+    '需要 API 金鑰，按用量付費',
+    'API キーが必要、使った分だけ有料',
+    'API 키 필요, 사용량만큼 유료',
+  ],
+  'Set it up here': ['在这里设置', '在這裡設定', 'ここで設定', '여기서 설정'],
+  'You can play right away: the built-in offline storyteller needs nothing. To have an AI model write your stories, connect one of the services below. It takes a few minutes, and you can switch any time.':
+    [
+      '你现在就能开始玩：内置的离线讲述者无需任何设置。想让 AI 模型来写你的故事，就连接下面的某个服务。只需几分钟，之后随时可以更换。',
+      '你現在就能開始玩：內建的離線講述者無需任何設定。想讓 AI 模型來寫你的故事，就連線下面的某個服務。只需幾分鐘，之後隨時可以更換。',
+      'すぐに遊べます。内蔵のオフラインの語り手は何も準備がいりません。AI モデルにストーリーを書いてもらうには、下のサービスのどれかに接続してください。数分で済み、いつでも切り替えられます。',
+      '지금 바로 플레이할 수 있습니다. 내장된 오프라인 이야기꾼은 아무 준비가 필요 없습니다. AI 모델이 스토리를 쓰게 하려면 아래 서비스 중 하나를 연결하세요. 몇 분이면 되고 언제든 바꿀 수 있습니다.',
+    ],
+  'On this page': ['本页内容', '本頁內容', 'このページの内容', '이 페이지의 내용'],
+  'In the library, choose {newStory}, pick a story and choose {start}.': [
+    '在书库中选择{newStory}，挑一个故事，然后选择{start}。',
+    '在書庫中選擇{newStory}，挑一個故事，然後選擇{start}。',
+    'ライブラリで{newStory}を選び、ストーリーを選んで{start}を押します。',
+    '라이브러리에서 {newStory}를 선택하고 스토리를 고른 뒤 {start}을 누르세요.',
+  ],
+  'The offline storyteller writes the replies: simple ones, free and without internet. You can switch to an AI model later, even in the middle of a story.':
+    [
+      '回复由离线讲述者撰写：内容简单、免费，且不需要网络。之后可以随时换成 AI 模型，即使故事进行到一半也可以。',
+      '回覆由離線講述者撰寫：內容簡單、免費，且不需要網路。之後可以隨時換成 AI 模型，即使故事進行到一半也可以。',
+      '返答はオフラインの語り手が書きます。シンプルで、無料で、インターネットもいりません。あとから AI モデルに切り替えられ、ストーリーの途中でもかまいません。',
+      '답변은 오프라인 이야기꾼이 씁니다. 간단하고, 무료이며, 인터넷이 필요 없습니다. 나중에 AI 모델로 바꿀 수 있고, 스토리 중간에도 됩니다.',
+    ],
+  'Nothing leaves your computer and nothing costs money. Small models run on most recent computers and write simpler stories; bigger ones write better but need a strong graphics card or a lot of memory.':
+    [
+      '所有内容都不会离开你的电脑，也不花钱。小模型能在大多数较新的电脑上运行，写出的故事较简单；大模型写得更好，但需要强劲的显卡或大量内存。',
+      '所有內容都不會離開你的電腦，也不花錢。小模型能在大多數較新的電腦上執行，寫出的故事較簡單；大模型寫得更好，但需要強勁的顯示卡或大量記憶體。',
+      'データはコンピューターの外に出ず、費用もかかりません。小さなモデルは最近のコンピューターならたいてい動き、シンプルなストーリーを書きます。大きなモデルほど上手に書きますが、高性能なグラフィックカードか大量のメモリが必要です。',
+      '아무것도 컴퓨터 밖으로 나가지 않고 비용도 들지 않습니다. 작은 모델은 대부분의 최신 컴퓨터에서 실행되며 간단한 스토리를 씁니다. 큰 모델은 더 잘 쓰지만 강력한 그래픽 카드나 많은 메모리가 필요합니다.',
+    ],
+  'The strongest writers. You pay the company for each reply, usually a fraction of a cent to a few cents. Each company has its own rules on what stories it will write.':
+    [
+      '写作能力最强。每条回复都要向公司付费，通常不到一美分到几美分。每家公司对愿意写哪些故事都有自己的规则。',
+      '寫作能力最強。每則回覆都要向公司付費，通常不到一美分到幾美分。每家公司對願意寫哪些故事都有自己的規則。',
+      '最も文章が上手です。返答ごとに会社へ料金を払い、たいてい 1 セント未満から数セントです。どんなストーリーを書くかは会社ごとに独自のルールがあります。',
+      '가장 글을 잘 씁니다. 답변마다 회사에 비용을 내며, 보통 1센트 미만에서 몇 센트입니다. 어떤 스토리를 쓸지는 회사마다 자체 규칙이 있습니다.',
+    ],
+  'Open models run for you by a service: often cheaper than the labs, with many models to choose from. Rules on content differ from model to model and service to service.':
+    [
+      '由服务商替你运行的开放模型：通常比 AI 实验室便宜，可选的模型也很多。内容规则因模型和服务而异。',
+      '由服務商替你執行的開放模型：通常比 AI 實驗室便宜，可選的模型也很多。內容規則因模型和服務而異。',
+      'サービスが代わりに動かしてくれるオープンモデルです。AI ラボより安いことが多く、選べるモデルもたくさんあります。内容のルールはモデルやサービスによって異なります。',
+      '서비스가 대신 실행해 주는 오픈 모델입니다. AI 연구소보다 저렴한 경우가 많고, 고를 수 있는 모델도 많습니다. 콘텐츠 규칙은 모델과 서비스마다 다릅니다.',
+    ],
+  'Pick one and open it for its steps. Links open in your browser; Set it up here opens a new connection with the service filled in.':
+    [
+      '选一个并展开查看步骤。链接会在浏览器中打开；“在这里设置”会打开一个已填好该服务的新连接。',
+      '選一個並展開查看步驟。連結會在瀏覽器中開啟；「在這裡設定」會開啟一個已填好該服務的新連線。',
+      'どれかを選んで開くと手順が表示されます。リンクはブラウザーで開きます。「ここで設定」を押すと、そのサービスが入力済みの新しい接続が開きます。',
+      '하나를 골라 펼치면 단계가 나옵니다. 링크는 브라우저에서 열립니다. ‘여기서 설정’을 누르면 그 서비스가 입력된 새 연결이 열립니다.',
+    ],
+  'Something else? Any service or program with an OpenAI-compatible API works: choose Add connection in Settings, then Other, and type its address.':
+    [
+      '其他服务？任何提供 OpenAI 兼容 API 的服务或程序都可以：在设置中选择“添加连接”，再选“其他”，然后输入它的地址。',
+      '其他服務？任何提供 OpenAI 相容 API 的服務或程式都可以：在設定中選擇「加入連線」，再選「其他」，然後輸入它的位址。',
+      'ほかのサービス？ OpenAI 互換 API を持つサービスやプログラムなら使えます。設定で「接続を追加」を選び、「その他」を選んでアドレスを入力してください。',
+      '다른 서비스인가요? OpenAI 호환 API가 있는 서비스나 프로그램이면 됩니다. 설정에서 ‘연결 추가’를 누르고 ‘기타’를 고른 뒤 주소를 입력하세요.',
+    ],
+  'In Settings, under AI connections, {test} checks the address and key for free. {send} asks the model for one short reply.':
+    [
+      '在设置的“AI 连接”下，{test}会免费检查地址和密钥。{send}会请模型写一条简短的回复。',
+      '在設定的「AI 連線」下，{test}會免費檢查位址和金鑰。{send}會請模型寫一則簡短的回覆。',
+      '設定の「AI 接続」で、{test}を押すとアドレスとキーを無料で確認します。{send}はモデルに短い返答を 1 つ書いてもらいます。',
+      '설정의 ‘AI 연결’에서 {test}는 주소와 키를 무료로 확인합니다. {send}는 모델에게 짧은 답변을 하나 요청합니다.',
+    ],
+  "Your first connection becomes the storyteller for every story. Settings → Storyteller changes it, and a story can have its own: click the storyteller's name above the story.":
+    [
+      '你的第一个连接会成为所有故事的讲述者。可以在“设置 → 讲述者”中更改；单个故事也可以有自己的讲述者：点击故事上方讲述者的名字即可。',
+      '你的第一個連線會成為所有故事的講述者。可以在「設定 → 講述者」中更改；單個故事也可以有自己的講述者：點選故事上方講述者的名字即可。',
+      '最初の接続がすべてのストーリーの語り手になります。「設定 → 語り手」で変更でき、ストーリーごとに別の語り手にもできます（ストーリーの上にある語り手の名前をクリック）。',
+      '첫 번째 연결이 모든 스토리의 이야기꾼이 됩니다. ‘설정 → 이야기꾼’에서 바꿀 수 있고, 스토리마다 따로 정할 수도 있습니다. 스토리 위의 이야기꾼 이름을 클릭하세요.',
+    ],
+  'Programs on this computer often load a model with a short memory (4096 tokens). If replies forget the start of the story, raise the context size in the program and the context limit of the connection.':
+    [
+      '在这台电脑上运行的程序常以较短的记忆（4096 个 token）加载模型。如果回复忘了故事的开头，请在程序中调大上下文长度，并调高该连接的上下文上限。',
+      '在這台電腦上執行的程式常以較短的記憶（4096 個 token）載入模型。如果回覆忘了故事的開頭，請在程式中調大上下文長度，並調高該連線的上下文上限。',
+      'このコンピューターで動くプログラムは、短い記憶（4096 トークン）でモデルを読み込むことがよくあります。返答がストーリーの始まりを忘れるようなら、プログラムのコンテキストサイズと、接続のコンテキスト上限を上げてください。',
+      '이 컴퓨터에서 실행되는 프로그램은 짧은 기억(4096토큰)으로 모델을 불러오는 경우가 많습니다. 답변이 스토리의 시작을 잊는다면 프로그램의 컨텍스트 크기와 연결의 컨텍스트 한도를 높이세요.',
+    ],
+  'Open Settings': ['打开设置', '開啟設定', '設定を開く', '설정 열기'],
+  "A picture connection draws a character's portrait from their description. Portraits are always asked for as safe-for-work pictures, and you can use your own pictures instead.":
+    [
+      '图片连接会根据角色的描述画出肖像。肖像始终以适合工作场合（SFW）的图片来请求，你也可以改用自己的图片。',
+      '圖片連線會根據角色的描述畫出肖像。肖像一律以適合工作場合（SFW）的圖片來請求，你也可以改用自己的圖片。',
+      '画像の接続は、キャラクターの説明から肖像を描きます。肖像は常に職場でも安全な（SFW）画像として依頼され、自分の画像を使うこともできます。',
+      '이미지 연결은 캐릭터 설명으로 초상화를 그립니다. 초상화는 항상 업무 환경에도 안전한(SFW) 이미지로 요청되며, 직접 가진 이미지를 써도 됩니다.',
+    ],
+  'Your first picture connection is put to use; Settings → Pictures chooses another, or none.': [
+    '你的第一个图片连接会被自动使用；可以在“设置 → 图片”中改选其他连接，或不使用。',
+    '你的第一個圖片連線會被自動使用；可以在「設定 → 圖片」中改選其他連線，或不使用。',
+    '最初の画像の接続が使われます。「設定 → 画像」でほかの接続を選ぶことも、使わないこともできます。',
+    '첫 번째 이미지 연결이 사용됩니다. ‘설정 → 이미지’에서 다른 연결을 고르거나 사용하지 않을 수 있습니다.',
+  ],
+  '{usage} estimates what each paid connection has cost, and can warn you or pause paid replies at a monthly limit you choose.':
+    [
+      '{usage}会估算每个付费连接的花费，并可在达到你设定的每月上限时提醒你或暂停付费回复。',
+      '{usage}會估算每個付費連線的花費，並可在達到你設定的每月上限時提醒你或暫停付費回覆。',
+      '{usage}では、有料の接続ごとにかかった費用を見積もり、決めた月の上限で警告したり有料の返答を止めたりできます。',
+      '{usage}에서는 유료 연결마다 든 비용을 추정하고, 정한 월 한도에 이르면 알려 주거나 유료 답변을 멈출 수 있습니다.',
+    ],
+  "Set a spending limit on the service's own site too: the app can't see your balance.": [
+    '也请在服务自己的网站上设置消费上限：本应用看不到你的余额。',
+    '也請在服務自己的網站上設定消費上限：本應用程式看不到你的餘額。',
+    'サービスのサイトでも利用上限を設定してください。このアプリには残高が見えません。',
+    '서비스 사이트에서도 지출 한도를 정해 두세요. 이 앱은 잔액을 볼 수 없습니다.',
+  ],
+  "API keys are kept in your computer's own password store (Credential Manager on Windows, Keychain on a Mac, the Secret Service on Linux) and are only sent to the service they belong to. They are never put in stories, storypacks, backups, exports or diagnostics reports.":
+    [
+      'API 密钥保存在你电脑自带的密码存储中（Windows 的凭据管理器、Mac 的钥匙串、Linux 的 Secret Service），只会发送给它所属的服务。它们绝不会出现在故事、故事包、备份、导出文件或诊断报告中。',
+      'API 金鑰儲存在你電腦內建的密碼儲存中（Windows 的認證管理員、Mac 的鑰匙圈、Linux 的 Secret Service），只會傳送給它所屬的服務。它們絕不會出現在故事、故事包、備份、匯出檔或診斷報告中。',
+      'API キーはコンピューター自身のパスワード保管場所（Windows の資格情報マネージャー、Mac のキーチェーン、Linux の Secret Service）に保存され、そのキーのサービスにだけ送られます。ストーリー、ストーリーパック、バックアップ、書き出したファイル、診断レポートに入ることはありません。',
+      'API 키는 컴퓨터 자체의 비밀번호 저장소(Windows 자격 증명 관리자, Mac 키체인, Linux Secret Service)에 보관되며 해당 서비스에만 전송됩니다. 스토리, 스토리팩, 백업, 내보낸 파일, 진단 보고서에는 절대 들어가지 않습니다.',
+    ],
+  'The key is wrong or was revoked. Edit the connection and paste a new one.': [
+    '密钥有误或已被撤销。请编辑该连接并粘贴新的密钥。',
+    '金鑰有誤或已被撤銷。請編輯該連線並貼上新的金鑰。',
+    'キーが間違っているか、無効にされています。接続を編集して新しいキーを貼り付けてください。',
+    '키가 잘못되었거나 취소되었습니다. 연결을 편집해 새 키를 붙여 넣으세요.',
+  ],
+  "Wait a minute and retry, or add credit on the service's site. New accounts often have low limits.":
+    [
+      '等一分钟后重试，或到服务的网站上充值。新账户的限额通常较低。',
+      '等一分鐘後重試，或到服務的網站上儲值。新帳戶的限額通常較低。',
+      '1 分ほど待ってからやり直すか、サービスのサイトでクレジットを追加してください。新しいアカウントは上限が低いことがよくあります。',
+      '1분 정도 기다렸다가 다시 시도하거나 서비스 사이트에서 크레딧을 충전하세요. 새 계정은 한도가 낮은 경우가 많습니다.',
+    ],
+  'For a program on this computer, check that it is running and its server is on. Otherwise check your internet connection and the address.':
+    [
+      '如果是在这台电脑上运行的程序，请确认它正在运行且服务器已开启。否则请检查网络连接和地址。',
+      '如果是在這台電腦上執行的程式，請確認它正在執行且伺服器已開啟。否則請檢查網路連線和位址。',
+      'このコンピューターで動くプログラムなら、起動していてサーバーがオンになっているか確認してください。そうでなければ、インターネット接続とアドレスを確認してください。',
+      '이 컴퓨터에서 실행되는 프로그램이라면 실행 중이고 서버가 켜져 있는지 확인하세요. 그렇지 않다면 인터넷 연결과 주소를 확인하세요.',
+    ],
+  "Often the model name: type it exactly as the service's model list shows it. The message under the reply says more.":
+    [
+      '常见原因是模型名称：请完全按照服务的模型列表输入。回复下方的消息会说明更多。',
+      '常見原因是模型名稱：請完全依照服務的模型列表輸入。回覆下方的訊息會說明更多。',
+      'よくある原因はモデル名です。サービスのモデル一覧のとおりに正確に入力してください。詳しくは返答の下のメッセージに出ます。',
+      '모델 이름이 원인인 경우가 많습니다. 서비스의 모델 목록에 나온 그대로 입력하세요. 자세한 내용은 답변 아래 메시지에 나옵니다.',
+    ],
+  '{diagnostics} checks the app and your connections, and can make a report to share that leaves out keys and story text.':
+    [
+      '{diagnostics}会检查应用和你的连接，并可生成一份便于分享的报告，其中不含密钥和故事文本。',
+      '{diagnostics}會檢查應用程式和你的連線，並可產生一份便於分享的報告，其中不含金鑰和故事文字。',
+      '{diagnostics}はアプリと接続を確認し、キーやストーリーの文章を含まない共有用のレポートを作れます。',
+      '{diagnostics}은 앱과 연결을 확인하고, 키와 스토리 내용을 뺀 공유용 보고서를 만들 수 있습니다.',
+    ],
+  'Get a key': ['获取密钥', '取得金鑰', 'キーを取得', '키 받기'],
+  'Model list': ['模型列表', '模型列表', 'モデル一覧', '모델 목록'],
+  Download: ['下载', '下載', 'ダウンロード', '다운로드'],
+  Instructions: ['说明', '說明', '手順', '안내'],
+  'Make an account at {site} and set up billing (credit you buy ahead, or a card).': [
+    '在 {site} 注册账户并设置付款方式（预先购买额度，或绑定银行卡）。',
+    '在 {site} 註冊帳戶並設定付款方式（預先購買額度，或綁定信用卡）。',
+    '{site} でアカウントを作り、支払い方法を設定します（前払いのクレジットかカード）。',
+    '{site}에서 계정을 만들고 결제 방법을 설정하세요(미리 사 두는 크레딧 또는 카드).',
+  ],
+  'Make an API key and copy it. Most sites show a key only once, so keep this page open.': [
+    '创建一个 API 密钥并复制。大多数网站只显示一次密钥，所以请先别关闭该页面。',
+    '建立一個 API 金鑰並複製。大多數網站只顯示一次金鑰，所以請先別關閉該頁面。',
+    'API キーを作ってコピーします。キーは一度しか表示されないサイトが多いので、そのページは開いたままにしてください。',
+    'API 키를 만들어 복사하세요. 키를 한 번만 보여 주는 사이트가 많으니 그 페이지는 열어 두세요.',
+  ],
+  'Choose Set it up here, paste the key, and type a model name from the service’s model list.': [
+    '选择“在这里设置”，粘贴密钥，然后从服务的模型列表中输入一个模型名称。',
+    '選擇「在這裡設定」，貼上金鑰，然後從服務的模型列表中輸入一個模型名稱。',
+    '「ここで設定」を押してキーを貼り付け、サービスのモデル一覧にあるモデル名を入力します。',
+    '‘여기서 설정’을 누르고 키를 붙여 넣은 뒤, 서비스 모델 목록에 있는 모델 이름을 입력하세요.',
+  ],
+  'The model field suggests a Claude model; you can type another.': [
+    '模型栏会建议一个 Claude 模型；你也可以输入其他模型。',
+    '模型欄會建議一個 Claude 模型；你也可以輸入其他模型。',
+    'モデル欄には Claude のモデルが提案されます。ほかのモデルを入力してもかまいません。',
+    '모델 칸에 Claude 모델이 제안됩니다. 다른 모델을 입력해도 됩니다.',
+  ],
+  'Sign in with a Google account, then choose Get API key in Google AI Studio.': [
+    '用 Google 账户登录，然后在 Google AI Studio 中选择 Get API key。',
+    '用 Google 帳戶登入，然後在 Google AI Studio 中選擇 Get API key。',
+    'Google アカウントでログインし、Google AI Studio で「Get API key」を選びます。',
+    'Google 계정으로 로그인한 뒤 Google AI Studio에서 Get API key를 고르세요.',
+  ],
+  'One key reaches hundreds of models from many companies. Each model page shows its price and the name to type.':
+    [
+      '一个密钥就能使用多家公司的数百个模型。每个模型的页面都会显示价格和要输入的名称。',
+      '一個金鑰就能使用多家公司的數百個模型。每個模型的頁面都會顯示價格和要輸入的名稱。',
+      '1 つのキーで多くの会社の数百のモデルが使えます。各モデルのページに価格と入力する名前が載っています。',
+      '키 하나로 여러 회사의 수백 개 모델을 쓸 수 있습니다. 모델마다 페이지에 가격과 입력할 이름이 나옵니다.',
+    ],
+  'The key is an access token: make a fine-grained one that may make calls to Inference Providers.':
+    [
+      '密钥就是访问令牌：请创建一个细粒度令牌，并允许它调用 Inference Providers。',
+      '金鑰就是存取權杖：請建立一個細粒度權杖，並允許它呼叫 Inference Providers。',
+      'キーはアクセストークンです。Inference Providers を呼び出せる fine-grained トークンを作ってください。',
+      '키는 액세스 토큰입니다. Inference Providers를 호출할 수 있는 fine-grained 토큰을 만드세요.',
+    ],
+  'Choose Set it up here. The address is filled in; type the model’s name as the program shows it.':
+    [
+      '选择“在这里设置”。地址已填好；按程序中显示的名称输入模型名。',
+      '選擇「在這裡設定」。位址已填好；依程式中顯示的名稱輸入模型名。',
+      '「ここで設定」を押します。アドレスは入力済みです。モデル名はプログラムに表示されているとおりに入力します。',
+      '‘여기서 설정’을 누르세요. 주소는 입력되어 있습니다. 모델 이름은 프로그램에 나온 그대로 입력하세요.',
+    ],
+  'Choose Set it up here. The address is filled in, and any model name works.': [
+    '选择“在这里设置”。地址已填好，模型名称随便填都可以。',
+    '選擇「在這裡設定」。位址已填好，模型名稱隨便填都可以。',
+    '「ここで設定」を押します。アドレスは入力済みで、モデル名は何でもかまいません。',
+    '‘여기서 설정’을 누르세요. 주소는 입력되어 있고, 모델 이름은 무엇이든 됩니다.',
+  ],
+  'Download and install Ollama. It runs in the background.': [
+    '下载并安装 Ollama。它会在后台运行。',
+    '下載並安裝 Ollama。它會在背景執行。',
+    'Ollama をダウンロードしてインストールします。バックグラウンドで動きます。',
+    'Ollama를 내려받아 설치하세요. 백그라운드에서 실행됩니다.',
+  ],
+  'Open a terminal and download a model with this command (or pick one from its list):': [
+    '打开终端，用下面的命令下载一个模型（或从它的列表中挑一个）：',
+    '開啟終端機，用下面的指令下載一個模型（或從它的列表中挑一個）：',
+    'ターミナルを開き、次のコマンドでモデルをダウンロードします（一覧から別のモデルを選んでもかまいません）：',
+    '터미널을 열고 다음 명령으로 모델을 내려받으세요(목록에서 다른 모델을 골라도 됩니다):',
+  ],
+  'Install LM Studio and download a model in it.': [
+    '安装 LM Studio，并在其中下载一个模型。',
+    '安裝 LM Studio，並在其中下載一個模型。',
+    'LM Studio をインストールし、その中でモデルをダウンロードします。',
+    'LM Studio를 설치하고 그 안에서 모델을 내려받으세요.',
+  ],
+  'In the Developer tab, load the model and switch on the server.': [
+    '在 Developer 标签页中加载模型，并打开服务器。',
+    '在 Developer 分頁中載入模型，並開啟伺服器。',
+    '「Developer」タブでモデルを読み込み、サーバーをオンにします。',
+    'Developer 탭에서 모델을 불러오고 서버를 켜세요.',
+  ],
+  'Install Jan and download a model in it.': [
+    '安装 Jan，并在其中下载一个模型。',
+    '安裝 Jan，並在其中下載一個模型。',
+    'Jan をインストールし、その中でモデルをダウンロードします。',
+    'Jan을 설치하고 그 안에서 모델을 내려받으세요.',
+  ],
+  'In Jan’s Settings, open Local API Server, choose the model and start the server. If you give it an API key, paste the same key here.':
+    [
+      '在 Jan 的设置中打开 Local API Server，选择模型并启动服务器。如果你为它设了 API 密钥，请在这里粘贴同一个密钥。',
+      '在 Jan 的設定中開啟 Local API Server，選擇模型並啟動伺服器。如果你為它設了 API 金鑰，請在這裡貼上同一個金鑰。',
+      'Jan の設定で「Local API Server」を開き、モデルを選んでサーバーを起動します。API キーを設定した場合は、同じキーをここに貼り付けてください。',
+      'Jan의 설정에서 Local API Server를 열고 모델을 골라 서버를 시작하세요. API 키를 정했다면 같은 키를 여기에 붙여 넣으세요.',
+    ],
+  'Download KoboldCpp and a model file (GGUF), and start it with the model.': [
+    '下载 KoboldCpp 和一个模型文件（GGUF），然后用该模型启动它。',
+    '下載 KoboldCpp 和一個模型檔（GGUF），然後用該模型啟動它。',
+    'KoboldCpp とモデルファイル（GGUF）をダウンロードし、そのモデルで起動します。',
+    'KoboldCpp와 모델 파일(GGUF)을 내려받아 그 모델로 실행하세요.',
+  ],
+  'Get llama.cpp and a model file (GGUF), and start its server:': [
+    '获取 llama.cpp 和一个模型文件（GGUF），然后启动它的服务器：',
+    '取得 llama.cpp 和一個模型檔（GGUF），然後啟動它的伺服器：',
+    'llama.cpp とモデルファイル（GGUF）を用意し、サーバーを起動します：',
+    'llama.cpp와 모델 파일(GGUF)을 준비하고 서버를 시작하세요:',
+  ],
+  'Install text-generation-webui, start it with --api and load a model.': [
+    '安装 text-generation-webui，用 --api 启动并加载一个模型。',
+    '安裝 text-generation-webui，用 --api 啟動並載入一個模型。',
+    'text-generation-webui をインストールし、--api を付けて起動してモデルを読み込みます。',
+    'text-generation-webui를 설치하고 --api로 실행한 뒤 모델을 불러오세요.',
+  ],
+  'vLLM needs a strong graphics card. Start it with the model you want:': [
+    'vLLM 需要强劲的显卡。用你想要的模型启动它：',
+    'vLLM 需要強勁的顯示卡。用你想要的模型啟動它：',
+    'vLLM には高性能なグラフィックカードが必要です。使いたいモデルで起動します：',
+    'vLLM에는 강력한 그래픽 카드가 필요합니다. 원하는 모델로 실행하세요:',
+  ],
+  'Choose Set it up here and type the same model name.': [
+    '选择“在这里设置”，然后输入相同的模型名称。',
+    '選擇「在這裡設定」，然後輸入相同的模型名稱。',
+    '「ここで設定」を押し、同じモデル名を入力します。',
+    '‘여기서 설정’을 누르고 같은 모델 이름을 입력하세요.',
+  ],
+  'Uses an OpenAI key (the same one works). OpenAI charges for each picture, and may ask you to verify your organization before its newest picture models work.':
+    [
+      '使用 OpenAI 密钥（同一个密钥即可）。OpenAI 按张收费，并且可能要求你先验证组织，才能使用它最新的图片模型。',
+      '使用 OpenAI 金鑰（同一個金鑰即可）。OpenAI 按張收費，並且可能要求你先驗證組織，才能使用它最新的圖片模型。',
+      'OpenAI のキーを使います（同じキーでかまいません）。OpenAI は画像ごとに料金がかかり、最新の画像モデルを使う前に組織の確認を求められることがあります。',
+      'OpenAI 키를 씁니다(같은 키로 됩니다). OpenAI는 이미지마다 요금을 받으며, 최신 이미지 모델을 쓰기 전에 조직 인증을 요구할 수 있습니다.',
+    ],
+  'Install Stable Diffusion WebUI (or its Forge version) and a model for it.': [
+    '安装 Stable Diffusion WebUI（或其 Forge 版本）以及一个模型。',
+    '安裝 Stable Diffusion WebUI（或其 Forge 版本）以及一個模型。',
+    'Stable Diffusion WebUI（または Forge 版）と、そのためのモデルをインストールします。',
+    'Stable Diffusion WebUI(또는 Forge 버전)와 모델을 설치하세요.',
+  ],
+  'Start it with --api: add it to COMMANDLINE_ARGS in webui-user.bat (Windows) or webui-user.sh (Mac and Linux).':
+    [
+      '用 --api 启动：把它加到 webui-user.bat（Windows）或 webui-user.sh（Mac 和 Linux）的 COMMANDLINE_ARGS 中。',
+      '用 --api 啟動：把它加到 webui-user.bat（Windows）或 webui-user.sh（Mac 和 Linux）的 COMMANDLINE_ARGS 中。',
+      '--api を付けて起動します。webui-user.bat（Windows）か webui-user.sh（Mac と Linux）の COMMANDLINE_ARGS に追加してください。',
+      '--api로 실행하세요. webui-user.bat(Windows) 또는 webui-user.sh(Mac, Linux)의 COMMANDLINE_ARGS에 추가하면 됩니다.',
+    ],
+  'Choose Set it up here. The model “default” uses whichever one the WebUI has loaded.': [
+    '选择“在这里设置”。模型“default”会使用 WebUI 当前加载的模型。',
+    '選擇「在這裡設定」。模型「default」會使用 WebUI 目前載入的模型。',
+    '「ここで設定」を押します。モデル「default」は WebUI が読み込んでいるモデルを使います。',
+    '‘여기서 설정’을 누르세요. 모델 ‘default’는 WebUI가 불러온 모델을 씁니다.',
+  ],
+  'Forge version': ['Forge 版本', 'Forge 版本', 'Forge 版', 'Forge 버전'],
+  'The setup guide shows how to connect an AI model, with links to get a key from each service or to run one on this computer.':
+    [
+      '设置指南会说明如何连接 AI 模型，并附有从各服务获取密钥、或在这台电脑上运行模型的链接。',
+      '設定指南會說明如何連線 AI 模型，並附有從各服務取得金鑰、或在這台電腦上執行模型的連結。',
+      'セットアップガイドでは、AI モデルの接続方法を、各サービスでキーを取得するリンクや、このコンピューターでモデルを動かすリンクとともに説明しています。',
+      '설정 가이드에서 AI 모델을 연결하는 방법을, 서비스별 키 받기 링크와 이 컴퓨터에서 모델을 실행하는 링크와 함께 안내합니다.',
+    ],
+  'Open the setup guide': [
+    '打开设置指南',
+    '開啟設定指南',
+    'セットアップガイドを開く',
+    '설정 가이드 열기',
+  ],
+  'Not sure which to choose, or where to get a key? {guide} walks you through it.': [
+    '不确定该选哪个，或去哪里获取密钥？{guide}会一步步带你完成。',
+    '不確定該選哪個，或去哪裡取得金鑰？{guide}會一步步帶你完成。',
+    'どれを選ぶか、キーをどこで取得するか迷ったら、{guide}で順を追って説明しています。',
+    '무엇을 고를지, 키를 어디서 받을지 모르겠다면 {guide}에서 차근차근 안내합니다.',
+  ],
+  'The setup guide': ['设置指南', '設定指南', 'セットアップガイド', '설정 가이드'],
 };

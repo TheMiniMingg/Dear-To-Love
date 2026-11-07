@@ -37,26 +37,34 @@ export function ShortcutsDialog() {
   if (!open) return null;
   return (
     <Dialog title={t('Keyboard shortcuts')} onClose={() => setOpen(false)} wide>
+      {/* The long story list in one column; the short ones share the other. */}
       <div className="shortcut-groups">
-        {SHORTCUT_GROUPS.map((g, i) => (
-          <section key={g.title} aria-labelledby={`${id}-${i}`}>
-            <h3 id={`${id}-${i}`}>{t(g.title)}</h3>
-            <dl className="shortcut-list">
-              {g.items.map((s) => (
-                <Fragment key={s.id}>
-                  <dt>{t(s.label)}</dt>
-                  <dd>
-                    {s.keys.map((k, n) => (
-                      <Fragment key={k}>
-                        {n > 0 && <span className="muted"> / </span>}
-                        <kbd>{keyLabel(k)}</kbd>
+        {[SHORTCUT_GROUPS.slice(0, 1), SHORTCUT_GROUPS.slice(1)].map((column, c) => (
+          <div key={c}>
+            {column.map((g) => {
+              const i = SHORTCUT_GROUPS.indexOf(g);
+              return (
+                <section key={g.title} aria-labelledby={`${id}-${i}`}>
+                  <h3 id={`${id}-${i}`}>{t(g.title)}</h3>
+                  <dl className="shortcut-list">
+                    {g.items.map((s) => (
+                      <Fragment key={s.id}>
+                        <dt>{t(s.label)}</dt>
+                        <dd>
+                          {s.keys.map((k, n) => (
+                            <Fragment key={k}>
+                              {n > 0 && <span className="muted"> / </span>}
+                              <kbd>{keyLabel(k)}</kbd>
+                            </Fragment>
+                          ))}
+                        </dd>
                       </Fragment>
                     ))}
-                  </dd>
-                </Fragment>
-              ))}
-            </dl>
-          </section>
+                  </dl>
+                </section>
+              );
+            })}
+          </div>
         ))}
       </div>
       <p className="muted small">

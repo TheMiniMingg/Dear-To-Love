@@ -2272,8 +2272,8 @@ details summary {
 /* ---------- keyboard shortcuts window ---------- */
 .shortcut-groups {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
-  gap: 0.5rem 1.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+  gap: 0.5rem 2rem;
 }
 .shortcut-groups h3 {
   margin: 0.5rem 0 0.4rem;
@@ -2304,4 +2304,112 @@ details summary {
   font-family: inherit;
   font-size: 0.85em;
   text-align: center;
+}
+
+/* ---------- setup guide ---------- */
+.guide-lead {
+  font-size: 1.05rem;
+  margin: 0.75rem 0 0;
+}
+.guide-toc ol {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  gap: 0.25rem 1.5rem;
+  margin: 1rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+.guide-toc button {
+  text-align: left;
+}
+.guide-section h2 {
+  margin-bottom: 0.6rem;
+}
+.guide-section h2:focus {
+  outline: none;
+}
+.guide-section h3 {
+  font-size: 1rem;
+  margin: 1.25rem 0 0.5rem;
+}
+.guide-steps {
+  margin: 0 0 0.75rem;
+  padding-left: 1.4rem;
+}
+.guide-steps li + li {
+  margin-top: 0.35rem;
+}
+.guide-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: 0.75rem;
+}
+.guide-option {
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+.guide-option h3 {
+  margin: 0 0 0.35rem;
+  font-size: 0.95rem;
+}
+.guide-option p {
+  margin: 0;
+}
+.guide-service {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin-bottom: 0.5rem;
+  padding: 0.5rem 0.85rem;
+}
+.guide-service[open] {
+  padding-bottom: 0.85rem;
+}
+.guide-service summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.25rem 0.75rem;
+  padding: 0.15rem 0;
+}
+.guide-service summary::before {
+  content: '▸';
+  color: var(--muted);
+}
+.guide-service[open] summary::before {
+  content: '▾';
+}
+.guide-service summary::-webkit-details-marker {
+  display: none;
+}
+.guide-service summary {
+  list-style: none;
+}
+.guide-service .guide-steps {
+  margin-top: 0.6rem;
+}
+.guide-command {
+  display: block;
+  width: fit-content;
+  max-width: 100%;
+  margin-top: 0.35rem;
+  padding: 0.3rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow-wrap: anywhere;
+  user-select: all;
+}
+.guide-links {
+  display: contents;
+}
+.guide-problems dt {
+  font-weight: 600;
+  margin-top: 0.6rem;
+}
+.guide-problems dd {
+  margin: 0.15rem 0 0 1.25rem;
+}
+.has-backdrop .guide-service,
+.has-backdrop .guide-option {
+  background: color-mix(in srgb, var(--bg) 70%, transparent);
 }
