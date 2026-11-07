@@ -283,7 +283,10 @@ fn narration_style_thoughts_messages_and_language_reach_the_storyteller() {
     assert!(p.contains("- Write texts the way that person really texts: short and casual"));
     assert!(p.contains("- Calls sound like real speech"));
     assert!(p.contains("- Characters may text or call Sam Ashby first"));
-    assert!(s.state.narration.scene_headings, "new stories have headings");
+    assert!(
+        s.state.narration.scene_headings,
+        "new stories have headings"
+    );
     s.state.narration.scene_headings = false;
     let p = system_prompt(&s, &frame());
     assert!(!p.contains("SCENE HEADINGS"), "only when asked");
