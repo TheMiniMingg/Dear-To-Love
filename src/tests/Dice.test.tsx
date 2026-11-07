@@ -190,12 +190,16 @@ describe('Roll dice in the composer', () => {
     await userEvent.selectOptions(screen.getByLabelText('With'), 'Fitness (+2)');
     await userEvent.type(screen.getByLabelText('Need'), '12');
     await userEvent.click(screen.getByRole('button', { name: 'Roll' }));
-    expect(onSubmit).toHaveBeenCalledWith('', {
-      label: 'Climb the wall',
-      dice: '1d20',
-      stat: 'Fitness',
-      target: 12,
-    });
+    expect(onSubmit).toHaveBeenCalledWith(
+      '',
+      {
+        label: 'Climb the wall',
+        dice: '1d20',
+        stat: 'Fitness',
+        target: 12,
+      },
+      undefined,
+    );
   });
 
   it('follows the story dice settings: own dice, no stats, a secret target, criticals', async () => {

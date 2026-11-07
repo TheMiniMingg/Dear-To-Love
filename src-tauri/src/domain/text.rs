@@ -214,6 +214,47 @@ pub(crate) fn scan_tags<'a>(text: &'a str, names: &[&'static str]) -> Vec<FoundT
     out
 }
 
+/// A reply split into what the reader shows and its asides (memory notes,
+/// open threads, new characters, next-move ideas) as they were written, so
+/// the words can be changed without touching what the asides did.
+pub fn split_asides(text: &str) -> (String, Vec<String>) {
+    let mut shown = String::new();
+    let mut asides = Vec::new();
+    let mut rest = text;
+    while let Some(i) = rest.find('<') {
+        let after = &rest[i + 1..];
+        let name = ASIDE_TAGS.iter().copied().find(|t| {
+            after.starts_with(t) && after[t.len()..].starts_with([' ', '/', '>', '\n', '\t'])
+        });
+        let (Some(name), Some(end)) = (name, after.find('>')) else {
+            shown.push_str(&rest[..=i]);
+            rest = after;
+            continue;
+        };
+        let head = &after[name.len()..end];
+        let tail = &after[end + 1..];
+        let len = if head.trim_end().ends_with('/') {
+            Some(end + 1)
+        } else {
+            let close = format!("</{name}>");
+            tail.find(&close).map(|j| end + 1 + j + close.len())
+        };
+        let Some(len) = len else {
+            shown.push_str(&rest[..=i]);
+            rest = after;
+            continue;
+        };
+        shown.push_str(&rest[..i]);
+        asides.push(rest[i..i + 1 + len].to_string());
+        // Drop the aside and the line break that set it apart.
+        shown.truncate(shown.trim_end_matches([' ', '\t']).len());
+        let next = &after[len..];
+        rest = next.strip_prefix('\n').unwrap_or(next);
+    }
+    shown.push_str(rest);
+    (shown.trim_end().to_string(), asides)
+}
+
 /// Where and when the last `<scene place="…" time="…"/>` heading in a reply
 /// puts the story; `None` when it has none (or one with neither).
 pub fn latest_scene(text: &str) -> Option<(Option<String>, Option<String>)> {
@@ -443,7 +484,31 @@ pub fn strip_app_tags(text: &str) -> String {
 
 #[cfg(test)]
 mod message_tag_tests {
-    use super::{latest_scene, plain_message_tags, strip_app_tags};
+    use super::{latest_scene, plain_message_tags, split_asides, strip_app_tags};
+    #[test]
+    fn asides_come_apart_from_the_words_and_back() {
+        let reply = "Mina laughs.\n\n<remember person=\"Mina\">Likes tea</remember>\n\
+                     <text from=\"Mina\">Hi</text>\n<next>Ask her why</next>\nThe kettle clicks.\n\
+                     <thread>Who sent the letter?</thread>";
+        let (shown, asides) = split_asides(reply);
+        assert_eq!(
+            shown,
+            "Mina laughs.\n\n<text from=\"Mina\">Hi</text>\nThe kettle clicks."
+        );
+        assert_eq!(
+            asides,
+            [
+                "<remember person=\"Mina\">Likes tea</remember>",
+                "<next>Ask her why</next>",
+                "<thread>Who sent the letter?</thread>"
+            ]
+        );
+        assert_eq!(
+            split_asides("No tags <here>."),
+            ("No tags <here>.".into(), vec![])
+        );
+        assert_eq!(split_asides("Half <remember person=\"x\">open").1.len(), 0);
+    }
 
     #[test]
     fn threads_new_characters_and_next_moves_are_left_out() {

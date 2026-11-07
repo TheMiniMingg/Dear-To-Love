@@ -4,6 +4,7 @@ use crate::db::test_support::{test_db, TestDb};
 use crate::db::timeline::fork_route;
 use crate::domain::events::StateEdit;
 use crate::domain::notes::{MemoryNote, NoteKind};
+use crate::domain::reply_options::ReplyOptions;
 use crate::domain::story::StoryCreated;
 use crate::domain::templates::{QuickStartInput, TemplateCatalog};
 use crate::errors::ErrorCode;
@@ -108,9 +109,17 @@ async fn invalid_or_stale_edits_write_nothing() {
 
     // While an action waits for its reply, details can't change under it.
     let state = route_view(&t.db, &s.main_route_id).await.unwrap().state;
-    let sub = submit_action(&t.db, &s.story_id, &s.main_route_id, &head, "Wait", None)
-        .await
-        .unwrap();
+    let sub = submit_action(
+        &t.db,
+        &s.story_id,
+        &s.main_route_id,
+        &head,
+        "Wait",
+        None,
+        &ReplyOptions::default(),
+    )
+    .await
+    .unwrap();
     let waiting = sub.view.route.head_event_id.clone().unwrap();
     let err = edit_details(
         &t.db,

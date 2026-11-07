@@ -148,7 +148,7 @@ pub fn extractive(prev: Option<&str>, chunk: &[EventRow], player_name: &str) -> 
     for e in chunk {
         match EventBody::from_parts(&e.kind, &e.payload_json)? {
             EventBody::Player(p) => {
-                action = Some(first_sentence(&plain_message_tags(&p.story_text()), 120))
+                action = Some(first_sentence(&plain_message_tags(&p.shown_text()), 120))
             }
             EventBody::Assistant(a) => {
                 let reply = first_sentence(&plain_message_tags(&a.text), 160);
@@ -176,7 +176,7 @@ pub fn transcript(chunk: &[EventRow], player_name: &str, max_chars: usize) -> Ap
         match EventBody::from_parts(&e.kind, &e.payload_json)? {
             EventBody::Player(p) => out.push(format!(
                 "{player_name}: {}",
-                clip(&p.story_text(), max_chars)
+                clip(&p.shown_text(), max_chars)
             )),
             EventBody::Assistant(a) => out.push(format!("Narrator: {}", clip(&a.text, max_chars))),
             EventBody::ChapterStart(c) => out.push(format!(

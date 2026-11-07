@@ -159,7 +159,11 @@ describe('Composer modes', () => {
     expect(screen.getByRole('button', { name: 'Send' })).toBeDisabled();
     await userEvent.type(screen.getByLabelText('To'), 'Mara Quill');
     await userEvent.click(screen.getByRole('button', { name: 'Send' }));
-    expect(onSubmit).toHaveBeenCalledWith('<text to="Mara Quill">Are you awake?</text>');
+    expect(onSubmit).toHaveBeenCalledWith(
+      '<text to="Mara Quill">Are you awake?</text>',
+      undefined,
+      undefined,
+    );
 
     rerender(
       <Composer
@@ -174,6 +178,10 @@ describe('Composer modes', () => {
     );
     await userEvent.click(screen.getByRole('radio', { name: 'Call' }));
     await userEvent.click(screen.getByRole('button', { name: 'Call' }));
-    expect(onSubmit).toHaveBeenLastCalledWith('<call with="Mara Quill" status="ringing"/>');
+    expect(onSubmit).toHaveBeenLastCalledWith(
+      '<call with="Mara Quill" status="ringing"/>',
+      undefined,
+      undefined,
+    );
   });
 });

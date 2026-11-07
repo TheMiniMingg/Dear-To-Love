@@ -121,6 +121,8 @@ function cleanNarration(n: Narration): Narration {
   if (n.noSuggestions) out.noSuggestions = true;
   const styleNotes = n.styleNotes?.trim();
   if (styleNotes) out.styleNotes = styleNotes;
+  const storytellerNote = n.storytellerNote?.trim();
+  if (storytellerNote) out.storytellerNote = storytellerNote;
   const diceRules = cleanDiceRules(n.diceRules);
   if (diceRules) out.diceRules = diceRules;
   return out;
@@ -221,6 +223,7 @@ export function diffState(
       manualMemory: onOff(!n.manualMemory),
       noSuggestions: onOff(!n.noSuggestions),
       styleNotes: n.styleNotes ?? t('Not set'),
+      storytellerNote: n.storytellerNote ?? t('Not set'),
       diceRules: diceSummary(n.diceRules) || t('Usual'),
     });
     lines.push(
@@ -246,6 +249,7 @@ export function diffState(
         ['manualMemory', msg('Let the storyteller keep memory notes')],
         ['noSuggestions', msg('Suggest what you could do next')],
         ['styleNotes', msg('Your own style (optional)')],
+        ['storytellerNote', msg('Note to the storyteller')],
         ['surprises', msg('Twists and surprises')],
       ]),
     );

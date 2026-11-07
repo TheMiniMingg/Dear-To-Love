@@ -18,6 +18,7 @@ use sha2::{Digest, Sha256};
 use self::banks::{bank, voices, Bank, Flavor, Voice, Voices};
 use crate::domain::dice::DiceSpec;
 use crate::domain::replay::EffectiveState;
+use crate::domain::reply_options::{ReplyLength, ReplyOptions};
 use crate::domain::story_state::{
     Character, Control, Detail, Narration, NarrationStyle, Perspective, RollFrequency, RollOdds,
     Surprises,
@@ -351,8 +352,17 @@ impl Rolled {
     }
 }
 
+/// What the player asked of this reply beyond their action.
+#[derive(Debug, Clone, Default)]
+pub struct Asked {
+    /// How many replies this action already has (Another reply).
+    pub attempt: usize,
+    pub options: ReplyOptions,
+}
+
 struct Ctx<'a> {
     state: &'a EffectiveState,
+    length: Option<ReplyLength>,
     n: &'a Narration,
     action: &'a str,
     seed: Seed,
@@ -371,8 +381,28 @@ struct Ctx<'a> {
 /// on the route; `opens_chapter` is true for the first reply after a
 /// chapter starts, which also sets the scene.
 pub fn reply(state: &EffectiveState, action: &str, turn: usize, opens_chapter: bool) -> String {
+    reply_with(state, action, turn, opens_chapter, &Asked::default())
+}
+
+/// [`reply`], for Another reply (a different reply each time) and the
+/// length the player asked for. An empty `action` is Keep going.
+pub fn reply_with(
+    state: &EffectiveState,
+    action: &str,
+    turn: usize,
+    opens_chapter: bool,
+    asked: &Asked,
+) -> String {
     let n = &state.state.narration;
-    let seed = Seed(format!("{turn}:{action}").into_bytes());
+    let hint = asked.options.hint.as_deref().unwrap_or_default();
+    let seed = Seed(
+        if asked.attempt == 0 && hint.is_empty() {
+            format!("{turn}:{action}")
+        } else {
+            format!("{turn}:{}:{hint}:{action}", asked.attempt)
+        }
+        .into_bytes(),
+    );
     // Mixed reads like a narrated story with its cards, offline.
     let style = match n.style.unwrap_or(NarrationStyle::Narrated) {
         NarrationStyle::Mixed => NarrationStyle::Narrated,
@@ -396,6 +426,7 @@ pub fn reply(state: &EffectiveState, action: &str, turn: usize, opens_chapter: b
     let npc = present_npc(state, &seed);
     let ctx = Ctx {
         state,
+        length: asked.options.length,
         n,
         action,
         turn,
@@ -896,7 +927,9 @@ impl Ctx<'_> {
         } else if self.n.scene_headings && self.words.any(banks::TRAVEL_WORDS) {
             parts.push("<scene time=\"Later\"/>".into());
         }
-        let brief = self.n.detail == Detail::Brief && !opens_chapter;
+        let brief = (self.n.detail == Detail::Brief || self.length == Some(ReplyLength::Short))
+            && !opens_chapter;
+        let long = self.length == Some(ReplyLength::Long);
         let talking = self.kind == ActionKind::Talk && self.rolled.is_none() && !self.is_fight();
         let npc_talks = talking.then_some(self.npc).flatten();
 
@@ -923,8 +956,11 @@ impl Ctx<'_> {
                 parts.push(self.direction(&text));
             }
         }
-        if matches!(self.n.detail, Detail::Detailed | Detail::Cinematic) {
+        if long || matches!(self.n.detail, Detail::Detailed | Detail::Cinematic) {
             parts.push(self.direction(&self.line(self.bank.details, 19)));
+        }
+        if long {
+            parts.push(self.direction(&self.line(self.bank.beats, 23)));
         }
 
         // With dice on, a risky action stops at the moment of truth.

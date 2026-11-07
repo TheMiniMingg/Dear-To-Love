@@ -5,9 +5,18 @@
  */
 import { locale, t } from '.';
 
-/** A route: "Main" and "Alt 2" are the app's own names. */
+/**
+ * A route: "Main", "Alt 2", "Taken back: …" and "Before your edit" are the
+ * app's own names.
+ */
 export function routeName(label: string): string {
   if (label === 'Main') return t('Main');
+  if (label === 'Before your edit') return t('Before your edit');
+  const back = /^Taken back: (.*)$/s.exec(label);
+  if (back) {
+    const words = back[1] === 'Keep going' ? t('Keep going') : plainStoryText(back[1]!);
+    return t('Taken back: {words}', { words });
+  }
   const m = /^Alt (\d+)$/.exec(label);
   return m ? t('Alt {n}', { n: m[1]! }) : label;
 }
@@ -91,6 +100,9 @@ function plainLabel(label: string): string | null {
   return null;
 }
 
+/** An empty action (Keep going) as the core shows it: `KEPT_GOING` in Rust. */
+const KEPT_GOING = '(lets the story go on)';
+
 /**
  * Plain story text from the app's core ("[Text from Mara] Are you up?",
  * "(Mara thinks: …)") with those labels in the chosen language.
@@ -98,6 +110,7 @@ function plainLabel(label: string): string | null {
 export function plainStoryText(text: string): string {
   if (locale() === 'en') return text;
   return text
+    .replace(KEPT_GOING, () => `(${t('lets the story go on')})`)
     .replace(/\[([^[\]]+)\]/g, (whole, label: string) => {
       const out = plainLabel(label);
       return out === null ? whole : `[${out}]`;

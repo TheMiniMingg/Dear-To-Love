@@ -7,6 +7,7 @@ use crate::db::test_support::{test_db, TestDb};
 use crate::db::timeline::{append_event, fork_route, AppendEvent};
 use crate::domain::events::{AssistantPayload, PlayerPayload};
 use crate::domain::provider::{AdapterKind, Billing, GenerationSettings, ProviderProfileInput};
+use crate::domain::reply_options::ReplyOptions;
 use crate::domain::story::StoryCreated;
 use crate::domain::templates::{QuickStartInput, TemplateCatalog};
 use crate::services::adapters::test_server::{serve, Reply, TestServer};
@@ -286,9 +287,17 @@ async fn branches_only_see_summaries_of_their_own_past() {
     };
     for branch in [&before.id, &after.id] {
         let head = env.head(branch).await;
-        let sub = submit_action(env.db(), &sid, branch, &head, "Open the door", None)
-            .await
-            .unwrap();
+        let sub = submit_action(
+            env.db(),
+            &sid,
+            branch,
+            &head,
+            "Open the door",
+            None,
+            &ReplyOptions::default(),
+        )
+        .await
+        .unwrap();
         generate(&ctx, &sub.run_id, &mut |_| {}).await.unwrap();
     }
     let reqs = server.requests();

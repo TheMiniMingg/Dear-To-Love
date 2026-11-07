@@ -1371,6 +1371,111 @@ details.more-options > summary {
   margin-top: 0.4rem;
 }
 
+/* ---------- storytelling tools (batch 4) ---------- */
+/* Length of the next reply, beside the kinds of action. */
+.reply-length {
+  border-radius: 999px;
+  font-size: 0.82rem;
+  background: var(--surface);
+}
+.reply-length span {
+  padding: 0.24rem 0.7rem;
+  color: var(--muted);
+}
+.reply-length input:checked + span {
+  color: var(--on-accent);
+}
+/* With nothing typed, the send button lets the story go on. */
+.composer .keep-going {
+  white-space: nowrap;
+}
+.kept-going {
+  margin: 0.15rem 0 0;
+  font-style: italic;
+  color: var(--muted);
+}
+/* The player's standing note to the storyteller, above the box. */
+.storyteller-note-chip {
+  flex-basis: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.3rem 0.45rem;
+  padding: 0.3rem 0.75rem;
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--border));
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--accent-soft) 60%, var(--surface));
+  font-size: 0.85rem;
+}
+.note-chip-icon {
+  flex: none;
+  color: var(--accent);
+}
+.note-chip-words {
+  flex: 1 1 12rem;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.storyteller-note-chip .link-button {
+  font-size: 0.82rem;
+  color: var(--accent);
+}
+/* The latest reply, open for new words. */
+.reply-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.reply-editor textarea {
+  width: 100%;
+  font-family: var(--font-story);
+  font-size: inherit;
+  line-height: 1.6;
+  resize: vertical;
+}
+.reply-editor p {
+  margin: 0;
+}
+/* Offered over words picked in the story. */
+.remember-this {
+  position: absolute;
+  z-index: 5;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.8rem;
+  transform: translateX(-50%);
+  border: 1px solid var(--accent);
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--on-accent);
+  font-size: 0.85rem;
+  box-shadow: var(--shadow-md);
+  animation: fade-in 0.15s var(--ease);
+}
+.remember-this:active:not(:disabled) {
+  transform: translateX(-50%) translateY(1px);
+}
+/* A choice of a few, in a form: as wide as its choices. */
+.field > .segmented {
+  align-self: flex-start;
+}
+/* Ready-made hints for Another reply. */
+.hint-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+.next-move[aria-pressed='true'],
+.next-move[aria-pressed='true']:hover {
+  border-style: solid;
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
 /* ---------- ideas for the next move, above the composer ---------- */
 .next-moves {
   flex-basis: 100%;

@@ -93,7 +93,8 @@ describe('Reader live replies', () => {
       gen!.send({ type: 'delta', runId: 'run-1', seq: 2, text: 'creaks' });
     });
     expect(screen.getByTestId('reply-draft')).toHaveTextContent('The door creaks');
-    expect(screen.getByRole('button', { name: 'Send' })).toBeDisabled();
+    // Nothing typed: the button would let the story go on, and waits too.
+    expect(screen.getByRole('button', { name: 'Keep going' })).toBeDisabled();
     expect(screen.getByText(/is writing/)).toBeInTheDocument();
     await act(async () => gen!.resolve(fakeRouteView([action, reply])));
     expect(screen.queryByTestId('reply-draft')).not.toBeInTheDocument();
@@ -117,6 +118,7 @@ describe('Reader live replies', () => {
       errorCode: 'CANCELLED',
       createdAt: '',
       finishedAt: '',
+      options: {},
     });
     backend(cancelled);
     await userEvent.click(screen.getByRole('button', { name: 'Stop' }));
@@ -146,12 +148,14 @@ describe('Reader live replies', () => {
         errorCode: 'RUN_INTERRUPTED',
         createdAt: '',
         finishedAt: '',
+        options: {},
       }),
     );
     render(<ReaderScreen routeId="route-1" />);
     expect(await screen.findByText(/may still have cost a little/)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Change action' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Send' })).toBeDisabled();
+    // Nothing typed: the button would let the story go on, and waits too.
+    expect(screen.getByRole('button', { name: 'Keep going' })).toBeDisabled();
   });
 
   it('picks up a reply that is waiting to start when the reader opens', async () => {
@@ -168,6 +172,7 @@ describe('Reader live replies', () => {
         errorCode: null,
         createdAt: '',
         finishedAt: null,
+        options: {},
       },
     };
     backend(v);

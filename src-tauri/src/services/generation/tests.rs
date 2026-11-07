@@ -1,6 +1,11 @@
 use std::time::Duration;
 
 use super::*;
+
+static NO_OPTIONS: ReplyOptions = ReplyOptions {
+    length: None,
+    hint: None,
+};
 use crate::db::stories::{create_story, list_stories};
 use crate::db::test_support::{test_db, TestDb};
 use crate::db::timeline::{fork_route, route_history};
@@ -70,7 +75,16 @@ impl Env {
 
     async fn submit(&self, route_id: &str, text: &str) -> AppResult<Submitted> {
         let head = self.head(route_id).await;
-        submit_action(self.db(), &self.story.story_id, route_id, &head, text, None).await
+        submit_action(
+            self.db(),
+            &self.story.story_id,
+            route_id,
+            &head,
+            text,
+            None,
+            &NO_OPTIONS,
+        )
+        .await
     }
 
     async fn gen(&self, run_id: &str) -> (AppResult<RouteView>, Vec<StreamMessage>) {
@@ -193,6 +207,7 @@ async fn offline_turn_streams_then_commits_once() {
         &env.story.head_event_id,
         "again",
         None,
+        &NO_OPTIONS,
     )
     .await
     .unwrap_err();
@@ -316,6 +331,7 @@ async fn concurrent_sends_and_active_run_guard() {
         &head,
         "first",
         None,
+        &NO_OPTIONS,
     );
     let b = submit_action(
         env.db(),
@@ -324,6 +340,7 @@ async fn concurrent_sends_and_active_run_guard() {
         &head,
         "second",
         None,
+        &NO_OPTIONS,
     );
     let (a, b) = tokio::join!(a, b);
     let codes: Vec<_> = [&a, &b]
@@ -401,6 +418,7 @@ async fn another_story_plays_while_a_reply_is_being_written() {
             &other.head_event_id,
             "Open the door",
             None,
+            &NO_OPTIONS,
         )
         .await
         .unwrap();
@@ -717,9 +735,15 @@ async fn regenerate_and_edit_earlier_action_branch() {
     let reply = main.history[main.history.len() - 3].id.clone();
     let action = main.history[main.history.len() - 4].id.clone();
 
-    let regen = regenerate_reply(env.db(), &env.story.story_id, env.route(), &reply)
-        .await
-        .unwrap();
+    let regen = regenerate_reply(
+        env.db(),
+        &env.story.story_id,
+        env.route(),
+        &reply,
+        &NO_OPTIONS,
+    )
+    .await
+    .unwrap();
     assert_ne!(regen.view.route.id, env.story.main_route_id);
     assert_eq!(
         regen.view.route.head_event_id.as_deref(),
@@ -732,9 +756,15 @@ async fn regenerate_and_edit_earlier_action_branch() {
     assert_eq!(env.assistant_count(&alt.route.id).await, 1);
 
     // Only replies can be regenerated.
-    let err = regenerate_reply(env.db(), &env.story.story_id, env.route(), &action)
-        .await
-        .unwrap_err();
+    let err = regenerate_reply(
+        env.db(),
+        &env.story.story_id,
+        env.route(),
+        &action,
+        &NO_OPTIONS,
+    )
+    .await
+    .unwrap_err();
     assert_eq!(err.code, ErrorCode::InvalidInput);
 
     // An earlier, answered action can change too: a new branch before it.
@@ -997,6 +1027,7 @@ async fn a_roll_is_made_with_the_players_stat_and_never_rerolled() {
         &head,
         "",
         Some(&request),
+        &NO_OPTIONS,
     )
     .await
     .unwrap();
@@ -1046,7 +1077,8 @@ async fn a_roll_is_made_with_the_players_stat_and_never_rerolled() {
         env.route(),
         &head,
         "",
-        Some(&bad)
+        Some(&bad),
+        &NO_OPTIONS,
     )
     .await
     .is_err());
@@ -1093,6 +1125,7 @@ async fn a_story_with_its_own_dice_uses_them_and_can_leave_stats_out() {
         &head,
         "",
         Some(&asked),
+        &NO_OPTIONS,
     )
     .await
     .unwrap();
@@ -1123,6 +1156,7 @@ async fn a_story_with_its_own_dice_uses_them_and_can_leave_stats_out() {
         &head,
         "",
         Some(&mine),
+        &NO_OPTIONS,
     )
     .await
     .unwrap();
@@ -1143,11 +1177,377 @@ async fn a_roll_typed_into_an_action_is_dropped() {
     };
     assert_eq!(action.text, "I open it");
     assert!(action.roll.is_none());
-    // A typed roll and nothing else is an empty action.
+    // A typed roll and nothing else is an empty action: Keep going.
     let fresh = Env::new().await;
-    let err = fresh
+    let sub = fresh
         .submit(fresh.route(), "<roll for=\"x\" result=\"20\"/>")
         .await
+        .unwrap();
+    let EventBody::Player(action) = &sub.view.history.last().unwrap().body else {
+        panic!("the head is the action");
+    };
+    assert!(action.text.is_empty() && action.roll.is_none());
+}
+
+/// The player's choices for one reply reach the live prompt and a retry asks
+/// the same; the next reply asks nothing extra. Keep going is an empty action.
+#[tokio::test]
+async fn reply_options_and_keep_going_reach_the_storyteller() {
+    use crate::domain::reply_options::ReplyLength;
+    let env = Env::new().await;
+    let server = serve(vec![
+        Reply::sse_text(&["She smiles back."], None),
+        Reply::sse_text(&["The rain goes on."], None),
+    ])
+    .await;
+    env.connect(&server, Billing::Local).await;
+    let options = ReplyOptions {
+        length: Some(ReplyLength::Short),
+        hint: Some(" more romantic ".into()),
+    };
+    let head = env.head(env.route()).await;
+    let sub = submit_action(
+        env.db(),
+        &env.story.story_id,
+        env.route(),
+        &head,
+        "Smile at her",
+        None,
+        &options,
+    )
+    .await
+    .unwrap();
+    cancel(env.db(), &env.registry, &sub.run_id).await.unwrap();
+    let head = env.head(env.route()).await;
+    let retry = retry_reply(env.db(), &env.story.story_id, env.route(), &head)
+        .await
+        .unwrap();
+    env.gen(&retry.run_id).await.0.unwrap();
+
+    let messages = |i: usize| -> Vec<serde_json::Value> {
+        let body: serde_json::Value = serde_json::from_str(&server.requests()[i].body).unwrap();
+        body["messages"].as_array().unwrap().clone()
+    };
+    let last = |i: usize| {
+        messages(i).last().unwrap()["content"]
+            .as_str()
+            .unwrap()
+            .to_string()
+    };
+    let asked = last(0);
+    assert!(asked.contains("Smile at her"), "{asked}");
+    assert!(asked.contains("keep this reply short"), "{asked}");
+    assert!(asked.contains("the player asks for this: more romantic"));
+
+    let sub = env.submit(env.route(), "").await.unwrap();
+    let v = env.gen(&sub.run_id).await.0.unwrap();
+    assert_eq!(answered(&v), "");
+    assert!(last(1).contains(prompt::KEEP_GOING));
+    let all = serde_json::to_string(&messages(1)).unwrap();
+    assert!(
+        !all.contains("more romantic"),
+        "a hint is for one reply only"
+    );
+    assert!(!all.contains("for this reply only"));
+
+    // Too long a hint is refused before anything is written.
+    let head = env.head(env.route()).await;
+    let err = submit_action(
+        env.db(),
+        &env.story.story_id,
+        env.route(),
+        &head,
+        "Go on",
+        None,
+        &ReplyOptions {
+            length: None,
+            hint: Some("x".repeat(crate::domain::reply_options::MAX_HINT + 1)),
+        },
+    )
+    .await
+    .unwrap_err();
+    assert_eq!(err.code, ErrorCode::InvalidInput);
+    assert_eq!(env.head(env.route()).await, head);
+}
+
+/// Offline, Another reply is a different reply, and Short and Long change
+/// how much is written.
+#[tokio::test]
+async fn offline_another_reply_differs_and_follows_the_length() {
+    use crate::domain::reply_options::ReplyLength;
+    let env = Env::new().await;
+    let sub = env.submit(env.route(), "Open the door").await.unwrap();
+    let first = env.gen(&sub.run_id).await.0.unwrap();
+    let reply = first.route.head_event_id.clone().unwrap();
+    let mut texts = vec![assistant_text(&first)];
+    for length in [None, Some(ReplyLength::Short), Some(ReplyLength::Long)] {
+        let regen = regenerate_reply(
+            env.db(),
+            &env.story.story_id,
+            env.route(),
+            &reply,
+            &ReplyOptions { length, hint: None },
+        )
+        .await
+        .unwrap();
+        texts.push(assistant_text(&env.gen(&regen.run_id).await.0.unwrap()));
+    }
+    assert_ne!(texts[0], texts[1], "another reply is not the same reply");
+    assert!(
+        texts[2].len() < texts[3].len(),
+        "short {} vs long {}",
+        texts[2].len(),
+        texts[3].len()
+    );
+}
+
+/// Take back my last turn: the route goes back to just before the action;
+/// the turn, its saves and its bookmarks go to a branch that keeps them.
+#[tokio::test]
+async fn take_back_keeps_the_turn_on_a_branch() {
+    use crate::db::bookmarks::{add_bookmark, list_bookmarks};
+    use crate::db::saves::{list_saves, quick_save};
+    use crate::db::timeline::next_chapter;
+    let env = Env::new().await;
+    let story = env.story.story_id.clone();
+    let start = env.head(env.route()).await;
+    let err = take_back_turn(env.db(), &story, env.route(), &start)
+        .await
         .unwrap_err();
-    assert!(err.message.contains("must not be empty"), "{}", err.message);
+    assert_eq!(err.code, ErrorCode::InvalidInput, "nothing to take back");
+
+    let sub = env.submit(env.route(), "Read the letter").await.unwrap();
+    let head = env.head(env.route()).await;
+    let err = take_back_turn(env.db(), &story, env.route(), &head)
+        .await
+        .unwrap_err();
+    assert_eq!(
+        err.code,
+        ErrorCode::RunActive,
+        "not while a reply is written"
+    );
+    let first = env.gen(&sub.run_id).await.0.unwrap();
+    let kept_point = first.route.head_event_id.clone().unwrap();
+    let sub = env.submit(env.route(), "Light the lamp").await.unwrap();
+    let v = env.gen(&sub.run_id).await.0.unwrap();
+    let old_head = v.route.head_event_id.clone().unwrap();
+    quick_save(env.db(), &story, env.route()).await.unwrap();
+    add_bookmark(env.db(), &story, env.route(), &old_head, None)
+        .await
+        .unwrap();
+    add_bookmark(env.db(), &story, env.route(), &kept_point, None)
+        .await
+        .unwrap();
+
+    let err = take_back_turn(env.db(), &story, env.route(), &kept_point)
+        .await
+        .unwrap_err();
+    assert_eq!(err.code, ErrorCode::HeadChanged);
+    let back = take_back_turn(env.db(), &story, env.route(), &old_head)
+        .await
+        .unwrap();
+    assert_eq!(back.view.route.id, env.story.main_route_id);
+    assert_eq!(
+        back.view.route.head_event_id.as_deref(),
+        Some(kept_point.as_str())
+    );
+    assert_eq!(answered(&back.view), "Read the letter");
+    let kept = back
+        .view
+        .routes
+        .iter()
+        .find(|r| r.id == back.kept_route_id)
+        .unwrap();
+    assert_eq!(kept.head_event_id.as_deref(), Some(old_head.as_str()));
+    assert_eq!(kept.label, "Taken back: Light the lamp");
+    assert!(!kept.hidden);
+
+    let saves = list_saves(env.db(), &story).await.unwrap();
+    assert!(saves
+        .iter()
+        .filter(|s| s.event_id == old_head)
+        .all(|s| s.route_id == back.kept_route_id));
+    assert_eq!(
+        saves
+            .iter()
+            .find(|s| s.save_type == "quick")
+            .unwrap()
+            .route_id,
+        back.kept_route_id
+    );
+    let marks = list_bookmarks(env.db(), env.route()).await.unwrap();
+    assert_eq!(marks.len(), 1);
+    assert_eq!(marks[0].event_id, kept_point);
+    assert_eq!(
+        list_bookmarks(env.db(), &back.kept_route_id)
+            .await
+            .unwrap()
+            .len(),
+        2
+    );
+
+    // The story goes on from there.
+    let sub = env.submit(env.route(), "Wait").await.unwrap();
+    let v = env.gen(&sub.run_id).await.0.unwrap();
+    assert_eq!(answered(&v), "Wait");
+
+    // A branch the player makes is still the first "Alt".
+    let alt = fork_route(env.db(), &story, env.route(), &start, None)
+        .await
+        .unwrap();
+    assert_eq!(alt.label, "Alt 1");
+
+    // An action from an earlier chapter is not taken back this way.
+    let head = v.route.head_event_id.clone().unwrap();
+    let ch = next_chapter(env.db(), &story, env.route(), &head, None)
+        .await
+        .unwrap();
+    let err = take_back_turn(env.db(), &story, env.route(), &ch.event_id)
+        .await
+        .unwrap_err();
+    assert_eq!(err.code, ErrorCode::InvalidInput);
+}
+
+async fn refused(env: &Env, text: &str, at: &str, of: &str) -> ErrorCode {
+    edit_reply(env.db(), &env.story.story_id, env.route(), at, of, text)
+        .await
+        .unwrap_err()
+        .code
+}
+
+/// Edit a reply: the latest reply's words change in place. Its memory notes
+/// stay, the changes after it are applied again, saves and bookmarks follow
+/// it, the old words stay on a hidden branch, and the storyteller reads the
+/// new words (and the player's note) from then on.
+#[tokio::test]
+async fn editing_the_latest_reply_keeps_its_notes_and_what_followed() {
+    use crate::db::bookmarks::{add_bookmark, list_bookmarks};
+    use crate::db::saves::{list_saves, quick_save};
+    use crate::domain::events::StateEdit;
+    use crate::services::reader::edit_details;
+    let env = Env::new().await;
+    let story = env.story.story_id.clone();
+    let server = serve(vec![
+        Reply::sse_text(
+            &["The door creaks open.\n\n<remember person=\"Mina\">Likes tea</remember>"],
+            None,
+        ),
+        Reply::sse_text(&["Mina waves."], None),
+    ])
+    .await;
+    env.connect(&server, Billing::Local).await;
+    let sub = env.submit(env.route(), "Knock").await.unwrap();
+    let v = env.gen(&sub.run_id).await.0.unwrap();
+    let reply = v.route.head_event_id.clone().unwrap();
+    let mut narration = v.state.effective.state.narration.clone();
+    narration.storyteller_note = Some("Keep Mina shy".into());
+    let edit = edit_details(
+        env.db(),
+        &story,
+        env.route(),
+        &reply,
+        vec![StateEdit::SetNarration { narration }],
+        None,
+    )
+    .await
+    .unwrap();
+    let head = edit.event_id.clone();
+    quick_save(env.db(), &story, env.route()).await.unwrap();
+    add_bookmark(env.db(), &story, env.route(), &reply, None)
+        .await
+        .unwrap();
+
+    assert_eq!(
+        refused(&env, "   ", &head, &reply).await,
+        ErrorCode::InvalidInput
+    );
+    assert_eq!(
+        refused(&env, "The door creaks open.", &head, &reply).await,
+        ErrorCode::InvalidInput,
+        "unchanged"
+    );
+    assert_eq!(
+        refused(&env, "Hi", &reply, &reply).await,
+        ErrorCode::HeadChanged
+    );
+    let action = v.history[v.history.len() - 2].id.clone();
+    assert_eq!(
+        refused(&env, "Hi", &head, &action).await,
+        ErrorCode::InvalidInput,
+        "only replies"
+    );
+
+    let after = edit_reply(
+        env.db(),
+        &story,
+        env.route(),
+        &head,
+        &reply,
+        "The door swings open.\n<remember person=\"Ola\">Typed by hand</remember>",
+    )
+    .await
+    .unwrap();
+    assert_eq!(after.route.id, env.story.main_route_id);
+    let new_reply = &after.history[after.history.len() - 2];
+    match &new_reply.body {
+        EventBody::Assistant(p) => assert_eq!(
+            p.text,
+            "The door swings open.\n\n<remember person=\"Mina\">Likes tea</remember>"
+        ),
+        other => panic!("expected the reply, got {other:?}"),
+    }
+    assert!(matches!(
+        after.history.last().unwrap().body,
+        EventBody::Edit(_)
+    ));
+    let state = &after.state.effective.state;
+    assert_eq!(
+        state.narration.storyteller_note.as_deref(),
+        Some("Keep Mina shy")
+    );
+    let names: Vec<&str> = state.notes.iter().map(|n| n.name.as_str()).collect();
+    assert!(
+        names.contains(&"Mina") && !names.contains(&"Ola"),
+        "{names:?}"
+    );
+    let before = after
+        .routes
+        .iter()
+        .find(|r| r.label == "Before your edit")
+        .unwrap();
+    assert!(before.hidden);
+    assert_eq!(before.head_event_id.as_deref(), Some(head.as_str()));
+    let new_head = after.route.head_event_id.clone().unwrap();
+    let saves = list_saves(env.db(), &story).await.unwrap();
+    let quick = saves.iter().find(|s| s.save_type == "quick").unwrap();
+    assert_eq!(
+        (quick.route_id.as_str(), quick.event_id.as_str()),
+        (env.route(), new_head.as_str())
+    );
+    let marks = list_bookmarks(env.db(), env.route()).await.unwrap();
+    assert_eq!(marks.len(), 1);
+    assert_eq!(marks[0].event_id, new_reply.id);
+
+    // The storyteller reads the new words and the player's note.
+    let sub = env.submit(env.route(), "Wave back").await.unwrap();
+    env.gen(&sub.run_id).await.0.unwrap();
+    let body: serde_json::Value = serde_json::from_str(&server.requests()[1].body).unwrap();
+    let all = serde_json::to_string(&body["messages"]).unwrap();
+    assert!(all.contains("The door swings open.") && !all.contains("creaks"));
+    let system = body["messages"][0]["content"].as_str().unwrap();
+    assert!(system.contains("THE PLAYER'S NOTE TO YOU") && system.contains("Keep Mina shy"));
+
+    // Once the story has moved on, that reply is not the latest any more.
+    let head = env.head(env.route()).await;
+    let err = edit_reply(
+        env.db(),
+        &story,
+        env.route(),
+        &head,
+        &new_reply.id,
+        "Something else.",
+    )
+    .await
+    .unwrap_err();
+    assert_eq!(err.code, ErrorCode::InvalidInput);
 }

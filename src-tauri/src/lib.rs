@@ -182,6 +182,8 @@ pub fn run() {
             commands::reader::draft_chapter_recap,
             commands::reader::end_chapter,
             commands::reader::regenerate_reply,
+            commands::reader::take_back_turn,
+            commands::reader::edit_reply,
             commands::reader::edit_story_details,
             commands::reader::undo_reply_notes,
             commands::reader::fork_route,

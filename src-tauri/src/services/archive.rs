@@ -1302,7 +1302,7 @@ pub async fn route_text(
             }
             EventBody::Player(p) => {
                 turns += 1;
-                let text = plain_message_tags(&p.story_text());
+                let text = plain_message_tags(&p.shown_text());
                 push_turn(&mut out, &label(&player, &e.created_at), &text, md);
             }
             EventBody::Assistant(p) => {

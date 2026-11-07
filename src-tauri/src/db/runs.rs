@@ -10,6 +10,7 @@ use ts_rs::TS;
 
 use super::{new_id, now, Database};
 use crate::domain::provider::NormalizedUsage;
+use crate::domain::reply_options::ReplyOptions;
 use crate::errors::{AppError, AppResult, ErrorCode};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, TS)]
@@ -63,6 +64,7 @@ struct RunRow {
     error_code: Option<String>,
     created_at: String,
     finished_at: Option<String>,
+    options_json: Option<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, TS)]
@@ -77,6 +79,8 @@ pub struct RunDto {
     pub error_code: Option<ErrorCode>,
     pub created_at: String,
     pub finished_at: Option<String>,
+    /// What the player asked of this reply only.
+    pub options: ReplyOptions,
 }
 
 impl RunRow {
@@ -92,13 +96,15 @@ impl RunRow {
             provider_profile_id: self.provider_profile_id,
             created_at: self.created_at,
             finished_at: self.finished_at,
+            options: ReplyOptions::from_json(self.options_json.as_deref()),
         })
     }
 }
 
 macro_rules! run_columns {
     () => {
-        "id, route_id, input_event_id, provider_profile_id, status, error_code, created_at, finished_at"
+        "id, route_id, input_event_id, provider_profile_id, status, error_code, created_at, finished_at, \
+         options_json"
     };
 }
 
@@ -115,17 +121,20 @@ pub async fn create_pending_tx(
     route_id: &str,
     input_event_id: &str,
     provider_profile_id: Option<&str>,
+    options: &ReplyOptions,
 ) -> AppResult<String> {
     let id = new_id();
     let res = sqlx::query(
-        "INSERT INTO generation_runs (id, route_id, input_event_id, provider_profile_id, status, created_at) \
-         VALUES (?, ?, ?, ?, 'pending', ?)",
+        "INSERT INTO generation_runs (id, route_id, input_event_id, provider_profile_id, status, \
+                                      created_at, options_json) \
+         VALUES (?, ?, ?, ?, 'pending', ?, ?)",
     )
     .bind(&id)
     .bind(route_id)
     .bind(input_event_id)
     .bind(provider_profile_id)
     .bind(now())
+    .bind(options.to_json())
     .execute(&mut *conn)
     .await;
     match res {
@@ -223,6 +232,24 @@ pub async fn latest_run_for_input(
     .await?
     .map(RunRow::into_dto)
     .transpose()
+}
+
+/// What the latest run for `input_event_id` on `route_id` asked for, so a
+/// retry asks the same.
+pub async fn latest_options_tx(
+    conn: &mut SqliteConnection,
+    route_id: &str,
+    input_event_id: &str,
+) -> AppResult<ReplyOptions> {
+    let json: Option<Option<String>> = sqlx::query_scalar(
+        "SELECT options_json FROM generation_runs WHERE route_id = ? AND input_event_id = ? \
+         ORDER BY created_at DESC, id DESC LIMIT 1",
+    )
+    .bind(route_id)
+    .bind(input_event_id)
+    .fetch_optional(&mut *conn)
+    .await?;
+    Ok(ReplyOptions::from_json(json.flatten().as_deref()))
 }
 
 /// App start: nothing can still be running, so any active run was cut off.
