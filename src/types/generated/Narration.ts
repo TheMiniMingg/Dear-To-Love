@@ -67,4 +67,9 @@ noSuggestions?: boolean,
  * How the player would like it told, in their own words ("like a cozy
  * anime, lots of banter").
  */
-styleNotes?: string, };
+styleNotes?: string, 
+/**
+ * The player's note to the storyteller ("slow the romance down"). It
+ * steers the replies from here on and is never part of the story.
+ */
+storytellerNote?: string, };

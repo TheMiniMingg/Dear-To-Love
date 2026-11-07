@@ -36,7 +36,10 @@ use crate::domain::tracking::Tracking;
 use crate::errors::{AppError, AppResult, ErrorCode};
 use crate::services::tokens::{estimate_message, estimate_messages, estimate_text};
 
-pub const PROMPT_SCHEMA_VERSION: u32 = 10;
+pub const PROMPT_SCHEMA_VERSION: u32 = 11;
+/// What the storyteller reads for **Keep going**, an action with no words.
+pub const KEEP_GOING: &str = "(Out of character: I let the story go on without acting. \
+     Continue from where it left off, and don't decide anything for my character.)";
 /// Newest messages (excluding the latest action) placed before the summary
 /// competes for room.
 pub const MIN_RECENT_MESSAGES: usize = 4;
@@ -913,6 +916,21 @@ fn system_prompt_with(state: &EffectiveState, frame: &StoryFrame, notes: &NotesP
     if !s.open_threads.is_empty() {
         out.push_str(&format!("Open threads: {}\n", s.open_threads.join("; ")));
     }
+    if let Some(note) = s
+        .narration
+        .storyteller_note
+        .as_deref()
+        .map(str::trim)
+        .filter(|n| !n.is_empty())
+    {
+        out.push_str(
+            "\nTHE PLAYER'S NOTE TO YOU\n\
+             Follow it in your replies from now on, until the player changes it. It is \
+             about the story, not part of it: never quote it or mention it.\n",
+        );
+        out.push_str(note);
+        out.push('\n');
+    }
     out
 }
 
@@ -960,7 +978,10 @@ fn turn_message(e: &EventRow) -> AppResult<Option<ModelMessage>> {
         match (e.kind(), EventBody::from_parts(&e.kind, &e.payload_json)?) {
             (Some(EventKind::Player), EventBody::Player(p)) => Some(ModelMessage {
                 role: Role::User,
-                content: p.story_text().into_owned(),
+                content: match p.story_text() {
+                    t if t.trim().is_empty() => KEEP_GOING.to_string(),
+                    t => t.into_owned(),
+                },
             }),
             (Some(EventKind::Assistant), EventBody::Assistant(p)) => Some(ModelMessage {
                 role: Role::Assistant,

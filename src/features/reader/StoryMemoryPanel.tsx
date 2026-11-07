@@ -22,6 +22,7 @@ function writerName(w: SummaryWriter | undefined): string {
  */
 export function StoryMemoryPanel({
   view,
+  startNote,
   playerName,
   detailsDisabled,
   onChanged,
@@ -29,6 +30,8 @@ export function StoryMemoryPanel({
   onOpenStoryteller,
 }: {
   view: RouteView;
+  /** Words picked in the story ("Remember this"): open a note holding them. */
+  startNote?: string | null;
   playerName: string;
   /** True while a reply is being written: details and notes wait. */
   detailsDisabled: boolean;
@@ -82,7 +85,12 @@ export function StoryMemoryPanel({
         </button>
       </div>
 
-      <Notebook view={view} disabled={detailsDisabled} onChanged={onChanged} />
+      <Notebook
+        view={view}
+        disabled={detailsDisabled}
+        onChanged={onChanged}
+        startNote={startNote}
+      />
       <ThreadLog view={view} disabled={detailsDisabled} onChanged={onChanged} />
 
       <section aria-labelledby="memory-summary">

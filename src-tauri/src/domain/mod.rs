@@ -6,6 +6,7 @@ pub mod events;
 pub mod notes;
 pub mod provider;
 pub mod replay;
+pub mod reply_options;
 pub mod story;
 pub mod story_state;
 pub mod templates;

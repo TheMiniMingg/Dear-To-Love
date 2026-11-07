@@ -2,6 +2,24 @@
 
 ## Unreleased
 
+- **Keep going.** With nothing typed, the send button is **Keep going**: the story goes on
+  without your character doing anything.
+- **How long the next reply is.** **Short**, **Normal** or **Long** beside the kinds of action
+  asks the next reply only to be short or long.
+- **Another reply with a hint.** **Another reply** can ask for a length and say what should be
+  different, in your own words or with a ready-made hint such as "More dialogue" or "More
+  romantic". The hint is for that reply only. The offline storyteller now writes a different
+  reply each time too.
+- **A note to the storyteller.** The note button beside the story, or the pause menu, keeps a
+  note to the storyteller ("let the romance build slowly"). It steers every reply from then
+  on, shows above the action box, and is never part of the story.
+- **Edit a reply.** The pencil under the latest reply changes its words in place. Its memory
+  notes and ideas stay, and the reply as it was is kept as a hidden route.
+- **Take back my last turn.** The pause menu, the arrow under your last action, or Ctrl+U
+  (Cmd+U on a Mac) goes back to just before your last action and puts its words back in the
+  box. The turn is kept in **Routes** as "Taken back: …".
+- **Remember this.** Pick words in the story and press **Remember this** to make them a memory
+  note: about the person they name, or a moment in the timeline.
 - **A new look.** Stories are set in Literata, a book font, and the rest of the app in Inter;
   both come with the app, so they look the same on every computer. Chapters open like a
   book's, with the chapter number, a large title, an ornament and a large first letter.

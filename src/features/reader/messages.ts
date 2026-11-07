@@ -233,6 +233,43 @@ export function plainText(text: string): string {
   return plainStoryText(words);
 }
 
+/**
+ * The words of a reply without its asides (memory notes, threads, new
+ * characters, ideas), each dropped with the line break after it. Mirrors
+ * `split_asides` in Rust, which keeps the old asides when a reply is edited.
+ */
+export function withoutAsides(text: string): string {
+  let shown = '';
+  let rest = text;
+  for (;;) {
+    const i = rest.indexOf('<');
+    if (i < 0) break;
+    const after = rest.slice(i + 1);
+    const name = ASIDE_TAGS.find(
+      (tag) => after.startsWith(tag) && /^[ /\n\t>]/.test(after.slice(tag.length)),
+    );
+    const end = after.indexOf('>');
+    let len = -1;
+    if (name && end >= 0) {
+      if (after.slice(name.length, end).trimEnd().endsWith('/')) len = end + 1;
+      else {
+        const close = `</${name}>`;
+        const j = after.indexOf(close, end + 1);
+        if (j >= 0) len = j + close.length;
+      }
+    }
+    if (len < 0) {
+      shown += rest.slice(0, i + 1);
+      rest = after;
+      continue;
+    }
+    shown = (shown + rest.slice(0, i)).replace(/[ \t]+$/, '');
+    const next = after.slice(len);
+    rest = next.startsWith('\n') ? next.slice(1) : next;
+  }
+  return (shown + rest).trimEnd();
+}
+
 /** Message cards whose words can stand for a reply on their own. */
 const SPOKEN: MessageTag[] = ['text', 'call', 'thought', 'letter', 'post'];
 

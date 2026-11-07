@@ -243,6 +243,7 @@ describe('Budget in the reader', () => {
     errorCode: 'BUDGET_OVERRIDE_REQUIRED',
     createdAt: '2026-11-06T00:00:01Z',
     finishedAt: '2026-11-06T00:00:01Z',
+    options: {},
   };
   const warnPolicy: BudgetPolicy = { ...disabled, enabled: true, monthlyLimitUsd: '5' };
 

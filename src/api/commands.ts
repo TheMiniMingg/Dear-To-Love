@@ -38,6 +38,7 @@ import type {
   RouteNode,
   StoryMemory,
   RollRequest,
+  ReplyOptions,
   RouteView,
   StateEdit,
   SaveDto,
@@ -50,6 +51,7 @@ import type {
   StorytellerChoice,
   StorytellerInfo,
   Submitted,
+  TakenBack,
   TemplateCatalog,
   UpdateStatus,
   UsageScope,
@@ -175,9 +177,19 @@ export const commands = {
   deleteStory: (storyId: string) => call<void>('delete_story', { storyId }),
 
   getRouteView: (routeId: string) => call<RouteView>('get_route_view', { routeId }),
-  /** With `roll`, the app rolls the dice and stores the result with the action. */
-  submitAction: (r: RouteRef & { expectedHeadId: string; text: string; roll?: RollRequest }) =>
-    call<Submitted>('submit_action', r),
+  /**
+   * With `roll`, the app rolls the dice and stores the result with the
+   * action. Empty `text` (and no roll) is Keep going. `options` ask the
+   * next reply only to be short or long.
+   */
+  submitAction: (
+    r: RouteRef & {
+      expectedHeadId: string;
+      text: string;
+      roll?: RollRequest;
+      options?: ReplyOptions;
+    },
+  ) => call<Submitted>('submit_action', r),
   /**
    * Streams drafts to `onMessage`; resolves once the reply is committed.
    * `budgetOverride` sends one reply the budget gate cannot price.
@@ -191,8 +203,14 @@ export const commands = {
   cancelReply: (runId: string) => call<void>('cancel_reply', { runId }),
   editAction: (r: RouteRef & { playerEventId: string; text: string }) =>
     call<Submitted>('edit_action', r),
-  regenerateReply: (r: RouteRef & { assistantEventId: string }) =>
+  /** Another reply on a new route, maybe with a length and a hint for it. */
+  regenerateReply: (r: RouteRef & { assistantEventId: string; options?: ReplyOptions }) =>
     call<Submitted>('regenerate_reply', r),
+  /** Back to just before the player's last action; that turn stays on a new branch. */
+  takeBackTurn: (r: RouteRef & { expectedHeadId: string }) => call<TakenBack>('take_back_turn', r),
+  /** New words for the latest reply, in place; its notes and ideas stay. */
+  editReply: (r: RouteRef & { expectedHeadId: string; assistantEventId: string; text: string }) =>
+    call<RouteView>('edit_reply', r),
   editStoryDetails: (
     r: RouteRef & { expectedHeadId: string; changes: StateEdit[]; note: string | null },
   ) => call<RouteView>('edit_story_details', r),

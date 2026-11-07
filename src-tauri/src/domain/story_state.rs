@@ -20,6 +20,8 @@ use crate::errors::{AppError, AppResult};
 pub const STORY_STATE_SCHEMA_VERSION: u32 = 1;
 const MAX_TEXT: usize = 20_000;
 const MAX_LIST: usize = 200;
+/// A note to the storyteller is a sentence or two, not a second story setup.
+pub const MAX_STORYTELLER_NOTE: usize = 500;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -291,6 +293,11 @@ pub struct Narration {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
     pub style_notes: Option<String>,
+    /// The player's note to the storyteller ("slow the romance down"). It
+    /// steers the replies from here on and is never part of the story.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub storyteller_note: Option<String>,
 }
 
 fn is_false(b: &bool) -> bool {
@@ -322,6 +329,7 @@ impl Default for Narration {
             manual_memory: false,
             no_suggestions: false,
             style_notes: None,
+            storyteller_note: None,
         }
     }
 }
@@ -545,6 +553,13 @@ impl StoryStateV1 {
         }
         if let Some(notes) = &self.narration.style_notes {
             check_text("style notes", notes)?;
+        }
+        if let Some(note) = &self.narration.storyteller_note {
+            if note.chars().count() > MAX_STORYTELLER_NOTE {
+                return Err(AppError::invalid_input(format!(
+                    "the note to the storyteller must be at most {MAX_STORYTELLER_NOTE} characters"
+                )));
+            }
         }
         check_list("world rules", &self.world.rules)?;
         check_list("open threads", &self.open_threads)?;

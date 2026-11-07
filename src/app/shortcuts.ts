@@ -19,6 +19,7 @@ export type ShortcutId =
   | 'endChapter'
   | 'pictures'
   | 'details'
+  | 'takeBack'
   | 'routes'
   | 'memory'
   | 'larger'
@@ -48,6 +49,7 @@ export const SHORTCUT_GROUPS: { title: string; items: Shortcut[] }[] = [
       { id: 'details', keys: ['Mod+I'], label: msg('Story details') },
       // Not Mod+M: on a Mac that minimizes the window.
       { id: 'memory', keys: ['Mod+Shift+M'], label: msg('Story memory') },
+      { id: 'takeBack', keys: ['Mod+U'], label: msg('Take back my last turn') },
       { id: 'endChapter', keys: ['Mod+E'], label: msg('End chapter') },
       { id: 'pictures', keys: ['Mod+P'], label: msg('Picture view on or off') },
       { id: 'larger', keys: ['Mod+='], label: msg('Larger text') },

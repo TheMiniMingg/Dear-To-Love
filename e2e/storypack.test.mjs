@@ -55,6 +55,8 @@ test('export a storypack and text, import it as a new story', async () => {
   await tabTo(b, 'composer-input');
   await typeInto(b, '#composer-input', 'Read the letter');
   await b.keys(['Enter']);
+  // The action first: before it shows, a story with no turns has no reply to wait for.
+  await waitForText(b, '.turn-player', 'Read the letter');
   await waitForReply(b);
 
   // A cover picture, so the pack carries an image. The native dialogs can't
