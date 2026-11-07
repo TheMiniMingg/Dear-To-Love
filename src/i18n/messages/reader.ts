@@ -1226,4 +1226,20 @@ export const reader: Messages = {
   'Phone call: {status}': ['通话：{status}', '通話：{status}', '通話：{status}', '통화: {status}'],
   'Phone call': ['通话', '通話', '通話', '통화'],
   'A post': ['帖子', '貼文', '投稿', '게시물'],
+  'Reading options': ['阅读选项', '閱讀選項', '読書オプション', '읽기 옵션'],
+  'Pictures are shown above the story. Click for text only.': [
+    '故事上方显示图片。点击后只显示文字。',
+    '故事上方顯示圖片。點擊後只顯示文字。',
+    'ストーリーの上に画像を表示中です。クリックすると文字だけになります。',
+    '스토리 위에 이미지가 표시됩니다. 클릭하면 글자만 보입니다.',
+  ],
+  'Text only. Click to show pictures above the story.': [
+    '只显示文字。点击后在故事上方显示图片。',
+    '只顯示文字。點擊後在故事上方顯示圖片。',
+    '文字だけを表示中です。クリックするとストーリーの上に画像を表示します。',
+    '글자만 보입니다. 클릭하면 스토리 위에 이미지를 보여 줍니다.',
+  ],
+  'Show on stage': ['在舞台上显示', '在舞台上顯示', 'ステージに表示', '무대에 표시'],
+  'Show {name}': ['显示{name}', '顯示{name}', '{name}を表示', '{name} 표시'],
+  'Picture view': ['图片视图', '圖片檢視', '画像ビュー', '이미지 보기'],
 };

@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- **Picture view.** With a background or portraits chosen, the reader shows a stage above
+  the story, like a visual novel: the scene's background with the portrait of the character
+  the story is with, and their name. When someone new appears in a reply, or returns after a
+  while, the stage switches to them; the small portraits beside it put anyone else in the
+  scene on stage. **Picture view**, on the right side of the story, switches to text only
+  (and back), and the app remembers the choice.
 - **A background picture.** **Settings → Background picture** puts a picture from your image
   library (or a new one from your computer) behind every screen, softened so the text stays
   easy to read; choose how much of it shows. It is a setting of this computer, and **Images**
