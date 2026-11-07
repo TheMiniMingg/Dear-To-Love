@@ -29,14 +29,14 @@ use crate::domain::notes::{MemoryNote, NoteKind};
 use crate::domain::provider::{ModelMessage, Role};
 use crate::domain::replay::EffectiveState;
 use crate::domain::story_state::{
-    ContentRating, Control, Detail, DiceRules, NarrationStyle, Pacing, Perspective, RollFrequency,
-    RollOdds, Surprises, Tense,
+    BondKind, ContentRating, Control, Detail, DiceRules, NarrationStyle, Pacing, Perspective,
+    RollFrequency, RollOdds, Surprises, Tense,
 };
 use crate::domain::tracking::Tracking;
 use crate::errors::{AppError, AppResult, ErrorCode};
 use crate::services::tokens::{estimate_message, estimate_messages, estimate_text};
 
-pub const PROMPT_SCHEMA_VERSION: u32 = 11;
+pub const PROMPT_SCHEMA_VERSION: u32 = 12;
 /// What the storyteller reads for **Keep going**, an action with no words.
 pub const KEEP_GOING: &str = "(Out of character: I let the story go on without acting. \
      Continue from where it left off, and don't decide anything for my character.)";
@@ -330,6 +330,23 @@ fn threads_contract(language: Option<&str>) -> String {
     );
     if let Some(language) = language.map(str::trim).filter(|l| !l.is_empty()) {
         out.push_str(&format!("Write threads and cards in {language}.\n"));
+    }
+    out
+}
+
+/// Feelings towards the player, when the storyteller keeps the notes.
+fn bonds_contract(player_name: &str, language: Option<&str>) -> String {
+    let mut out = format!(
+        "\nFEELINGS\nWhen how someone feels about {player_name} changes in a way that lasts, end \
+         the reply with <bond name=\"Mina\" heart=\"+10\">how they feel about {player_name} now, \
+         in a few words</bond>. Use heart= for affection and trust= for trust: +5 to +15 (or \
+         -5 to -15) for most moments, up to 30 for a turning point. Leave the bar out to change \
+         only the words. Only when something really shifts, not in every reply. RELATIONSHIPS \
+         above shows each bar from 0 (cold, or no trust at all) to 100 (devoted, or complete \
+         trust); 50 is neutral.\n"
+    );
+    if let Some(language) = language.map(str::trim).filter(|l| !l.is_empty()) {
+        out.push_str(&format!("Write the words in {language}.\n"));
     }
     out
 }
@@ -691,6 +708,10 @@ fn system_prompt_with(state: &EffectiveState, frame: &StoryFrame, notes: &NotesP
     if !s.narration.manual_memory {
         out.push_str(&notes_contract(s.narration.language.as_deref()));
         out.push_str(&threads_contract(s.narration.language.as_deref()));
+        out.push_str(&bonds_contract(
+            player_name,
+            s.narration.language.as_deref(),
+        ));
     }
     if !s.narration.no_suggestions {
         out.push_str(&next_moves_contract(
@@ -824,16 +845,27 @@ fn system_prompt_with(state: &EffectiveState, frame: &StoryFrame, notes: &NotesP
         out.push_str("\nRELATIONSHIPS\n");
         for r in &s.relationships {
             let status = r.status.trim();
+            let words = match (r.label.trim(), status) {
+                ("", "") => String::new(),
+                (label, "") => label.to_string(),
+                ("", status) => status.to_string(),
+                (label, status) => format!("{label} ({status})"),
+            };
+            let bar = match r.bond {
+                Some(b) => format!(
+                    " [{} {}/100]",
+                    match b.kind {
+                        BondKind::Heart => "heart",
+                        BondKind::Trust => "trust",
+                    },
+                    b.value
+                ),
+                None => String::new(),
+            };
             out.push_str(&format!(
-                "- {} → {}: {}{}\n",
+                "- {} → {}: {words}{bar}\n",
                 name_of(&r.from_id),
                 name_of(&r.to_id),
-                r.label,
-                if status.is_empty() {
-                    String::new()
-                } else {
-                    format!(" ({status})")
-                }
             ));
         }
     }

@@ -59,7 +59,8 @@ if (import.meta.url === `file://${process.argv[1]}`) {
       if (f === 'index.ts' || f === 'types.ts') continue;
       const src = fs.readFileSync(path.join(dir, f), 'utf8');
       for (const m of src.matchAll(
-        /^  (?:'((?:\\.|[^'\\])*)'|"((?:\\.|[^"\\])*)"|([A-Za-z_$][\w$]*)):/gm,
+        // Unquoted keys can be any identifier, such as `Café` (Prettier drops the quotes).
+        /^  (?:'((?:\\.|[^'\\])*)'|"((?:\\.|[^"\\])*)"|([\p{L}_$][\p{L}\p{N}_$]*)):/gmu,
       ))
         have.add(m[3] ?? unescape(m[1] ?? m[2]));
     }

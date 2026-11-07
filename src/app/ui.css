@@ -1797,6 +1797,33 @@ details.more-options > summary {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+/* ---------- batch 6: chapter jump ---------- */
+.chapter-jump {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  min-width: 0;
+  padding: 0.05rem 0.4rem;
+  margin-inline-start: -0.4rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: none;
+  box-shadow: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+.chapter-jump:hover,
+.chapter-jump[aria-expanded='true'] {
+  background: var(--accent-soft);
+  border-color: var(--border);
+}
+.chapter-jump > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .step-count {
   margin: 0.15rem 0 0;
   text-align: center;
@@ -1974,4 +2001,359 @@ details.more-options > summary {
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
+}
+.chapter-jump-icon {
+  flex: none;
+  color: var(--muted);
+}
+.reader-heading .menu-popup {
+  right: auto;
+  left: 0;
+  max-height: min(60vh, 26rem);
+  overflow-y: auto;
+}
+.menu-icon-space {
+  display: inline-block;
+  width: 16px;
+}
+.reader-heading .menu-anchor {
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* ---------- batch 6: read aloud ---------- */
+.read-aloud-settings {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.45rem;
+  margin-top: 1rem;
+}
+.read-aloud-settings h3,
+.read-aloud-settings p {
+  margin: 0;
+}
+.read-aloud-settings select {
+  max-width: min(100%, 26rem);
+}
+.read-aloud-settings .inline-choices {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 1.25rem;
+}
+.read-aloud-settings .choices-label {
+  font-weight: 600;
+}
+.read-aloud-button[data-reading] {
+  color: var(--accent);
+}
+
+/* ---------- batch 6: command palette ---------- */
+/* The palette stays put near the top while its list grows and shrinks. */
+.dialog-backdrop:has(.palette) {
+  place-items: start center;
+  padding-top: max(1rem, 12vh);
+}
+.palette {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  min-width: min(34rem, 80vw);
+}
+.palette-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.palette-search-icon {
+  position: absolute;
+  inset-inline-start: 0.75rem;
+  color: var(--muted);
+  pointer-events: none;
+}
+.palette-search input {
+  width: 100%;
+  padding-inline-start: 2.4rem;
+  font-size: 1.02rem;
+}
+.palette-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: min(55vh, 28rem);
+  overflow-y: auto;
+}
+.palette-option {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 0.25rem 0.7rem;
+  padding: 0.5rem 0.65rem;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+.palette-option[data-group]:not(:first-child) {
+  margin-top: 0.35rem;
+  border-top: 1px solid var(--border);
+  border-start-start-radius: 0;
+  border-start-end-radius: 0;
+}
+.palette-option[aria-selected='true'] {
+  background: var(--accent-soft);
+}
+.palette-icon {
+  color: var(--muted);
+}
+.palette-option[aria-selected='true'] .palette-icon {
+  color: var(--accent);
+}
+.palette-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.palette-label,
+.palette-hint {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.palette-hint {
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+.palette-group {
+  font-size: 0.78rem;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.palette-keys {
+  font: inherit;
+  font-size: 0.75rem;
+  padding: 0.05rem 0.35rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--muted);
+  background: var(--surface-2);
+}
+.palette-empty {
+  margin: 0.25rem 0.5rem;
+}
+@media (max-width: 640px) {
+  .palette-group {
+    display: none;
+  }
+}
+
+/* ---------- batch 6: first-time tips ---------- */
+.tour {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.9rem;
+  margin: 0 0 0.6rem;
+  padding: 0.6rem 0.85rem;
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--border));
+  border-radius: var(--radius);
+  background: var(--accent-soft);
+  box-shadow: var(--shadow-sm);
+  animation: pop-in 0.2s var(--ease);
+}
+.tour-icon {
+  flex: none;
+  color: var(--accent);
+}
+.tour-text {
+  flex: 1 1 18rem;
+  margin: 0;
+  font-size: 0.92rem;
+}
+.tour-count {
+  font-weight: 600;
+  color: var(--accent);
+}
+.tour-buttons {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-inline-start: auto;
+}
+.tour-target {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: var(--radius-sm);
+  animation: tour-pulse 1.6s var(--ease) 2;
+}
+@keyframes tour-pulse {
+  50% {
+    outline-offset: 6px;
+    outline-color: color-mix(in srgb, var(--accent) 40%, transparent);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tour,
+  .tour-target {
+    animation: none;
+  }
+}
+
+/* ---------- batch 6: feelings ---------- */
+.bond-bar {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+.bond-icon {
+  flex: none;
+}
+.bond-bar.kind-heart .bond-icon {
+  color: #e0456f;
+}
+.bond-bar.kind-trust .bond-icon {
+  color: color-mix(in srgb, #3a8fd8 80%, var(--fg));
+}
+.bond-track {
+  position: relative;
+  width: 6.5rem;
+  height: 0.45rem;
+  border-radius: 999px;
+  background: var(--surface-2);
+  box-shadow: inset 0 0 0 1px var(--border);
+  overflow: hidden;
+}
+.bond-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: inherit;
+  background: linear-gradient(90deg, color-mix(in srgb, #e0456f 55%, transparent), #e0456f);
+  transition: width 0.3s var(--ease);
+}
+.bond-bar.kind-trust .bond-fill {
+  background: linear-gradient(90deg, color-mix(in srgb, #3a8fd8 55%, transparent), #3a8fd8);
+}
+.bond-value {
+  min-width: 1.6em;
+  font-variant-numeric: tabular-nums;
+}
+.relationship-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.25rem 1rem;
+}
+.memory-chip.kind-bond {
+  --kind: #e0456f;
+}
+.memory-chip.kind-bond.bond-trust {
+  --kind: #3a8fd8;
+}
+.bond-change {
+  margin-inline-start: 0.25rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--pass);
+}
+.memory-chip.down .bond-change {
+  color: var(--fail);
+}
+.feeling-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--accent-soft) 45%, var(--surface));
+}
+.feeling-fields > legend {
+  padding: 0 0.3rem;
+  font-weight: 600;
+}
+.feeling-fields p {
+  margin: 0;
+}
+.feeling-bar-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem 1.2rem;
+}
+.feeling-range {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1 1 16rem;
+}
+.feeling-range input[type='range'] {
+  flex: 1;
+  min-width: 6rem;
+  accent-color: var(--accent);
+}
+.feeling-value {
+  min-width: 2ch;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* End chapter: tidying the notebook, each change kept or undone. */
+.tidy-review {
+  border: 1px solid var(--border);
+  border-radius: var(--radius, 10px);
+  padding: 0.75rem 1rem;
+  display: grid;
+  gap: 0.5rem;
+}
+.tidy-review legend {
+  font-weight: 600;
+  padding: 0 0.25rem;
+}
+.tidy-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.5rem;
+  max-height: min(40vh, 22rem);
+  overflow-y: auto;
+}
+.tidy-change {
+  background: var(--surface-2);
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+  display: grid;
+  gap: 0.35rem;
+}
+.tidy-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+.tidy-title {
+  font-weight: 600;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.tidy-text {
+  margin: 0;
+  white-space: pre-wrap;
+}
+.tidy-change.undone .tidy-text {
+  color: var(--muted);
+  font-style: italic;
+}
+.tidy-before summary {
+  cursor: pointer;
+  color: var(--muted);
+  font-size: 0.875rem;
+}
+.tidy-before ul {
+  margin: 0.25rem 0 0;
+  padding-left: 1.1rem;
+  color: var(--muted);
+  font-size: 0.875rem;
 }

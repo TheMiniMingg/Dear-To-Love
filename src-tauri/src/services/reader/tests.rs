@@ -494,3 +494,73 @@ async fn a_reply_keeps_the_quest_log_and_its_threads_can_be_undone() {
     .unwrap_err();
     assert!(err.message.contains("changed since"), "{}", err.message);
 }
+
+#[tokio::test]
+async fn a_reply_moves_how_someone_feels_and_its_undo_moves_it_back() {
+    use crate::domain::story_state::{Bond, BondKind};
+    let (t, s) = story().await;
+    let feeling = |v: &RouteView| {
+        let st = &v.state.effective.state;
+        st.relationships
+            .iter()
+            .find(|r| r.from_id == "starter:npc-mara" && r.to_id == st.player_character_id)
+            .map(|r| (r.status.clone(), r.bond))
+    };
+    let start = feeling(&route_view(&t.db, &s.main_route_id).await.unwrap());
+    let first = exchange(
+        &t,
+        &s,
+        &s.head_event_id,
+        "She smiles. <bond name=\"Mara\" heart=\"+10\">Warmer since the lamp</bond>",
+    )
+    .await;
+    let heart = |value| {
+        Some(Bond {
+            kind: BondKind::Heart,
+            value,
+        })
+    };
+    let v = route_view(&t.db, &s.main_route_id).await.unwrap();
+    assert_eq!(
+        feeling(&v),
+        Some(("Warmer since the lamp".into(), heart(60)))
+    );
+    let second = exchange(&t, &s, &first, "<bond name=\"Mara\" heart=\"+5\"/>").await;
+    let v = route_view(&t.db, &s.main_route_id).await.unwrap();
+    assert_eq!(
+        feeling(&v),
+        Some(("Warmer since the lamp".into(), heart(65)))
+    );
+
+    // Undo the second reply: the bar is back where the first left it.
+    undo_reply_notes(&t.db, &s.story_id, &s.main_route_id, &second, &second, None)
+        .await
+        .unwrap();
+    let v = route_view(&t.db, &s.main_route_id).await.unwrap();
+    assert_eq!(
+        feeling(&v),
+        Some(("Warmer since the lamp".into(), heart(60)))
+    );
+    match &v.history.last().unwrap().body {
+        EventBody::Edit(p) => assert_eq!(p.note.as_deref(), Some("Mara Quill")),
+        other => panic!("expected an edit, got {other:?}"),
+    }
+    // Undo the first: Mara feels as she did when the story began.
+    let head = v.state.head_event_id.clone();
+    undo_reply_notes(&t.db, &s.story_id, &s.main_route_id, &head, &first, None)
+        .await
+        .unwrap();
+    let v = route_view(&t.db, &s.main_route_id).await.unwrap();
+    assert_eq!(feeling(&v), start);
+    let err = undo_reply_notes(
+        &t.db,
+        &s.story_id,
+        &s.main_route_id,
+        &v.state.head_event_id,
+        &first,
+        None,
+    )
+    .await
+    .unwrap_err();
+    assert!(err.message.contains("changed since"), "{}", err.message);
+}

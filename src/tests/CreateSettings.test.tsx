@@ -230,8 +230,8 @@ describe('Preset Story cover', () => {
     expect(within(cover).getByRole('heading', { level: 2 })).toHaveTextContent(
       'The Unsigned Letter',
     );
-    // A mystery reads in Midnight when stories fit their genre.
-    expect(cover).toHaveAttribute('data-theme-preview', 'midnight');
+    // A mystery reads in Gothic when stories fit their genre.
+    expect(cover).toHaveAttribute('data-theme-preview', 'gothic');
     const cast = within(cover).getByRole('list', { name: 'Cast' });
     expect(within(cast).getByText('Sam Ashby')).toBeInTheDocument();
     expect(within(cast).getByText('You')).toBeInTheDocument();

@@ -17,6 +17,7 @@ use crate::services::memory::{self, SummaryEnv};
 use crate::services::reader::{self, RouteView};
 use crate::services::route_map::{self, RouteNode};
 use crate::services::story_memory::{self, StoryMemory};
+use crate::services::tidy::{self, NotebookTidy};
 use crate::state::AppState;
 
 #[tauri::command]
@@ -240,6 +241,23 @@ pub async fn draft_chapter_recap(
         session_id: &state.session_id,
     };
     chapters::draft_recap(&env, &route_id).await
+}
+
+/// Suggested merges and shortenings for the notebook at chapter end, by the
+/// chosen storyteller (one possibly paid request) or offline. Nothing is
+/// stored; the kept changes are saved with `edit_story_details`.
+#[tauri::command]
+pub async fn draft_notebook_tidy(
+    state: State<'_, AppState>,
+    route_id: String,
+) -> AppResult<NotebookTidy> {
+    let env = SummaryEnv {
+        db: state.db()?,
+        secrets: state.secrets.as_ref(),
+        jobs: &state.memory,
+        session_id: &state.session_id,
+    };
+    tidy::draft_tidy(&env, &route_id).await
 }
 
 /// End the chapter: keep the recap on this route, save, and start the next

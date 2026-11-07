@@ -135,7 +135,7 @@ mod tests {
 /// Tags the storyteller uses for texts, calls, thoughts, letters, posts,
 /// dice rolls, headings, bars, items, memory notes, open threads, new
 /// characters and ideas for the player's next move.
-const MESSAGE_TAGS: [&str; 14] = [
+const MESSAGE_TAGS: [&str; 15] = [
     "text",
     "call",
     "thought",
@@ -150,10 +150,11 @@ const MESSAGE_TAGS: [&str; 14] = [
     "thread",
     "character",
     "next",
+    "bond",
 ];
 
 /// Tags that are about the story, not part of its text.
-const ASIDE_TAGS: [&str; 5] = ["remember", "forget", "thread", "character", "next"];
+const ASIDE_TAGS: [&str; 6] = ["remember", "forget", "thread", "character", "next", "bond"];
 
 /// One finished tag found by [`scan_tags`].
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -421,7 +422,7 @@ pub fn plain_message_tags(text: &str) -> String {
 /// Tags only the app and the storyteller may write: a roll is the app's,
 /// and bars, items, memory notes, threads, new characters and next-move
 /// ideas come only from the storyteller's replies.
-const APP_TAGS: [&str; 8] = [
+const APP_TAGS: [&str; 9] = [
     "roll",
     "meter",
     "item",
@@ -430,6 +431,7 @@ const APP_TAGS: [&str; 8] = [
     "thread",
     "character",
     "next",
+    "bond",
 ];
 
 /// The text has a roll, meter, item, memory note or other storyteller-only

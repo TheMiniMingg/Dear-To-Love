@@ -17,16 +17,19 @@ import {
   PenLine,
   Pencil,
   RefreshCw,
+  Square,
   Undo2,
+  Volume2,
 } from 'lucide-react';
 import { errorMessage } from '../../api/commands';
 import { isComposing } from '../../app/keyboard';
-import type { EventDto, MemoryNote, RollRequest } from '../../types';
+import { canReadAloud, useReadAloud } from '../../app/readAloud';
+import type { EventDto, MemoryNote, RollRequest, StoryStateV1 } from '../../types';
 import { RollResult } from './DiceCards';
 import { NameColorsContext, nameStyle } from './nameColors';
 import { MemoryLine, notesOnly, type ThreadLists } from './notes';
 import { NewCharacterCards } from './NewCharacterCard';
-import { withoutAsides, type NewCharacter } from './messages';
+import { plainText, withoutAsides, type NewCharacter } from './messages';
 import { picturesOnly } from './pictures';
 import { RichText } from './RichText';
 import { t } from '../../i18n';
@@ -66,6 +69,8 @@ type Props = {
   currentNotes?: MemoryNote[];
   /** The threads as they are now, for the same. */
   currentThreads?: ThreadLists;
+  /** The story as it is now, for the feelings a reply moved. */
+  currentState?: StoryStateV1;
   /** Offer "See notes" on that line. */
   onOpenNotes?: () => void;
   /** Offer "Undo" on that line. */
@@ -76,6 +81,8 @@ type Props = {
   newcomers?: Newcomers;
   /** Ideas for the first move show above the box. */
   ideasShown?: boolean;
+  /** The story's language for the computer's voice ("ja-JP"), when known. */
+  speechLang?: string;
 };
 
 export type Newcomers = {
@@ -174,6 +181,29 @@ function ReplyEditor({
   );
 }
 
+/** Read a reply aloud with the computer's own voice, or stop it. */
+function ReadAloudButton({ id, text, lang }: { id: string; text: string; lang?: string }) {
+  const reading = useReadAloud((s) => s.reading === id);
+  if (!canReadAloud()) return null;
+  return (
+    <button
+      type="button"
+      className="turn-action read-aloud-button"
+      aria-pressed={reading}
+      data-reading={reading || undefined}
+      onClick={() =>
+        reading
+          ? useReadAloud.getState().stop()
+          : useReadAloud.getState().read(id, plainText(text), lang)
+      }
+      title={reading ? t('Stop reading aloud') : t('Read this reply aloud')}
+    >
+      {reading ? <Square {...ACTION_ICON} /> : <Volume2 {...ACTION_ICON} />}
+      <span className="visually-hidden">{reading ? t('Stop reading') : t('Read aloud')}</span>
+    </button>
+  );
+}
+
 function Paragraphs({ text }: { text: string }) {
   return (
     <>
@@ -202,11 +232,13 @@ function EventBlock({
   keepsNotes,
   currentNotes,
   currentThreads,
+  currentState,
   onOpenNotes,
   onUndoNotes,
   opensChapter,
   sceneHeadings,
   newcomers,
+  speechLang,
 }: {
   e: EventDto;
   focused: boolean;
@@ -374,6 +406,7 @@ function EventBlock({
               text={e.payload.text}
               current={currentNotes}
               threads={currentThreads}
+              feelings={currentState}
               onOpen={onOpenNotes}
               onUndo={onUndoNotes && (() => onUndoNotes(e.id))}
             />
@@ -387,8 +420,9 @@ function EventBlock({
               onAdd={newcomers.onAdd}
             />
           )}
-          {!editing && (branch || regenerate || edit || bookmark) && (
+          {!editing && (canReadAloud() || branch || regenerate || edit || bookmark) && (
             <div className="turn-actions">
+              <ReadAloudButton id={e.id} text={e.payload.text} lang={speechLang} />
               {edit}
               {regenerate}
               {branch}
@@ -461,11 +495,13 @@ export function NarrativeView({
   keepsNotes,
   currentNotes,
   currentThreads,
+  currentState,
   onOpenNotes,
   onUndoNotes,
   sceneHeadings,
   newcomers,
   ideasShown = false,
+  speechLang,
 }: Props) {
   const opening = events[0]?.kind === 'chapter_start' && events[0].payload.ordinal === 1;
   const notStarted = !draft && !events.some((e) => e.kind === 'player');
@@ -626,10 +662,12 @@ export function NarrativeView({
                 keepsNotes={keepsNotes}
                 currentNotes={currentNotes}
                 currentThreads={currentThreads}
+                currentState={currentState}
                 onOpenNotes={onOpenNotes}
                 onUndoNotes={onUndoNotes}
                 sceneHeadings={sceneHeadings}
                 newcomers={newcomers}
+                speechLang={speechLang}
                 latest={i >= events.length - 2 && i === lastOfKind(events, e.kind)}
                 opensChapter={opensChapter}
               />

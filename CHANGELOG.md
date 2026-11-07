@@ -20,16 +20,41 @@
   box. The turn is kept in **Routes** as "Taken back: …".
 - **Remember this.** Pick words in the story and press **Remember this** to make them a memory
   note: about the person they name, or a moment in the timeline.
+- **Find anything.** Ctrl+K (Cmd+K on a Mac) opens a box that finds any story, chapter,
+  window or setting as you type. Up and Down choose, Enter goes.
+- **Jump to a chapter.** The chapter name under the story's title lists every chapter so far;
+  pick one to jump there, or **Replay a chapter…**.
+- **Read aloud.** The speaker under a reply reads it with the computer's own voices, offline
+  and free. **Settings → Sound** chooses the voice and the speed, with **Try it**. The
+  speaker shows only where the computer has voices.
+- **Save a route as a book.** **Export → Book** saves the route as an e-book (`.epub`) for any
+  e-reader or book app: the story's cover (or a drawn one), a title page with who you played,
+  a page for each chapter, a table of contents and the Literata font. Only the story goes in,
+  never notes or settings.
+- **How they feel about you.** A character can have a **Heart** bar (cold to devoted) or a
+  **Trust** bar (suspicious to complete trust) beside how they know you and how they feel now.
+  The storyteller reads the bars before every reply and moves them as things happen; the
+  "Memory updated" line shows each change (Mara +10) with **Undo**. Set them yourself in
+  **Story details**.
+- **A tidier notebook.** When a chapter ends and the notebook has grown, the storyteller
+  offers to merge notes about the same person or thing and shorten long ones. Each change
+  shows what it would become, with **Keep** or **Undo**; nothing changes until the chapter
+  ends. The offline storyteller does a simpler version, and stories that keep their notes by
+  hand are left alone.
+- **Tips for your first story.** Four short tips point at the action box, the kinds of
+  action, the tools and the side bar. **Skip tips** hides them for good.
 - **A new look.** Stories are set in Literata, a book font, and the rest of the app in Inter;
   both come with the app, so they look the same on every computer. Chapters open like a
   book's, with the chapter number, a large title, an ornament and a large first letter.
   Buttons, cards, dialogs and settings have depth, on/off options are switches, lists to
   pick from are pills, and the main buttons have icons. Things fade in gently, and not at all
   when the computer asks for less motion.
-- **Themes.** **Settings → Look** chooses Rose (light or dark with your computer), Midnight
-  or Parchment. With **Give each story a look that fits its genre** on, each story takes the
-  look of its genre: Midnight for horror, mysteries and science fiction, Parchment for
-  fantasy and history, Rose for romance. **Look** beside the story chooses another for that
+- **Themes.** **Settings → Look** chooses Rose (light or dark with your computer), Midnight,
+  Parchment, Neon (near black with cyan and magenta), Café (latte browns and a soft green) or
+  Gothic (charcoal and deep red, with serif headings). With **Give each story a look that fits
+  its genre** on, each story takes the look of its genre: Gothic for horror and mysteries,
+  Neon for science fiction, Midnight for thrillers, Parchment for fantasy and history, Café
+  for cozy stories and Rose for romance. **Look** beside the story chooses another for that
   story. Looks are a setting of this computer.
 - **Reading the way you like.** **Settings → Look** and **Look** beside the story choose the
   text size, the column width (Narrow, Medium or Wide) and the line spacing (Compact, Normal or

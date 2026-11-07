@@ -533,6 +533,7 @@ fn merge_cast(draft: &mut CreateStoryDraft, v: &Value) -> bool {
                     label,
                     status: String::new(),
                     source_event_id: None,
+                    bond: None,
                 });
             }
             draft.npcs.push(c);

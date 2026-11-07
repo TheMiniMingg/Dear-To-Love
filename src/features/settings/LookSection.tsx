@@ -45,7 +45,7 @@ export function LookSection() {
         </label>
         <p id={`${id}-fit`} className="muted small check-hint">
           {t(
-            'Horror, mysteries and science fiction read in Midnight, fantasy and history on Parchment, romance in Rose. Change any story with Look beside it while reading.',
+            'Horror and mysteries read in Gothic, science fiction in Neon, thrillers in Midnight, fantasy and history on Parchment, cozy stories in Café and romance in Rose. Change any story with Look beside it while reading.',
           )}
         </p>
       </div>

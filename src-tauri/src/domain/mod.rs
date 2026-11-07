@@ -1,4 +1,5 @@
 pub mod app_info;
+pub mod bonds;
 pub mod diagnostics;
 pub mod dice;
 pub mod draft;

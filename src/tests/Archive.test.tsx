@@ -119,6 +119,14 @@ describe('Export from the reader', () => {
       if (cmd === 'get_route_view') return fakeRouteView();
       if (cmd === 'export_route_text')
         return { fileName: 'The Unsigned Letter - Main.txt', chapters: 2, turns: 8 };
+      if (cmd === 'export_route_book')
+        return {
+          fileName: 'The Unsigned Letter - Main.epub',
+          chapters: 2,
+          turns: 8,
+          bytes: 420_000,
+          coverPicture: false,
+        };
       if (cmd === 'export_storypack')
         return {
           fileName: 'The Unsigned Letter.storypack',
@@ -160,6 +168,35 @@ describe('Export from the reader', () => {
     });
     expect(await within(dialog).findByRole('status')).toHaveTextContent(
       'Saved The Unsigned Letter - Main.txt: 2 chapters, 8 turns.',
+    );
+  });
+
+  it('saves this route as a book with its own title page words', async () => {
+    const dialog = await openExport();
+    expect(dialog).toHaveTextContent('Only the story goes in, never notes or settings.');
+    saveDialog.mockResolvedValue('/home/a/The Unsigned Letter - Main.epub');
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Save as a book…' }));
+
+    expect(saveDialog).toHaveBeenCalledWith(
+      expect.objectContaining({
+        defaultPath: 'The Unsigned Letter - Main.epub',
+        filters: [{ name: 'E-book (.epub)', extensions: ['epub'] }],
+      }),
+    );
+    expect(invoke).toHaveBeenCalledWith('export_route_book', {
+      routeId: 'route-1',
+      path: '/home/a/The Unsigned Letter - Main.epub',
+      labels: {
+        language: undefined,
+        // The main route needs no subtitle.
+        subtitle: undefined,
+        byline: 'Played as Sam Ashby',
+        colophon: expect.stringMatching(/^Made with Dear to Love on \w+ \d+, \d{4}$/),
+        contents: 'Contents',
+      },
+    });
+    expect(await within(dialog).findByRole('status')).toHaveTextContent(
+      'Saved The Unsigned Letter - Main.epub (410 KB): 2 chapters, 8 turns. The story has no cover picture, so the front shows its title.',
     );
   });
 

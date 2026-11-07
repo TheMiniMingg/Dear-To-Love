@@ -419,7 +419,35 @@ pub struct Relationship {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
     pub source_event_id: Option<String>,
+    /// How warm or trusting `from` is towards `to`, as a bar the storyteller
+    /// moves with `<bond>` tags and the player can drag.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub bond: Option<Bond>,
 }
+
+/// What a relationship's bar measures.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub enum BondKind {
+    /// Affection: from cold to devoted.
+    Heart,
+    /// Trust: from suspicious to complete trust.
+    Trust,
+}
+
+/// A relationship's bar, from 0 to [`MAX_BOND`]; [`START_BOND`] is neutral.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[ts(export)]
+pub struct Bond {
+    pub kind: BondKind,
+    pub value: u8,
+}
+
+pub const MAX_BOND: u8 = 100;
+pub const START_BOND: u8 = 50;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -522,6 +550,9 @@ impl StoryStateV1 {
                     "relationship {} -> {} references an unknown character",
                     r.from_id, r.to_id
                 ));
+            }
+            if r.bond.is_some_and(|b| b.value > MAX_BOND) {
+                return bad(format!("a relationship's bar goes from 0 to {MAX_BOND}"));
             }
         }
         let mut fact_ids = BTreeSet::new();
@@ -785,6 +816,7 @@ pub fn sample_lighthouse() -> StoryStateV1 {
             label: "old friends".into(),
             status: "friendly".into(),
             source_event_id: None,
+            bond: None,
         }],
         known_facts: vec![],
         scene: Scene {

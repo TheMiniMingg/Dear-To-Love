@@ -6,13 +6,15 @@
 //! exceptions are tags in the storyteller's replies, which the reader shows
 //! where they happen: `<meter>` and `<item>` in a story that keeps bars and
 //! items (`tracking`), `<scene>` headings (where and when the story is),
-//! and the `<remember>` and `<forget>` memory notes and `<thread>` open
-//! threads unless the player keeps those themselves (`manual_memory`).
+//! and the `<remember>` and `<forget>` memory notes, `<thread>` open
+//! threads and `<bond>` feelings unless the player keeps those themselves
+//! (`manual_memory`).
 
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use ts_rs::TS;
 
+use super::bonds;
 use super::events::{EventBody, StateEdit};
 use super::notes::{self, MAX_NOTES};
 use super::story_state::{KnownFact, StoryStateV1};
@@ -92,6 +94,7 @@ impl EffectiveState {
                     notes::apply_reply(&mut self.state.notes, &p.text, chapter, event_id);
                     let s = &mut self.state;
                     threads::apply_reply(&mut s.open_threads, &mut s.done_threads, &p.text);
+                    bonds::apply_reply(&mut self.state, &p.text, event_id);
                 }
             }
             EventBody::Player(_) | EventBody::Checkpoint(_) => {}

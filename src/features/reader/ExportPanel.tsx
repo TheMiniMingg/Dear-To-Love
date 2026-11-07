@@ -1,19 +1,22 @@
 import { useId, useState } from 'react';
 import {
   TEXT_FORMATS,
+  describeBook,
   describeExport,
   describeText,
+  pickBookTarget,
   pickStorypackTarget,
   pickTextTarget,
 } from '../../api/archive';
+import { speechLang } from '../../app/readAloud';
 import { commands, errorMessage } from '../../api/commands';
 import type { RouteView, TextFormat } from '../../types';
-import { t, tr } from '../../i18n';
+import { intlLocale, t, tr } from '../../i18n';
 import { routeName } from '../../i18n/names';
 
 /**
- * Reader -> Export: this route as readable text, or the whole story as a
- * storypack another copy of the app can import.
+ * Reader -> Export: this route as readable text or as a book, or the whole
+ * story as a storypack another copy of the app can import.
  */
 export function ExportPanel({ view }: { view: RouteView }) {
   const id = useId();
@@ -46,6 +49,28 @@ export function ExportPanel({ view }: { view: RouteView }) {
       () => pickTextTarget(view.story.title, view.route.label, format),
       async (path) =>
         describeText(await commands.exportRouteText(view.route.id, path, format, timestamps)),
+    );
+
+  const saveBook = () =>
+    run(
+      () => pickBookTarget(view.story.title, view.route.label),
+      async (path) => {
+        const s = view.state.state;
+        const player = s.characters[s.playerCharacterId]?.name.trim() || t('you');
+        return describeBook(
+          await commands.exportRouteBook(view.route.id, path, {
+            language: speechLang(s.narration?.language),
+            subtitle: view.route.isMain
+              ? undefined
+              : t('Route: {name}', { name: routeName(view.route.label) }),
+            byline: t('Played as {name}', { name: player }),
+            colophon: t('Made with Dear to Love on {date}', {
+              date: new Date().toLocaleDateString(intlLocale(), { dateStyle: 'long' }),
+            }),
+            contents: t('Contents'),
+          }),
+        );
+      },
     );
 
   const savePack = () =>
@@ -91,6 +116,20 @@ export function ExportPanel({ view }: { view: RouteView }) {
         <div className="button-row">
           <button type="button" disabled={busy} onClick={() => void saveText()}>
             {t('Save as text…')}
+          </button>
+        </div>
+      </section>
+      <section aria-labelledby={`${id}-book`}>
+        <h3 id={`${id}-book`}>{t('Book')}</h3>
+        <p className="muted small">
+          {tr(
+            'The route {route} as an e-book for any e-reader or book app: the cover, a title page, a page for each chapter and the reading font. Only the story goes in, never notes or settings.',
+            { route: <strong>{routeName(view.route.label)}</strong> },
+          )}
+        </p>
+        <div className="button-row">
+          <button type="button" disabled={busy} onClick={() => void saveBook()}>
+            {t('Save as a book…')}
           </button>
         </div>
       </section>
