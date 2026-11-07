@@ -837,6 +837,17 @@ textarea:focus-visible {
   flex: 1;
   min-width: 10rem;
 }
+/* Save / Load: your saves, then the autosaves. */
+.save-group {
+  margin-top: 1.1rem;
+}
+.save-group h3 {
+  margin: 0 0 0.15rem;
+  font-size: 0.95rem;
+}
+.save-group > p {
+  margin: 0 0 0.3rem;
+}
 .item-list {
   list-style: none;
   padding: 0;

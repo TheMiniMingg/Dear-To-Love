@@ -17,8 +17,9 @@ vi.mock('@tauri-apps/api/core', () => ({
 import { useUiStore } from '../app/store';
 import { QuickStartScreen } from '../features/create/QuickStartScreen';
 import { LibraryScreen } from '../features/library/LibraryScreen';
-import { openingIdeas } from '../features/reader/messages';
+import { openingIdeas, shortName } from '../features/reader/messages';
 import { ReaderScreen } from '../features/reader/ReaderScreen';
+import { SavesPanel } from '../features/saves/SavesPanel';
 import { SettingsScreen } from '../features/settings/SettingsScreen';
 
 const narration = { perspective: 'second', detail: 'balanced', tone: 'Warm', pacing: 'normal' };
@@ -105,6 +106,13 @@ describe('ways in at a chapter start', () => {
     ]);
   });
 
+  it('keeps a title with the name it goes with', () => {
+    expect(shortName('Mara Quill')).toBe('Mara');
+    expect(shortName(' Lord Shen Yao ')).toBe('Lord Shen');
+    expect(shortName('Dr. Ines Alvarez')).toBe('Dr. Ines');
+    expect(shortName('Captain')).toBe('Captain');
+  });
+
   it('shows above the box before the first move, and puts one in the box', async () => {
     const view = fakeRouteView();
     invoke.mockImplementation(async (cmd: string) => {
@@ -115,6 +123,10 @@ describe('ways in at a chapter start', () => {
     useUiStore.setState({ screen: { name: 'reader', routeId: 'route-1' }, history: [] });
     render(<ReaderScreen routeId="route-1" />);
     const ideas = await screen.findByRole('group', { name: 'Ideas for what to do next' });
+    // Opening the story puts the focus in the action box, ready to play.
+    await waitFor(() =>
+      expect(document.activeElement).toBe(screen.getByRole('textbox', { name: /What do you do/ })),
+    );
     expect(
       screen.getByText(
         'Write what you do in the box below to begin, or pick an idea just above it.',
@@ -157,5 +169,41 @@ describe('Settings', () => {
     await waitFor(() =>
       expect(document.activeElement).toBe(screen.getByRole('region', { name: 'AI connections' })),
     );
+  });
+});
+
+describe('Save / Load', () => {
+  it('lists your own saves apart from the autosaves', async () => {
+    const save = (id: string, label: string, saveType: string) => ({
+      id,
+      storyId: 'story-1',
+      routeId: 'route-1',
+      routeLabel: 'Main',
+      eventId: 'ev-1',
+      label,
+      saveType,
+      slot: null,
+      createdAt: '2026-11-07T12:00:00Z',
+      updatedAt: '2026-11-07T12:00:00Z',
+      isRouteHead: false,
+    });
+    invoke.mockImplementation(async (cmd: string) =>
+      cmd === 'list_saves'
+        ? [save('a1', 'Autosave (Main)', 'auto'), save('m1', 'Before the dance', 'manual')]
+        : null,
+    );
+    render(
+      <SavesPanel
+        storyId="story-1"
+        routeId="route-1"
+        onView={() => undefined}
+        onResume={() => undefined}
+        onSaved={() => undefined}
+      />,
+    );
+    const mine = await screen.findByRole('list', { name: 'Your saves' });
+    expect(mine).toHaveTextContent('Before the dance');
+    expect(mine).not.toHaveTextContent('Autosave');
+    expect(screen.getByRole('list', { name: 'Autosaves' })).toHaveTextContent('Autosave (Main)');
   });
 });

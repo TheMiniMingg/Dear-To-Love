@@ -372,6 +372,25 @@ export function nextMoves(text: string): string[] {
   return out.slice(0, 4);
 }
 
+/** Words that come before a name: "Lord Shen Yao" is not called "Lord". */
+const TITLES = new Set(
+  (
+    'aunt auntie baron baroness brother capt captain count countess dame det detective doctor dr ' +
+    'duchess duke emperor empress father general grandma grandpa king lady lieutenant lord lt ' +
+    'madam madame master miss mistress mother mr mrs ms mx officer prince princess prof ' +
+    'professor queen saint sergeant sgt sir sister st uncle'
+  ).split(' '),
+);
+
+/**
+ * What people call someone in passing: the first name ("Mara" for Mara
+ * Quill), or the title and the next word ("Lord Shen" for Lord Shen Yao).
+ */
+export function shortName(name: string): string {
+  const [first = '', next] = name.trim().split(/\s+/);
+  return next && TITLES.has(first.replace(/\.$/, '').toLowerCase()) ? `${first} ${next}` : first;
+}
+
 /**
  * Ideas for the first move of a chapter, before the storyteller has
  * offered any: look around, talk to someone in the scene (or ask who is
@@ -380,7 +399,7 @@ export function nextMoves(text: string): string[] {
 export function openingIdeas(state: StoryStateV1): string[] {
   const other = state.scene.participantIds
     .filter((id) => id !== state.playerCharacterId)
-    .map((id) => state.characters[id]?.name.trim().split(/\s+/)[0])
+    .map((id) => shortName(state.characters[id]?.name ?? ''))
     .find(Boolean);
   return [
     t('Look around'),

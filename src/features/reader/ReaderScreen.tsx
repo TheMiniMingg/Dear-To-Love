@@ -390,6 +390,18 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
     }
   }, []);
 
+  // Opening a story or a route (from the library, a save or a branch)
+  // leaves the focus on the page: put it in the action box, ready to play.
+  const placedFocus = useRef(false);
+  useEffect(() => {
+    if (placedFocus.current || !view || busy || panel || viewing) return;
+    const box = document.getElementById('composer-input') as HTMLTextAreaElement | null;
+    if (!box || box.disabled) return;
+    placedFocus.current = true;
+    const active = document.activeElement;
+    if (!active || active === document.body) box.focus({ preventScroll: true });
+  });
+
   const awaitingReply = !!view?.awaitingReply;
   const writing = stream !== null;
   const lastAction = view?.history[view.history.length - 1];
