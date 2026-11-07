@@ -320,4 +320,25 @@ describe('diffState', () => {
       after: 'Off',
     });
   });
+
+  it("keeps the story's own style notes when something else changes", () => {
+    const before = structuredClone(state);
+    before.narration = { ...before.narration, styleNotes: 'Lots of banter' };
+    const after = structuredClone(before);
+    after.narration = { ...after.narration, tone: 'Wistful' };
+    const { changes } = diffState(before, after);
+    expect(changes).toEqual([
+      {
+        op: 'setNarration',
+        narration: { ...before.narration, tone: 'Wistful', styleNotes: 'Lots of banter' },
+      },
+    ]);
+
+    after.narration = { ...after.narration, styleNotes: '  Short replies ' };
+    expect(diffState(before, after).lines).toContainEqual({
+      what: 'Narration · Your own style (optional)',
+      before: 'Lots of banter',
+      after: 'Short replies',
+    });
+  });
 });
