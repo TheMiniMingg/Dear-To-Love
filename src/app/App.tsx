@@ -14,6 +14,7 @@ import { ShortcutsDialog } from '../components/ShortcutsDialog';
 import { StatusFooter } from '../components/StatusFooter';
 import { Backdrop } from './Backdrop';
 import { useBackdrop } from './backdropStore';
+import { useApplyTheme } from './look';
 import { useUiStore } from './store';
 import { useLanguage } from '../i18n';
 
@@ -23,6 +24,8 @@ export function App() {
   // the app from here (screens keep their place in the store).
   const language = useLanguage((s) => s.locale);
   const backdrop = useBackdrop((s) => s.assetId !== null);
+  // The open story's look, or the app's, on the whole window.
+  useApplyTheme();
   // Each screen opens at the top, or where you left it when you come back
   // (the screens share one scrolling area).
   const main = useRef<HTMLElement>(null);

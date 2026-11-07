@@ -11,4 +11,9 @@ species?: string, description?: string, appearance?: string, personality: Array<
 /**
  * Numbers added to the dice rolls that use them, e.g. Smarts 2.
  */
-stats?: Array<Stat>, };
+stats?: Array<Stat>, 
+/**
+ * The colour of their name in the reader, as `#rrggbb`. Unset picks
+ * one from the name. Only for display: never sent to the model.
+ */
+color?: string, };

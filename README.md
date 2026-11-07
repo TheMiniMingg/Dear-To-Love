@@ -30,6 +30,9 @@ Japanese and Korean, and stories can be written in many more languages.
   visual novel. One click switches to text only.
 - **Play several stories at once**, branch from any moment, and keep long stories consistent
   with automatic memory.
+- **Made for reading**: a book font, chapters that open like a book's, each character's name
+  in their own color, and three themes (Rose, Midnight and Parchment). A story can take the
+  look that fits its genre.
 - **Every feature can be switched off** with a checkbox.
 
 ## Download
@@ -109,6 +112,17 @@ story can also **Send a text**, **Call** someone, **Think** a thought of your ow
 - **Search and bookmarks**, and **Export** a route as text or a whole story as a
   `.storypack` to share.
 - **Keyboard shortcuts** for almost everything; press **F1** to see them.
+- **Looks.** Stories are set in Literata, a font made for long reading, and each chapter
+  opens with its number, its title and a large first letter. Everyone in the cast gets a
+  color for their name, picked from the name; change it under **Name color** in **Story
+  details**. **Settings → Look** has three themes: Rose (light or dark with your computer),
+  Midnight and Parchment. With **Give each story a look that fits its genre** on, horror,
+  mysteries and science fiction read in Midnight, fantasy and history on Parchment and
+  romance in Rose; **Look** beside the story picks another for that story.
+
+![The same app in Rose, Midnight and Parchment: a café romance, a horror story and a fantasy raid](docs/screenshots/themes.webp)
+
+![A chapter opening: the chapter number, its title, an ornament and a large first letter](docs/screenshots/reader-look.webp)
 
 ![The library: three stories, one still writing a reply](docs/screenshots/library.webp)
 
@@ -374,4 +388,4 @@ More in [`docs/dev.md`](docs/dev.md); releases are described in
   [`docs/roadmap-v4.md`](docs/roadmap-v4.md) and
   [`docs/roadmap-decisions.md`](docs/roadmap-decisions.md).
 - [Changelog](CHANGELOG.md).
-- License: [MIT](LICENSE).
+- License: [MIT](LICENSE). The bundled fonts and icons: [third-party notices](THIRD-PARTY-NOTICES.md).

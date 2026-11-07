@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
+import { BookOpen, Images, PenLine, Settings, Sparkles, Upload } from 'lucide-react';
 import { describeImport, pickStorypackFile } from '../../api/archive';
 import { describeRestoreResult } from '../../api/backups';
 import { commands, errorMessage } from '../../api/commands';
@@ -116,6 +117,7 @@ export function LibraryScreen() {
         <h1 id="library-title">{t('Your stories')}</h1>
         <div className="button-row">
           <button type="button" onClick={() => navigate({ name: 'create' })}>
+            <PenLine className="btn-icon" aria-hidden={true} />
             {t('Create your own')}
           </button>
           <button
@@ -125,6 +127,7 @@ export function LibraryScreen() {
             title={withKeys(t('New story'), 'newStory')}
             aria-keyshortcuts={ariaKeys('newStory')}
           >
+            <Sparkles className="btn-icon" aria-hidden={true} />
             {t('New story')}
           </button>
         </div>
@@ -136,15 +139,19 @@ export function LibraryScreen() {
           title={withKeys(t('Settings'), 'settings')}
           aria-keyshortcuts={ariaKeys('settings')}
         >
+          <Settings className="btn-icon" aria-hidden={true} />
           {t('Settings')}
         </button>
         <button type="button" onClick={() => navigate({ name: 'images' })}>
+          <Images className="btn-icon" aria-hidden={true} />
           {t('Images')}
         </button>
         <button type="button" onClick={() => navigate({ name: 'guide' })}>
+          <BookOpen className="btn-icon" aria-hidden={true} />
           {t('Setup guide')}
         </button>
         <button type="button" disabled={importing} onClick={() => void importPack()}>
+          <Upload className="btn-icon" aria-hidden={true} />
           {t('Import storypack')}
         </button>
       </div>

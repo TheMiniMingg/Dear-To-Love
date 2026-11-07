@@ -48,6 +48,7 @@ export function cleanCharacter(c: Character): Character {
     goals: cleanList(c.goals),
     abilities: cleanList(c.abilities),
     ...cleanStats(c.stats),
+    ...(c.color ? { color: c.color.toLowerCase() } : {}),
   };
 }
 
@@ -146,6 +147,7 @@ const CHARACTER_FIELDS: [keyof Character, string][] = [
   ['goals', msg('Goals')],
   ['abilities', msg('Abilities')],
   ['stats', msg('Stats')],
+  ['color', msg('Name color')],
 ];
 
 function fieldLines<T>(

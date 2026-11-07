@@ -1,0 +1,503 @@
+/*
+ * Themes. Every colour on screen comes from these tokens, so a theme is
+ * one block. The active theme is set on <html data-theme="…"> (Settings →
+ * Look, or a story's own look); `data-theme-preview` draws a small sample
+ * of any theme inside another.
+ *
+ * --bg        page                --surface    cards, dialogs, inputs
+ * --surface-2 hover and wells     --fg / --muted  text
+ * --accent    links, primary buttons, focus   --on-accent  text on accent
+ * --accent-soft  tinted fills     --border     lines
+ * --name-mix  how much of a name colour shows against --fg
+ */
+
+:root,
+:root[data-theme='rose'],
+[data-theme-preview='rose'] {
+  color-scheme: light;
+  --bg: #fbf6f8;
+  --surface: #ffffff;
+  --surface-2: #f6edf1;
+  --fg: #241c20;
+  --muted: #6d6268;
+  --accent: #c2185b;
+  --accent-strong: #a3124b;
+  --on-accent: #ffffff;
+  --border: #ecdfe5;
+  --pass: #2e7d32;
+  --warn: #a35f00;
+  --fail: #c62828;
+  --skipped: #6d6268;
+  --name-mix: 88%;
+  --page-glow: radial-gradient(
+    1200px 600px at 85% -10%,
+    color-mix(in srgb, var(--accent) 7%, transparent),
+    transparent 70%
+  );
+  --shadow-color: 330deg 25% 30%;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]),
+  :root[data-theme='rose'],
+  [data-theme-preview='rose'] {
+    color-scheme: dark;
+    --bg: #161114;
+    --surface: #211a1e;
+    --surface-2: #2b2227;
+    --fg: #f4ecf0;
+    --muted: #ab9ea5;
+    --accent: #f27aa3;
+    --accent-strong: #f797b8;
+    --on-accent: #22070f;
+    --border: #3b3036;
+    --pass: #7fcf86;
+    --warn: #f0b45c;
+    --fail: #ff8a80;
+    --skipped: #ab9ea5;
+    --name-mix: 62%;
+    --shadow-color: 330deg 30% 2%;
+  }
+}
+
+:root[data-theme='midnight'],
+[data-theme-preview='midnight'] {
+  color-scheme: dark;
+  --bg: #0d1120;
+  --surface: #151b30;
+  --surface-2: #1d2440;
+  --fg: #e4e7f3;
+  --muted: #959dbb;
+  --accent: #a9bcff;
+  --accent-strong: #c3d0ff;
+  --on-accent: #0d1120;
+  --border: #283052;
+  --pass: #7fd394;
+  --warn: #f2bd65;
+  --fail: #ff8f8f;
+  --skipped: #959dbb;
+  --name-mix: 58%;
+  --page-glow: radial-gradient(1000px 520px at 80% -15%, rgb(120 140 255 / 0.12), transparent 70%);
+  --shadow-color: 230deg 50% 2%;
+}
+
+:root[data-theme='parchment'],
+[data-theme-preview='parchment'] {
+  color-scheme: light;
+  --bg: #f2e8d3;
+  --surface: #faf4e5;
+  --surface-2: #ece0c4;
+  --fg: #35281b;
+  --muted: #76664f;
+  --accent: #8c2a22;
+  --accent-strong: #70201a;
+  --on-accent: #fff8ea;
+  --border: #dccdab;
+  --pass: #3b6a28;
+  --warn: #8f5a07;
+  --fail: #a92a22;
+  --skipped: #76664f;
+  --name-mix: 72%;
+  --page-glow: radial-gradient(1200px 700px at 50% -20%, rgb(255 250 235 / 0.7), transparent 70%);
+  --shadow-color: 35deg 35% 25%;
+}
+
+:root,
+[data-theme-preview] {
+  --accent-soft: color-mix(in srgb, var(--accent) 11%, var(--surface));
+  --ring: color-mix(in srgb, var(--accent) 55%, transparent);
+  --radius-sm: 8px;
+  --radius: 12px;
+  --radius-lg: 18px;
+  --shadow-xs: 0 1px 1px hsl(var(--shadow-color) / 0.06);
+  --shadow-sm: 0 1px 2px hsl(var(--shadow-color) / 0.07), 0 2px 6px hsl(var(--shadow-color) / 0.06);
+  --shadow-md: 0 1px 2px hsl(var(--shadow-color) / 0.08), 0 6px 18px hsl(var(--shadow-color) / 0.1);
+  --shadow-lg:
+    0 2px 6px hsl(var(--shadow-color) / 0.1), 0 24px 60px hsl(var(--shadow-color) / 0.22);
+  --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+/* ---------- fonts ---------- */
+
+/* Inter for the interface and Literata for the story, both bundled with the
+   app (SIL Open Font License). Chinese, Japanese and Korean text falls
+   through to the computer's own fonts after them. */
+:root {
+  --font-ui:
+    'Inter Variable', system-ui, -apple-system, 'Segoe UI', Roboto, 'Noto Sans', sans-serif;
+  --font-story:
+    'Literata Variable', 'Iowan Old Style', 'Palatino Linotype', Georgia, 'Noto Serif', serif;
+}
+:root:lang(zh-Hans) {
+  --font-ui:
+    'Inter Variable', system-ui, -apple-system, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei',
+    'Noto Sans CJK SC', 'Noto Sans SC', 'Source Han Sans SC', sans-serif;
+  --font-story:
+    'Literata Variable', 'Noto Serif CJK SC', 'Noto Serif SC', 'Source Han Serif SC', 'Songti SC',
+    SimSun, serif;
+}
+:root:lang(zh-Hant) {
+  --font-ui:
+    'Inter Variable', system-ui, -apple-system, 'Segoe UI', 'PingFang TC', 'Microsoft JhengHei',
+    'Noto Sans CJK TC', 'Noto Sans TC', 'Source Han Sans TC', sans-serif;
+  --font-story:
+    'Literata Variable', 'Noto Serif CJK TC', 'Noto Serif TC', 'Source Han Serif TC', 'Songti TC',
+    MingLiU, serif;
+}
+:root:lang(ja) {
+  --font-ui:
+    'Inter Variable', system-ui, -apple-system, 'Segoe UI', 'Hiragino Sans',
+    'Hiragino Kaku Gothic ProN', 'Yu Gothic UI', Meiryo, 'Noto Sans CJK JP', 'Noto Sans JP',
+    sans-serif;
+  --font-story:
+    'Literata Variable', 'Hiragino Mincho ProN', 'Yu Mincho', 'Noto Serif CJK JP', 'Noto Serif JP',
+    'Source Han Serif JP', serif;
+}
+:root:lang(ko) {
+  --font-ui:
+    'Inter Variable', system-ui, -apple-system, 'Segoe UI', 'Apple SD Gothic Neo', 'Malgun Gothic',
+    'Noto Sans CJK KR', 'Noto Sans KR', sans-serif;
+  --font-story:
+    'Literata Variable', 'Noto Serif CJK KR', 'Noto Serif KR', 'Source Han Serif KR', AppleMyungjo,
+    Batang, serif;
+}
+
+/* ---------- switches and choice pills ---------- */
+
+/* A single on/off setting is a switch. */
+label.check > input[type='checkbox'] {
+  appearance: none;
+  flex: none;
+  width: 2.3em;
+  height: 1.3em;
+  margin: 0;
+  padding: 0;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--muted) 45%, var(--border));
+  background-color: var(--surface-2);
+  background-image: radial-gradient(
+    circle closest-side,
+    var(--surface) 0 calc(100% - 1.5px),
+    color-mix(in srgb, var(--muted) 35%, transparent) calc(100% - 1px),
+    transparent 100%
+  );
+  background-size: 1.3em 1.3em;
+  background-repeat: no-repeat;
+  background-position: -1px center;
+  box-shadow: inset 0 1px 2px hsl(var(--shadow-color) / 0.12);
+  cursor: pointer;
+  transition:
+    background-position 0.18s var(--ease),
+    background-color 0.18s var(--ease),
+    border-color 0.18s var(--ease);
+}
+label.check > input[type='checkbox']:checked {
+  background-color: var(--accent);
+  border-color: var(--accent);
+  background-image: radial-gradient(
+    circle closest-side,
+    var(--on-accent) 0 calc(100% - 2.5px),
+    transparent calc(100% - 1.5px)
+  );
+  background-position: calc(100% + 1px) center;
+}
+label.check > input[type='checkbox']:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+label.check > input[type='checkbox']:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Round choices in the theme's colour (pickers that hide theirs aside). */
+input[type='radio']:not(.segmented input, .theme-option input, .swatch input) {
+  appearance: none;
+  flex: none;
+  width: 1.1em;
+  height: 1.1em;
+  margin: 0.15em 0 0;
+  padding: 0;
+  border-radius: 50%;
+  border: 1.5px solid color-mix(in srgb, var(--muted) 60%, var(--border));
+  background: var(--surface);
+  cursor: pointer;
+  transition:
+    background-color 0.15s var(--ease),
+    border-color 0.15s var(--ease),
+    box-shadow 0.15s var(--ease);
+}
+input[type='radio']:not(.segmented input, .theme-option input, .swatch input):checked {
+  border-color: var(--accent);
+  background: var(--accent);
+  box-shadow: inset 0 0 0 3px var(--surface);
+}
+input[type='radio']:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* A list to pick several from is a row of pills. */
+.toggle-list label.check,
+.toggle-list > label,
+.toggle-list > div > label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.3rem 0.75rem 0.3rem 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  cursor: pointer;
+  transition:
+    background-color 0.15s var(--ease),
+    border-color 0.15s var(--ease);
+}
+.toggle-list label.check:hover,
+.toggle-list > label:hover {
+  border-color: color-mix(in srgb, var(--accent) 40%, var(--border));
+}
+.toggle-list label:has(input:checked) {
+  background: var(--accent-soft);
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--border));
+}
+.toggle-list label > input[type='checkbox'] {
+  appearance: none;
+  flex: none;
+  width: 1em;
+  height: 1em;
+  margin: 0;
+  padding: 0;
+  border-radius: 50%;
+  border: 1.5px solid color-mix(in srgb, var(--muted) 60%, var(--border));
+  background: var(--surface);
+  transition:
+    background-color 0.15s var(--ease),
+    border-color 0.15s var(--ease),
+    box-shadow 0.15s var(--ease);
+}
+.toggle-list label > input[type='checkbox']:checked {
+  border-color: var(--accent);
+  background: var(--accent);
+  box-shadow: inset 0 0 0 2.5px var(--surface);
+}
+.toggle-list label > input[type='checkbox']:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ---------- theme picker ---------- */
+
+.theme-picker {
+  border: 0;
+  padding: 0;
+  margin: 1rem 0 0;
+  min-width: 0;
+}
+.theme-picker + .field {
+  margin-top: 1rem;
+}
+.theme-picker > legend {
+  font-weight: 600;
+  padding: 0;
+  margin-bottom: 0.5rem;
+}
+.theme-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(10.5rem, 1fr));
+  gap: 0.75rem;
+}
+.theme-option {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow-xs);
+  cursor: pointer;
+  transition:
+    border-color 0.15s var(--ease),
+    box-shadow 0.15s var(--ease),
+    transform 0.15s var(--ease);
+}
+.theme-option:hover {
+  box-shadow: var(--shadow-sm);
+  transform: translateY(-1px);
+}
+.theme-option:has(input:checked) {
+  border-color: var(--accent);
+  box-shadow:
+    0 0 0 1px var(--accent),
+    var(--shadow-sm);
+}
+.theme-option:has(input:focus-visible) {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.theme-option input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+.theme-swatch {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-content: start;
+  gap: 0.3rem 0.5rem;
+  height: 4.6rem;
+  padding: 0.55rem 0.65rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--fg);
+  overflow: hidden;
+}
+.swatch-title {
+  grid-column: 1 / -1;
+  font-family: var(--font-story);
+  font-weight: 600;
+  font-size: 1.15rem;
+  line-height: 1;
+}
+.swatch-line {
+  grid-column: 1;
+  height: 0.32rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--fg) 30%, transparent);
+}
+.swatch-line.short {
+  width: 60%;
+}
+.swatch-button {
+  grid-column: 2;
+  grid-row: 2 / 4;
+  align-self: end;
+  width: 1.9rem;
+  height: 0.95rem;
+  border-radius: 999px;
+  background: var(--accent);
+}
+.theme-name {
+  font-weight: 600;
+}
+.theme-hint {
+  font-size: 0.8rem;
+  color: var(--muted);
+  line-height: 1.35;
+}
+
+/* ---------- name colours ---------- */
+
+/* A name colour (set as --name on the element) blended with the text
+   colour, so it reads well on every theme. */
+.line-speaker,
+.speaker,
+.msg-name {
+  color: color-mix(in oklab, var(--name, var(--accent)) var(--name-mix), var(--fg));
+}
+.msg-avatar:not(img) {
+  background: color-mix(in oklab, var(--name, var(--accent)) 18%, var(--surface));
+  color: color-mix(in oklab, var(--name, var(--accent)) var(--name-mix), var(--fg));
+}
+.name-colors .swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: center;
+}
+.swatch {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  cursor: pointer;
+}
+.swatch input[type='radio'] {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+.swatch-dot {
+  display: grid;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 50%;
+  background: color-mix(in oklab, var(--name, var(--accent)) var(--name-mix), var(--fg));
+  color: var(--surface);
+  font-size: 0.75rem;
+  font-weight: 700;
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--surface) 25%, transparent);
+  transition: transform 0.15s var(--ease);
+}
+.swatch:hover .swatch-dot {
+  transform: scale(1.08);
+}
+.swatch:has(input:checked) .swatch-dot {
+  box-shadow:
+    0 0 0 2px var(--surface),
+    0 0 0 4px var(--fg);
+}
+.swatch:has(input:focus-visible) .swatch-dot {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+}
+.swatch-custom input[type='color'] {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+/* "Your own colour": a colour wheel until one is chosen. */
+.swatch-custom .swatch-dot:not([data-custom]) {
+  background: conic-gradient(#e53935, #fdd835, #43a047, #1e88e5, #8e24aa, #e53935);
+}
+.swatch-custom:has(.swatch-dot[data-custom]) .swatch-dot {
+  box-shadow:
+    0 0 0 2px var(--surface),
+    0 0 0 4px var(--fg);
+}
+.swatch-custom:has(input:focus-visible) .swatch-dot {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+}
+
+/* ---------- motion ---------- */
+
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.985);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

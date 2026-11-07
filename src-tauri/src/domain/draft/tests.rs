@@ -64,10 +64,12 @@ fn custom_draft_from_scratch() {
     d.title = "Lanterns".into();
     d.scene.location = "The barge's stern".into();
     d.first_chapter_title = "Opening Night".into();
+    d.player.color = Some(" #C2185B ".into());
     d.npcs.push(Character {
         id: "custom:npc-1".into(),
         name: "Bo".into(),
         control: Control::Player,
+        color: Some("pink".into()),
         ..Character::default()
     });
     d.relationships.push(Relationship {
@@ -97,6 +99,8 @@ fn custom_draft_from_scratch() {
         Control::Npc,
         "others are never player-controlled"
     );
+    assert_eq!(pc.color.as_deref(), Some("#c2185b"));
+    assert_eq!(s.characters["custom:npc-1"].color, None, "not a colour");
     assert_eq!(s.relationships[0].to_id, CUSTOM_PLAYER_ID);
     assert_eq!(input.chapter_outlines.len(), 1, "blank outlines dropped");
 }

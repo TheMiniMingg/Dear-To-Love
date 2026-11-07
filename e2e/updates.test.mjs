@@ -65,7 +65,7 @@ test('opt-in update notice, acknowledgement across a restart, and a clean report
   assert.equal(await (await notice()).isExisting(), false);
 
   // Opting in runs the first check: the highest stable release wins (T42, T45).
-  await click('input[type="checkbox"]');
+  await click('//label[contains(., "Check GitHub for a new release")]/input');
   await waitForText(b, 'main', 'v0.10.0 is available; you have v0.1.0');
   assert.deepEqual(releases.requests, ['/repos/TheMiniMingg/Dear-To-Love/releases?per_page=100']);
   await waitForText(b, 'footer', 'Dear to Love v0.10.0 is available.');

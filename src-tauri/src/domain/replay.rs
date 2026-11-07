@@ -348,6 +348,7 @@ mod tests {
             goals: vec![],
             abilities: vec![],
             stats: vec![],
+            color: None,
         };
         assert!(s
             .apply(
