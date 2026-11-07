@@ -17,6 +17,11 @@ export type Preset = {
   replyTokens?: number;
   /** An example model name, shown in the empty Model field. */
   model?: string;
+  /**
+   * Current model names offered in the Model field's list (checked
+   * November 2026). Any other name can still be typed.
+   */
+  suggestions?: string[];
   /** One sentence on getting started with this service. */
   note?: string;
 };
@@ -106,6 +111,8 @@ export const PRESETS: Preset[] = [
     adapter: COMPATIBLE,
     baseUrl: 'https://api.openai.com/v1',
     contextTokens: 128_000,
+    model: 'gpt-6.1-terra',
+    suggestions: ['gpt-6.1-terra', 'gpt-6.1-sol', 'gpt-6-astra', 'gpt-6-luna'],
     note: msg('Create a key at platform.openai.com.'),
   },
   {
@@ -116,6 +123,7 @@ export const PRESETS: Preset[] = [
     baseUrl: 'https://api.anthropic.com/v1',
     contextTokens: 128_000,
     model: 'claude-opus-5-5',
+    suggestions: ['claude-opus-5-5', 'claude-sonnet-5-5', 'claude-haiku-5-5'],
     note: msg('Create a key at platform.claude.com. Uses Anthropic’s own API.'),
   },
   {
@@ -125,6 +133,8 @@ export const PRESETS: Preset[] = [
     adapter: COMPATIBLE,
     baseUrl: 'https://generativelanguage.googleapis.com/v1beta/openai',
     contextTokens: 128_000,
+    model: 'gemini-3.6-flash',
+    suggestions: ['gemini-3.6-flash', 'gemini-3.5-flash-lite'],
     note: msg('Create a key in Google AI Studio (aistudio.google.com).'),
   },
   {
@@ -207,7 +217,9 @@ export const PRESETS: Preset[] = [
     billing: 'paid',
     needsKey: true,
     contextTokens: 16_000,
-    model: 'gpt-image-1',
+    // gpt-image-1 was retired on 23 October 2026.
+    model: 'gpt-image-2.6-flare',
+    suggestions: ['gpt-image-2.6-flare', 'gpt-image-2.6-sunburst', 'gpt-image-2.5-flare'],
     note: msg(
       "Makes character portraits. OpenAI charges for each picture; the app records every request but can't price pictures.",
     ),
@@ -238,3 +250,8 @@ export const PRESETS: Preset[] = [
     note: msg('Any service or server with an OpenAI-compatible chat completions API works.'),
   },
 ];
+
+/** OpenAI picture models that no longer answer (retired in 2026). */
+export function retiredPictureModel(model: string): boolean {
+  return /^(gpt-image-1(-\d{4}-\d{2}-\d{2})?|dall-e-[23])$/i.test(model.trim());
+}

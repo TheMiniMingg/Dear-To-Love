@@ -8,6 +8,7 @@ import { ConnectionForm } from './ConnectionForm';
 import { BackdropSection } from './BackdropSection';
 import { LanguageSection } from './LanguageSection';
 import { ADAPTER_LABELS, makesPictures, pictureConnections, storyConnections } from './kinds';
+import { retiredPictureModel } from './presets';
 import { t, tr } from '../../i18n';
 
 type Note = { tone: 'ok' | 'warn' | 'error'; text: string };
@@ -272,6 +273,14 @@ export function SettingsScreen() {
                         ? t('no key needed')
                         : t('no key')}
                   </div>
+                  {makesPictures(c) && retiredPictureModel(c.modelId) && (
+                    <p className="small note-warn">
+                      {t(
+                        'OpenAI retired this picture model. Edit the connection and choose {model}.',
+                        { model: 'gpt-image-2.6-flare' },
+                      )}
+                    </p>
+                  )}
                 </div>
                 <div className="button-row">
                   <button

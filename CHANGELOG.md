@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- **Which model should I use?** The Setup guide has a folded-away section with suggestions
+  for stories, pictures, low cost and privacy: OpenAI's GPT-6 models with GPT Image for
+  stories and pictures on one key, Claude for long stories, cheap and quick picks, OpenRouter,
+  and models on your own computer. The Model field also lists current names for OpenAI,
+  Claude, Gemini and OpenAI pictures, while any other name can still be typed.
+- **Fixed: OpenAI pictures.** New OpenAI picture connections suggested `gpt-image-1`, which
+  OpenAI retired on 23 October 2026. They now use `gpt-image-2.6-flare`, and Settings points
+  out a connection still set to a retired picture model.
 - **17 new worlds, 19 scenarios and 12 characters.** Raid the Shifting Deep with a party of
   four in Greywatch, or join the resistance against STEWARD, the AI that runs Arclight. Also
   new: a college of weather magic, a gothic fen village with a bell that rings for the dead, a

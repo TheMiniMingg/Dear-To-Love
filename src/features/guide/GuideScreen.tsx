@@ -39,6 +39,87 @@ function Section({ id, children }: { id: SectionId; children: ReactNode }) {
   );
 }
 
+const code = (name: string) => <code>{name}</code>;
+
+/**
+ * Which model to pick, folded away until someone opens it. Names are the
+ * services' own and change often, so the services' lists are a click away.
+ */
+function ModelPicks({ onError }: { onError: (e: string) => void }) {
+  return (
+    <details className="guide-models" data-testid="guide-models">
+      <summary>{t('Which model should I use?')}</summary>
+      <p className="muted small">
+        {t(
+          'Suggestions, checked in November 2026. Names change often: the service’s model list has the current ones, and any model you like works.',
+        )}
+      </p>
+      <dl className="guide-picks">
+        <dt>{t('Stories and pictures with one key')}</dt>
+        <dd>
+          {tr(
+            'OpenAI. {terra} writes clear, natural stories quickly, {sol} is stronger for long, twisting plots, and {astra} is the most capable and costs the most. {pictures} makes portraits and item pictures with the same key.',
+            {
+              terra: code('gpt-6.1-terra'),
+              sol: code('gpt-6.1-sol'),
+              astra: code('gpt-6-astra'),
+              pictures: code('gpt-image-2.6-flare'),
+            },
+          )}
+        </dd>
+        <dt>{t('Long stories that stay consistent')}</dt>
+        <dd>
+          {tr(
+            'Anthropic’s Claude. {opus} keeps characters, threads and tone straight over long stories, and {sonnet} costs less for everyday play. Claude doesn’t make pictures, so add a picture connection too.',
+            { opus: code('claude-opus-5-5'), sonnet: code('claude-sonnet-5-5') },
+          )}
+        </dd>
+        <dt>{t('Cheap and quick')}</dt>
+        <dd>
+          {tr(
+            '{luna}, {flash} or {haiku}: a fraction of a cent per reply, good for trying things out and for light stories.',
+            {
+              luna: code('gpt-6-luna'),
+              flash: code('gemini-3.6-flash'),
+              haiku: code('claude-haiku-5-5'),
+            },
+          )}
+        </dd>
+        <dt>{t('Many models with one key')}</dt>
+        <dd>
+          {t(
+            'OpenRouter offers hundreds of models, including open ones with looser content rules, and its roleplay list shows what other players use most.',
+          )}
+        </dd>
+        <dt>{t('Free and private')}</dt>
+        <dd>
+          {tr(
+            'On this computer with Ollama or LM Studio. {small} runs on almost any computer. Models of 12 to 14B write much better and want about 16 GB of memory; 27 to 32B models need a strong graphics card.',
+            { small: code('llama3.2') },
+          )}
+        </dd>
+        <dt>{t('Pictures')}</dt>
+        <dd>
+          {tr(
+            '{flare} is quick for portraits and items, and {sunburst} takes more care over detail. Free on this computer: Stable Diffusion WebUI.',
+            { flare: code('gpt-image-2.6-flare'), sunburst: code('gpt-image-2.6-sunburst') },
+          )}
+        </dd>
+      </dl>
+      <Links
+        links={[
+          { id: 'openai-models', label: 'OpenAI' },
+          { id: 'anthropic-models', label: 'Anthropic' },
+          { id: 'gemini-models', label: 'Gemini' },
+          { id: 'openrouter-roleplay', label: 'OpenRouter' },
+          { id: 'ollama-models', label: 'Ollama' },
+        ]}
+        onError={onError}
+      />
+    </details>
+  );
+}
+
 /** Buttons that open a service's pages in the browser. */
 function Links({ links, onError }: { links: GuideLink[]; onError: (e: string) => void }) {
   return (
@@ -198,6 +279,7 @@ export function GuideScreen() {
             </p>
           </div>
         </div>
+        <ModelPicks onError={setError} />
       </Section>
 
       <Section id="guide-connect">

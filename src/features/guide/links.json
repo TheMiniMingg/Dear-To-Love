@@ -16,6 +16,7 @@
   "deepseek-models": "https://api-docs.deepseek.com/",
   "openrouter-keys": "https://openrouter.ai/settings/keys",
   "openrouter-models": "https://openrouter.ai/models",
+  "openrouter-roleplay": "https://openrouter.ai/collections/roleplay",
   "groq-keys": "https://console.groq.com/keys",
   "groq-models": "https://console.groq.com/docs/models",
   "together-keys": "https://api.together.ai/settings/api-keys",

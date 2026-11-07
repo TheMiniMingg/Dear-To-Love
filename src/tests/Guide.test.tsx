@@ -14,7 +14,7 @@ import { App } from '../app/App';
 import { useUiStore } from '../app/store';
 import { HOSTED, LABS, LOCAL, PICTURES } from '../features/guide/guide';
 import links from '../features/guide/links.json';
-import { PRESETS } from '../features/settings/presets';
+import { PRESETS, retiredPictureModel } from '../features/settings/presets';
 
 describe('the setup guide', () => {
   beforeEach(() => {
@@ -30,6 +30,17 @@ describe('the setup guide', () => {
       if (cmd === 'open_guide_link') return String(args.id) in links ? null : Promise.reject('no');
       throw { code: 'NOT_FOUND', message: cmd };
     });
+  });
+
+  it('suggests a picture model OpenAI still offers', () => {
+    const images = PRESETS.find((p) => p.id === 'openai-images')!;
+    // gpt-image-1 and DALL·E were retired in 2026.
+    expect(images.model).toMatch(/^gpt-image-2/);
+    expect(images.suggestions?.every((m) => /^gpt-image-2/.test(m))).toBe(true);
+    expect(retiredPictureModel('gpt-image-1')).toBe(true);
+    expect(retiredPictureModel(' DALL-E-3 ')).toBe(true);
+    expect(retiredPictureModel('gpt-image-1-mini')).toBe(false);
+    expect(retiredPictureModel('gpt-image-2.6-flare')).toBe(false);
   });
 
   it('covers every service with a preset, with pages that exist', () => {
@@ -60,8 +71,26 @@ describe('the setup guide', () => {
     await userEvent.click(within(ollama).getByText('Ollama'));
     expect(within(ollama).getByText('ollama pull llama3.2')).toBeVisible();
 
+    // Model suggestions stay folded away until someone opens them.
+    const picks = screen.getByTestId('guide-models');
+    expect(picks).not.toHaveAttribute('open');
+    expect(within(picks).getByText('gpt-6.1-terra')).not.toBeVisible();
+    await userEvent.click(within(picks).getByText('Which model should I use?'));
+    expect(within(picks).getByText('gpt-6.1-terra')).toBeVisible();
+    expect(within(picks).getByText('claude-opus-5-5')).toBeVisible();
+    await userEvent.click(within(picks).getByRole('button', { name: /OpenRouter/ }));
+    expect(invoke).toHaveBeenCalledWith('open_guide_link', { id: 'openrouter-roleplay' });
+
     await userEvent.click(within(openai).getByRole('button', { name: 'Set it up here' }));
     const form = await screen.findByRole('dialog', { name: 'Add AI connection' });
+    // The Model field offers current names without filling one in.
+    const model = within(form).getByLabelText('Model');
+    expect(model).toHaveValue('');
+    expect(model).toHaveAttribute('placeholder', 'For example gpt-6.1-terra');
+    const listed = [
+      ...document.querySelectorAll(`#${CSS.escape(model.getAttribute('list')!)} option`),
+    ];
+    expect(listed.map((o) => o.getAttribute('value'))).toContain('gpt-6.1-sol');
     expect(within(form).getByLabelText('Service')).toHaveValue('openai');
     expect(within(form).getByLabelText('Address')).toHaveValue('https://api.openai.com/v1');
     expect(within(form).getByLabelText('Name')).toHaveValue('OpenAI');
