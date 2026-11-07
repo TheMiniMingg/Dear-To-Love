@@ -28,6 +28,7 @@ import {
   defaultTracking,
   trackingSummary,
 } from '../features/create/TrackingFields';
+import { MeterView } from '../features/reader/InventoryPanel';
 import { RichText } from '../features/reader/RichText';
 import { ReaderScreen } from '../features/reader/ReaderScreen';
 import { diffState } from '../features/reader/stateDiff';
@@ -280,6 +281,18 @@ describe('Status and inventory', () => {
       await within(dialog).findByRole('img', { name: 'Picture of Rusty Key' }),
     ).toBeInTheDocument();
     expect(screen.getByRole('status')).toHaveTextContent('Picture of Rusty Key set for the story');
+  });
+
+  it('warns only when a bar you need runs low', () => {
+    const { container } = render(
+      <>
+        <MeterView meter={{ name: 'Affection', value: 20, max: 100 }} />
+        <MeterView meter={{ name: 'Stamina', value: 2, max: 10 }} />
+        <MeterView meter={{ name: 'Gold', value: 0 }} />
+      </>,
+    );
+    const meters = container.querySelectorAll('.hud-meter');
+    expect([...meters].map((m) => m.classList.contains('low'))).toEqual([false, true, false]);
   });
 
   it('only shows up in stories that keep track', async () => {

@@ -21,12 +21,24 @@ import { picture, itemSlot, slotName } from './pictures';
 const fullness = (m: Meter) =>
   m.max ? Math.round((Math.min(Math.max(m.value, 0), m.max) / m.max) * 100) : 0;
 
+/** Bars that are a warning when they run low; Affection at 20 is just a start. */
+const VITAL = ['Health', 'Stamina', 'Mana', 'Sanity'];
+const VITAL_MORE = ['hp', 'life', 'energy', 'shield', 'oxygen'];
+const vital = (name: string) => {
+  const n = name.trim().toLowerCase();
+  return (
+    VITAL_MORE.includes(n) || VITAL.some((v) => v.toLowerCase() === n || t(v).toLowerCase() === n)
+  );
+};
+
 /** "Health ▰▰▰▱ 80/100" or "Gold 35"; the words carry it, the bar is a picture of them. */
 export function MeterView({ meter: m }: { meter: Meter }) {
   const bar = m.max !== undefined;
   const pct = fullness(m);
   return (
-    <span className={`hud-meter ${bar ? 'bar' : 'counter'}${bar && pct <= 25 ? ' low' : ''}`}>
+    <span
+      className={`hud-meter ${bar ? 'bar' : 'counter'}${bar && pct <= 25 && vital(m.name) ? ' low' : ''}`}
+    >
       <span className="hud-name">{m.name}</span>
       {bar && (
         <span className="hud-track" aria-hidden="true">
