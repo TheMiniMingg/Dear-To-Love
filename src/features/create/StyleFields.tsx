@@ -186,6 +186,7 @@ export function tellingOf(n: Narration): Partial<Narration> {
     sceneHeadings: n.sceneHeadings,
     autopilot: n.autopilot,
     manualMemory: n.manualMemory,
+    noSuggestions: n.noSuggestions,
     styleNotes: n.styleNotes,
     surprises: n.surprises,
     language: n.language,
@@ -617,10 +618,18 @@ export function FeatureFields({
       <Check
         label={t('Let the storyteller keep memory notes')}
         hint={t(
-          'It notes people, places, gifts and promises as the story goes, so it does not forget them. You can change the notes in Story memory.',
+          'It notes people, places, gifts and promises as the story goes, keeps the threads still to follow, and offers to add new characters. You can change all of it in Story memory.',
         )}
         checked={!narration.manualMemory}
         onChange={(on) => onChange({ manualMemory: on ? undefined : true })}
+      />
+      <Check
+        label={t('Suggest what you could do next')}
+        hint={t(
+          'Two or three ideas above the box after each reply. Pick one to put it in the box.',
+        )}
+        checked={!narration.noSuggestions}
+        onChange={(on) => onChange({ noSuggestions: on ? undefined : true })}
       />
       <ArrowPicker
         label={t('Twists and surprises')}

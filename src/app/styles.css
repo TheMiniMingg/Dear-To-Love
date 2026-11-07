@@ -2190,14 +2190,23 @@ img.msg-avatar {
 .make-portrait .field {
   max-width: 14rem;
 }
-.portrait-prompt {
+/* What a portrait or item picture is made from, changeable before it is made. */
+.picture-description {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.25rem 0 0.25rem 0.75rem;
   border-left: 3px solid var(--border);
-  padding: 0.25rem 0.6rem;
-  white-space: pre-wrap;
+}
+.picture-description .field {
+  margin: 0;
+}
+.picture-description p {
+  margin: 0;
   overflow-wrap: anywhere;
 }
-.portrait-prompt p {
-  margin: 0 0 0.25rem;
+.picture-description .link-button {
+  align-self: flex-start;
 }
 .routes-panel .segmented {
   align-self: flex-start;

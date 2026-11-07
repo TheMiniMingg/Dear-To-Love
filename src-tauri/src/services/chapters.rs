@@ -41,6 +41,9 @@ pub struct ChapterRecapDraft {
     pub written_by: String,
     pub next_ordinal: u32,
     pub next_title: String,
+    /// The storyteller suggested `next_title` from how the chapter ended
+    /// (not the outline's title or the plain "Chapter N").
+    pub next_title_suggested: bool,
     /// The route head the recap was written for.
     pub head_event_id: String,
 }
@@ -180,6 +183,7 @@ pub async fn draft_recap(env: &SummaryEnv<'_>, route_id: &str) -> AppResult<Chap
     let (ordinal, title, events) = current_chapter(&chain)?;
     check_endable(&chain, events)?;
 
+    let mut suggested = false;
     let (recap, written_by) = match providers::route_storyteller(env.db, route_id).await? {
         None => (
             extractive(None, events, &player_name)?,
@@ -253,6 +257,7 @@ pub async fn draft_recap(env: &SummaryEnv<'_>, route_id: &str) -> AppResult<Chap
             let (recap, title) = split_next_title(&c.text);
             if let (true, Some(title)) = (suggest_title, title) {
                 next.1 = title;
+                suggested = true;
             }
             (recap, row.label)
         }
@@ -264,6 +269,7 @@ pub async fn draft_recap(env: &SummaryEnv<'_>, route_id: &str) -> AppResult<Chap
         written_by,
         next_ordinal: next.0,
         next_title: next.1,
+        next_title_suggested: suggested,
         head_event_id: head,
     })
 }

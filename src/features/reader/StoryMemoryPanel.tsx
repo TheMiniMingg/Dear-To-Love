@@ -5,6 +5,7 @@ import type { RouteView, StoryMemory, SummaryWriter } from '../../types';
 import { joinList, joinSentences, t, tKnown, tn, tr } from '../../i18n';
 import { chapterHeading } from '../../i18n/names';
 import { Notebook } from './Notebook';
+import { ThreadLog } from './ThreadLog';
 
 /** Who wrote a summary: "Cloud model (story-model)", or the offline storyteller. */
 function writerName(w: SummaryWriter | undefined): string {
@@ -60,7 +61,6 @@ export function StoryMemoryPanel({
       ? playerName
       : s.characters[id]?.name || t('someone');
   const facts = s.knownFacts.filter((f) => f.confirmed && f.text.trim());
-  const threads = s.openThreads.filter((x) => x.trim());
   const relationships = s.relationships.filter((r) => r.label.trim() || r.status.trim());
   const teller = view.storyteller;
 
@@ -82,6 +82,7 @@ export function StoryMemoryPanel({
       </div>
 
       <Notebook view={view} disabled={detailsDisabled} onChanged={onChanged} />
+      <ThreadLog view={view} disabled={detailsDisabled} onChanged={onChanged} />
 
       <section aria-labelledby="memory-summary">
         <h3 id="memory-summary">{t('The story so far')}</h3>
@@ -166,11 +167,11 @@ export function StoryMemoryPanel({
       </section>
 
       <section aria-labelledby="memory-facts">
-        <h3 id="memory-facts">{t('Facts, relationships and open threads')}</h3>
+        <h3 id="memory-facts">{t('Facts and relationships')}</h3>
         <p className="muted small">
           {t('These go into every reply. Change them in Story details.')}
         </p>
-        {facts.length === 0 && relationships.length === 0 && threads.length === 0 && (
+        {facts.length === 0 && relationships.length === 0 && (
           <p className="muted">{t('None yet.')}</p>
         )}
         {facts.length > 0 && (
@@ -200,16 +201,6 @@ export function StoryMemoryPanel({
                   {nameOf(r.fromId)} → {nameOf(r.toId)}: {r.label}
                   {r.status ? ` (${r.status})` : ''}
                 </li>
-              ))}
-            </ul>
-          </>
-        )}
-        {threads.length > 0 && (
-          <>
-            <h4>{t('Open threads')}</h4>
-            <ul aria-label={t('Open threads')} className="memory-list">
-              {threads.map((x, i) => (
-                <li key={i}>{x}</li>
               ))}
             </ul>
           </>

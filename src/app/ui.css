@@ -1124,3 +1124,169 @@ details.more-options > summary {
   margin-right: 0.35rem;
   vertical-align: -0.2em;
 }
+
+/* Threads to follow: a short quest log in Story memory. */
+.thread-log h3 {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.thread-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.35rem;
+}
+.thread {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+}
+.thread-text {
+  flex: 1;
+  min-width: 0;
+}
+.thread.editing input {
+  flex: 1;
+}
+.thread-tick {
+  display: inline-grid;
+  place-items: center;
+  width: 1.6rem;
+  height: 1.6rem;
+  padding: 0;
+  border: none;
+  background: none;
+}
+.thread-box {
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid var(--muted);
+  border-radius: 4px;
+  transition:
+    border-color 0.15s var(--ease),
+    background-color 0.15s var(--ease);
+}
+.thread-tick:hover:not(:disabled) .thread-box {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+.thread.done {
+  background: transparent;
+}
+.thread.done .thread-text {
+  color: var(--muted);
+  text-decoration: line-through;
+}
+.thread-done-icon {
+  color: var(--pass);
+  flex: none;
+}
+.thread-add {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+.thread-add input {
+  flex: 1;
+}
+.thread-done {
+  margin-top: 0.6rem;
+}
+.thread-done > summary {
+  cursor: pointer;
+  font-weight: 600;
+  margin-bottom: 0.4rem;
+}
+.memory-chip.kind-thread.done .memory-chip-text {
+  text-decoration: line-through;
+}
+
+/* ---------- someone new: the card under a reply that brings them in ---------- */
+.newcomer {
+  display: flex;
+  gap: 0.7rem;
+  align-items: flex-start;
+  margin: 0.75em 0 0;
+  padding: 0.7rem 0.9rem;
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--border));
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--accent-soft) 45%, var(--surface));
+  font-family: var(--font-ui);
+  font-size: 0.9rem;
+}
+.newcomer-icon {
+  flex: none;
+  margin-top: 0.15rem;
+  color: var(--accent);
+}
+.newcomer-body {
+  flex: 1;
+  min-width: 0;
+}
+.newcomer-body > p {
+  margin: 0;
+}
+.newcomer-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--muted);
+}
+.newcomer-body > .newcomer-name {
+  margin-top: 0.15rem;
+}
+.newcomer-body > .newcomer-looks {
+  margin-top: 0.25rem;
+}
+.newcomer-form {
+  margin-top: 0.4rem;
+}
+.newcomer-form .field {
+  margin-bottom: 0.5rem;
+}
+.newcomer-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 0.6rem;
+  margin-top: 0.55rem;
+}
+.newcomer-body > .error {
+  margin-top: 0.4rem;
+}
+
+/* ---------- ideas for the next move, above the composer ---------- */
+.next-moves {
+  flex-basis: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.4rem;
+}
+.next-moves-icon {
+  flex: none;
+  color: var(--accent);
+}
+.next-move {
+  padding: 0.22rem 0.75rem;
+  border: 1px dashed color-mix(in srgb, var(--accent) 45%, var(--border));
+  border-radius: 999px;
+  background: var(--surface);
+  font-size: 0.85rem;
+  color: var(--fg);
+  text-align: left;
+  transition:
+    border-color 0.15s var(--ease),
+    background-color 0.15s var(--ease);
+}
+.next-move:hover {
+  border-style: solid;
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}

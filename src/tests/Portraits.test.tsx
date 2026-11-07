@@ -66,7 +66,8 @@ describe('Make a portrait', () => {
           return [painter];
         case 'preview_portrait':
           return {
-            text: 'Head-and-shoulders portrait of a lizardfolk (person). No text.',
+            description: 'Head-and-shoulders portrait of a lizardfolk (person).',
+            closing: 'Safe for work, no text.',
             avoid: 'nudity, text',
           };
         case 'make_portrait':
@@ -90,9 +91,11 @@ describe('Make a portrait', () => {
     expect(await screen.findByText(/Uses Pictures \(gpt-image-1\)/)).toBeInTheDocument();
     expect(screen.getByText(/charges for each picture/)).toBeInTheDocument();
 
-    await userEvent.click(screen.getByRole('button', { name: 'Show what is sent' }));
-    expect(await screen.findByText(/portrait of a lizardfolk/)).toBeInTheDocument();
-    expect(screen.getByText('Avoid: nudity, text')).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'See or change what is sent' }));
+    const description = await screen.findByLabelText('Description');
+    expect(description).toHaveValue('Head-and-shoulders portrait of a lizardfolk (person).');
+    expect(screen.getByText('Always added: Safe for work, no text.')).toBeInTheDocument();
+    expect(screen.getByText('Always left out: nudity, text')).toBeInTheDocument();
 
     await userEvent.selectOptions(screen.getByLabelText('Style'), 'anime');
     await userEvent.click(screen.getByRole('button', { name: 'Make portrait' }));
@@ -101,6 +104,42 @@ describe('Make a portrait', () => {
     });
     expect(onMade).toHaveBeenCalledWith(portrait);
     expect(await screen.findByText(/Made “Portrait of Mara”/)).toBeInTheDocument();
+  });
+
+  it('makes the portrait from the description as the player changed it', async () => {
+    render(<MakePortrait character={mara} world={world} storyId="s1" onMade={() => {}} />);
+    await userEvent.click(
+      await screen.findByRole('button', { name: 'See or change what is sent' }),
+    );
+    const description = await screen.findByLabelText('Description');
+    await userEvent.clear(description);
+    await userEvent.type(description, 'Mara at the harbor, green scales, a gold earring');
+
+    // Hidden, it says the player's words are used; back, they can undo them.
+    await userEvent.click(screen.getByRole('button', { name: 'Hide what is sent' }));
+    expect(screen.getByText('Your own description is used.')).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Make portrait' }));
+    expect(invoke).toHaveBeenLastCalledWith('make_portrait', {
+      input: {
+        character: mara,
+        world,
+        style: 'painted',
+        storyId: 's1',
+        prompt: 'Mara at the harbor, green scales, a gold earring',
+      },
+    });
+
+    await userEvent.click(screen.getByRole('button', { name: 'See or change what is sent' }));
+    await userEvent.click(
+      await screen.findByRole('button', { name: 'Use the drafted description' }),
+    );
+    expect(screen.getByLabelText('Description')).toHaveValue(
+      'Head-and-shoulders portrait of a lizardfolk (person).',
+    );
+    await userEvent.click(screen.getByRole('button', { name: 'Make portrait' }));
+    expect(invoke).toHaveBeenLastCalledWith('make_portrait', {
+      input: { character: mara, world, style: 'painted', storyId: 's1' },
+    });
   });
 
   it('a story being created asks for a picture that waits for it', async () => {

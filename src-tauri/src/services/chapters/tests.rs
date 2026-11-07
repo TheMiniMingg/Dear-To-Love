@@ -296,6 +296,7 @@ async fn a_live_storyteller_suggests_the_next_title_unless_the_outline_has_one()
     let draft = draft_recap(&env.env(), &env.route()).await.unwrap();
     assert_eq!(draft.recap, "Sam went to the ferry.");
     assert_eq!(draft.next_title, "Low Tide");
+    assert!(!draft.next_title_suggested);
     assert!(!server.requests()[0].body.contains("Next chapter: "));
 
     // Without one, the storyteller's title is the one offered.
@@ -306,6 +307,7 @@ async fn a_live_storyteller_suggests_the_next_title_unless_the_outline_has_one()
     let draft = draft_recap(&env.env(), &env.route()).await.unwrap();
     assert_eq!(draft.recap, "Sam went to the ferry.");
     assert_eq!(draft.next_title, "The Crossing");
+    assert!(draft.next_title_suggested);
     assert!(server.requests()[1].body.contains("Next chapter: "));
 }
 

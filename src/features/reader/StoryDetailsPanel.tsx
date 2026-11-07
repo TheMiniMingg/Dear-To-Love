@@ -519,19 +519,33 @@ export function StoryDetailsPanel({
         )}
         {tab === 'scene' && (
           <>
-            <TextField
-              label={t('Where')}
-              value={edited.scene.location}
-              onChange={(location) => set({ scene: { ...edited.scene, location } })}
-            />
+            <div className="field-row">
+              <TextField
+                label={t('Where')}
+                value={edited.scene.location}
+                onChange={(location) => set({ scene: { ...edited.scene, location } })}
+              />
+              <TextField
+                label={t('When')}
+                value={edited.scene.time ?? ''}
+                placeholder={t('Monday, 7:40 AM')}
+                onChange={(time) => set({ scene: { ...edited.scene, time: time || undefined } })}
+              />
+            </div>
+            <p className="muted small">
+              {t(
+                'Both follow the place and time the storyteller marks as the story moves; change them here to set them yourself.',
+              )}
+            </p>
             <TextArea
               label={t('What is happening')}
               value={edited.scene.summary}
               onChange={(summary) => set({ scene: { ...edited.scene, summary } })}
             />
             <LinesField
-              label={t('Open questions')}
+              label={t('Open threads')}
               value={edited.openThreads}
+              hint={t('One per line. Story memory lists them too, where you can tick them off.')}
               onChange={(openThreads) => set({ openThreads })}
             />
           </>

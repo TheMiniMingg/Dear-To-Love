@@ -11,7 +11,9 @@ import { Bookmark, BookmarkCheck, GitBranch, PenLine, RefreshCw } from 'lucide-r
 import type { EventDto, MemoryNote, RollRequest } from '../../types';
 import { RollResult } from './DiceCards';
 import { NameColorsContext, nameStyle } from './nameColors';
-import { MemoryLine, notesOnly } from './notes';
+import { MemoryLine, notesOnly, type ThreadLists } from './notes';
+import { NewCharacterCards } from './NewCharacterCard';
+import type { NewCharacter } from './messages';
 import { picturesOnly } from './pictures';
 import { RichText } from './RichText';
 import { t } from '../../i18n';
@@ -41,10 +43,24 @@ type Props = {
   keepsNotes?: boolean;
   /** The story's notes as they are now, to tell whether a reply's notes can be undone. */
   currentNotes?: MemoryNote[];
+  /** The threads as they are now, for the same. */
+  currentThreads?: ThreadLists;
   /** Offer "See notes" on that line. */
   onOpenNotes?: () => void;
   /** Offer "Undo" on that line. */
   onUndoNotes?: (eventId: string) => void;
+  /** Show the place and time headings; off, the storyteller's marks are kept but hidden. */
+  sceneHeadings?: boolean;
+  /** Offer to add the people a reply brings in to the cast. */
+  newcomers?: Newcomers;
+};
+
+export type Newcomers = {
+  storyId: string;
+  /** Everyone in the story now, the player too. */
+  cast: string[];
+  adultsOnly: boolean;
+  onAdd: (c: NewCharacter) => Promise<void>;
 };
 
 export type StoryIntro = { premise: string; location: string; scene: string };
@@ -74,9 +90,12 @@ function EventBlock({
   latest,
   keepsNotes,
   currentNotes,
+  currentThreads,
   onOpenNotes,
   onUndoNotes,
   opensChapter,
+  sceneHeadings,
+  newcomers,
 }: {
   e: EventDto;
   focused: boolean;
@@ -201,13 +220,24 @@ function EventBlock({
             playerName={playerName}
             onRoll={latest ? onRoll : undefined}
             dropCap={opensChapter}
+            sceneHeadings={sceneHeadings}
           />
           {keepsNotes && (
             <MemoryLine
               text={e.payload.text}
               current={currentNotes}
+              threads={currentThreads}
               onOpen={onOpenNotes}
               onUndo={onUndoNotes && (() => onUndoNotes(e.id))}
+            />
+          )}
+          {newcomers && (
+            <NewCharacterCards
+              text={e.payload.text}
+              storyId={newcomers.storyId}
+              cast={newcomers.cast}
+              adultsOnly={newcomers.adultsOnly}
+              onAdd={newcomers.onAdd}
             />
           )}
           {(branch || regenerate || bookmark) && (
@@ -277,8 +307,11 @@ export function NarrativeView({
   onRoll,
   keepsNotes,
   currentNotes,
+  currentThreads,
   onOpenNotes,
   onUndoNotes,
+  sceneHeadings,
+  newcomers,
 }: Props) {
   const opening = events[0]?.kind === 'chapter_start' && events[0].payload.ordinal === 1;
   const notStarted = !draft && !events.some((e) => e.kind === 'player');
@@ -394,8 +427,11 @@ export function NarrativeView({
                 onRoll={onRoll}
                 keepsNotes={keepsNotes}
                 currentNotes={currentNotes}
+                currentThreads={currentThreads}
                 onOpenNotes={onOpenNotes}
                 onUndoNotes={onUndoNotes}
+                sceneHeadings={sceneHeadings}
+                newcomers={newcomers}
                 latest={i >= events.length - 2 && i === lastOfKind(events, e.kind)}
                 opensChapter={opensChapter}
               />
@@ -412,7 +448,12 @@ export function NarrativeView({
           {draft && (
             <div className="turn-assistant turn-draft" aria-busy="true" data-testid="reply-draft">
               {draft.text ? (
-                <RichText text={draft.text} playerName={playerName} streaming />
+                <RichText
+                  text={draft.text}
+                  playerName={playerName}
+                  streaming
+                  sceneHeadings={sceneHeadings}
+                />
               ) : (
                 <p className="muted">{t('Writing…')}</p>
               )}

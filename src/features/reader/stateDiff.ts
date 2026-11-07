@@ -118,6 +118,7 @@ function cleanNarration(n: Narration): Narration {
   if (n.autopilot) out.autopilot = true;
   if (n.quietPhones) out.quietPhones = true;
   if (n.manualMemory) out.manualMemory = true;
+  if (n.noSuggestions) out.noSuggestions = true;
   const styleNotes = n.styleNotes?.trim();
   if (styleNotes) out.styleNotes = styleNotes;
   const diceRules = cleanDiceRules(n.diceRules);
@@ -218,6 +219,7 @@ export function diffState(
       autopilot: onOff(n.autopilot),
       quietPhones: onOff(!n.quietPhones),
       manualMemory: onOff(!n.manualMemory),
+      noSuggestions: onOff(!n.noSuggestions),
       styleNotes: n.styleNotes ?? t('Not set'),
       diceRules: diceSummary(n.diceRules) || t('Usual'),
     });
@@ -242,6 +244,7 @@ export function diffState(
         ['autopilot', msg('Your small reactions')],
         ['quietPhones', msg('Characters can text or call you first')],
         ['manualMemory', msg('Let the storyteller keep memory notes')],
+        ['noSuggestions', msg('Suggest what you could do next')],
         ['styleNotes', msg('Your own style (optional)')],
         ['surprises', msg('Twists and surprises')],
       ]),
@@ -266,16 +269,19 @@ export function diffState(
     }
   }
 
+  const time = after.scene.time?.trim();
   const scene = {
     ...after.scene,
     location: after.scene.location.trim(),
     summary: after.scene.summary.trim(),
+    time: time || undefined,
   };
   if (!same(scene, before.scene)) {
     changes.push({ op: 'setScene', scene });
     lines.push(
       ...fieldLines(`${t('Scene')} · `, before.scene, scene, [
         ['location', msg('Where')],
+        ['time', msg('When')],
         ['summary', msg('What is happening')],
       ]),
     );
@@ -284,9 +290,18 @@ export function diffState(
   if (!same(threads, before.openThreads)) {
     changes.push({ op: 'setOpenThreads', openThreads: threads });
     lines.push({
-      what: t('Open questions'),
+      what: t('Open threads'),
       before: show(before.openThreads),
       after: show(threads),
+    });
+  }
+  const settled = cleanList(after.doneThreads ?? []);
+  if (!same(settled, before.doneThreads ?? [])) {
+    changes.push({ op: 'setDoneThreads', doneThreads: settled });
+    lines.push({
+      what: t('Settled threads'),
+      before: show(before.doneThreads ?? []),
+      after: show(settled),
     });
   }
 
