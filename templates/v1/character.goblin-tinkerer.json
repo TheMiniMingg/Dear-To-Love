@@ -4,6 +4,18 @@
   "id": "starter:goblin-tinkerer",
   "label": "The Goblin Tinkerer",
   "summary": "Builds things that mostly work, talks fast and runs faster.",
+  "suits": [
+    "starter:ashen-throne",
+    "starter:ember-road",
+    "starter:glass-orchard",
+    "starter:greywatch",
+    "starter:underhalls",
+    "starter:tumbledown-isles",
+    "starter:saltmarsh-lyceum",
+    "starter:rosaline-court",
+    "starter:shattered-main",
+    "starter:velvet-court"
+  ],
   "character": {
     "id": "starter:goblin-tinkerer",
     "name": "Nix Sparkwhistle",

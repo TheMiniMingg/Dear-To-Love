@@ -1,11 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Shuffle } from 'lucide-react';
 import { commands, errorMessage } from '../../api/commands';
 import { useUiStore } from '../../app/store';
 import { ArrowPicker } from '../../components/ArrowPicker';
 import type { Detail, Perspective, TemplateCatalog } from '../../types';
 import { STORY_TYPES, withStoryType, worldFits } from './ContentFields';
-import { fittingScenarios } from './WizardSteps';
+import { charactersFor, fittingScenarios, suits } from './WizardSteps';
 import { t, tOptions } from '../../i18n';
 import { DETAILS, PERSPECTIVES, appStoryLanguage, storyLanguageLabel } from './StyleFields';
 import { trackingSummary } from './TrackingFields';
@@ -22,6 +22,8 @@ export function QuickStartScreen() {
   const [detail, setDetail] = useState<Detail | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  // Until you pick a character yourself, the character follows the world.
+  const ownCharacter = useRef(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -33,7 +35,7 @@ export function QuickStartScreen() {
         const firstWorld = c.worlds[0]?.id ?? '';
         setWorldId(firstWorld);
         setScenarioId(fittingScenarios(c, firstWorld)[0]?.id ?? '');
-        setCharacterId(c.characters[0]?.id ?? '');
+        setCharacterId(charactersFor(c, firstWorld)[0]?.id ?? '');
       })
       .catch((e: unknown) => {
         if (!cancelled) setError(errorMessage(e));
@@ -49,6 +51,11 @@ export function QuickStartScreen() {
     if (catalog && !fittingScenarios(catalog, id).some((s) => s.id === scenarioId)) {
       setScenarioId(fittingScenarios(catalog, id)[0]?.id ?? '');
     }
+    if (catalog && !ownCharacter.current) setCharacterId(charactersFor(catalog, id)[0]?.id ?? '');
+  };
+  const chooseCharacter = (id: string) => {
+    ownCharacter.current = true;
+    setCharacterId(id);
   };
   const fitting = catalog?.worlds.filter((w) => worldFits(w.narration.genres, storyType)) ?? [];
   const worlds = fitting.length > 0 ? fitting : (catalog?.worlds ?? []);
@@ -76,7 +83,9 @@ export function QuickStartScreen() {
     if (!w) return;
     setWorldId(w.id);
     setScenarioId(pick(fittingScenarios(catalog, w.id))?.id ?? '');
-    setCharacterId(pick(catalog.characters)?.id ?? '');
+    // Someone who belongs there: no lizardfolk on a modern campus.
+    setCharacterId(pick(catalog.characters.filter((c) => suits(c, w.id)))?.id ?? '');
+    ownCharacter.current = false;
   };
 
   const start = async () => {
@@ -164,13 +173,13 @@ export function QuickStartScreen() {
             />
             <ArrowPicker
               label={t('Your character')}
-              options={catalog.characters.map((c) => ({
+              options={charactersFor(catalog, worldId).map((c) => ({
                 value: c.id,
                 label: c.label,
                 hint: c.summary,
               }))}
               value={characterId}
-              onChange={setCharacterId}
+              onChange={chooseCharacter}
             />
             <ArrowPicker
               label={t('Narration')}

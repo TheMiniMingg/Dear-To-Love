@@ -4,6 +4,13 @@
   "id": "starter:quartermaster",
   "label": "The Quartermaster",
   "summary": "A pirate quartermaster who keeps the books, the peace and a knife in each boot.",
+  "suits": [
+    "starter:shattered-main",
+    "starter:tumbledown-isles",
+    "starter:tallow-drift",
+    "starter:ember-road",
+    "starter:isla-monarch"
+  ],
   "character": {
     "id": "starter:quartermaster",
     "name": "Bess Marrow",

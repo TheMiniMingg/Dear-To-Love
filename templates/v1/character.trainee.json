@@ -4,6 +4,14 @@
   "id": "starter:trainee",
   "label": "The Trainee",
   "summary": "A late-signed trainee with a great voice and no idea how to survive an agency.",
+  "suits": [
+    "starter:star-lane",
+    "starter:larkport",
+    "starter:northgate",
+    "starter:maple-fern",
+    "starter:harbor-town",
+    "starter:lumen-city"
+  ],
   "character": {
     "id": "starter:trainee",
     "name": "Seo-yeon Park",

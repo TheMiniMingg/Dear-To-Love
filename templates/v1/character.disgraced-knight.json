@@ -4,6 +4,18 @@
   "id": "starter:disgraced-knight",
   "label": "The Disgraced Knight",
   "summary": "A knight stripped of their title for refusing an order, looking for a cause worth the sword.",
+  "suits": [
+    "starter:ashen-throne",
+    "starter:ember-road",
+    "starter:glass-orchard",
+    "starter:greywatch",
+    "starter:underhalls",
+    "starter:tumbledown-isles",
+    "starter:saltmarsh-lyceum",
+    "starter:rosaline-court",
+    "starter:shattered-main",
+    "starter:velvet-court"
+  ],
   "character": {
     "id": "starter:disgraced-knight",
     "name": "Roderic Thale",

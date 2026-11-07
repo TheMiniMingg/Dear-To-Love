@@ -4,6 +4,15 @@
   "id": "starter:delver",
   "label": "The Orc Delver",
   "summary": "A young orc with a borrowed pick and a debt to the delvers' guild.",
+  "suits": [
+    "starter:ashen-throne",
+    "starter:ember-road",
+    "starter:glass-orchard",
+    "starter:greywatch",
+    "starter:underhalls",
+    "starter:tumbledown-isles",
+    "starter:shattered-main"
+  ],
   "character": {
     "id": "starter:delver",
     "name": "Torva Ironroot",

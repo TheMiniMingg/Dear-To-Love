@@ -4,6 +4,23 @@
   "id": "starter:skeptic",
   "label": "The Skeptic",
   "summary": "A debunker of hauntings and hoaxes who has never met a ghost, so far.",
+  "suits": [
+    "starter:calder-falls",
+    "starter:harbor-town",
+    "starter:hollow-pines",
+    "starter:isla-monarch",
+    "starter:larkport",
+    "starter:maple-fern",
+    "starter:northgate",
+    "starter:star-lane",
+    "starter:doomspire",
+    "starter:lumen-city",
+    "starter:juniper-heights",
+    "starter:ashcombe-1923",
+    "starter:aurelia-1934",
+    "starter:brackwater",
+    "starter:dust-creek"
+  ],
   "character": {
     "id": "starter:skeptic",
     "name": "Imogen Ward",

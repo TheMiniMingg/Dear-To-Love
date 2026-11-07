@@ -4,6 +4,16 @@
   "id": "starter:lizardfolk-scout",
   "label": "The Lizardfolk Scout",
   "summary": "Cold-blooded, warm-hearted and puzzled by warm-blooded customs.",
+  "suits": [
+    "starter:ashen-throne",
+    "starter:ember-road",
+    "starter:glass-orchard",
+    "starter:greywatch",
+    "starter:underhalls",
+    "starter:tumbledown-isles",
+    "starter:shattered-main",
+    "starter:saltmarsh-lyceum"
+  ],
   "character": {
     "id": "starter:lizardfolk-scout",
     "name": "Ves-tal",

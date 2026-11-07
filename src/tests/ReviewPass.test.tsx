@@ -1,5 +1,6 @@
 // The review pass: a welcome when the library is empty, ways in at a
-// chapter's start, Surprise me on Preset Story, and jump links in Settings.
+// chapter's start, Surprise me and fitting characters on Preset Story, and
+// jump links in Settings.
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -61,7 +62,16 @@ const catalog = {
       id: 'c:keeper',
       label: 'The Keeper',
       summary: '',
+      suits: ['w:harbor'],
       character: { id: 'c:keeper', name: 'Sam', personality: [], goals: [], abilities: [] },
+    },
+    {
+      templateSchemaVersion: 1,
+      id: 'c:pilot',
+      label: 'The Pilot',
+      summary: '',
+      suits: ['w:station'],
+      character: { id: 'c:pilot', name: 'Ash', personality: [], goals: [], abilities: [] },
     },
   ],
 } as unknown as TemplateCatalog;
@@ -151,6 +161,26 @@ describe('Preset Story', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Surprise me' }));
     expect(within(preview).getByRole('heading', { name: 'Night Shift' })).toBeInTheDocument();
     expect(screen.getByRole('combobox', { name: 'World' })).toHaveValue('w:station');
+    // Someone who belongs on a space station.
+    expect(screen.getByRole('combobox', { name: 'Your character' })).toHaveValue('c:pilot');
+  });
+
+  it('suggests a character who suits the world until you pick one yourself', async () => {
+    invoke.mockImplementation(async (cmd: string) =>
+      cmd === 'get_template_catalog' ? catalog : null,
+    );
+    render(<QuickStartScreen />);
+    const character = await screen.findByRole('combobox', { name: 'Your character' });
+    const world = screen.getByRole('combobox', { name: 'World' });
+    expect(character).toHaveValue('c:keeper');
+    await userEvent.selectOptions(world, 'w:station');
+    expect(character).toHaveValue('c:pilot');
+    // The ones who suit the world come first.
+    expect(within(character).getAllByRole('option')[0]).toHaveTextContent('The Pilot');
+    await userEvent.selectOptions(character, 'c:keeper');
+    await userEvent.selectOptions(world, 'w:harbor');
+    await userEvent.selectOptions(world, 'w:station');
+    expect(character).toHaveValue('c:keeper');
   });
 });
 

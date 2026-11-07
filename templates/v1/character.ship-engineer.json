@@ -4,6 +4,21 @@
   "id": "starter:ship-engineer",
   "label": "The Engineer",
   "summary": "Happiest with grease on both hands and a problem nobody else wants.",
+  "suits": [
+    "starter:arclight",
+    "starter:neon-harbor",
+    "starter:vesper-city",
+    "starter:meridian-station",
+    "starter:tallow-drift",
+    "starter:dry-country",
+    "starter:aurelia-1934",
+    "starter:shattered-main",
+    "starter:harbor-town",
+    "starter:hollow-pines",
+    "starter:calder-falls",
+    "starter:juniper-heights",
+    "starter:dust-creek"
+  ],
   "character": {
     "id": "starter:ship-engineer",
     "name": "Kit Okafor",

@@ -72,6 +72,12 @@
   **Settings** has links to each section at the top; **Save / Load** lists your saves apart
   from the autosaves; a title stays with a name in ideas ("Lord Shen", not "Lord"); and
   Escape closes a panel even after a button in it turned off while busy.
+- **Characters who suit the world.** Preset characters now say which worlds they suit:
+  **Surprise me** picks someone who belongs there (no lizardfolk scout on a modern campus),
+  the character list shows the best fits first, and the suggested character follows the
+  world until you pick one yourself. Any character can still go anywhere.
+- **Custom Story's problems in your language.** The list of things to fix before creating
+  a story was always in English; it now follows the app's language.
 - **Older chapters are kept in brief.** Beyond the 10 newest chapter recaps, the 40 before
   them are now sent in brief instead of being left out.
 - **Play several stories at once.** A Stories button beside the story goes back to the library

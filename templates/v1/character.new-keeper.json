@@ -4,6 +4,15 @@
   "id": "starter:new-keeper",
   "label": "The New Keeper",
   "summary": "Took the lighthouse job to start over somewhere quiet. It is not quiet.",
+  "suits": [
+    "starter:harbor-town",
+    "starter:ashcombe-1923",
+    "starter:tumbledown-isles",
+    "starter:shattered-main",
+    "starter:saltmarsh-lyceum",
+    "starter:larkport",
+    "starter:isla-monarch"
+  ],
   "character": {
     "id": "starter:new-keeper",
     "name": "Sam Ashby",

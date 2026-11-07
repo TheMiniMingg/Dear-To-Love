@@ -4,6 +4,14 @@
   "id": "starter:dukes-daughter",
   "label": "The Duke's Daughter",
   "summary": "A sharp-tongued noblewoman with a terrible reputation, a good heart and a plan to change her fate.",
+  "suits": [
+    "starter:rosaline-court",
+    "starter:ashen-throne",
+    "starter:velvet-court",
+    "starter:glass-orchard",
+    "starter:ashcombe-1923",
+    "starter:aurelia-1934"
+  ],
   "character": {
     "id": "starter:dukes-daughter",
     "name": "Lady Cordelia Ashgrove",

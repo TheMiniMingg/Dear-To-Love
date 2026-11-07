@@ -181,6 +181,10 @@ pub struct CharacterTemplate {
     pub id: String,
     pub label: String,
     pub summary: String,
+    /// Worlds this character suits best; empty means any world. Only a
+    /// suggestion for the pickers: any character can be played anywhere.
+    #[serde(default)]
+    pub suits: Vec<String>,
     pub character: Character,
 }
 
@@ -329,6 +333,18 @@ impl TemplateCatalog {
                 return Err(AppError::invalid_input(format!(
                     "scenario {} names unknown world {w}",
                     s.id
+                )));
+            }
+        }
+        for c in &cat.characters {
+            if let Some(w) = c
+                .suits
+                .iter()
+                .find(|w| !cat.worlds.iter().any(|x| &x.id == *w))
+            {
+                return Err(AppError::invalid_input(format!(
+                    "character {} names unknown world {w}",
+                    c.id
                 )));
             }
         }
@@ -534,6 +550,7 @@ mod tests {
             id: "test:clash".into(),
             label: "Clash".into(),
             summary: String::new(),
+            suits: Vec::new(),
             character: npc_as_player,
         });
         let mut input = starter();
@@ -665,6 +682,29 @@ mod tests {
         );
         let dup = r#"{"templateSchemaVersion":1,"type":"world","id":"a:b","label":"x","summary":"","world":{"era":"","setting":"s","description":"","rules":[]},"narration":{"perspective":"second","detail":"brief","tone":"","pacing":"fast"}}"#;
         assert!(TemplateCatalog::parse(&[dup, dup]).is_err());
+    }
+
+    /// Which worlds a character suits is only a suggestion for the pickers,
+    /// but the worlds it names must exist.
+    #[test]
+    fn characters_suit_worlds_but_can_go_anywhere() {
+        let cat = TemplateCatalog::bundled();
+        let scout = cat
+            .characters
+            .iter()
+            .find(|c| c.id == "starter:lizardfolk-scout")
+            .unwrap();
+        assert!(scout.suits.iter().any(|w| w == "starter:underhalls"));
+        assert!(!scout.suits.iter().any(|w| w == "starter:northgate"));
+        let input = QuickStartInput {
+            world_id: "starter:northgate".into(),
+            scenario_id: "starter:midterm-week".into(),
+            character_id: scout.id.clone(),
+            ..starter()
+        };
+        assert!(cat.resolve_quick_start(&input).is_ok());
+        let nowhere = r#"{"templateSchemaVersion":1,"type":"character","id":"a:c","label":"x","summary":"","suits":["a:nowhere"],"character":{"id":"a:c","name":"x","control":"player"}}"#;
+        assert!(TemplateCatalog::parse(&[nowhere]).is_err());
     }
 
     #[test]

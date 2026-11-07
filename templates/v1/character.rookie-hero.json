@@ -4,6 +4,19 @@
   "id": "starter:rookie-hero",
   "label": "The Rookie Hero",
   "summary": "Got powers three weeks ago and has told nobody.",
+  "suits": [
+    "starter:calder-falls",
+    "starter:harbor-town",
+    "starter:hollow-pines",
+    "starter:isla-monarch",
+    "starter:larkport",
+    "starter:maple-fern",
+    "starter:northgate",
+    "starter:star-lane",
+    "starter:doomspire",
+    "starter:lumen-city",
+    "starter:juniper-heights"
+  ],
   "character": {
     "id": "starter:rookie-hero",
     "name": "Max Rivera",
