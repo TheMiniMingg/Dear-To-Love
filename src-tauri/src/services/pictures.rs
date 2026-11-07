@@ -376,6 +376,66 @@ pub fn portrait_prompt(c: &Character, world: &World, style: PortraitStyle) -> Pr
     }
 }
 
+/// Always the last sentence of an item's description, never cut off.
+const ITEM_SAFE: &str = "The object alone, no people, safe for work, no text.";
+
+/// The description sent for an inventory item's picture: what it is, in
+/// the style chosen, with the world's era and setting for its look.
+pub fn item_prompt(name: &str, about: &str, world: &World, style: PortraitStyle) -> Prompt {
+    let one_line = |s: &str| s.split_whitespace().collect::<Vec<_>>().join(" ");
+    let name = one_line(name);
+    let about = one_line(about);
+    let mut parts = vec![format!(
+        "A single item, {name}, centered on a plain, softly lit background, {}.",
+        style.words()
+    )];
+    if !about.is_empty() {
+        parts.push(format!("It is {about}"));
+        if !about.ends_with(['.', '!', '?']) {
+            parts.last_mut().expect("just pushed").push('.');
+        }
+    }
+    let era = world.era.trim();
+    let setting = world.setting.trim();
+    match (era.is_empty(), setting.is_empty()) {
+        (false, false) => parts.push(format!("Made the way things are in {era}, {setting}.")),
+        (false, true) => parts.push(format!("Made the way things are in {era}.")),
+        (true, false) => parts.push(format!("Made the way things are in {setting}.")),
+        (true, true) => {}
+    }
+    let room = MAX_PROMPT_CHARS - ITEM_SAFE.chars().count() - 1;
+    let mut text = parts.join(" ");
+    if text.chars().count() > room {
+        text = text.chars().take(room).collect();
+    }
+    text.push(' ');
+    text.push_str(ITEM_SAFE);
+    Prompt {
+        text,
+        avoid: "people, hands, nudity, sexual content, gore, text, watermark".into(),
+    }
+}
+
+/// An inventory item's picture to make.
+#[derive(Debug, Clone, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct ItemPictureInput {
+    pub name: String,
+    #[serde(default)]
+    pub description: String,
+    #[serde(default)]
+    pub world: World,
+    #[serde(default)]
+    pub style: PortraitStyle,
+    /// The story the picture is kept for.
+    pub story_id: String,
+    /// The player allowed one request the budget can't price.
+    #[serde(default)]
+    #[ts(as = "Option<bool>", optional)]
+    pub budget_override: bool,
+}
+
 /// A portrait to make.
 #[derive(Debug, Clone, Deserialize, TS)]
 #[serde(rename_all = "camelCase")]
@@ -430,6 +490,82 @@ pub async fn make_portrait(
             "give the character a name before making a portrait",
         ));
     }
+    let scope = match (&input.story_id, input.new_story) {
+        (Some(id), _) => ImportScope::Story(id.clone()),
+        (None, true) => ImportScope::NewStory,
+        (None, false) => ImportScope::Shared,
+    };
+    make_picture(
+        db,
+        store,
+        secrets,
+        session_id,
+        Made {
+            prompt: portrait_prompt(&input.character, &input.world, input.style),
+            label: format!("Portrait of {name}"),
+            tag: "Portrait",
+            scope,
+            budget_override: input.budget_override,
+        },
+    )
+    .await
+}
+
+/// Makes a picture of an inventory item for its story. One ledger row per
+/// attempt.
+pub async fn make_item_picture(
+    db: &Database,
+    store: &AssetStore,
+    secrets: &dyn SecretStore,
+    session_id: &str,
+    input: &ItemPictureInput,
+) -> AppResult<Imported> {
+    let name = input.name.split_whitespace().collect::<Vec<_>>().join(" ");
+    if name.is_empty() {
+        return Err(AppError::invalid_input(
+            "give the item a name before making its picture",
+        ));
+    }
+    make_picture(
+        db,
+        store,
+        secrets,
+        session_id,
+        Made {
+            prompt: item_prompt(&name, &input.description, &input.world, input.style),
+            label: name,
+            tag: "Item",
+            scope: ImportScope::Story(input.story_id.clone()),
+            budget_override: input.budget_override,
+        },
+    )
+    .await
+}
+
+/// What to make and where it goes.
+struct Made {
+    prompt: Prompt,
+    label: String,
+    /// The library tag the new picture gets.
+    tag: &'static str,
+    scope: ImportScope,
+    budget_override: bool,
+}
+
+async fn make_picture(
+    db: &Database,
+    store: &AssetStore,
+    secrets: &dyn SecretStore,
+    session_id: &str,
+    made: Made,
+) -> AppResult<Imported> {
+    let Made {
+        prompt,
+        label,
+        tag,
+        scope,
+        budget_override,
+    } = made;
     let row = picture_profile(db).await?;
     let kind = row.adapter()?;
     let key = match &row.secret_ref {
@@ -437,13 +573,7 @@ pub async fn make_portrait(
         None => None,
     };
     let maker = PictureMaker::new(kind, row.base_url.as_deref().unwrap_or_default(), key)?;
-    let prompt = portrait_prompt(&input.character, &input.world, input.style);
-    let scope = match (&input.story_id, input.new_story) {
-        (Some(id), _) => ImportScope::Story(id.clone()),
-        (None, true) => ImportScope::NewStory,
-        (None, false) => ImportScope::Shared,
-    };
-    // Before anything is paid for: the story the portrait is for must exist.
+    // Before anything is paid for: the story the picture is for must exist.
     asset_rows::check_import_scope(db, &scope).await?;
     let request = usage::open_request(
         db,
@@ -458,7 +588,7 @@ pub async fn make_portrait(
             purpose: RequestPurpose::CharacterSuggestion,
             prompt_tokens: 0,
             max_output_tokens: 0,
-            allow_unpriced: input.budget_override,
+            allow_unpriced: budget_override,
         },
     )
     .await?;
@@ -487,7 +617,6 @@ pub async fn make_portrait(
             return Err(e.error);
         }
     };
-    let label = format!("Portrait of {name}");
     let imported = import_bytes(db, store, bytes, &label, &scope)
         .await
         .map_err(|e| {
@@ -501,8 +630,7 @@ pub async fn make_portrait(
         })?;
     if !imported.already_in_library {
         let asset =
-            asset_rows::update_details(db, &imported.asset.id, &label, &["Portrait".into()])
-                .await?;
+            asset_rows::update_details(db, &imported.asset.id, &label, &[tag.into()]).await?;
         return Ok(Imported {
             asset,
             already_in_library: false,

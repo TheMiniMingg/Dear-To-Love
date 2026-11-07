@@ -362,6 +362,34 @@ left as it is keeps the usual behavior:
 - **Show the number needed before you roll** (on): off, the card keeps the target hidden
   until the dice land.
 
+## Health, items and more
+
+For stories played like an RPG, turn on **Keep track of health, items and more** in the
+wizard's **Narration** step or in **Story details → Narration**. It starts with what suits
+the kind of story: Health, Mana and Gold for fantasy and adventure, Health and Credits for
+science fiction, Affection for romance, and Health and Money otherwise. Change any of it:
+
+- **Bars** have a maximum, such as Health 80/100. **Counters** don't, such as Gold 35 or
+  damage dealt. Each has a name, a value and, if it isn't yours, whose it is (a party
+  member's or a rival's). Up to 24.
+- **Keep an inventory** (on): what you find, buy or are given, each with how many and a
+  description. Add starting items, such as a rope or a letter. Up to 200 kinds of item.
+
+As the story goes, the storyteller is told the current numbers and the inventory, and writes
+a short tag right where something changes them: a goblin's blade, a potion, a chest with a
+key in it. The app does the arithmetic, keeps bars between 0 and their maximum, and shows
+each change in the story as a small chip ("Health −12", "+1 Rusty Key"). Tags you type in
+your own action are ignored, so a story can't be cheated by writing one.
+
+Your bars and counters show above the action box. **Inventory** next to them (or **Status
+and inventory** in the pause menu) lists everyone's bars and every item with its
+description. **Make a picture** asks your picture connection for a picture of the item (the
+object alone, safe for work), kept for this story.
+
+Each route keeps its own numbers: going back, branching or asking for another reply gives
+the values from that point of the story. **Story details** changes them by hand, from now on
+on that route, like any other detail.
+
 ## Adult and explicit stories
 
 Dear to Love supports any kind of fiction between adults, including erotica, dark themes, and

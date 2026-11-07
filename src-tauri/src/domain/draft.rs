@@ -16,6 +16,7 @@ use super::story_state::{
     StoryStateV1, World, STORY_STATE_SCHEMA_VERSION,
 };
 use super::templates::{check_id, SceneTemplate, PLAYER_PLACEHOLDER};
+use super::tracking::{Item, Meter, Tracking};
 use super::visuals::{VisualSlot, PORTRAIT_PREFIX};
 use crate::errors::{AppError, AppResult};
 
@@ -74,6 +75,10 @@ pub struct CreateStoryDraft {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
     pub storyteller: Option<StorytellerChoice>,
+    /// Bars, counters and an inventory, RPG style.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub tracking: Option<Tracking>,
 }
 
 impl Default for CreateStoryDraft {
@@ -102,6 +107,7 @@ impl Default for CreateStoryDraft {
             pictures: vec![],
             story_images: vec![],
             storyteller: None,
+            tracking: None,
         }
     }
 }
@@ -150,6 +156,40 @@ fn clean_list(items: &[String]) -> Vec<String> {
         .filter(|t| !t.is_empty())
         .map(String::from)
         .collect()
+}
+
+/// Blank rows dropped, names trimmed and bars started within their range.
+fn clean_tracking(t: &Tracking) -> Tracking {
+    Tracking {
+        meters: t
+            .meters
+            .iter()
+            .filter(|m| !blank(&m.name))
+            .map(|m| Meter {
+                name: clean_text(&m.name),
+                value: match m.max {
+                    Some(max) => m.value.clamp(0, max.max(0)),
+                    None => m.value,
+                },
+                max: m.max,
+                who: clean_opt(&m.who),
+            })
+            .collect(),
+        inventory: t.inventory,
+        items: if t.inventory {
+            t.items
+                .iter()
+                .filter(|i| !blank(&i.name))
+                .map(|i| Item {
+                    name: clean_text(&i.name),
+                    qty: i.qty,
+                    description: clean_text(&i.description),
+                })
+                .collect()
+        } else {
+            vec![]
+        },
+    }
 }
 
 fn clean_character(c: &Character, control: Control) -> Character {
@@ -442,6 +482,7 @@ impl CreateStoryDraft {
             },
             open_threads: clean_list(&self.open_threads),
             visual_refs: BTreeMap::new(),
+            tracking: self.tracking.as_ref().map(clean_tracking),
         };
         base_state.validate()?;
         let chapter_outlines = self

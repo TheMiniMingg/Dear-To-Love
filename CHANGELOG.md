@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- **Health, items and more, like an RPG.** **Keep track of health, items and more** (in the
+  wizard's Narration step and Story details) gives a story bars such as Health 80/100,
+  counters such as Gold 35, and an inventory. It starts with what suits the story (Health,
+  Mana and Gold for fantasy, Affection for romance) and every bar, counter and starting item
+  can be changed, including a party member's. The storyteller is told the numbers and writes
+  what changes (a goblin's blade, a chest with a key in it); the app does the arithmetic and
+  shows each change in the story. Your bars show above the action box, and **Inventory**
+  lists every item with its description. **Make a picture** asks your picture connection for
+  a picture of an item. Each route keeps its own numbers.
 - **More ways to tell a story, with an example of each.** Two new styles, _Roleplay chat_
   (actions in italics, short replies) and _Text adventure_ (where you are, what you see and
   the ways onward), join Narrated, Script, Thoughts and Messages. Under the style picker a

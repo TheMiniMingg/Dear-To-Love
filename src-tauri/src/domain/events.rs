@@ -8,6 +8,7 @@ use ts_rs::TS;
 use super::dice::DiceRoll;
 use super::story_state::{Character, KnownFact, Narration, Relationship, Scene, World};
 use super::text::plain_message_tags;
+use super::tracking::Tracking;
 use crate::errors::{AppError, AppResult};
 
 /// Current payload version written to `events.payload_version`.
@@ -91,10 +92,11 @@ impl PlayerPayload {
 
     /// The action as the storyteller reads it: the roll as a tag, then
     /// the player's words.
-    /// Roll tags typed into the words are dropped: only the app's roll counts.
+    /// Roll, meter and item tags typed into the words are dropped: only the
+    /// app's roll and the storyteller's changes count.
     pub fn story_text(&self) -> Cow<'_, str> {
-        let words = if self.text.contains("<roll") {
-            Cow::Owned(super::text::strip_roll_tags(&self.text))
+        let words = if super::text::has_app_tags(&self.text) {
+            Cow::Owned(super::text::strip_app_tags(&self.text))
         } else {
             Cow::Borrowed(self.text.as_str())
         };
@@ -173,6 +175,12 @@ pub enum StateEdit {
     SetVisualRef {
         slot: String,
         asset_id: Option<String>,
+    },
+    /// Bars, counters and the inventory as they are from here on; `None`
+    /// stops keeping them.
+    SetTracking {
+        #[ts(optional)]
+        tracking: Option<Tracking>,
     },
 }
 

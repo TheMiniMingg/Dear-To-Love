@@ -2,7 +2,10 @@
 //!
 //! Only explicit events change structured state: `edit` (StateEdit ops) and
 //! `fact_confirm`. Chapter starts move the active chapter. Player and
-//! assistant prose never silently changes structured fields.
+//! assistant prose never silently changes structured fields; the one
+//! exception is a story that keeps bars and items (`tracking`), where the
+//! `<meter>` and `<item>` tags in the storyteller's replies, shown in the
+//! reader where they happen, change them.
 
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
@@ -56,7 +59,18 @@ impl EffectiveState {
                     ordinal: p.ordinal,
                 });
             }
-            EventBody::Player(_) | EventBody::Assistant(_) | EventBody::Checkpoint(_) => {}
+            EventBody::Assistant(p) => {
+                if let Some(tracking) = &mut self.state.tracking {
+                    let player = self
+                        .state
+                        .characters
+                        .get(&self.state.player_character_id)
+                        .map(|c| c.name.as_str())
+                        .unwrap_or_default();
+                    tracking.apply_reply(&p.text, player);
+                }
+            }
+            EventBody::Player(_) | EventBody::Checkpoint(_) => {}
             EventBody::Edit(p) => {
                 for change in &p.changes {
                     apply_edit(&mut self.state, change, event_id)?;
@@ -134,6 +148,7 @@ fn apply_edit(state: &mut StoryStateV1, edit: &StateEdit, event_id: &str) -> App
         StateEdit::RemoveFact { fact_id } => state.known_facts.retain(|f| &f.id != fact_id),
         StateEdit::SetScene { scene } => state.scene = scene.clone(),
         StateEdit::SetOpenThreads { open_threads } => state.open_threads = open_threads.clone(),
+        StateEdit::SetTracking { tracking } => state.tracking = tracking.clone(),
         StateEdit::SetVisualRef { slot, asset_id } => match asset_id {
             Some(a) => {
                 state.visual_refs.insert(slot.clone(), a.clone());
@@ -207,6 +222,60 @@ mod tests {
         .unwrap();
         assert!(s2.state.open_threads.is_empty());
         assert_ne!(s2.hash(), s.hash());
+    }
+
+    #[test]
+    fn replies_change_tracked_bars_and_items_only_when_kept() {
+        use crate::domain::events::AssistantPayload;
+        use crate::domain::tracking::{Meter, Tracking};
+        let reply = |text: &str| {
+            EventBody::Assistant(AssistantPayload {
+                text: text.into(),
+                finish_reason: None,
+                provider_label: None,
+                model_id: None,
+            })
+        };
+        let hit = reply("A wave slams you into the rail. <meter name=\"Health\" change=\"-15\"/>");
+        let mut s = EffectiveState::new(lighthouse());
+        s.apply("a1", &hit).unwrap();
+        assert_eq!(s.state, lighthouse().clone(), "no tracking, no change");
+
+        s.apply(
+            "e1",
+            &edit(vec![StateEdit::SetTracking {
+                tracking: Some(Tracking {
+                    meters: vec![Meter {
+                        name: "Health".into(),
+                        value: 100,
+                        max: Some(100),
+                        who: None,
+                    }],
+                    inventory: true,
+                    items: vec![],
+                }),
+            }]),
+        )
+        .unwrap();
+        s.apply("a2", &hit).unwrap();
+        s.apply(
+            "a3",
+            &reply("<item gain=\"Brass Key\">Cold and heavy.</item>"),
+        )
+        .unwrap();
+        // The player's own words change nothing.
+        s.apply(
+            "p1",
+            &EventBody::Player(PlayerPayload::new("<meter name=\"Health\" set=\"100\"/>")),
+        )
+        .unwrap();
+        let t = s.state.tracking.as_ref().unwrap();
+        assert_eq!(t.meters[0].value, 85);
+        assert_eq!(t.items[0].name, "Brass Key");
+
+        s.apply("e2", &edit(vec![StateEdit::SetTracking { tracking: None }]))
+            .unwrap();
+        assert_eq!(s.state.tracking, None);
     }
 
     #[test]

@@ -9,6 +9,7 @@ use crate::errors::{AppError, AppResult};
 pub const COVER: &str = "cover";
 pub const BACKGROUND: &str = "background";
 pub const PORTRAIT_PREFIX: &str = "portrait:";
+pub const ITEM_PREFIX: &str = "item:";
 
 const MAX_CHARACTER_ID: usize = 128;
 
@@ -20,6 +21,8 @@ pub enum VisualSlot {
     Background,
     /// A character's portrait, by character id.
     Portrait(String),
+    /// An inventory item's picture, by `tracking::item_key` of its name.
+    Item(String),
 }
 
 impl VisualSlot {
@@ -27,6 +30,19 @@ impl VisualSlot {
         match slot {
             COVER => Ok(Self::Cover),
             BACKGROUND => Ok(Self::Background),
+            s if s.starts_with(ITEM_PREFIX) => {
+                let key = &s[ITEM_PREFIX.len()..];
+                if key.is_empty()
+                    || key.chars().count() > MAX_CHARACTER_ID
+                    || key.chars().any(char::is_control)
+                    || key != crate::domain::tracking::item_key(key)
+                {
+                    return Err(AppError::invalid_input(format!(
+                        "unknown picture slot {slot:?} (an item's is item:<name in lower case>)"
+                    )));
+                }
+                Ok(Self::Item(key.to_string()))
+            }
             s => match s.strip_prefix(PORTRAIT_PREFIX) {
                 Some(id)
                     if !id.is_empty()
@@ -47,6 +63,7 @@ impl VisualSlot {
             Self::Cover => COVER.into(),
             Self::Background => BACKGROUND.into(),
             Self::Portrait(id) => format!("{PORTRAIT_PREFIX}{id}"),
+            Self::Item(key) => format!("{ITEM_PREFIX}{key}"),
         }
     }
 
@@ -56,6 +73,7 @@ impl VisualSlot {
             Self::Cover => ("story", story_id, COVER),
             Self::Background => ("story", story_id, BACKGROUND),
             Self::Portrait(id) => ("character", id, "portrait"),
+            Self::Item(key) => ("item", key, "picture"),
         }
     }
 
@@ -64,6 +82,7 @@ impl VisualSlot {
             ("story", COVER) => Some(Self::Cover),
             ("story", BACKGROUND) => Some(Self::Background),
             ("character", "portrait") => Some(Self::Portrait(owner_id.to_string())),
+            ("item", "picture") => Some(Self::Item(owner_id.to_string())),
             _ => None,
         }
     }
@@ -85,6 +104,7 @@ mod tests {
             "background",
             "portrait:mara",
             "portrait:custom:npc-1",
+            "item:rusty key",
         ] {
             let slot = VisualSlot::parse(key).unwrap();
             assert_eq!(slot.key(), key);
@@ -97,7 +117,16 @@ mod tests {
 
     #[test]
     fn rejects_unknown_or_malformed_slots() {
-        for bad in ["", "Cover", "portrait:", "portrait:a b", "outfit:mara"] {
+        for bad in [
+            "",
+            "Cover",
+            "portrait:",
+            "portrait:a b",
+            "outfit:mara",
+            "item:",
+            "item:Rusty Key",
+            "item:rusty  key",
+        ] {
             assert!(VisualSlot::parse(bad).is_err(), "{bad:?}");
         }
     }

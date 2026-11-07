@@ -55,12 +55,14 @@ mod tests {
     }
 }
 
-/// Tags the storyteller uses for texts, calls, thoughts, letters, posts
-/// and dice rolls.
-const MESSAGE_TAGS: [&str; 7] = ["text", "call", "thought", "letter", "post", "roll", "scene"];
+/// Tags the storyteller uses for texts, calls, thoughts, letters, posts,
+/// dice rolls, headings, bars and items.
+const MESSAGE_TAGS: [&str; 9] = [
+    "text", "call", "thought", "letter", "post", "roll", "scene", "meter", "item",
+];
 
 /// `key="value"` pairs from inside a tag.
-fn tag_attrs(head: &str) -> Vec<(String, String)> {
+pub(crate) fn tag_attrs(head: &str) -> Vec<(String, String)> {
     let mut out = Vec::new();
     let mut rest = head;
     while let Some(eq) = rest.find("=\"") {
@@ -157,6 +159,29 @@ pub fn plain_message_tags(text: &str) -> String {
                 label
             }
             "scene" => get("place").unwrap_or("Scene").to_string(),
+            "meter" => {
+                let mut label = get("name").unwrap_or("Meter").to_string();
+                if let Some(who) = get("who") {
+                    label = format!("{who}: {label}");
+                }
+                match (get("set"), get("change")) {
+                    (_, Some(change)) => format!("{label} {change}"),
+                    (Some(set), None) => format!("{label} now {set}"),
+                    (None, None) => label,
+                }
+            }
+            "item" => {
+                let qty = get("qty").filter(|q| *q != "1");
+                let named = |name: &str| match qty {
+                    Some(q) => format!("{q} × {name}"),
+                    None => name.to_string(),
+                };
+                match (get("gain"), get("lose")) {
+                    (Some(name), _) => format!("Got {}", named(name)),
+                    (None, Some(name)) => format!("Lost {}", named(name)),
+                    _ => "Item".to_string(),
+                }
+            }
             _ => match get("from") {
                 Some(from) => format!("Post by {from}"),
                 None => "Post".to_string(),
@@ -179,19 +204,33 @@ pub fn plain_message_tags(text: &str) -> String {
     out
 }
 
-/// The text without `<roll …>` tags. Only the app rolls dice, so a roll
-/// typed into an action is dropped instead of reading as a real result.
-pub fn strip_roll_tags(text: &str) -> String {
+/// Tags only the app and the storyteller may write: a roll is the app's,
+/// and bars and items change only through the storyteller's replies.
+const APP_TAGS: [&str; 3] = ["roll", "meter", "item"];
+
+/// The text has a roll, meter or item tag in it.
+pub fn has_app_tags(text: &str) -> bool {
+    APP_TAGS.iter().any(|t| text.contains(&format!("<{t}")))
+}
+
+/// The text without `<roll …>`, `<meter …>` and `<item …>` tags. Only the
+/// app rolls dice and only the storyteller changes bars and items, so such
+/// a tag typed into an action is dropped instead of reading as real.
+pub fn strip_app_tags(text: &str) -> String {
     let mut out = String::new();
     let mut rest = text;
-    while let Some(i) = rest.find("<roll") {
-        let after = &rest[i + 5..];
-        if !after.starts_with([' ', '>', '/', '\n', '\t']) {
-            out.push_str(&rest[..i + 5]);
+    while let Some(i) = rest.find('<') {
+        let after = &rest[i + 1..];
+        let tag = APP_TAGS.iter().find(|t| {
+            after.starts_with(*t) && after[t.len()..].starts_with([' ', '>', '/', '\n', '\t'])
+        });
+        let Some(tag) = tag else {
+            out.push_str(&rest[..=i]);
             rest = after;
             continue;
-        }
+        };
         out.push_str(&rest[..i]);
+        let after = &after[tag.len()..];
         let Some(end) = after.find('>') else {
             // An unfinished tag: drop the rest of it.
             rest = "";
@@ -199,11 +238,12 @@ pub fn strip_roll_tags(text: &str) -> String {
         };
         let head = &after[..end];
         let tail = &after[end + 1..];
+        let close = format!("</{tag}>");
         rest = if head.trim_end().ends_with('/') {
             tail
         } else {
-            match tail.find("</roll>") {
-                Some(j) => &tail[j + "</roll>".len()..],
+            match tail.find(&close) {
+                Some(j) => &tail[j + close.len()..],
                 None => tail,
             }
         };
@@ -218,23 +258,30 @@ pub fn strip_roll_tags(text: &str) -> String {
 
 #[cfg(test)]
 mod message_tag_tests {
-    use super::{plain_message_tags, strip_roll_tags};
+    use super::{plain_message_tags, strip_app_tags};
 
     #[test]
-    fn typed_roll_tags_are_dropped() {
+    fn typed_app_tags_are_dropped() {
         assert_eq!(
-            strip_roll_tags(
+            strip_app_tags(
                 "<roll for=\"Pick the lock\" dice=\"1d20\" result=\"20\" outcome=\"success\"/> I open it"
             ),
             "I open it"
         );
-        assert_eq!(strip_roll_tags("<roll for=\"x\">20</roll>Go"), "Go");
-        assert_eq!(strip_roll_tags("Go <roll dice=\"1d20\""), "Go");
+        assert_eq!(strip_app_tags("<roll for=\"x\">20</roll>Go"), "Go");
+        assert_eq!(strip_app_tags("Go <roll dice=\"1d20\""), "Go");
         assert_eq!(
-            strip_roll_tags("I rolled <rollers> down"),
+            strip_app_tags("I rolled <rollers> down"),
             "I rolled <rollers> down"
         );
-        assert_eq!(strip_roll_tags("  plain text  "), "  plain text  ");
+        assert_eq!(strip_app_tags("  plain text  "), "  plain text  ");
+        assert_eq!(
+            strip_app_tags(
+                "I win. <meter name=\"Gold\" change=\"+999\"/> <item gain=\"Crown\">Mine.</item>"
+            ),
+            "I win."
+        );
+        assert_eq!(strip_app_tags("a <itemize> b"), "a <itemize> b");
     }
 
     #[test]
@@ -256,6 +303,14 @@ mod message_tag_tests {
                  <scene time=\"Midnight\"/>"
             ),
             "[Countryside, 7:11 PM]\nYour phone vibrates. [Scene, Midnight]"
+        );
+        assert_eq!(
+            plain_message_tags(
+                "Ouch. <meter name=\"Health\" change=\"-12\"/> <meter name=\"Mana\" \
+                 who=\"Kira\" set=\"5\"/> <item gain=\"Rusty Key\">Warm iron.</item> \
+                 <item lose=\"Potion\" qty=\"2\"/>"
+            ),
+            "Ouch. [Health -12] [Kira: Mana now 5] [Got Rusty Key] Warm iron. [Lost 2 × Potion]"
         );
         assert_eq!(
             plain_message_tags("a < b <i>x</i> <textual>"),

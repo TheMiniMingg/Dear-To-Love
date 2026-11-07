@@ -1,4 +1,14 @@
-import type { Character, KnownFact, Narration, StateEdit, StoryStateV1 } from '../../types';
+import type {
+  Character,
+  Item,
+  KnownFact,
+  Meter,
+  Narration,
+  StateEdit,
+  StoryStateV1,
+  Tracking,
+} from '../../types';
+import { trackingSummary } from '../create/TrackingFields';
 import { cleanOptionalList, minorsIn, RATING_LABELS } from '../create/ContentFields';
 import {
   DETAILS,
@@ -50,6 +60,35 @@ function cleanStats(stats: Character['stats']): Pick<Character, 'stats'> {
 }
 
 const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
+
+/** Tracking as Rust keeps it: blank rows dropped, names trimmed, in key order. */
+function cleanTracking(tr: Tracking | undefined): Tracking | undefined {
+  if (!tr) return undefined;
+  const out: Tracking = {
+    meters: tr.meters
+      .filter((m) => m.name.trim())
+      .map((m) => {
+        const meter: Meter = { name: m.name.trim(), value: m.value };
+        if (m.max !== undefined) meter.max = m.max;
+        const who = m.who?.trim();
+        if (who) meter.who = who;
+        return meter;
+      }),
+  };
+  if (tr.inventory) {
+    out.inventory = true;
+    const items = (tr.items ?? [])
+      .filter((i) => i.name.trim())
+      .map((i) => {
+        const item: Item = { name: i.name.trim(), qty: i.qty };
+        const description = i.description?.trim();
+        if (description) item.description = description;
+        return item;
+      });
+    if (items.length) out.items = items;
+  }
+  return out;
+}
 
 /** Narration in a fixed key order, with empty lists and an unset rating left out. */
 function cleanNarration(n: Narration): Narration {
@@ -239,6 +278,16 @@ export function diffState(
       what: t('Open questions'),
       before: show(before.openThreads),
       after: show(threads),
+    });
+  }
+
+  const tracking = cleanTracking(after.tracking);
+  if (!same(tracking, cleanTracking(before.tracking))) {
+    changes.push(tracking ? { op: 'setTracking', tracking } : { op: 'setTracking' });
+    lines.push({
+      what: t('Tracking'),
+      before: trackingSummary(before.tracking) || t('Off'),
+      after: trackingSummary(tracking) || t('Off'),
     });
   }
 

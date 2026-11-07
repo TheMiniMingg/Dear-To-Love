@@ -441,3 +441,56 @@ fn a_characters_race_reaches_the_storyteller() {
         "{p}"
     );
 }
+
+#[test]
+fn tracked_bars_and_items_reach_the_storyteller() {
+    use crate::domain::tracking::{Item, Meter, Tracking};
+    let mut s = state();
+    assert!(!system_prompt(&s, &frame()).contains("TRACKING"));
+    s.state.tracking = Some(Tracking {
+        meters: vec![
+            Meter {
+                name: "Health".into(),
+                value: 80,
+                max: Some(100),
+                who: None,
+            },
+            Meter {
+                name: "Gold".into(),
+                value: 35,
+                max: None,
+                who: None,
+            },
+            Meter {
+                name: "Health".into(),
+                value: 40,
+                max: Some(60),
+                who: Some("Kira".into()),
+            },
+        ],
+        inventory: true,
+        items: vec![
+            Item {
+                name: "Healing Potion".into(),
+                qty: 2,
+                description: "Red and fizzy.".into(),
+            },
+            Item {
+                name: "Rope".into(),
+                qty: 1,
+                description: String::new(),
+            },
+        ],
+    });
+    let p = system_prompt(&s, &frame());
+    assert!(p.contains(
+        "- Sam Ashby's Health: 80/100\n- Sam Ashby's Gold: 35\n- Kira's Health: 40/60\n\
+         - Sam Ashby's inventory:\n  - Healing Potion x2: Red and fizzy.\n  - Rope\n"
+    ));
+    assert!(p.contains("<meter name=\"Health\" change=\"-12\"/>"));
+    assert!(p.contains("<item gain=\"Name\" qty=\"1\">"));
+
+    s.state.tracking.as_mut().unwrap().inventory = false;
+    let p = system_prompt(&s, &frame());
+    assert!(!p.contains("<item") && !p.contains("inventory"));
+}

@@ -30,6 +30,7 @@ import { Composer } from './Composer';
 import { ContextPreviewPanel } from './ContextPreviewPanel';
 import { EndChapterPanel } from './EndChapterPanel';
 import { ExportPanel } from './ExportPanel';
+import { InventoryPanel, TrackerHud } from './InventoryPanel';
 import { NarrativeView } from './NarrativeView';
 import { PicturesPanel } from './PicturesPanel';
 import { ReaderRail } from './ReaderRail';
@@ -59,6 +60,7 @@ type Panel =
   | 'search'
   | 'storyteller'
   | 'memory'
+  | 'inventory'
   | 'end';
 
 const PANEL_TITLES: Record<Exclude<Panel, null>, string> = {
@@ -75,6 +77,7 @@ const PANEL_TITLES: Record<Exclude<Panel, null>, string> = {
   search: msg('Story search'),
   storyteller: msg('Storyteller'),
   memory: msg('Story memory'),
+  inventory: msg('Status and inventory'),
   end: msg('End chapter'),
 };
 
@@ -695,6 +698,9 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
               </div>
             </div>
           )}
+          {view.state.state.tracking && (
+            <TrackerHud tracking={view.state.state.tracking} onOpen={() => setPanel('inventory')} />
+          )}
           <Composer
             value={draft}
             onChange={(text) => setDraft(routeId, text)}
@@ -769,7 +775,11 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
           }
           onClose={() =>
             setPanel(
-              panel === 'menu' || panel === 'edit' || panel === 'end' || panel === 'storyteller'
+              panel === 'menu' ||
+                panel === 'edit' ||
+                panel === 'end' ||
+                panel === 'storyteller' ||
+                panel === 'inventory'
                 ? null
                 : 'menu',
             )
@@ -845,6 +855,11 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
                 <p id="details-hint" className="muted small">
                   {t('Story details can change once the waiting action has its reply.')}
                 </p>
+              )}
+              {view.state.state.tracking && (
+                <button type="button" onClick={() => setPanel('inventory')}>
+                  {t('Status and inventory')}
+                </button>
               )}
               <button type="button" onClick={() => setPanel('pictures')}>
                 {t('Pictures')}
@@ -977,6 +992,17 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
             <PicturesPanel
               view={view}
               awaitingReply={awaitingReply || writing}
+              onChanged={(v, status) => {
+                setView(v);
+                setSaveStatus(t('{status} {time}', { status, time: timeNow() }));
+              }}
+            />
+          )}
+          {panel === 'inventory' && (
+            <InventoryPanel
+              view={view}
+              detailsDisabled={awaitingReply || writing}
+              onOpenDetails={() => setPanel('details')}
               onChanged={(v, status) => {
                 setView(v);
                 setSaveStatus(t('{status} {time}', { status, time: timeNow() }));

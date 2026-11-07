@@ -5,6 +5,7 @@ import type { Character, EventDto, RouteView, StoryStateV1 } from '../../types';
 import { ContentFields } from '../create/ContentFields';
 import { LinesField, StatsField, TextArea, TextField } from '../create/fields';
 import { FeatureFields, StyleFields } from '../create/StyleFields';
+import { TrackingFields } from '../create/TrackingFields';
 import { diffState, editProblems, summarize, type ChangeLine } from './stateDiff';
 import { msg, t, tr } from '../../i18n';
 import { chapterHasTitle, routeName } from '../../i18n/names';
@@ -354,6 +355,11 @@ export function StoryDetailsPanel({
               onChange={(patch) =>
                 setEdited((s) => ({ ...s, narration: { ...s.narration, ...patch } }))
               }
+            />
+            <TrackingFields
+              tracking={edited.tracking}
+              onChange={(tracking) => setEdited((s) => ({ ...s, tracking }))}
+              genres={edited.narration.genres ?? []}
             />
             <h3>{t('What kind of story')}</h3>
             <ContentFields

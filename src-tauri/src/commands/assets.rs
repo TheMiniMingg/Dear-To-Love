@@ -12,7 +12,7 @@ use crate::db::assets::{self, AssetDto, AssetUsage, ImportScope, StoryVisual};
 use crate::domain::visuals::VisualSlot;
 use crate::errors::{AppError, AppResult};
 use crate::services::assets::{self as library, Size};
-use crate::services::pictures::{self, PortraitInput, Prompt};
+use crate::services::pictures::{self, ItemPictureInput, PortraitInput, Prompt};
 use crate::state::AppState;
 
 /// Most files added in one go.
@@ -153,6 +153,30 @@ pub async fn make_portrait(
     input: PortraitInput,
 ) -> AppResult<AssetDto> {
     let made = pictures::make_portrait(
+        state.db()?,
+        &state.assets()?,
+        state.secrets.as_ref(),
+        &state.session_id,
+        &input,
+    )
+    .await?;
+    Ok(made.asset)
+}
+
+/// The description an item's picture would be made from. Sends nothing.
+#[tauri::command]
+pub fn preview_item_picture(input: ItemPictureInput) -> Prompt {
+    pictures::item_prompt(&input.name, &input.description, &input.world, input.style)
+}
+
+/// Makes a picture of an inventory item with the picture connection (one
+/// request, which may be paid) and adds it to the story's library.
+#[tauri::command]
+pub async fn make_item_picture(
+    state: State<'_, AppState>,
+    input: ItemPictureInput,
+) -> AppResult<AssetDto> {
+    let made = pictures::make_item_picture(
         state.db()?,
         &state.assets()?,
         state.secrets.as_ref(),

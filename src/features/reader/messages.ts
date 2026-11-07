@@ -1,7 +1,7 @@
 /**
  * Message tags the storyteller (and the composer) write into story text:
- * texts, calls, inner thoughts, letters, posts, dice rolls and scene
- * headings. The reader
+ * texts, calls, inner thoughts, letters, posts, dice rolls, scene
+ * headings, and changes to tracked bars and items. The reader
  * shows them as cards; anything else is prose. Mirrors `plain_message_tags`
  * in Rust.
  */
@@ -9,7 +9,8 @@ import type { RollRequest } from '../../types';
 import { t } from '../../i18n';
 import { plainStoryText } from '../../i18n/names';
 
-export type MessageTag = 'text' | 'call' | 'thought' | 'letter' | 'post' | 'roll' | 'scene';
+export type MessageTag =
+  'text' | 'call' | 'thought' | 'letter' | 'post' | 'roll' | 'scene' | 'meter' | 'item';
 
 export type Block =
   | { kind: 'prose'; text: string }
@@ -21,7 +22,20 @@ export type Block =
       open: boolean;
     };
 
-const TAGS: MessageTag[] = ['text', 'call', 'thought', 'letter', 'post', 'roll', 'scene'];
+const TAGS: MessageTag[] = [
+  'text',
+  'call',
+  'thought',
+  'letter',
+  'post',
+  'roll',
+  'scene',
+  'meter',
+  'item',
+];
+
+/** Tags only the app (a roll) or the storyteller (bars and items) may write. */
+export const APP_TAGS: MessageTag[] = ['roll', 'meter', 'item'];
 
 function parseAttrs(head: string): Record<string, string> {
   const out: Record<string, string> = {};
@@ -120,6 +134,18 @@ function plainLabel(kind: MessageTag, a: Record<string, string>): string {
     case 'scene':
       label = a.place || 'Scene';
       break;
+    case 'meter': {
+      label = a.name || 'Meter';
+      if (a.who) label = `${a.who}: ${label}`;
+      if (a.change) label = `${label} ${a.change}`;
+      else if (a.set) label = `${label} now ${a.set}`;
+      break;
+    }
+    case 'item': {
+      const named = (name: string) => (a.qty && a.qty !== '1' ? `${a.qty} × ${name}` : name);
+      label = a.gain ? `Got ${named(a.gain)}` : a.lose ? `Lost ${named(a.lose)}` : 'Item';
+      break;
+    }
   }
   return a.time ? `${label}, ${a.time}` : label;
 }

@@ -41,6 +41,7 @@ import {
   tellingOf,
 } from './StyleFields';
 import { BACKGROUND_SLOT, COVER_SLOT, livePictures } from './PicturesStep';
+import { TrackingFields, trackingSummary } from './TrackingFields';
 import { joinList, msg, t, tKnown, tn } from '../../i18n';
 
 export type StepProps = {
@@ -666,6 +667,11 @@ export function NarrationStep({ draft, update, catalog, guided }: StepProps) {
       )}
       <h2>{t('Features')}</h2>
       <FeatureFields narration={n} onChange={set} />
+      <TrackingFields
+        tracking={draft.tracking}
+        onChange={(tracking) => update({ tracking })}
+        genres={withStoryType(n.genres, draft.storyType ?? '')}
+      />
       <h2>{t('What kind of story')}</h2>
       <ContentFields
         narration={n}
@@ -784,6 +790,12 @@ export function ReviewStep({
         </dd>
         <dt>{t('Features')}</dt>
         <dd>{joinList(featureList(draft.narration)) || t('(none)')}</dd>
+        {draft.tracking && (
+          <>
+            <dt>{t('Tracking')}</dt>
+            <dd>{trackingSummary(draft.tracking) || t('(none)')}</dd>
+          </>
+        )}
         <dt>{t('Kind of story')}</dt>
         <dd>
           {storyKind(

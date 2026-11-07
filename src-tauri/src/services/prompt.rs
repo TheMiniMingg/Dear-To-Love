@@ -29,10 +29,11 @@ use crate::domain::story_state::{
     ContentRating, Control, Detail, DiceRules, NarrationStyle, Pacing, Perspective, RollFrequency,
     RollOdds, Surprises, Tense,
 };
+use crate::domain::tracking::Tracking;
 use crate::errors::{AppError, AppResult, ErrorCode};
 use crate::services::tokens::{estimate_message, estimate_messages, estimate_text};
 
-pub const PROMPT_SCHEMA_VERSION: u32 = 6;
+pub const PROMPT_SCHEMA_VERSION: u32 = 7;
 /// Newest messages (excluding the latest action) placed before the summary
 /// competes for room.
 pub const MIN_RECENT_MESSAGES: usize = 4;
@@ -201,6 +202,76 @@ fn dice_rules(rules: Option<&DiceRules>, player_name: &str) -> String {
     out
 }
 
+/// Items listed in full in the prompt; any more are only counted.
+const PROMPT_ITEMS: usize = 40;
+/// Longest item description in the prompt.
+const PROMPT_ITEM_CHARS: usize = 120;
+
+/// The TRACKING section: the bars, counters and inventory as they are now,
+/// and the tags that change them.
+fn tracking_section(t: &Tracking, player_name: &str) -> String {
+    let mut out = String::from(
+        "\nTRACKING\nThe app keeps these numbers for the story and shows them on screen. \
+         Right now:\n",
+    );
+    for m in &t.meters {
+        let whose = m.who.as_deref().unwrap_or(player_name);
+        let value = match m.max {
+            Some(max) => format!("{}/{max}", m.value),
+            None => m.value.to_string(),
+        };
+        out.push_str(&format!("- {whose}'s {}: {value}\n", m.name));
+    }
+    if t.inventory {
+        if t.items.is_empty() {
+            out.push_str(&format!("- {player_name}'s inventory: empty\n"));
+        } else {
+            out.push_str(&format!("- {player_name}'s inventory:\n"));
+            for it in t.items.iter().take(PROMPT_ITEMS) {
+                let qty = if it.qty > 1 {
+                    format!(" x{}", it.qty)
+                } else {
+                    String::new()
+                };
+                let mut about: String = it.description.chars().take(PROMPT_ITEM_CHARS).collect();
+                if about.len() < it.description.len() {
+                    about.push('…');
+                }
+                if about.is_empty() {
+                    out.push_str(&format!("  - {}{qty}\n", it.name));
+                } else {
+                    out.push_str(&format!("  - {}{qty}: {about}\n", it.name));
+                }
+            }
+            if t.items.len() > PROMPT_ITEMS {
+                out.push_str(&format!(
+                    "  - and {} more kinds of item\n",
+                    t.items.len() - PROMPT_ITEMS
+                ));
+            }
+        }
+    }
+    out.push_str(
+        "When something in the story changes them, write a tag right where it happens; the app \
+         updates the numbers and shows the change:\n\
+         - <meter name=\"Health\" change=\"-12\"/> for damage, healing, spending or earning, or \
+         set=\"40\" to set a value. Add who=\"Name\" for someone else's. A new name starts a \
+         new one (add max=\"100\" for a bar).\n",
+    );
+    if t.inventory {
+        out.push_str(&format!(
+            "- <item gain=\"Name\" qty=\"1\">what it is, in one line</item> when {player_name} \
+             gets something, and <item lose=\"Name\"/> when it is used up, given away or lost.\n"
+        ));
+    }
+    out.push_str(
+        "Change them only when the story gives a reason, by amounts that fit what happened. When \
+         a bar runs out, the story feels it (defeat, capture, exhaustion or worse) instead of \
+         shrugging it off. Don't recite the numbers in the story itself.\n",
+    );
+    out
+}
+
 pub fn system_prompt(state: &EffectiveState, frame: &StoryFrame) -> String {
     let s = &state.state;
     let player = s.characters.get(&s.player_character_id);
@@ -361,6 +432,9 @@ pub fn system_prompt(state: &EffectiveState, frame: &StoryFrame) -> String {
     }
     if s.narration.dice {
         out.push_str(&dice_rules(s.narration.dice_rules.as_ref(), player_name));
+    }
+    if let Some(t) = &s.tracking {
+        out.push_str(&tracking_section(t, player_name));
     }
 
     let n = &s.narration;

@@ -12,7 +12,8 @@ import type {
 import { joinSentences, msg, t } from '../../i18n';
 import { pictureName } from '../../i18n/names';
 
-const STYLES: { value: PortraitStyle; label: string }[] = [
+/** Picture styles, for portraits and item pictures. */
+export const PICTURE_STYLES: { value: PortraitStyle; label: string }[] = [
   { value: 'painted', label: msg('Painted') },
   { value: 'anime', label: msg('Anime') },
   { value: 'photo', label: msg('Photo') },
@@ -159,7 +160,7 @@ export function MakePortrait({ character, world, storyId, onMade }: Props) {
           value={style}
           onChange={(e) => setStyle(e.target.value as PortraitStyle)}
         >
-          {STYLES.map((s) => (
+          {PICTURE_STYLES.map((s) => (
             <option key={s.value} value={s.value}>
               {t(s.label)}
             </option>

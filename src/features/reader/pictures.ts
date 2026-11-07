@@ -5,6 +5,10 @@ export const COVER = 'cover';
 export const BACKGROUND = 'background';
 export const portraitSlot = (characterId: string) => `portrait:${characterId}`;
 
+/** An item's key, as `tracking::item_key` in Rust: lower case, single spaces. */
+export const itemKey = (name: string) => name.trim().split(/\s+/).join(' ').toLowerCase();
+export const itemSlot = (name: string) => `item:${itemKey(name)}`;
+
 export type PictureSource = 'route' | 'default' | 'none';
 
 /** Where a slot's picture comes from on this route, and which image it is. */
@@ -27,6 +31,11 @@ export function picturesOnly(changes: StateEdit[]): boolean {
 export function slotName(view: RouteView, slot: string): string {
   if (slot === COVER) return t('Cover');
   if (slot === BACKGROUND) return t('Background');
+  if (slot.startsWith('item:')) {
+    const key = slot.slice('item:'.length);
+    const item = view.state.state.tracking?.items?.find((i) => itemKey(i.name) === key);
+    return t('Picture of {name}', { name: item?.name ?? key });
+  }
   const id = slot.startsWith('portrait:') ? slot.slice('portrait:'.length) : slot;
   const name = view.state.state.characters?.[id]?.name;
   return name ? t('Portrait of {name}', { name }) : t('Portrait of a character');
