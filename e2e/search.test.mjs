@@ -50,7 +50,11 @@ test('search a route, jump to a result, and keep bookmarks across a restart', as
   await waitForText(b, '[role="dialog"]', 'on Main match');
   const hits = await b.$$('.search-hit');
   assert.ok(hits.length >= 1);
-  assert.match(await hits[0].getText(), /Read the letter by the window/);
+  // The side sheet fades in: until it shows, its text reads as empty.
+  await b.waitUntil(async () => /Read the letter by the window/.test(await hits[0].getText()), {
+    timeout: 5000,
+    timeoutMsg: 'the first hit never showed the action',
+  });
   const marks = [];
   for (const m of await hits[0].$$('mark')) marks.push(await m.getText());
   assert.deepEqual(marks, ['letter', 'window']);
