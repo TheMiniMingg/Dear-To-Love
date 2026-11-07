@@ -118,6 +118,8 @@ function cleanNarration(n: Narration): Narration {
   if (n.autopilot) out.autopilot = true;
   if (n.quietPhones) out.quietPhones = true;
   if (n.manualMemory) out.manualMemory = true;
+  const styleNotes = n.styleNotes?.trim();
+  if (styleNotes) out.styleNotes = styleNotes;
   const diceRules = cleanDiceRules(n.diceRules);
   if (diceRules) out.diceRules = diceRules;
   return out;
@@ -216,6 +218,7 @@ export function diffState(
       autopilot: onOff(n.autopilot),
       quietPhones: onOff(!n.quietPhones),
       manualMemory: onOff(!n.manualMemory),
+      styleNotes: n.styleNotes ?? t('Not set'),
       diceRules: diceSummary(n.diceRules) || t('Usual'),
     });
     lines.push(
@@ -239,6 +242,7 @@ export function diffState(
         ['autopilot', msg('Your small reactions')],
         ['quietPhones', msg('Characters can text or call you first')],
         ['manualMemory', msg('Let the storyteller keep memory notes')],
+        ['styleNotes', msg('Your own style (optional)')],
         ['surprises', msg('Twists and surprises')],
       ]),
     );
