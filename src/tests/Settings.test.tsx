@@ -206,6 +206,24 @@ describe('Settings: AI connections', () => {
     expect(input.settings.maxContextTokens).toBe(16000);
   });
 
+  it('says when an OpenAI picture model has been retired', async () => {
+    const retired = {
+      ...painter,
+      id: 'p3',
+      label: 'OpenAI images',
+      adapter: 'openai_images' as const,
+      modelId: 'gpt-image-1',
+    };
+    connections = [saved, retired, painter];
+    render(<SettingsScreen />);
+    expect(
+      await screen.findByText(
+        'OpenAI retired this picture model. Edit the connection and choose gpt-image-2.6-flare.',
+      ),
+    ).toBeInTheDocument();
+    expect(screen.getAllByText(/retired this picture model/)).toHaveLength(1);
+  });
+
   it('shows a typed result for a failed connection test', async () => {
     connections = [saved];
     render(<SettingsScreen />);

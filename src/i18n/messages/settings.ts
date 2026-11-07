@@ -872,4 +872,85 @@ export const settings: Messages = {
     '무엇을 고를지, 키를 어디서 받을지 모르겠다면 {guide}에서 차근차근 안내합니다.',
   ],
   'The setup guide': ['设置指南', '設定指南', 'セットアップガイド', '설정 가이드'],
+  'Which model should I use?': [
+    '该用哪个模型？',
+    '該用哪個模型？',
+    'どのモデルを使えばいい？',
+    '어떤 모델을 쓰면 좋을까요?',
+  ],
+  'Suggestions, checked in November 2026. Names change often: the service’s model list has the current ones, and any model you like works.':
+    [
+      '以下建议核对于 2026 年 11 月。模型名称经常变化：以服务商的模型列表为准，你喜欢的任何模型都可以用。',
+      '以下建議核對於 2026 年 11 月。模型名稱經常變動：以服務商的模型清單為準，你喜歡的任何模型都可以用。',
+      '2026 年 11 月時点のおすすめです。モデル名はよく変わるので、最新の名前はサービスのモデル一覧で確認してください。好きなモデルならどれでも使えます。',
+      '2026년 11월 기준 추천입니다. 모델 이름은 자주 바뀌니 최신 이름은 서비스의 모델 목록에서 확인하세요. 원하는 모델은 무엇이든 쓸 수 있습니다.',
+    ],
+  'Stories and pictures with one key': [
+    '一个密钥同时写故事和画图',
+    '一個金鑰同時寫故事和畫圖',
+    'ひとつのキーで物語も画像も',
+    '키 하나로 이야기와 그림까지',
+  ],
+  'OpenAI. {terra} writes clear, natural stories quickly, {sol} is stronger for long, twisting plots, and {astra} is the most capable and costs the most. {pictures} makes portraits and item pictures with the same key.':
+    [
+      'OpenAI。{terra} 写得快，文字清晰自然；{sol} 更擅长又长又曲折的剧情；{astra} 能力最强，价格也最高。{pictures} 用同一个密钥画角色肖像和物品图片。',
+      'OpenAI。{terra} 寫得快，文字清晰自然；{sol} 更擅長又長又曲折的劇情；{astra} 能力最強，價格也最高。{pictures} 用同一個金鑰畫角色肖像和物品圖片。',
+      'OpenAI。{terra} は速く、明快で自然な文章を書きます。{sol} は長く入り組んだ物語に強く、{astra} は最も高性能で料金も最も高めです。{pictures} なら同じキーで肖像画やアイテムの画像を作れます。',
+      'OpenAI. {terra}는 빠르고 명확하며 자연스럽게 씁니다. {sol}은 길고 반전 많은 이야기에 더 강하고, {astra}는 가장 뛰어나지만 가장 비쌉니다. {pictures}로 같은 키로 초상화와 아이템 그림을 만들 수 있습니다.',
+    ],
+  'Long stories that stay consistent': [
+    '长篇故事也前后一致',
+    '長篇故事也前後一致',
+    '長い物語でも一貫性を保つ',
+    '긴 이야기도 일관되게',
+  ],
+  'Anthropic’s Claude. {opus} keeps characters, threads and tone straight over long stories, and {sonnet} costs less for everyday play. Claude doesn’t make pictures, so add a picture connection too.':
+    [
+      'Anthropic 的 Claude。{opus} 在长篇故事里也能记清角色、线索和基调；{sonnet} 更便宜，适合日常游玩。Claude 不画图，所以还要另加一个图片连接。',
+      'Anthropic 的 Claude。{opus} 在長篇故事裡也能記清角色、線索和基調；{sonnet} 更便宜，適合日常遊玩。Claude 不畫圖，所以還要另加一個圖片連線。',
+      'Anthropic の Claude。{opus} は長い物語でも登場人物や伏線、雰囲気をぶれずに保ちます。{sonnet} は普段遊ぶのに安価です。Claude は画像を作らないので、画像用の接続も追加してください。',
+      'Anthropic의 Claude. {opus}는 긴 이야기에서도 인물, 복선, 분위기를 흔들림 없이 유지하고, {sonnet}은 평소에 즐기기에 더 저렴합니다. Claude는 그림을 만들지 않으니 그림 연결도 추가하세요.',
+    ],
+  'Cheap and quick': ['便宜又快', '便宜又快', '安くて速い', '저렴하고 빠르게'],
+  '{luna}, {flash} or {haiku}: a fraction of a cent per reply, good for trying things out and for light stories.':
+    [
+      '{luna}、{flash} 或 {haiku}：每次回复不到一美分，适合试玩和轻松的故事。',
+      '{luna}、{flash} 或 {haiku}：每次回覆不到一美分，適合試玩和輕鬆的故事。',
+      '{luna}、{flash}、{haiku}：1 回の返答が 1 セント未満。お試しや気軽な物語に向いています。',
+      '{luna}, {flash}, {haiku}: 답장 한 번에 1센트도 안 들어 가볍게 시험해 보거나 가벼운 이야기에 좋습니다.',
+    ],
+  'Many models with one key': [
+    '一个密钥用很多模型',
+    '一個金鑰用很多模型',
+    'ひとつのキーで多くのモデルを',
+    '키 하나로 여러 모델을',
+  ],
+  'OpenRouter offers hundreds of models, including open ones with looser content rules, and its roleplay list shows what other players use most.':
+    [
+      'OpenRouter 提供数百个模型，包括内容限制较宽松的开源模型；它的角色扮演榜单显示其他玩家最常用的模型。',
+      'OpenRouter 提供數百個模型，包括內容限制較寬鬆的開源模型；它的角色扮演榜單顯示其他玩家最常用的模型。',
+      'OpenRouter には数百のモデルがあり、内容の制限がゆるめのオープンモデルもあります。ロールプレイ一覧で他のプレイヤーがよく使うモデルがわかります。',
+      'OpenRouter에는 수백 개의 모델이 있고 콘텐츠 규칙이 느슨한 오픈 모델도 있습니다. 롤플레이 목록에서 다른 플레이어가 가장 많이 쓰는 모델을 볼 수 있습니다.',
+    ],
+  'Free and private': ['免费又私密', '免費又私密', '無料でプライベート', '무료이고 비공개로'],
+  'On this computer with Ollama or LM Studio. {small} runs on almost any computer. Models of 12 to 14B write much better and want about 16 GB of memory; 27 to 32B models need a strong graphics card.':
+    [
+      '用 Ollama 或 LM Studio 在本机运行。{small} 几乎在任何电脑上都能跑。12B 到 14B 的模型写得好得多，需要约 16 GB 内存；27B 到 32B 的模型需要性能强的显卡。',
+      '用 Ollama 或 LM Studio 在本機執行。{small} 幾乎在任何電腦上都能跑。12B 到 14B 的模型寫得好得多，需要約 16 GB 記憶體；27B 到 32B 的模型需要效能強的顯示卡。',
+      'Ollama か LM Studio でこのコンピューター上で動かします。{small} はほぼどのコンピューターでも動きます。12〜14B のモデルはずっと上手に書けますが、約 16 GB のメモリが必要です。27〜32B のモデルには高性能なグラフィックカードが必要です。',
+      'Ollama나 LM Studio로 이 컴퓨터에서 실행합니다. {small}은 거의 모든 컴퓨터에서 돌아갑니다. 12~14B 모델은 훨씬 잘 쓰지만 메모리가 16GB 정도 필요하고, 27~32B 모델은 성능 좋은 그래픽카드가 필요합니다.',
+    ],
+  '{flare} is quick for portraits and items, and {sunburst} takes more care over detail. Free on this computer: Stable Diffusion WebUI.':
+    [
+      '{flare} 画肖像和物品又快又好；{sunburst} 更注重细节。想在本机免费画图：Stable Diffusion WebUI。',
+      '{flare} 畫肖像和物品又快又好；{sunburst} 更注重細節。想在本機免費畫圖：Stable Diffusion WebUI。',
+      '{flare} は肖像画やアイテムを手早く描き、{sunburst} は細部をより丁寧に描きます。このコンピューターで無料なら Stable Diffusion WebUI。',
+      '{flare}는 초상화와 아이템을 빠르게 그리고, {sunburst}는 세부를 더 공들여 그립니다. 이 컴퓨터에서 무료로: Stable Diffusion WebUI.',
+    ],
+  'OpenAI retired this picture model. Edit the connection and choose {model}.': [
+    'OpenAI 已停用这个图片模型。请编辑此连接并改选 {model}。',
+    'OpenAI 已停用這個圖片模型。請編輯此連線並改選 {model}。',
+    'OpenAI はこの画像モデルの提供を終了しました。接続を編集して {model} を選んでください。',
+    'OpenAI가 이 그림 모델을 종료했습니다. 연결을 편집해 {model}을(를) 선택하세요.',
+  ],
 };

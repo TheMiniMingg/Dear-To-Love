@@ -2469,6 +2469,45 @@ img.msg-avatar {
 .guide-problems dd {
   margin: 0.15rem 0 0 1.25rem;
 }
+/* Which model should I use? (folded away until opened) */
+.guide-models {
+  margin-top: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.5rem 0.85rem;
+}
+.guide-models summary {
+  font-weight: 600;
+  list-style: none;
+  padding: 0.15rem 0;
+}
+.guide-models summary::-webkit-details-marker {
+  display: none;
+}
+.guide-models summary::before {
+  content: '▸ ';
+  color: var(--muted);
+}
+.guide-models[open] summary::before {
+  content: '▾ ';
+}
+.guide-picks dt {
+  font-weight: 600;
+  margin-top: 0.6rem;
+}
+.guide-picks dd {
+  margin: 0.15rem 0 0;
+}
+.guide-picks code {
+  overflow-wrap: anywhere;
+}
+.guide-models .guide-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+.has-backdrop .guide-models,
 .has-backdrop .guide-service,
 .has-backdrop .guide-option {
   background: color-mix(in srgb, var(--bg) 70%, transparent);

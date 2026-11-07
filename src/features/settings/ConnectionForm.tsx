@@ -218,7 +218,15 @@ export function ConnectionForm({ existing, preset: startPreset, onSaved, onCance
           spellCheck={false}
           required
           aria-describedby={`${id}-model-hint`}
+          list={preset?.suggestions ? `${id}-models` : undefined}
         />
+        {preset?.suggestions && (
+          <datalist id={`${id}-models`}>
+            {preset.suggestions.map((m) => (
+              <option key={m} value={m} />
+            ))}
+          </datalist>
+        )}
         <p id={`${id}-model-hint`} className="muted small">
           {tr(
             "After saving, {test} checks the name against the service's list of models, for free.",
