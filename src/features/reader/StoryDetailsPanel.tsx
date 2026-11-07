@@ -8,6 +8,8 @@ import { StyleFields } from '../create/StyleFields';
 import { DETAILS, PERSPECTIVES } from '../create/WizardSteps';
 import { diffState, editProblems, summarize, type ChangeLine } from './stateDiff';
 import { msg, t, tOptions, tr } from '../../i18n';
+import { chapterHasTitle, routeName } from '../../i18n/names';
+import { plainText } from './messages';
 
 type Tab = 'characters' | 'world' | 'narration' | 'scene' | 'facts';
 const TABS: [Tab, string][] = [
@@ -35,14 +37,16 @@ export function effectivePoint(e: EventDto | undefined, playerName: string): str
   if (!e) return t('the start of the story');
   switch (e.kind) {
     case 'chapter_start':
-      return t('the start of Chapter {n}: {title}', {
-        n: e.payload.ordinal,
-        title: e.payload.title,
-      });
+      return chapterHasTitle(e.payload.ordinal, e.payload.title)
+        ? t('the start of Chapter {n}: {title}', { n: e.payload.ordinal, title: e.payload.title })
+        : t('the start of Chapter {n}', { n: e.payload.ordinal });
     case 'assistant':
-      return t('the latest reply ("{text}")', { text: excerpt(e.payload.text) });
+      return t('the latest reply ("{text}")', { text: excerpt(plainText(e.payload.text)) });
     case 'player':
-      return t('{name}\'s action ("{text}")', { name: playerName, text: excerpt(e.payload.text) });
+      return t('{name}\'s action ("{text}")', {
+        name: playerName,
+        text: excerpt(plainText(e.payload.text)),
+      });
     case 'edit':
       return t('your last change to the story details');
     case 'fact_confirm':
@@ -212,7 +216,7 @@ export function StoryDetailsPanel({
       <div className="panel">
         <dl className="facts" aria-label={t('Where this applies')}>
           <dt>{t('Route')}</dt>
-          <dd>{tr('{route} only', { route: <strong>{view.route.label}</strong> })}</dd>
+          <dd>{tr('{route} only', { route: <strong>{routeName(view.route.label)}</strong> })}</dd>
           <dt>{t('Takes effect')}</dt>
           <dd>{t('After {point}', { point: effectivePoint(head, playerName) })}</dd>
         </dl>

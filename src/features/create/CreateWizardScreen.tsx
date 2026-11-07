@@ -24,7 +24,7 @@ import {
 } from './WizardSteps';
 import { PicturesStep } from './PicturesStep';
 import { appStoryLanguage } from './StyleFields';
-import { intlLocale, msg, t, tKnown } from '../../i18n';
+import { formatWhen, msg, t, tKnown } from '../../i18n';
 
 const STEPS: DraftStep[] = ['world', 'character', 'story', 'narration', 'pictures', 'review'];
 const SAVE_DELAY_MS = 400;
@@ -51,8 +51,7 @@ function storytellerLabel(draft: CreateStoryDraft, tellers: Tellers): string | u
 }
 
 function savedLabel(iso: string): string {
-  const d = new Date(iso);
-  return Number.isNaN(d.getTime()) ? '' : d.toLocaleString(intlLocale());
+  return Number.isNaN(new Date(iso).getTime()) ? '' : formatWhen(iso);
 }
 
 async function freshDraft(catalog: TemplateCatalog): Promise<CreateStoryDraft> {

@@ -10,6 +10,7 @@ import type {
   World,
 } from '../../types';
 import { joinSentences, msg, t } from '../../i18n';
+import { pictureName } from '../../i18n/names';
 
 const STYLES: { value: PortraitStyle; label: string }[] = [
   { value: 'painted', label: msg('Painted') },
@@ -100,7 +101,7 @@ export function MakePortrait({ character, world, storyId, onMade }: Props) {
       const asset = await commands.makePortrait(
         portraitInput(character, world, style, storyId, budgetOverride),
       );
-      setMade(t('Made “{name}”. It is selected below.', { name: asset.label }));
+      setMade(t('Made “{name}”. It is selected below.', { name: pictureName(asset.label) }));
       onMade(asset);
     } catch (e) {
       if (e instanceof CommandError && e.code === 'BUDGET_OVERRIDE_REQUIRED') {

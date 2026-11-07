@@ -7,12 +7,9 @@ import { isEditableTarget, moveRovingFocus } from '../../app/keyboard';
 import { Dialog } from '../../components/Dialog';
 import { Thumb } from '../images/ImageGrid';
 import type { StorySummary } from '../../types';
-import { intlLocale, t, tn, tr } from '../../i18n';
+import { formatWhen, t, tn, tr } from '../../i18n';
 
-function formatDate(iso: string): string {
-  const d = new Date(iso);
-  return Number.isNaN(d.getTime()) ? iso : d.toLocaleString(intlLocale());
-}
+const formatDate = formatWhen;
 
 export function LibraryScreen() {
   const navigate = useUiStore((s) => s.navigate);

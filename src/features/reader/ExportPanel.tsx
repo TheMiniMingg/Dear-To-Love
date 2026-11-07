@@ -9,6 +9,7 @@ import {
 import { commands, errorMessage } from '../../api/commands';
 import type { RouteView, TextFormat } from '../../types';
 import { t, tr } from '../../i18n';
+import { routeName } from '../../i18n/names';
 
 /**
  * Reader -> Export: this route as readable text, or the whole story as a
@@ -60,7 +61,7 @@ export function ExportPanel({ view }: { view: RouteView }) {
         <p className="muted small">
           {tr(
             'The route {route} as you read it: chapter headings, then each turn with who said it.',
-            { route: <strong>{view.route.label}</strong> },
+            { route: <strong>{routeName(view.route.label)}</strong> },
           )}
         </p>
         <div className="inline-choices" role="radiogroup" aria-labelledby={`${id}-format`}>

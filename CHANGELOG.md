@@ -99,6 +99,16 @@
   covered the fields, the Routes list showed "Main" twice (the first route is now marked
   "Original"), the Library's Delete link touched the card edge, and an over-long action is now
   stopped in the box instead of failing on send.
+- More fixes: a dice result typed into an action is ignored (only the app's own rolls count),
+  and a roll's bonus needs its stat; the **Roll dice** box accepts exactly the dice the app can
+  roll; the safety line at the end of a portrait request can no longer be cut off; a picture or
+  portrait for a story that was just deleted is refused before anything is paid or added;
+  bookmarks, search results and the routes list show texts, calls and thoughts as short labels
+  instead of raw tags; a chapter with no title of its own shows as "Chapter 2", not
+  "Chapter 2: Chapter 2"; a long rule no longer makes the create screen scroll sideways; and a
+  story's **Pictures** lists the cover and background first, as when the story was made. In
+  Chinese, Japanese and Korean, the app's own names (Main, Alt 2, Autosave, Portrait of …),
+  the Diagnostics checks and the search labels are translated too.
 - [How it works](docs/how-it-works.md) explains storage, memory, limits and workarounds,
   templates and content settings. The README has examples and screenshots.
 

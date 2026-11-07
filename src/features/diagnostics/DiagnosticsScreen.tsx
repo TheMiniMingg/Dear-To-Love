@@ -3,13 +3,30 @@ import { CommandError, commands } from '../../api/commands';
 import { useUiStore } from '../../app/store';
 import type { CheckStatus, DiagnosticCheck } from '../../types';
 import { ReportDialog } from './ReportDialog';
-import { msg, t } from '../../i18n';
+import { locale, msg, t } from '../../i18n';
 
 const STATUS: Record<CheckStatus, string> = {
   PASS: msg('PASS'),
   WARN: msg('WARN'),
   FAIL: msg('FAIL'),
   SKIPPED: msg('SKIPPED'),
+};
+
+/** Each check's name; the app's core sends them in English. */
+const NAMES: Record<string, string> = {
+  APP_VERSION: msg('App version'),
+  DATA_DIR: msg('Data folder'),
+  DISK_SPACE: msg('Free disk space'),
+  DATABASE: msg('Story database'),
+  DB_INTEGRITY: msg('Database integrity (deep)'),
+  AI_CONNECTION: msg('AI storyteller'),
+  ASSETS: msg('Image library'),
+  BACKUPS: msg('Backups'),
+  USAGE_LEDGER: msg('API usage ledger'),
+  RATE_CONFIG: msg('API prices and budget'),
+  UPDATES: msg('Updates'),
+  TIMELINE_REPLAY: msg('Story engine self-test'),
+  SECRETS: msg('Secure key storage'),
 };
 
 export function DiagnosticsScreen() {
@@ -68,6 +85,13 @@ export function DiagnosticsScreen() {
         </button>
       </div>
       {error && <p role="alert">{t('Diagnostics could not run: {error}', { error })}</p>}
+      {checks && locale() !== 'en' && (
+        <p className="muted">
+          {t(
+            'The details of each check are in English, so they can go into a support request as they are.',
+          )}
+        </p>
+      )}
       {checks && (
         <ul className="check-list">
           {checks.map((c) => (
@@ -76,7 +100,7 @@ export function DiagnosticsScreen() {
                 {t(STATUS[c.status])}
               </span>
               <div>
-                <strong>{c.label}</strong>
+                <strong>{NAMES[c.id] ? t(NAMES[c.id]!) : c.label}</strong>
                 <div>{c.summary}</div>
                 {c.remediation && <div className="muted">{c.remediation}</div>}
               </div>

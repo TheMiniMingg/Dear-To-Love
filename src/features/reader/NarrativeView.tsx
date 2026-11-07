@@ -4,6 +4,7 @@ import { RollResult } from './DiceCards';
 import { picturesOnly } from './pictures';
 import { RichText } from './RichText';
 import { t } from '../../i18n';
+import { chapterHeading } from '../../i18n/names';
 
 type Props = {
   events: EventDto[];
@@ -113,7 +114,7 @@ function EventBlock({
             </aside>
           )}
           <header className={cls('chapter-heading')} data-event-id={e.id} tabIndex={-1}>
-            <h2>{t('Chapter {n}: {title}', { n: e.payload.ordinal, title: e.payload.title })}</h2>
+            <h2>{chapterHeading(e.payload.ordinal, e.payload.title)}</h2>
             {branch}
             {bookmark}
           </header>
@@ -125,7 +126,9 @@ function EventBlock({
         <div className={cls('turn-player')} data-event-id={e.id} tabIndex={-1}>
           <span className="speaker">{playerName}</span>
           {e.payload.roll && <RollResult roll={e.payload.roll} fresh={latest} />}
-          {e.payload.text.trim() && <RichText text={e.payload.text} playerName={playerName} />}
+          {e.payload.text.trim() && (
+            <RichText text={e.payload.text} playerName={playerName} rolls={false} />
+          )}
           {(change || bookmark) && (
             <div className="turn-actions">
               {change}

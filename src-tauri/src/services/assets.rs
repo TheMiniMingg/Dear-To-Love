@@ -200,6 +200,9 @@ pub async fn import_bytes(
             MAX_IMAGE_BYTES / (1024 * 1024)
         )));
     }
+    // A missing story is refused before the picture is stored, so it never
+    // ends up shared with every story instead.
+    assets::check_import_scope(db, scope).await?;
     let sha = sha256_hex(&bytes);
     if let Some(row) = assets::by_sha(db, &sha).await? {
         // Same picture: reuse it, and put back a file that went missing.

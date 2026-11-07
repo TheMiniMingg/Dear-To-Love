@@ -2,7 +2,7 @@
 import { open, save } from '@tauri-apps/plugin-dialog';
 import type { BackupExport, BackupKind, RestorePlan, RestoreResult } from '../types';
 import { formatBytes } from './images';
-import { intlLocale, joinSentences, msg, t, tn } from '../i18n';
+import { formatWhen, joinSentences, msg, t, tn } from '../i18n';
 
 const backupFilter = () => ({ name: t('Dear to Love backup'), extensions: ['dtlbackup'] });
 
@@ -14,12 +14,7 @@ const KINDS: Record<BackupKind, string> = {
 
 export const kindLabel = (kind: BackupKind) => t(KINDS[kind]);
 
-export function formatWhen(iso: string): string {
-  const d = new Date(iso);
-  return Number.isNaN(d.getTime())
-    ? iso
-    : d.toLocaleString(intlLocale(), { dateStyle: 'medium', timeStyle: 'short' });
-}
+export { formatWhen };
 
 /** Where to save a full backup. `null` when the dialog is closed. */
 export async function pickBackupTarget(today = new Date()): Promise<string | null> {

@@ -1,6 +1,7 @@
 import type { Placed } from './routeLayout';
 import { turnCount } from './routeLayout';
 import { joinList, t } from '../../i18n';
+import { routeName } from '../../i18n/names';
 
 const NODE_W = 168;
 const NODE_H = 48;
@@ -68,11 +69,15 @@ export function RouteMap({ placed, currentRouteId, selectedId, onSelect }: Props
                   className={`route-node${current ? ' current' : ''}${r.hidden ? ' hidden-route' : ''}`}
                   aria-pressed={r.id === selectedId}
                   aria-label={joinList(
-                    [r.label, current ? t('current') : '', turnCount(p.node.turns)].filter(Boolean),
+                    [
+                      routeName(r.label),
+                      current ? t('current') : '',
+                      turnCount(p.node.turns),
+                    ].filter(Boolean),
                   )}
                   onClick={() => onSelect(r.id)}
                 >
-                  <span className="route-node-label">{r.label}</span>
+                  <span className="route-node-label">{routeName(r.label)}</span>
                   <span className="route-node-meta">
                     {current ? `${t('Current')} · ` : ''}
                     {turnCount(p.node.turns)}

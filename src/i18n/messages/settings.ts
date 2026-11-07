@@ -11,10 +11,10 @@ export const settings: Messages = {
     'このコンピューターと同じ（{language}）',
     '이 컴퓨터와 같게({language})',
   ],
-  "Menus, buttons and messages. A story is written in the language set in its own style, so you can play in one language with the app in another. Story presets and templates are in English; the storyteller still writes in the story's language.":
+  "The language of menus, buttons and messages. A story is written in the language set in its own style, so you can play in one language with the app in another. Story presets and templates are in English; the storyteller still writes in the story's language.":
     [
-      '菜单、按钮和提示信息。故事使用它自己风格设置中的语言来写，所以你可以让应用显示一种语言，而用另一种语言游玩。故事预设和模板是英文的；讲述者仍会用故事的语言来写。',
-      '選單、按鈕和提示訊息。故事使用它自己風格設定中的語言來寫，所以你可以讓應用程式顯示一種語言，而用另一種語言遊玩。故事預設和範本是英文的；講述者仍會用故事的語言來寫。',
+      '菜单、按钮和提示信息所用的语言。故事使用它自己风格设置中的语言来写，所以你可以让应用显示一种语言，而用另一种语言游玩。故事预设和模板是英文的；讲述者仍会用故事的语言来写。',
+      '選單、按鈕和提示訊息所用的語言。故事使用它自己風格設定中的語言來寫，所以你可以讓應用程式顯示一種語言，而用另一種語言遊玩。故事預設和範本是英文的；講述者仍會用故事的語言來寫。',
       'メニュー、ボタン、メッセージの言語です。ストーリーはそれぞれのスタイルで設定した言語で書かれるので、アプリとは別の言語で遊べます。ストーリーのプリセットとテンプレートは英語ですが、語り手はストーリーの言語で書きます。',
       '메뉴, 버튼, 메시지의 언어입니다. 스토리는 각 스토리의 스타일에서 정한 언어로 쓰이므로, 앱과 다른 언어로 즐길 수 있습니다. 스토리 프리셋과 템플릿은 영어지만, 이야기꾼은 스토리의 언어로 씁니다.',
     ],

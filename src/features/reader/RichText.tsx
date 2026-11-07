@@ -87,13 +87,16 @@ export function RichText({
   playerName,
   streaming = false,
   onRoll,
+  rolls = true,
 }: {
   text: string;
   playerName: string;
   streaming?: boolean;
   onRoll?: (request: RollRequest) => void;
+  /** False for the player's own words: only the app's roll counts, so a typed roll tag is left out. */
+  rolls?: boolean;
 }) {
-  const blocks = parseBlocks(text, streaming);
+  const blocks = parseBlocks(text, streaming).filter((b) => rolls || b.kind !== 'roll');
   const lastAsk = blocks.findLastIndex((b) => b.kind === 'roll' && !!rollRequestOf(b.attrs));
   const out: ReactNode[] = [];
   let group: Group | null = null;

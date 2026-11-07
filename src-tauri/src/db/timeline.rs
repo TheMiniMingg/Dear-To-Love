@@ -667,7 +667,7 @@ pub async fn edit_prior_player_turn_tx(
             expected_head_id: parent,
             // A roll stays as it was: changing the words never rerolls.
             body: EventBody::Player(PlayerPayload {
-                text: new_text,
+                text: crate::domain::text::strip_roll_tags(&new_text),
                 roll: old.roll,
             }),
             generation_run_id: None,

@@ -14,7 +14,12 @@ export function LanguageSection() {
   return (
     <section className="settings-section" aria-labelledby={`${id}-title`}>
       <h2 id={`${id}-title`}>{t('Language')}</h2>
-      <div className="field">
+      <p className="muted">
+        {t(
+          "The language of menus, buttons and messages. A story is written in the language set in its own style, so you can play in one language with the app in another. Story presets and templates are in English; the storyteller still writes in the story's language.",
+        )}
+      </p>
+      <div className="field language-field">
         <label htmlFor={`${id}-select`}>{t('App language')}</label>
         <select
           id={`${id}-select`}
@@ -32,11 +37,6 @@ export function LanguageSection() {
           ))}
         </select>
       </div>
-      <p className="muted small">
-        {t(
-          "Menus, buttons and messages. A story is written in the language set in its own style, so you can play in one language with the app in another. Story presets and templates are in English; the storyteller still writes in the story's language.",
-        )}
-      </p>
     </section>
   );
 }

@@ -7,6 +7,7 @@ use ts_rs::TS;
 
 use super::dice::DiceRoll;
 use super::story_state::{Character, KnownFact, Narration, Relationship, Scene, World};
+use super::text::plain_message_tags;
 use crate::errors::{AppError, AppResult};
 
 /// Current payload version written to `events.payload_version`.
@@ -90,11 +91,17 @@ impl PlayerPayload {
 
     /// The action as the storyteller reads it: the roll as a tag, then
     /// the player's words.
+    /// Roll tags typed into the words are dropped: only the app's roll counts.
     pub fn story_text(&self) -> Cow<'_, str> {
+        let words = if self.text.contains("<roll") {
+            Cow::Owned(super::text::strip_roll_tags(&self.text))
+        } else {
+            Cow::Borrowed(self.text.as_str())
+        };
         match &self.roll {
-            None => Cow::Borrowed(&self.text),
-            Some(r) if self.text.trim().is_empty() => Cow::Owned(r.tag()),
-            Some(r) => Cow::Owned(format!("{}\n\n{}", r.tag(), self.text)),
+            None => words,
+            Some(r) if words.trim().is_empty() => Cow::Owned(r.tag()),
+            Some(r) => Cow::Owned(format!("{}\n\n{}", r.tag(), words)),
         }
     }
 }
@@ -245,12 +252,13 @@ impl EventBody {
     }
 
     /// The words a reader sees for this event, for search and bookmark
-    /// excerpts. An edit shows only its note.
+    /// excerpts, with texts, calls and rolls written out as words. An edit
+    /// shows only its note.
     pub fn reader_text(&self) -> Cow<'_, str> {
         match self {
             Self::ChapterStart(p) => Cow::Owned(format!("Chapter {}: {}", p.ordinal, p.title)),
-            Self::Player(p) => p.story_text(),
-            Self::Assistant(p) => Cow::Borrowed(&p.text),
+            Self::Player(p) => Cow::Owned(plain_message_tags(&p.story_text())),
+            Self::Assistant(p) => Cow::Owned(plain_message_tags(&p.text)),
             Self::Edit(p) => Cow::Borrowed(p.note.as_deref().unwrap_or_default()),
             Self::Checkpoint(p) => Cow::Borrowed(&p.label),
             Self::FactConfirm(p) => Cow::Borrowed(&p.fact.text),

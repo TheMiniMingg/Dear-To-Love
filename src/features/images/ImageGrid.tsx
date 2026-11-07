@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { imageUrl } from '../../api/images';
 import type { AssetDto } from '../../types';
 import { t } from '../../i18n';
+import { pictureName } from '../../i18n/names';
 
 /** A library thumbnail that says so when its file is missing. */
 export function Thumb({
@@ -57,7 +58,7 @@ export function ImageGrid({
             onClick={() => onSelect(a)}
           >
             <Thumb assetId={a.id} alt="" />
-            <span className="image-name">{a.label || t('Untitled')}</span>
+            <span className="image-name">{pictureName(a.label) || t('Untitled')}</span>
           </button>
         </li>
       ))}

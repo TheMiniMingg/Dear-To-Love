@@ -5,7 +5,7 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { Composer } from '../features/reader/Composer';
 import {
-  DICE_PATTERN,
+  isDice,
   lastRollRequest,
   rollFromComposer,
   rollRequestOf,
@@ -33,11 +33,34 @@ describe('roll tags', () => {
   });
 
   it('accepts dice and ranges the app can roll', () => {
-    for (const ok of ['1d20', 'd6', '2d6+1', '1d100 - 5', '40-100', '0 to 100', '-5 to 5']) {
-      expect(DICE_PATTERN.test(ok), ok).toBe(true);
+    for (const ok of [
+      '1d20',
+      'd6',
+      '2d6+1',
+      '1d100 - 5',
+      '40-100',
+      '40–100',
+      '40—100',
+      '0 to 100',
+      '-5 to 5',
+      '20d6',
+    ]) {
+      expect(isDice(ok), ok).toBe(true);
     }
-    for (const bad of ['', 'd', 'two dice', '1d20+', '7']) {
-      expect(DICE_PATTERN.test(bad), bad).toBe(false);
+    // The same limits as the app's core: at most 20 dice, numbers up to a million.
+    for (const bad of [
+      '',
+      'd',
+      'two dice',
+      '1d20+',
+      '7',
+      '5to10',
+      '30d6',
+      '1d20+5000000',
+      '9-3',
+      '1d1',
+    ]) {
+      expect(isDice(bad), bad).toBe(false);
     }
   });
 
