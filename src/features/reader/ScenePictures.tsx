@@ -1,21 +1,50 @@
+import { useState } from 'react';
 import { Thumb } from '../images/ImageGrid';
-import type { RouteView } from '../../types';
+import type { EventDto, RouteView } from '../../types';
 import { BACKGROUND, picture, portraitSlot } from './pictures';
+import { replyTexts, stageCast, stageFocus, usePictureView } from './stage';
 import { t } from '../../i18n';
 
-/** The current scene's background and the portraits of who is there. */
-export function ScenePictures({ view }: { view: RouteView }) {
+/**
+ * The stage above the story (visual-novel style): the scene's background with
+ * the portrait of the character the story is with, which changes when someone
+ * new appears. Others in the scene can be shown with a click. Hidden when the
+ * reader chooses text only.
+ */
+export function ScenePictures({
+  view,
+  events,
+  draft,
+}: {
+  view: RouteView;
+  events: EventDto[];
+  draft?: string | null;
+}) {
+  const shown = usePictureView((s) => s.shown);
+  // A character the reader picked stays until the next reply.
+  const [picked, setPicked] = useState<{ id: string; at: number } | null>(null);
+  if (!shown) return null;
   const s = view.state.state;
   const bg = picture(view, BACKGROUND).assetId;
-  const people = (s.scene?.participantIds ?? []).flatMap((cid) => {
-    const c = s.characters?.[cid];
-    const a = picture(view, portraitSlot(cid)).assetId;
-    return c && a ? [{ c, a }] : [];
-  });
-  if (!bg && people.length === 0) return null;
+  const cast = stageCast(view);
+  const replies = replyTexts(events, draft);
+  const auto =
+    stageFocus(replies, cast) ??
+    // Before anyone is mentioned: the first one in the scene with a portrait.
+    (s.scene?.participantIds ?? []).find((id) => cast.some((c) => c.id === id)) ??
+    null;
+  const focusId = picked && picked.at === replies.length ? picked.id : auto;
+  const focus = focusId ? s.characters?.[focusId] : undefined;
+  const focusAsset = focusId ? picture(view, portraitSlot(focusId)).assetId : null;
+  // Who can be put on stage: those in the scene, and whoever is there now.
+  const choices = cast
+    .filter((c) => c.id === focusId || (s.scene?.participantIds ?? []).includes(c.id))
+    .map((c) => s.characters[c.id]!)
+    .filter(Boolean);
+  if (!bg && !focusAsset) return null;
   return (
     <div
-      className={`scene-pictures${bg ? ' has-bg' : ''}`}
+      className={`scene-pictures stage${bg ? ' has-bg' : ''}`}
       role="group"
       aria-label={t('Scene pictures')}
       data-testid="scene-pictures"
@@ -32,12 +61,29 @@ export function ScenePictures({ view }: { view: RouteView }) {
           className="scene-bg"
         />
       )}
-      {people.length > 0 && (
-        <ul className="scene-portraits">
-          {people.map(({ c, a }) => (
+      {focus && focusAsset && (
+        <figure className="stage-focus" key={focus.id}>
+          <Thumb
+            assetId={focusAsset}
+            size="full"
+            alt={t('Portrait of {name}', { name: focus.name })}
+          />
+          <figcaption>{focus.name}</figcaption>
+        </figure>
+      )}
+      {choices.length > 1 && (
+        <ul className="scene-portraits" aria-label={t('Show on stage')}>
+          {choices.map((c) => (
             <li key={c.id}>
-              <Thumb assetId={a} alt={t('Portrait of {name}', { name: c.name })} />
-              <span>{c.name}</span>
+              <button
+                type="button"
+                aria-pressed={c.id === focusId}
+                title={c.name}
+                aria-label={t('Show {name}', { name: c.name })}
+                onClick={() => setPicked({ id: c.id, at: replies.length })}
+              >
+                <Thumb assetId={picture(view, portraitSlot(c.id)).assetId!} alt="" />
+              </button>
             </li>
           ))}
         </ul>

@@ -29,6 +29,7 @@ import { EndChapterPanel } from './EndChapterPanel';
 import { ExportPanel } from './ExportPanel';
 import { NarrativeView } from './NarrativeView';
 import { PicturesPanel } from './PicturesPanel';
+import { ReaderRail } from './ReaderRail';
 import { ScenePictures } from './ScenePictures';
 import { StoryDetailsPanel } from './StoryDetailsPanel';
 import { StoryMemoryPanel } from './StoryMemoryPanel';
@@ -564,7 +565,7 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
         </div>
       )}
 
-      {!viewing && <ScenePictures view={view} />}
+      {!viewing && <ScenePictures view={view} events={events} draft={stream?.text} />}
 
       <div ref={narrativeHost} className="reader-body">
         <NarrativeView
@@ -596,6 +597,7 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
                 }
           }
         />
+        <ReaderRail />
       </div>
 
       {error && (

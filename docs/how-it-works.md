@@ -358,3 +358,23 @@ never makes pictures.
 - **Cost**: each picture is one request, recorded in Usage as "Character picture". The app
   can't price pictures, so paid ones show no estimate; when the budget pauses paid requests,
   the app asks before sending one.
+
+## Picture view
+
+When a story has a background or portraits, the reader shows a stage above the story: the
+scene's background with the portrait and name of the character the story is with, as in a
+visual novel. The app works out who that is from the replies, on this computer, without
+asking the storyteller:
+
+- A character with a portrait who appears in a reply for the first time, or again after
+  three replies away, takes the stage. A text, call or letter from them counts.
+- The character on stage stays while the replies keep mentioning them, even when others are
+  mentioned too. When they drop out, whoever the reply mentions most takes over.
+- Names match as whole words (a first name counts when no one else shares it); names in
+  Chinese, Japanese or Korean match anywhere in the text. Your own character is never on
+  stage.
+- The small portraits beside the stage put anyone else in the scene on stage until the next
+  reply.
+
+**Picture view** on the right side of the story turns the stage off for text only, and on
+again. The choice is kept on this computer.
