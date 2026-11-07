@@ -157,6 +157,29 @@ pub async fn edit_story_details(
     reader::route_view(db, &route_id).await
 }
 
+/// Undo the memory notes one reply wrote, from now on.
+#[tauri::command]
+pub async fn undo_reply_notes(
+    state: State<'_, AppState>,
+    story_id: String,
+    route_id: String,
+    expected_head_id: String,
+    assistant_event_id: String,
+    note: Option<String>,
+) -> AppResult<RouteView> {
+    let db = state.db()?;
+    reader::undo_reply_notes(
+        db,
+        &story_id,
+        &route_id,
+        &expected_head_id,
+        &assistant_event_id,
+        note,
+    )
+    .await?;
+    reader::route_view(db, &route_id).await
+}
+
 /// A recap of the chapter being played, written by the chosen storyteller
 /// (one possibly paid request) or offline. Nothing is stored yet.
 #[tauri::command]

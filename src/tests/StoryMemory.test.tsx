@@ -27,6 +27,7 @@ const remembered: StoryMemory = {
   },
   recaps: [{ ordinal: 1, title: 'The Lamp Room', text: 'The lamp was lit at last.' }],
   recapsRead: 10,
+  recapsBriefed: 40,
   firstSummaryAfter: 16,
 };
 

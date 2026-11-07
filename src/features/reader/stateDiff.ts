@@ -116,6 +116,7 @@ function cleanNarration(n: Narration): Narration {
   if (n.surprises && n.surprises !== 'sometimes') out.surprises = n.surprises;
   if (n.autopilot) out.autopilot = true;
   if (n.quietPhones) out.quietPhones = true;
+  if (n.manualMemory) out.manualMemory = true;
   const diceRules = cleanDiceRules(n.diceRules);
   if (diceRules) out.diceRules = diceRules;
   return out;
@@ -212,6 +213,7 @@ export function diffState(
       surprises: labelOf(SURPRISES, n.surprises ?? 'sometimes'),
       autopilot: onOff(n.autopilot),
       quietPhones: onOff(!n.quietPhones),
+      manualMemory: onOff(!n.manualMemory),
       diceRules: diceSummary(n.diceRules) || t('Usual'),
     });
     lines.push(
@@ -234,6 +236,7 @@ export function diffState(
         ['sceneHeadings', msg('Place and time headings')],
         ['autopilot', msg('Your small reactions')],
         ['quietPhones', msg('Characters can text or call you first')],
+        ['manualMemory', msg('Let the storyteller keep memory notes')],
         ['surprises', msg('Twists and surprises')],
       ]),
     );

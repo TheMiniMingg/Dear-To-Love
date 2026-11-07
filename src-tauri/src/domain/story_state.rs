@@ -3,7 +3,8 @@
 //! `stories.base_state_json` holds the original configuration. Events from
 //! the route history (`chapter_start`, `edit`, `fact_confirm`) modify the
 //! effective state from that event forward. Narrative prose never silently
-//! changes these fields.
+//! changes these fields: only the storyteller's bar, item and memory note
+//! tags do, and the reader shows each of those where it happens.
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -11,6 +12,7 @@ use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use ts_rs::TS;
 
+use super::notes::MemoryNote;
 use super::tracking::Tracking;
 use crate::errors::{AppError, AppResult};
 
@@ -38,6 +40,11 @@ pub struct StoryStateV1 {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
     pub tracking: Option<Tracking>,
+    /// Memory notes: people, places, items, events and facts the story must
+    /// not forget, oldest first.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[ts(as = "Option<Vec<MemoryNote>>", optional)]
+    pub notes: Vec<MemoryNote>,
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize, TS)]
@@ -262,6 +269,11 @@ pub struct Narration {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
     pub dice_rules: Option<DiceRules>,
+    /// The storyteller does not keep memory notes; only the player writes
+    /// them.
+    #[serde(default, skip_serializing_if = "is_false")]
+    #[ts(as = "Option<bool>", optional)]
+    pub manual_memory: bool,
 }
 
 fn is_false(b: &bool) -> bool {
@@ -290,6 +302,7 @@ impl Default for Narration {
             autopilot: false,
             quiet_phones: false,
             dice_rules: None,
+            manual_memory: false,
         }
     }
 }
@@ -502,6 +515,7 @@ impl StoryStateV1 {
         if let Some(tracking) = &self.tracking {
             tracking.validate()?;
         }
+        super::notes::validate(&self.notes)?;
         if let Some(language) = &self.narration.language {
             if language.chars().count() > 60 {
                 return bad("the story language is longer than 60 characters".into());
@@ -716,6 +730,7 @@ pub fn sample_lighthouse() -> StoryStateV1 {
         open_threads: vec!["Who lit the lamp?".into()],
         visual_refs: BTreeMap::new(),
         tracking: None,
+        notes: Vec::new(),
     }
 }
 

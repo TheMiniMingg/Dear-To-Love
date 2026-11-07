@@ -2,6 +2,18 @@
 
 ## Unreleased
 
+- **Story memory that keeps itself up to date.** As it writes, the storyteller notes what
+  must stay true: people (where things stand with them), places, things that matter, a
+  timeline of events with their chapters, and other facts. Every later reply reads the notes,
+  so a gift, a promise or a new home is not forgotten chapters later. A small "Memory updated"
+  line under the reply names what was noted, with **See notes** and **Undo**. **Story memory**
+  now opens with the notebook, where you can add, change or remove any note while the story
+  goes on; changes hold from the next reply. Notes follow branches like the rest of the story.
+  Turn off **Let the storyteller keep memory notes** in **Story details** to keep them only
+  by hand. When a story has more notes than fit, the ones about the current scene go first and
+  the rest are still named.
+- **Older chapters are kept in brief.** Beyond the 10 newest chapter recaps, the 40 before
+  them are now sent in brief instead of being left out.
 - **Play several stories at once.** A Stories button beside the story goes back to the library
   in one click. A reply keeps writing when you leave and open another story; the library marks
   the story with "Writing a reply…" until it is in. Each story still opens where you left it,

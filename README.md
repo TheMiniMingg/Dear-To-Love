@@ -98,7 +98,11 @@ story can also **Send a text**, **Call** someone, **Think** a thought of your ow
 - **End a chapter** when it feels finished: the storyteller writes a recap, you can edit it,
   and later chapters remember it.
 - **Long stories stay consistent.** Older turns are summarized automatically, so a story can
-  run for thousands of turns. **Story memory** shows what the storyteller remembers, and
+  run for thousands of turns. As it writes, the storyteller keeps a notebook of what must not
+  be forgotten: people, places, things, a timeline and other facts, so the ring you gave in
+  chapter 4 is still on her hand in chapter 9. A small "Memory updated" line under the reply
+  shows what it noted, with **Undo**. **Story memory** shows everything the storyteller
+  remembers and lets you add, change or remove any note while the story goes on, and
   **Preview context** shows exactly what it will read next.
 - **Change the story as you go** in **Story details**: characters, the world, the narration,
   the scene and the facts it must keep to.
@@ -107,6 +111,10 @@ story can also **Send a text**, **Call** someone, **Think** a thought of your ow
 - **Keyboard shortcuts** for almost everything; press **F1** to see them.
 
 ![The library: three stories, one still writing a reply](docs/screenshots/library.webp)
+
+![A reply that noted Mina, the silver ring and the moment you gave it, with See notes and Undo](docs/screenshots/memory-line.webp)
+
+![The notebook in Story memory: people, places, things and a timeline, each note with Change and Remove](docs/screenshots/notebook.webp)
 
 ### Texts and calls
 

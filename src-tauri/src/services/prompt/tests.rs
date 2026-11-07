@@ -1,6 +1,7 @@
 use super::*;
 use crate::db::memory::MemoryRow;
 use crate::domain::events::{AssistantPayload, PlayerPayload};
+use crate::domain::notes::{MemoryNote, NoteKind};
 use crate::domain::templates::{QuickStartInput, TemplateCatalog};
 use crate::services::tokens::estimate_messages;
 
@@ -493,4 +494,162 @@ fn tracked_bars_and_items_reach_the_storyteller() {
     s.state.tracking.as_mut().unwrap().inventory = false;
     let p = system_prompt(&s, &frame());
     assert!(!p.contains("<item") && !p.contains("inventory"));
+}
+
+fn note(kind: NoteKind, name: &str, text: &str, chapter: Option<u32>) -> MemoryNote {
+    MemoryNote {
+        kind,
+        name: name.into(),
+        text: text.into(),
+        chapter,
+        source_event_id: None,
+    }
+}
+
+#[test]
+fn memory_notes_reach_the_storyteller_grouped_by_kind() {
+    let mut s = state();
+    let p = system_prompt(&s, &frame());
+    assert!(p.contains("MEMORY NOTES") && p.contains("<remember person=\"Name\">"));
+    assert!(p.contains("<forget person=\"Name\"/>"));
+    assert!(!p.contains("\nMEMORY\n"));
+
+    s.state.notes = vec![
+        note(
+            NoteKind::Event,
+            "Ring given",
+            "Z gave Erika a ring.",
+            Some(4),
+        ),
+        note(
+            NoteKind::Person,
+            "Erika",
+            "Z's girlfriend.\n Wears his ring.",
+            Some(4),
+        ),
+        note(
+            NoteKind::Place,
+            "Z's house",
+            "Two floors, in the suburbs.",
+            None,
+        ),
+        note(NoteKind::Person, "Haruka", "Won't forgive Z.", Some(3)),
+    ];
+    let p = system_prompt(&s, &frame());
+    assert!(p.contains(
+        "\nMEMORY\nNotes kept so far. They stay true unless the story changes them.\n\
+         People:\n- Erika: Z's girlfriend. Wears his ring.\n- Haruka: Won't forgive Z.\n\
+         Places:\n- Z's house: Two floors, in the suburbs.\n\
+         Timeline:\n- Chapter 4, Ring given: Z gave Erika a ring.\n"
+    ));
+
+    // Kept by hand: the notes are still read, but the storyteller isn't
+    // asked to write any.
+    s.state.narration.manual_memory = true;
+    s.state.narration.language = Some("Japanese".into());
+    let p = system_prompt(&s, &frame());
+    assert!(p.contains("- Erika: Z's girlfriend."));
+    assert!(!p.contains("MEMORY NOTES") && !p.contains("<remember"));
+
+    s.state.narration.manual_memory = false;
+    let p = system_prompt(&s, &frame());
+    assert!(p.contains("- Write notes in Japanese.\n"));
+}
+
+#[test]
+fn when_notes_dont_fit_the_scene_comes_first_and_the_rest_are_named() {
+    let filler = " detail".repeat(40);
+    let mut notes: Vec<MemoryNote> = (0..30)
+        .map(|i| {
+            note(
+                NoteKind::Place,
+                &format!("Room {i}"),
+                &format!("Room{filler}"),
+                None,
+            )
+        })
+        .collect();
+    notes.insert(0, note(NoteKind::Person, "Erika", "Wears Z's ring.", None));
+    notes.push(note(
+        NoteKind::Event,
+        "Old fight",
+        &format!("Fight{filler}"),
+        Some(1),
+    ));
+
+    // Room enough: everything, in order.
+    let all = pick_notes(&notes, "", Some(1_000_000));
+    assert_eq!(all.shown.len(), notes.len());
+    assert!(all.unshown.is_empty());
+
+    // Not enough: Erika (named in the scene) first, then the newest
+    // places; the event and the oldest rooms are left out but named.
+    let line_cost = crate::services::tokens::estimate_text(&format!("- Room 10: Room{filler}\n"));
+    let pick = pick_notes(&notes, "erika smiles at you", Some(line_cost * 5 + 20));
+    let shown: Vec<&str> = pick.shown.iter().map(|n| n.name.as_str()).collect();
+    assert_eq!(
+        shown,
+        ["Erika", "Room 25", "Room 26", "Room 27", "Room 28", "Room 29"]
+    );
+    assert!(pick.unshown.iter().any(|n| n.name == "Old fight"));
+
+    let mut s = state();
+    s.state.notes = notes;
+    let mut history = history(1, 0);
+    // A tiny context: the notes get a fifth of what's left for the prompt.
+    let a = assemble(
+        &s,
+        &frame(),
+        &history,
+        None,
+        Some("I ask Erika about the ring"),
+        Budget {
+            max_context_tokens: 9_000,
+            max_output_tokens: 700,
+        },
+    )
+    .unwrap();
+    let text = all_text(&a);
+    assert!(text.contains("- Erika: Wears Z's ring."));
+    assert!(text.contains("Also kept but not shown here for room: "));
+    assert!(text.contains("Old fight (event)"));
+    history.clear();
+}
+
+#[test]
+fn older_chapters_are_sent_in_brief_instead_of_dropped() {
+    let s = state();
+    let mut f = frame();
+    f.earlier_chapters = (1..=60)
+        .map(|i| ChapterRecap {
+            ordinal: i,
+            title: format!("Part {i}"),
+            recap: format!(
+                "Chapter {i} opened at the harbor. Then a lot more happened{} in the end.",
+                " and more".repeat(40)
+            ),
+        })
+        .collect();
+    let p = system_prompt(&s, &f);
+    // 60 chapters: 1-10 left to the summary, 11-50 in brief, 51-60 in full.
+    assert!(p.contains("(Chapters 1 to 10 are covered by the story summary and the notes.)\n"));
+    assert!(p.contains("In brief:\nChapter 11, Part 11: Chapter 11 opened at the harbor.\n"));
+    assert!(p.contains("Chapter 50, Part 50: Chapter 50 opened at the harbor.\nIn full:\n"));
+    assert!(p.contains("Chapter 51, Part 51: Chapter 51 opened at the harbor. Then a lot more"));
+    assert!(!p.contains("Chapter 10, Part 10"));
+
+    // A few chapters: all in full, no headings.
+    f.earlier_chapters.truncate(3);
+    let p = system_prompt(&s, &f);
+    assert!(!p.contains("In brief") && !p.contains("In full"));
+    assert!(p.contains("Chapter 3, Part 3: Chapter 3 opened"));
+}
+
+#[test]
+fn a_brief_keeps_whole_sentences_and_cuts_one_long_one() {
+    assert_eq!(brief("One.  Two!\nThree?"), "One. Two! Three?");
+    let long = format!("{}.", "word ".repeat(100));
+    let b = brief(&long);
+    assert!(b.ends_with('…'));
+    assert!(b.chars().count() <= BRIEF_RECAP_CHARS);
 }

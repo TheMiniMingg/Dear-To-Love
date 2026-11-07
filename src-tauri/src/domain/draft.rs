@@ -483,6 +483,7 @@ impl CreateStoryDraft {
             open_threads: clean_list(&self.open_threads),
             visual_refs: BTreeMap::new(),
             tracking: self.tracking.as_ref().map(clean_tracking),
+            notes: Vec::new(),
         };
         base_state.validate()?;
         let chapter_outlines = self

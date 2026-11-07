@@ -2346,6 +2346,96 @@ img.msg-avatar {
   gap: 0.3rem;
 }
 
+/* Memory notes: the notebook in Story memory. */
+.note-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.note {
+  border-left: 3px solid var(--border);
+  padding-left: 0.75rem;
+}
+.note-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.25rem 0.6rem;
+}
+.note-actions {
+  margin-left: auto;
+  display: inline-flex;
+  gap: 0.75rem;
+  font-size: 0.85rem;
+}
+.note-actions .danger-link {
+  padding: 0;
+}
+.story-memory .note-text {
+  white-space: pre-wrap;
+  margin-top: 0.15rem;
+}
+.note-confirm {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.4rem;
+}
+.note-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.75rem;
+}
+.note-form .field-row {
+  margin-top: 0;
+  grid-template-columns: minmax(0, 1fr) 6rem;
+}
+.note-form .field-row > .field:only-child {
+  grid-column: 1 / -1;
+}
+.note-form textarea {
+  resize: vertical;
+}
+
+/* Memory notes: the line under a reply that wrote some. */
+.memory-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.3rem 0.45rem;
+  margin: 0.5em 0 0;
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+.memory-label {
+  font-weight: 600;
+}
+.memory-chip {
+  display: inline-flex;
+  padding: 0.05rem 0.55rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--border));
+  color: var(--fg);
+}
+.memory-chip.forgot {
+  border-style: dashed;
+  color: var(--muted);
+}
+.memory-action {
+  border: none;
+  padding: 0;
+  font-size: inherit;
+  color: inherit;
+  text-decoration: underline;
+}
+
 /* ---------- keyboard shortcuts window ---------- */
 .shortcut-groups {
   display: grid;

@@ -3,6 +3,7 @@ use crate::db::stories::create_story;
 use crate::db::test_support::{test_db, TestDb};
 use crate::db::timeline::fork_route;
 use crate::domain::events::StateEdit;
+use crate::domain::notes::{MemoryNote, NoteKind};
 use crate::domain::story::StoryCreated;
 use crate::domain::templates::{QuickStartInput, TemplateCatalog};
 use crate::errors::ErrorCode;
@@ -215,4 +216,194 @@ async fn route_pictures_need_a_real_slot_image_and_character() {
     let v = route_view(&t.db, &s.main_route_id).await.unwrap();
     assert_eq!(v.state.effective.state.visual_refs.len(), 2);
     assert!(v.visuals.is_empty(), "story defaults are untouched");
+}
+
+/// One action and the storyteller's reply, straight onto the main route.
+async fn exchange(t: &TestDb, s: &StoryCreated, head: &str, reply: &str) -> String {
+    use crate::domain::events::{AssistantPayload, PlayerPayload};
+    let player = append_event(
+        &t.db,
+        AppendEvent {
+            story_id: s.story_id.clone(),
+            route_id: s.main_route_id.clone(),
+            expected_head_id: head.into(),
+            body: EventBody::Player(PlayerPayload::new("Go on")),
+            generation_run_id: None,
+        },
+    )
+    .await
+    .unwrap();
+    append_event(
+        &t.db,
+        AppendEvent {
+            story_id: s.story_id.clone(),
+            route_id: s.main_route_id.clone(),
+            expected_head_id: player.event_id,
+            body: EventBody::Assistant(AssistantPayload {
+                text: reply.into(),
+                finish_reason: None,
+                provider_label: None,
+                model_id: None,
+            }),
+            generation_run_id: None,
+        },
+    )
+    .await
+    .unwrap()
+    .event_id
+}
+
+fn note_texts(v: &RouteView) -> Vec<(String, String)> {
+    v.state
+        .effective
+        .state
+        .notes
+        .iter()
+        .map(|n| (n.name.clone(), n.text.clone()))
+        .collect()
+}
+
+#[tokio::test]
+async fn replies_keep_memory_notes_and_one_reply_can_be_undone() {
+    let (t, s) = story().await;
+    let first = exchange(
+        &t,
+        &s,
+        &s.head_event_id,
+        "Mara nods. <remember person=\"Mara\">Trusts the keeper.</remember>\
+         <remember place=\"Lighthouse\">The lamp room door sticks.</remember>",
+    )
+    .await;
+    let second = exchange(
+        &t,
+        &s,
+        &first,
+        "She slips a ring on. <remember person=\"Mara\">Engaged to the keeper; wears a silver \
+         ring.</remember><remember item=\"Silver ring\">Mara's engagement ring.</remember>\
+         <forget place=\"Lighthouse\"/>",
+    )
+    .await;
+    let v = route_view(&t.db, &s.main_route_id).await.unwrap();
+    assert_eq!(
+        note_texts(&v),
+        [
+            (
+                "Mara".to_string(),
+                "Engaged to the keeper; wears a silver ring.".to_string()
+            ),
+            ("Silver ring".into(), "Mara's engagement ring.".into()),
+        ]
+    );
+    assert_eq!(
+        v.state.effective.state.notes[0].source_event_id.as_deref(),
+        Some(second.as_str())
+    );
+
+    // Undo the second reply's notes: Mara and the lighthouse go back to
+    // how the first reply left them, and the ring note goes.
+    undo_reply_notes(
+        &t.db,
+        &s.story_id,
+        &s.main_route_id,
+        &second,
+        &second,
+        Some("took back Mara, Lighthouse and Ring".into()),
+    )
+    .await
+    .unwrap();
+    let v = route_view(&t.db, &s.main_route_id).await.unwrap();
+    match &v.history.last().unwrap().body {
+        EventBody::Edit(p) => {
+            assert_eq!(
+                p.note.as_deref(),
+                Some("took back Mara, Lighthouse and Ring")
+            )
+        }
+        other => panic!("expected an edit, got {other:?}"),
+    }
+    let mut got = note_texts(&v);
+    got.sort();
+    assert_eq!(
+        got,
+        [
+            (
+                "Lighthouse".to_string(),
+                "The lamp room door sticks.".to_string()
+            ),
+            ("Mara".into(), "Trusts the keeper.".into()),
+        ]
+    );
+    let head = v.state.head_event_id.clone();
+    // Nothing left to undo for that reply now.
+    let again = undo_reply_notes(&t.db, &s.story_id, &s.main_route_id, &head, &second, None).await;
+    assert!(again.is_err());
+
+    // A note changed since a reply is not undone with it.
+    let changed = edit_details(
+        &t.db,
+        &s.story_id,
+        &s.main_route_id,
+        &head,
+        vec![StateEdit::UpsertNote {
+            note: MemoryNote {
+                kind: NoteKind::Person,
+                name: "Mara".into(),
+                text: "Rewritten by the player.".into(),
+                chapter: None,
+                source_event_id: None,
+            },
+        }],
+        None,
+    )
+    .await
+    .unwrap();
+    undo_reply_notes(
+        &t.db,
+        &s.story_id,
+        &s.main_route_id,
+        &changed.event_id,
+        &first,
+        None,
+    )
+    .await
+    .unwrap();
+    let v = route_view(&t.db, &s.main_route_id).await.unwrap();
+    assert_eq!(
+        note_texts(&v),
+        [("Mara".to_string(), "Rewritten by the player.".to_string())]
+    );
+    let mara = &v.state.effective.state.notes[0];
+    assert_eq!(
+        mara.source_event_id.as_deref(),
+        Some(changed.event_id.as_str())
+    );
+}
+
+#[tokio::test]
+async fn a_story_can_keep_its_notes_by_hand() {
+    let (t, s) = story().await;
+    let v = route_view(&t.db, &s.main_route_id).await.unwrap();
+    let mut narration = v.state.effective.state.narration.clone();
+    narration.manual_memory = true;
+    let off = edit_details(
+        &t.db,
+        &s.story_id,
+        &s.main_route_id,
+        &s.head_event_id,
+        vec![StateEdit::SetNarration { narration }],
+        None,
+    )
+    .await
+    .unwrap();
+    let reply = exchange(
+        &t,
+        &s,
+        &off.event_id,
+        "Hi. <remember person=\"Mara\">Ignored.</remember>",
+    )
+    .await;
+    let v = route_view(&t.db, &s.main_route_id).await.unwrap();
+    assert!(v.state.effective.state.notes.is_empty());
+    let err = undo_reply_notes(&t.db, &s.story_id, &s.main_route_id, &reply, &reply, None).await;
+    assert!(err.is_err());
 }

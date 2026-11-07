@@ -53,4 +53,9 @@ autopilot?: boolean,
 /**
  * Characters never text or call the player first.
  */
-quietPhones?: boolean, diceRules?: DiceRules, };
+quietPhones?: boolean, diceRules?: DiceRules, 
+/**
+ * The storyteller does not keep memory notes; only the player writes
+ * them.
+ */
+manualMemory?: boolean, };

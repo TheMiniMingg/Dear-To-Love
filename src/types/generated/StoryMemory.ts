@@ -16,9 +16,13 @@ summary?: MemorySummary,
  */
 recaps: Array<MemoryRecap>, 
 /**
- * How many of the newest recaps each reply reads.
+ * How many of the newest recaps each reply reads in full.
  */
 recapsRead: number, 
+/**
+ * How many recaps before those each reply reads in brief.
+ */
+recapsBriefed: number, 
 /**
  * Replies a route needs before its first summary is written.
  */

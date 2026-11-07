@@ -5,8 +5,10 @@
 //! ancestors, so nothing from another route can leak in. Order:
 //!
 //! 1. Narration contract, the story's premise, genre and content settings,
-//!    world, characters, relationships, confirmed facts and the current
-//!    scene with its chapter goal (always sent).
+//!    world, characters, relationships, confirmed facts, memory notes (all
+//!    of them, or as many as fit a fifth of the room with the ones the
+//!    scene names first), chapter recaps and the current scene with its
+//!    chapter goal (always sent).
 //! 2. "Story so far": the newest eligible rolling summary.
 //! 3. Verbatim player and story turns after the summary, oldest first.
 //! 4. The latest player action, exactly once, always last.
@@ -23,6 +25,7 @@ use ts_rs::TS;
 use crate::db::memory::EligibleSummary;
 use crate::db::timeline::EventRow;
 use crate::domain::events::{EventBody, EventKind};
+use crate::domain::notes::{MemoryNote, NoteKind};
 use crate::domain::provider::{ModelMessage, Role};
 use crate::domain::replay::EffectiveState;
 use crate::domain::story_state::{
@@ -33,14 +36,25 @@ use crate::domain::tracking::Tracking;
 use crate::errors::{AppError, AppResult, ErrorCode};
 use crate::services::tokens::{estimate_message, estimate_messages, estimate_text};
 
-pub const PROMPT_SCHEMA_VERSION: u32 = 7;
+pub const PROMPT_SCHEMA_VERSION: u32 = 8;
 /// Newest messages (excluding the latest action) placed before the summary
 /// competes for room.
 pub const MIN_RECENT_MESSAGES: usize = 4;
 const EARLIER_PREFIX: &str = "(Earlier in the story:)\n";
-/// Chapter recaps sent with each reply, newest kept; older chapters are
-/// covered by the rolling story summary.
+/// Chapter recaps sent in full with each reply, newest kept; older chapters
+/// are sent in brief (their first lines).
 pub const MAX_RECAPS_IN_PROMPT: usize = 10;
+/// Older chapters sent in brief, newest kept; the rolling summary and the
+/// memory notes cover any before them.
+pub const MAX_BRIEF_RECAPS: usize = 40;
+/// The longest brief of an older chapter.
+const BRIEF_RECAP_CHARS: usize = 220;
+/// Share of a request's room the memory notes may take when there are too
+/// many to send them all (1/5).
+const NOTES_SHARE: u32 = 5;
+/// Names of notes left out that are still listed, so the storyteller knows
+/// they exist.
+const MAX_UNSHOWN_NAMES: usize = 60;
 
 /// Story facts kept outside the branch state: the title, the premise and
 /// the authored plan for the chapter being played.
@@ -272,7 +286,174 @@ fn tracking_section(t: &Tracking, player_name: &str) -> String {
     out
 }
 
+/// What the storyteller is told about memory notes when it keeps them.
+fn notes_contract(language: Option<&str>) -> String {
+    let mut out = String::from(
+        "\nMEMORY NOTES\nThe app keeps notes so a long story never forgets what matters. When \
+         something lasting happens or comes to light, end your reply with a note; the reader \
+         sees that the story's memory was updated, not the note itself:\n\
+         <remember person=\"Name\">where things stand with them now: relationship, feelings, \
+         promises, secrets they know, what they have or wear</remember>\n\
+         Use person= for someone, place= for a place and what it is like (a home, an office, a \
+         hideout), item= for something that matters (a gift, a weapon, a key), event= for \
+         something that happened (a short title as the name) and fact= for anything else that \
+         must stay true.\n\
+         - A note with the same kind and name replaces the old one, so write everything about \
+         it that is still true.\n\
+         - <forget person=\"Name\"/> removes a note that no longer applies.\n\
+         - Note only lasting changes and new details worth keeping, not passing moments: at \
+         most a few notes in a reply, often none, each one to three short sentences.\n\
+         - Notes the player wrote are as true as yours; keep to them.\n",
+    );
+    if let Some(language) = language.map(str::trim).filter(|l| !l.is_empty()) {
+        out.push_str(&format!("- Write notes in {language}.\n"));
+    }
+    out
+}
+
+fn kind_heading(kind: NoteKind) -> &'static str {
+    match kind {
+        NoteKind::Person => "People",
+        NoteKind::Place => "Places",
+        NoteKind::Item => "Things",
+        NoteKind::Event => "Timeline",
+        NoteKind::Fact => "Other facts",
+    }
+}
+
+fn note_line(n: &MemoryNote) -> String {
+    let text = n.text.split_whitespace().collect::<Vec<_>>().join(" ");
+    match (n.kind, n.chapter) {
+        (NoteKind::Event, Some(ch)) => format!("- Chapter {ch}, {}: {text}\n", n.name.trim()),
+        _ => format!("- {}: {text}\n", n.name.trim()),
+    }
+}
+
+/// Whether `focus` (lower case) mentions the note's name, or a word of it
+/// with four or more letters ("house" for "Z's house").
+fn named_in(n: &MemoryNote, focus: &str) -> bool {
+    let name = n.name.trim().to_lowercase();
+    if name.is_empty() {
+        return false;
+    }
+    if focus.contains(&name) {
+        return true;
+    }
+    name.split(|c: char| !c.is_alphanumeric())
+        .filter(|w| w.chars().count() >= 4)
+        .any(|w| focus.contains(w))
+}
+
+/// Which notes a request has room for. All of them when they fit in
+/// `budget` tokens; otherwise the ones the scene names first, then the
+/// newest people, places, things and facts, then the newest events. The
+/// rest are only listed by name.
+pub struct NotesPick<'a> {
+    pub shown: Vec<&'a MemoryNote>,
+    pub unshown: Vec<&'a MemoryNote>,
+}
+
+pub fn pick_notes<'a>(notes: &'a [MemoryNote], focus: &str, budget: Option<u32>) -> NotesPick<'a> {
+    let total: u32 = notes.iter().map(|n| estimate_text(&note_line(n))).sum();
+    let Some(budget) = budget.filter(|b| total > *b) else {
+        return NotesPick {
+            shown: notes.iter().collect(),
+            unshown: Vec::new(),
+        };
+    };
+    let focus = focus.to_lowercase();
+    let mut order: Vec<usize> = (0..notes.len()).rev().collect();
+    // Stable: newest first within each group.
+    order.sort_by_key(|&i| {
+        let n = &notes[i];
+        if named_in(n, &focus) {
+            0
+        } else if n.kind != NoteKind::Event {
+            1
+        } else {
+            2
+        }
+    });
+    let mut keep = vec![false; notes.len()];
+    let mut used = 0u32;
+    for i in order {
+        let cost = estimate_text(&note_line(&notes[i]));
+        if used + cost <= budget {
+            used += cost;
+            keep[i] = true;
+        }
+    }
+    let (shown, unshown): (Vec<_>, Vec<_>) = notes.iter().zip(keep).partition(|(_, k)| *k);
+    NotesPick {
+        shown: shown.into_iter().map(|(n, _)| n).collect(),
+        unshown: unshown.into_iter().map(|(n, _)| n).collect(),
+    }
+}
+
+/// The MEMORY section: the notes grouped by kind, oldest first in each.
+fn notes_section(pick: &NotesPick<'_>) -> String {
+    if pick.shown.is_empty() && pick.unshown.is_empty() {
+        return String::new();
+    }
+    let mut out = String::from(
+        "\nMEMORY\nNotes kept so far. They stay true unless the story changes them.\n",
+    );
+    for kind in NoteKind::ALL {
+        let of_kind: Vec<_> = pick.shown.iter().filter(|n| n.kind == kind).collect();
+        if of_kind.is_empty() {
+            continue;
+        }
+        out.push_str(&format!("{}:\n", kind_heading(kind)));
+        for n in of_kind {
+            out.push_str(&note_line(n));
+        }
+    }
+    if !pick.unshown.is_empty() {
+        let names: Vec<String> = pick
+            .unshown
+            .iter()
+            .rev()
+            .take(MAX_UNSHOWN_NAMES)
+            .map(|n| format!("{} ({})", n.name.trim(), n.kind.attr()))
+            .collect();
+        let more = pick.unshown.len().saturating_sub(MAX_UNSHOWN_NAMES);
+        out.push_str(&format!(
+            "Also kept but not shown here for room: {}{}. If one of them changes, write \
+             everything you know that is still true about it.\n",
+            names.join(", "),
+            if more > 0 {
+                format!(" and {more} more")
+            } else {
+                String::new()
+            }
+        ));
+    }
+    out
+}
+
+/// The first sentence or two of a recap, cut to `BRIEF_RECAP_CHARS`.
+fn brief(recap: &str) -> String {
+    let one_line = recap.split_whitespace().collect::<Vec<_>>().join(" ");
+    let mut out = String::new();
+    for sentence in one_line.split_inclusive(['.', '!', '?', '。', '！', '？']) {
+        if !out.is_empty() && out.chars().count() + sentence.chars().count() > BRIEF_RECAP_CHARS {
+            break;
+        }
+        out.push_str(sentence);
+    }
+    if out.chars().count() > BRIEF_RECAP_CHARS {
+        out = out.chars().take(BRIEF_RECAP_CHARS - 1).collect::<String>();
+        out = out.trim_end().to_string();
+        out.push('…');
+    }
+    out.trim().to_string()
+}
+
 pub fn system_prompt(state: &EffectiveState, frame: &StoryFrame) -> String {
+    system_prompt_with(state, frame, &pick_notes(&state.state.notes, "", None))
+}
+
+fn system_prompt_with(state: &EffectiveState, frame: &StoryFrame, notes: &NotesPick<'_>) -> String {
     let s = &state.state;
     let player = s.characters.get(&s.player_character_id);
     let player_name = player.map(|p| p.name.as_str()).unwrap_or("the player");
@@ -436,6 +617,9 @@ pub fn system_prompt(state: &EffectiveState, frame: &StoryFrame) -> String {
     if let Some(t) = &s.tracking {
         out.push_str(&tracking_section(t, player_name));
     }
+    if !s.narration.manual_memory {
+        out.push_str(&notes_contract(s.narration.language.as_deref()));
+    }
 
     let n = &s.narration;
     let mut story = String::new();
@@ -572,11 +756,32 @@ pub fn system_prompt(state: &EffectiveState, frame: &StoryFrame) -> String {
         }
     }
 
+    out.push_str(&notes_section(notes));
+
     let recaps = &frame.earlier_chapters;
     if !recaps.is_empty() {
         out.push_str("\nEARLIER CHAPTERS\n");
-        let skip = recaps.len().saturating_sub(MAX_RECAPS_IN_PROMPT);
-        for r in &recaps[skip..] {
+        let full_from = recaps.len().saturating_sub(MAX_RECAPS_IN_PROMPT);
+        let brief_from = full_from.saturating_sub(MAX_BRIEF_RECAPS);
+        if brief_from > 0 {
+            out.push_str(&format!(
+                "(Chapters 1 to {} are covered by the story summary and the notes.)\n",
+                recaps[brief_from - 1].ordinal
+            ));
+        }
+        if full_from > brief_from {
+            out.push_str("In brief:\n");
+            for r in &recaps[brief_from..full_from] {
+                out.push_str(&format!(
+                    "Chapter {}, {}: {}\n",
+                    r.ordinal,
+                    r.title.trim(),
+                    brief(&r.recap)
+                ));
+            }
+            out.push_str("In full:\n");
+        }
+        for r in &recaps[full_from..] {
             out.push_str(&format!(
                 "Chapter {}, {}: {}\n",
                 r.ordinal,
@@ -730,10 +935,24 @@ pub fn assemble(
     } else {
         frame
     };
-    let system = system_prompt(state, frame);
     let available = budget
         .max_context_tokens
         .saturating_sub(budget.max_output_tokens);
+    // What the scene is about: where it is, who is there, the newest turns.
+    let s = &state.state;
+    let mut focus = format!("{} {}", s.scene.location, s.scene.summary);
+    for id in &s.scene.participant_ids {
+        if let Some(c) = s.characters.get(id) {
+            focus.push(' ');
+            focus.push_str(&c.name);
+        }
+    }
+    for m in older.iter().rev().take(6).chain([&latest]) {
+        focus.push(' ');
+        focus.push_str(&m.content);
+    }
+    let notes = pick_notes(&s.notes, &focus, Some(available / NOTES_SHARE));
+    let system = system_prompt_with(state, frame, &notes);
     let mut prompt = vec![
         ModelMessage {
             role: Role::System,
