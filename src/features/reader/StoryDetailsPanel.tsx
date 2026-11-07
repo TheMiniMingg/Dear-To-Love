@@ -1,13 +1,12 @@
 import { useId, useState } from 'react';
 import { commands, errorMessage } from '../../api/commands';
 import { ArrowPicker } from '../../components/ArrowPicker';
-import type { Character, EventDto, Pacing, RouteView, StoryStateV1 } from '../../types';
+import type { Character, EventDto, RouteView, StoryStateV1 } from '../../types';
 import { ContentFields } from '../create/ContentFields';
 import { LinesField, StatsField, TextArea, TextField } from '../create/fields';
-import { StyleFields } from '../create/StyleFields';
-import { DETAILS, PERSPECTIVES } from '../create/WizardSteps';
+import { FeatureFields, StyleFields } from '../create/StyleFields';
 import { diffState, editProblems, summarize, type ChangeLine } from './stateDiff';
-import { msg, t, tOptions, tr } from '../../i18n';
+import { msg, t, tr } from '../../i18n';
 import { chapterHasTitle, routeName } from '../../i18n/names';
 import { plainText } from './messages';
 
@@ -19,12 +18,6 @@ const TABS: [Tab, string][] = [
   ['scene', msg('Scene')],
   ['facts', msg('Facts')],
 ];
-const PACINGS: { value: Pacing; label: string }[] = [
-  { value: 'fast', label: msg('Fast') },
-  { value: 'normal', label: msg('Normal') },
-  { value: 'slow', label: msg('Slow') },
-];
-
 const copy = <T,>(v: T): T => JSON.parse(JSON.stringify(v)) as T;
 
 function excerpt(text: string, n = 80): string {
@@ -350,29 +343,19 @@ export function StoryDetailsPanel({
                 setEdited((s) => ({ ...s, narration: { ...s.narration, ...patch } }))
               }
             />
-            <ArrowPicker
-              label={t('Point of view')}
-              options={tOptions(PERSPECTIVES)}
-              value={edited.narration.perspective}
-              onChange={(perspective) => set({ narration: { ...edited.narration, perspective } })}
-            />
-            <ArrowPicker
-              label={t('Detail')}
-              options={tOptions(DETAILS)}
-              value={edited.narration.detail}
-              onChange={(detail) => set({ narration: { ...edited.narration, detail } })}
-            />
-            <ArrowPicker
-              label={t('Pacing')}
-              options={tOptions(PACINGS)}
-              value={edited.narration.pacing}
-              onChange={(pacing) => set({ narration: { ...edited.narration, pacing } })}
-            />
             <TextField
               label={t('Tone')}
               value={edited.narration.tone}
               onChange={(tone) => set({ narration: { ...edited.narration, tone } })}
             />
+            <h3>{t('Features')}</h3>
+            <FeatureFields
+              narration={edited.narration}
+              onChange={(patch) =>
+                setEdited((s) => ({ ...s, narration: { ...s.narration, ...patch } }))
+              }
+            />
+            <h3>{t('What kind of story')}</h3>
             <ContentFields
               narration={edited.narration}
               pickGenres={false}

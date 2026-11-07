@@ -4,9 +4,9 @@ import { useUiStore } from '../../app/store';
 import { ArrowPicker } from '../../components/ArrowPicker';
 import type { Detail, Perspective, TemplateCatalog } from '../../types';
 import { STORY_TYPES, withStoryType, worldFits } from './ContentFields';
-import { DETAILS, PERSPECTIVES, fittingScenarios } from './WizardSteps';
+import { fittingScenarios } from './WizardSteps';
 import { joinList, t, tOptions } from '../../i18n';
-import { appStoryLanguage, storyLanguageLabel } from './StyleFields';
+import { DETAILS, PERSPECTIVES, appStoryLanguage, storyLanguageLabel } from './StyleFields';
 
 /** Quick Start: pick presets with arrows or menus. No typing required. */
 export function QuickStartScreen() {

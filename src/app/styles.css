@@ -784,6 +784,51 @@ textarea:focus-visible,
 details summary {
   cursor: pointer;
 }
+/* An example of the chosen story style, drawn like the reader. */
+.style-example {
+  margin: 0;
+  padding: 0.5rem 0.85rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 0.92em;
+  line-height: 1.55;
+}
+.style-example figcaption {
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.style-example-text > :first-child {
+  margin-top: 0.3rem;
+}
+.style-example-text > :last-child {
+  margin-bottom: 0;
+}
+.style-example-text p {
+  margin: 0.45rem 0;
+}
+/* Settings that belong to the option above them. */
+.sub-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin: -0.3rem 0 0 1.6rem;
+  padding-left: 0.75rem;
+  border-left: 2px solid var(--border);
+}
+details.sub-options {
+  display: block;
+}
+details.sub-options > summary {
+  font-weight: 600;
+}
+/* WebKit doesn't lay a <details> out as flex, so its body does. */
+.sub-options-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-top: 0.6rem;
+}
 
 /* Settings */
 .settings-section {
@@ -1906,6 +1951,11 @@ img.msg-avatar {
 .msg-roll.failure .roll-outcome {
   color: var(--fail);
   background: color-mix(in srgb, var(--fail) 14%, transparent);
+}
+/* A natural top or bottom face: a double ring around the die. */
+.msg-roll.critical .roll-die {
+  border-width: 3px;
+  box-shadow: 0 0 0 3px color-mix(in srgb, currentColor 25%, transparent);
 }
 .msg-roll.rolled.fresh .roll-die {
   animation: roll-tumble 0.7s ease-out;

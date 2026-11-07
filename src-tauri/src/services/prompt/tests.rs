@@ -369,6 +369,68 @@ fn dice_stats_and_rolls_reach_the_storyteller() {
 }
 
 #[test]
+fn dice_rules_change_how_rolls_are_asked_for() {
+    use crate::domain::story_state::{DiceRules, RollFrequency, RollOdds};
+    let mut s = state();
+    s.state.narration.dice = true;
+    s.state.narration.dice_rules = Some(DiceRules {
+        dice: Some("2d6".into()),
+        frequency: Some(RollFrequency::Rare),
+        odds: Some(RollOdds::Tough),
+        no_stats: true,
+        crits: true,
+        hide_target: true,
+        player_only: false,
+    });
+    let p = system_prompt(&s, &frame());
+    assert!(p.contains("<roll for=\"what the roll decides\" dice=\"2d6\" target=\"…\"/>"));
+    assert!(p.contains("- Use dice=\"2d6\" for every roll."));
+    assert!(!p.contains("Add stat=") && !p.contains("dice=\"40-100\" after"));
+    assert!(p.contains("Lean tough: failure is common and costly."));
+    assert!(p.contains("- Ask for a roll only at big, dramatic turning points"));
+    assert!(p.contains("- Stats are not added to rolls in this story."));
+    assert!(p.contains("critical=\"success\" or critical=\"failure\""));
+
+    s.state.narration.dice_rules = Some(DiceRules {
+        player_only: true,
+        ..DiceRules::default()
+    });
+    let p = system_prompt(&s, &frame());
+    assert!(p.contains("- Never ask for a roll yourself: Sam Ashby rolls when they choose to."));
+    assert!(!p.contains("end your reply with a roll"));
+    assert!(p.contains("never reroll, ignore or soften it"));
+}
+
+#[test]
+fn styles_tense_twists_and_control_reach_the_storyteller() {
+    use crate::domain::story_state::{Surprises, Tense};
+    let mut s = state();
+    let p = system_prompt(&s, &frame());
+    assert!(p.contains("Never decide Sam Ashby's actions, words, thoughts or feelings"));
+    assert!(p.contains("Don't rush to resolve threads or force a twist."));
+    assert!(!p.contains("tense"));
+
+    s.state.narration.style = Some(NarrationStyle::Roleplay);
+    s.state.narration.tense = Some(Tense::Past);
+    s.state.narration.surprises = Some(Surprises::Often);
+    s.state.narration.autopilot = true;
+    s.state.narration.quiet_phones = true;
+    let p = system_prompt(&s, &frame());
+    assert!(p.contains("- Write like a roleplay chat, in second person"));
+    assert!(p.contains("- Write in the past tense."));
+    assert!(p.contains("bring in twists, complications and surprises often"));
+    assert!(p.contains("You may describe Sam Ashby's small, natural reactions"));
+    assert!(p.contains("- Only Sam Ashby starts texts and calls; others answer."));
+    assert!(!p.contains("may text or call Sam Ashby first"));
+
+    s.state.narration.style = Some(NarrationStyle::Adventure);
+    s.state.narration.surprises = Some(Surprises::Off);
+    let p = system_prompt(&s, &frame());
+    assert!(p.contains("- Write like a classic text adventure"));
+    assert!(p.contains("don't add surprises of your own"));
+}
+
+#[test]
 fn a_characters_race_reaches_the_storyteller() {
     let mut s = state();
     let pc = s.state.player_character_id.clone();

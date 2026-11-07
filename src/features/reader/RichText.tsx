@@ -254,6 +254,8 @@ export function RichText({
               target: Number.isFinite(target) ? target : undefined,
               stat: a.stat,
               bonus: Number.parseInt(a.bonus ?? '0', 10) || 0,
+              critical:
+                a.critical === 'success' || a.critical === 'failure' ? a.critical : undefined,
             }}
           />
         );

@@ -124,7 +124,31 @@ pub async fn submit_action(
                 .effective
                 .state;
             let player = state.characters.get(&state.player_character_id);
-            Some(dice::roll(req, player, &mut dice::os_uniform)?)
+            let rules = state.narration.dice_rules.clone().unwrap_or_default();
+            // A story that leaves stats out of rolls adds none, and one with
+            // set dice uses them for every roll the storyteller asks for.
+            let fixed = rules
+                .dice
+                .as_deref()
+                .map(str::trim)
+                .filter(|d| !d.is_empty());
+            let req = RollRequest {
+                stat: if rules.no_stats {
+                    None
+                } else {
+                    req.stat.clone()
+                },
+                dice: match fixed {
+                    Some(d) if req.asked => d.to_string(),
+                    _ => req.dice.clone(),
+                },
+                ..req.clone()
+            };
+            let mut made = dice::roll(&req, player, &mut dice::os_uniform)?;
+            if rules.crits {
+                made.mark_critical();
+            }
+            Some(made)
         }
     };
     let profile = providers::story_storyteller(db, story_id).await?;

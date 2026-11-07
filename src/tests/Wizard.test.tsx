@@ -526,7 +526,7 @@ describe('Create a story', () => {
     expect(dice).toBeChecked();
     await userEvent.click(screen.getByRole('button', { name: '6. Review' }));
     const summary = await screen.findByLabelText('Story summary');
-    expect(summary).toHaveTextContent('dice rolls');
+    expect(summary).toHaveTextContent('Dice rolls');
     expect(summary).toHaveTextContent('Nerve 3');
     await userEvent.click(await screen.findByRole('button', { name: 'Create story' }));
     const draft = lastCall('create_story')?.draft as CreateStoryDraft;
@@ -544,6 +544,62 @@ describe('Create a story', () => {
     expect(
       await screen.findByRole('checkbox', { name: 'Roll dice for uncertain moments' }),
     ).not.toBeChecked();
+  });
+
+  it('shows an example of each style and sets every feature, down to the dice', async () => {
+    render(<CreateWizardScreen />);
+    await userEvent.selectOptions(
+      await screen.findByRole('combobox', { name: 'Type of story' }),
+      'Adventure',
+    );
+    await userEvent.click(screen.getByRole('button', { name: '4. Narration' }));
+    await userEvent.selectOptions(await screen.findByRole('combobox', { name: 'Style' }), 'script');
+    const example = screen.getByRole('figure', { name: 'Example of this style' });
+    expect(within(example).getByText('Theo:', { selector: 'strong' })).toBeInTheDocument();
+    expect(within(example).getByRole('heading', { name: 'Café Lumen — Friday, 7:14 AM' }));
+    await userEvent.selectOptions(screen.getByRole('combobox', { name: 'Tense' }), 'past');
+    await userEvent.click(
+      screen.getByRole('checkbox', { name: 'Let the storyteller add your small reactions' }),
+    );
+    await userEvent.click(
+      screen.getByRole('checkbox', { name: 'Characters can text or call you first' }),
+    );
+    await userEvent.selectOptions(
+      screen.getByRole('combobox', { name: 'Twists and surprises' }),
+      'off',
+    );
+    await userEvent.click(screen.getByText('Dice settings'));
+    await userEvent.selectOptions(
+      screen.getByRole('combobox', { name: 'Who asks for rolls' }),
+      'player',
+    );
+    expect(screen.queryByRole('combobox', { name: 'Odds' })).not.toBeInTheDocument();
+    const dice = screen.getByRole('combobox', { name: 'Dice for every roll' });
+    await userEvent.type(dice, '2d');
+    expect(dice).toHaveAttribute('aria-invalid', 'true');
+    await userEvent.type(dice, '6');
+    expect(dice).toHaveAttribute('aria-invalid', 'false');
+    await userEvent.click(screen.getByRole('checkbox', { name: 'Add your stats to rolls' }));
+    await userEvent.click(screen.getByRole('checkbox', { name: 'Critical rolls' }));
+    await userEvent.click(
+      screen.getByRole('checkbox', { name: 'Show the number needed before you roll' }),
+    );
+
+    await userEvent.click(screen.getByRole('button', { name: '6. Review' }));
+    const summary = await screen.findByLabelText('Story summary');
+    expect(summary).toHaveTextContent('Your small reactions');
+    expect(summary).toHaveTextContent('only when you roll');
+    await userEvent.click(await screen.findByRole('button', { name: 'Create story' }));
+    const draft = lastCall('create_story')?.draft as CreateStoryDraft;
+    expect(draft.narration).toMatchObject({
+      style: 'script',
+      tense: 'past',
+      surprises: 'off',
+      autopilot: true,
+      quietPhones: true,
+      dice: true,
+      diceRules: { dice: '2d6', playerOnly: true, noStats: true, crits: true, hideTarget: true },
+    });
   });
 
   it('Review lists problems and links to the step that fixes them', async () => {

@@ -1,5 +1,9 @@
-import type { DiceRoll, RollRequest } from '../../types';
+import { createContext, useContext } from 'react';
+import type { DiceRoll, DiceRules, RollRequest } from '../../types';
 import { t } from '../../i18n';
+
+/** The story's dice rules, for cards that hide the number needed. */
+export const DiceRulesContext = createContext<DiceRules>({});
 
 /** A die outline, for a roll that is still to be made. */
 function DieIcon() {
@@ -42,12 +46,23 @@ export function RollResult({
   fresh?: boolean;
 }) {
   const outcome =
-    roll.target === undefined ? null : roll.total >= roll.target ? 'success' : 'failure';
+    roll.critical ??
+    (roll.target === undefined ? null : roll.total >= roll.target ? 'success' : 'failure');
   const outcomeText =
-    outcome === 'success' ? t('Success') : outcome === 'failure' ? t('Failed') : '';
+    roll.critical === 'success'
+      ? t('Critical success')
+      : roll.critical === 'failure'
+        ? t('Critical failure')
+        : outcome === 'success'
+          ? t('Success')
+          : outcome === 'failure'
+            ? t('Failed')
+            : '';
   return (
     <div
-      className={['msg-roll', 'rolled', outcome, fresh && 'fresh'].filter(Boolean).join(' ')}
+      className={['msg-roll', 'rolled', outcome, roll.critical && 'critical', fresh && 'fresh']
+        .filter(Boolean)
+        .join(' ')}
       role="group"
       aria-label={
         outcomeText
@@ -80,11 +95,13 @@ export function RollAsk({
   request: RollRequest;
   onRoll?: (request: RollRequest) => void;
 }) {
+  const rules = useContext(DiceRulesContext);
+  const stat = rules.noStats ? undefined : request.stat;
+  // A story with its own dice rolls them for every roll asked for.
+  const dice = rules.dice ?? request.dice;
   const detail = [
-    request.stat
-      ? t('{dice} + your {stat}', { dice: request.dice, stat: request.stat })
-      : request.dice,
-    request.target !== undefined && t('needs {n}', { n: request.target }),
+    stat ? t('{dice} + your {stat}', { dice, stat }) : dice,
+    request.target !== undefined && !rules.hideTarget && t('needs {n}', { n: request.target }),
   ]
     .filter(Boolean)
     .join(' · ');
@@ -103,7 +120,7 @@ export function RollAsk({
       </div>
       {onRoll && (
         <button type="button" className="primary" onClick={() => onRoll(request)}>
-          {t('Roll {dice}', { dice: request.dice })}
+          {t('Roll {dice}', { dice })}
         </button>
       )}
     </div>
