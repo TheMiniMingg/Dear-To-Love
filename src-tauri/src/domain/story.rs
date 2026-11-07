@@ -1,7 +1,9 @@
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 
+use super::provider::StorytellerChoice;
 use super::story_state::StoryStateV1;
+use super::visuals::VisualSlot;
 
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]
 #[serde(rename_all = "camelCase")]
@@ -15,6 +17,18 @@ pub struct CreateStoryInput {
     /// Optional authored chapter plans, in order.
     #[serde(default)]
     pub chapter_outlines: Vec<ChapterOutlineInput>,
+}
+
+/// Choices made while creating a story that are not part of its state:
+/// the story's pictures, its own images and who writes its replies.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct StorySetup {
+    /// Story-default pictures. Portraits name the story's character ids.
+    pub pictures: Vec<(VisualSlot, String)>,
+    /// Images added for this story only.
+    pub own_images: Vec<String>,
+    /// `None`: the story follows the app's storyteller.
+    pub storyteller: Option<StorytellerChoice>,
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize, TS)]

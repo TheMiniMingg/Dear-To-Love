@@ -166,10 +166,16 @@ async fn route_pictures_need_a_real_slot_image_and_character() {
     image::RgbImage::new(4, 4)
         .write_to(&mut std::io::Cursor::new(&mut png), image::ImageFormat::Png)
         .unwrap();
-    let img = import_bytes(&t.db, &AssetStore::new(t.dir.path()), png, "x")
-        .await
-        .unwrap()
-        .asset;
+    let img = import_bytes(
+        &t.db,
+        &AssetStore::new(t.dir.path()),
+        png,
+        "x",
+        &crate::db::assets::ImportScope::Shared,
+    )
+    .await
+    .unwrap()
+    .asset;
     let set = |slot: &str, asset: Option<&str>| StateEdit::SetVisualRef {
         slot: slot.into(),
         asset_id: asset.map(String::from),

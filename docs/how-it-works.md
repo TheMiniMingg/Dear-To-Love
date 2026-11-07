@@ -51,9 +51,14 @@ They never appear in the database, logs, exports, backups or support reports.
   (or writes one offline from the chapter's own turns), lets you edit it, then starts the next
   chapter with the recap kept on its `chapter_start` event and makes a save named "End of
   Chapter N: title". The recap belongs to that route only, like everything else on it.
+- **Pictures** are either shared with every story or kept for the stories listed in
+  `asset_stories`. Pictures added from a story or while creating it are that story's own.
+  Deleting a story keeps its pictures in the library (under **Not in any story**).
 - **App settings** (budget, update checks, the half-made story in the wizard) are in the
   `app_preferences` table. AI connections are in `provider_profiles`, with only a reference
-  to the key.
+  to the key. A story that picked its own storyteller names the connection on its `stories`
+  row; the story's summaries, recaps and facts don't depend on the connection, so switching
+  keeps them.
 
 ## How the storyteller remembers
 

@@ -960,7 +960,16 @@ mod tests {
         image::RgbImage::new(8, 8)
             .write_to(&mut std::io::Cursor::new(&mut png), image::ImageFormat::Png)
             .unwrap();
-        let img = import_bytes(&t.db, &store, png, "x").await.unwrap().asset;
+        let img = import_bytes(
+            &t.db,
+            &store,
+            png,
+            "x",
+            &crate::db::assets::ImportScope::Shared,
+        )
+        .await
+        .unwrap()
+        .asset;
         let db = Ok(t.db.clone());
         assert_eq!(
             check_assets(&db, &data, true).await.status,

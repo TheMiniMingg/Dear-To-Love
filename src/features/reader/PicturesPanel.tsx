@@ -63,6 +63,9 @@ export function PicturesPanel({ view, awaitingReply, onChanged }: Props) {
     setReload((n) => n + 1);
     if (added[0]) setPick(added[0].id);
   });
+  const storyId = view.story.id;
+  const ownImages = images?.filter((a) => !a.shared && a.stories.some((s) => s.id === storyId));
+  const sharedImages = images?.filter((a) => a.shared);
 
   const state = view.state.state;
   const characters = Object.values(state.characters ?? {}).sort((a, b) =>
@@ -135,21 +138,48 @@ export function PicturesPanel({ view, awaitingReply, onChanged }: Props) {
           Choose: {name}
         </h3>
         <div className="button-row">
-          <button type="button" disabled={adding} onClick={() => void add()}>
-            {adding ? 'Adding…' : 'Add images'}
+          <button
+            type="button"
+            disabled={adding}
+            onClick={() => void add({ storyId })}
+            title="Only this story can use them"
+          >
+            {adding ? 'Adding…' : 'Add for this story'}
+          </button>
+          <button
+            type="button"
+            disabled={adding}
+            onClick={() => void add()}
+            title="Every story can use them"
+          >
+            Add for all stories
           </button>
         </div>
         <ImportResult result={result} />
-        {images && images.length === 0 && (
+        {ownImages && sharedImages && ownImages.length + sharedImages.length === 0 && (
           <p className="muted">No images yet. Add some from this computer first.</p>
         )}
-        {images && images.length > 0 && (
-          <ImageGrid
-            images={images}
-            selectedId={pick}
-            onSelect={(a) => setPick(a.id)}
-            label="Your images"
-          />
+        {ownImages && ownImages.length > 0 && (
+          <section className="image-group" aria-label="This story's pictures">
+            <h4 className="small-heading">This story&apos;s pictures</h4>
+            <ImageGrid
+              images={ownImages}
+              selectedId={pick}
+              onSelect={(a) => setPick(a.id)}
+              label="This story's pictures"
+            />
+          </section>
+        )}
+        {sharedImages && sharedImages.length > 0 && (
+          <section className="image-group" aria-label="Pictures for all stories">
+            <h4 className="small-heading">For all stories</h4>
+            <ImageGrid
+              images={sharedImages}
+              selectedId={pick}
+              onSelect={(a) => setPick(a.id)}
+              label="Pictures for all stories"
+            />
+          </section>
         )}
         {routeScoped && (
           <fieldset className="choice-list">

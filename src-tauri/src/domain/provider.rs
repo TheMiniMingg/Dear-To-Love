@@ -65,6 +65,18 @@ impl Billing {
     }
 }
 
+/// Who writes one story's replies, when the story doesn't follow the app's
+/// storyteller (the one chosen in Settings).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase", tag = "kind")]
+#[ts(export)]
+pub enum StorytellerChoice {
+    /// The built-in offline storyteller.
+    Offline,
+    /// A saved AI connection, by id.
+    Connection { id: String },
+}
+
 pub const DEFAULT_MAX_OUTPUT_TOKENS: u32 = 700;
 pub const DEFAULT_TIMEOUT_MS: u32 = 120_000;
 /// Prompt plus reply. Conservative for small local models; raise it for

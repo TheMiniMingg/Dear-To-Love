@@ -41,7 +41,8 @@ pub async fn create_story(
     draft: CreateStoryDraft,
 ) -> AppResult<StoryCreated> {
     let db = state.db()?;
-    let created = stories::create_story(db, draft.into_story_input()?).await?;
+    let setup = draft.setup()?;
+    let created = stories::create_story_with(db, draft.into_story_input()?, &setup).await?;
     // The story exists either way; a leftover draft is only an extra prompt.
     if let Err(e) = drafts::clear(db).await {
         eprintln!("could not clear the wizard draft: {}", e.message);

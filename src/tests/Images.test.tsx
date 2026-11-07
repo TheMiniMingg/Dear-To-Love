@@ -31,6 +31,8 @@ const harbor: AssetDto = {
   label: 'Harbor at dusk',
   tags: ['Background'],
   createdAt: '2026-11-06T00:00:00Z',
+  shared: true,
+  stories: [],
 };
 const mara: AssetDto = { ...harbor, id: 'img-2', label: 'Mara', tags: [] };
 
@@ -80,11 +82,12 @@ describe('Images screen', () => {
     });
     openDialog.mockResolvedValue(['/p/harbor.png', '/p/mara-copy.png', '/p/notes.txt']);
     render(<ImagesScreen />);
-    await screen.findByRole('list', { name: 'Your images' });
+    await screen.findByRole('list', { name: 'For all stories' });
     await userEvent.click(screen.getByRole('button', { name: 'Add images' }));
 
     expect(invoke).toHaveBeenCalledWith('import_images', {
       paths: ['/p/harbor.png', '/p/mara-copy.png', '/p/notes.txt'],
+      scope: null,
     });
     const status = await screen.findByText(/Added 1 image\./);
     expect(status).toHaveTextContent('1 was already in your library and is reused.');
@@ -135,6 +138,62 @@ describe('Images screen', () => {
     expect(invoke).toHaveBeenCalledWith('delete_image', { assetId: 'img-2' });
     expect(await screen.findByText('Choose an image to see where it is used.')).toBeVisible();
     expect(screen.queryByRole('button', { name: 'Mara' })).toBeNull();
+  });
+});
+
+describe('Pictures for one story or all', () => {
+  it('groups pictures by who may use them, and shares or keeps them', async () => {
+    const own: AssetDto = {
+      ...harbor,
+      id: 'img-3',
+      label: 'Lamp room',
+      shared: false,
+      stories: [{ id: 's1', title: 'The Unsigned Letter' }],
+    };
+    const orphan: AssetDto = { ...harbor, id: 'img-4', label: 'Old sketch', shared: false };
+    let library = [harbor, own, orphan];
+    invoke.mockImplementation(async (cmd: string, args: Record<string, unknown>) => {
+      if (cmd === 'list_images') return library;
+      if (cmd === 'list_stories') return [{ id: 's1', title: 'The Unsigned Letter' }];
+      if (cmd === 'image_usages') return [];
+      if (cmd === 'set_image_scope') {
+        const next: AssetDto = args.storyId
+          ? { ...harbor, shared: false, stories: [{ id: 's1', title: 'The Unsigned Letter' }] }
+          : { ...own, shared: true, stories: [] };
+        library = library.map((a) => (a.id === next.id ? next : a));
+        return next;
+      }
+      throw { code: 'NOT_FOUND', message: cmd };
+    });
+    render(<ImagesScreen />);
+    const shared = await screen.findByRole('list', { name: 'For all stories' });
+    expect(within(shared).getByRole('button', { name: 'Harbor at dusk' })).toBeTruthy();
+    const mine = screen.getByRole('list', { name: 'Only in “The Unsigned Letter”' });
+    expect(within(mine).getByRole('button', { name: 'Lamp room' })).toBeTruthy();
+    expect(
+      within(screen.getByRole('list', { name: 'Not in any story' })).getByRole('button', {
+        name: 'Old sketch',
+      }),
+    ).toBeTruthy();
+
+    // A story's own picture can be shared with every story.
+    await userEvent.click(within(mine).getByRole('button', { name: 'Lamp room' }));
+    expect(await screen.findByTestId('image-scope')).toHaveTextContent(
+      'Only “The Unsigned Letter”',
+    );
+    await userEvent.click(screen.getByRole('button', { name: 'Share with all stories' }));
+    expect(invoke).toHaveBeenCalledWith('set_image_scope', { assetId: 'img-3', storyId: null });
+    expect(await screen.findByText('Shared with all stories.')).toBeVisible();
+
+    // A shared one can be kept for one story.
+    await userEvent.click(screen.getAllByRole('button', { name: 'Harbor at dusk' })[0]!);
+    await userEvent.selectOptions(
+      await screen.findByRole('combobox', { name: 'Keep for one story only' }),
+      's1',
+    );
+    await userEvent.click(screen.getByRole('button', { name: 'Keep for that story' }));
+    expect(invoke).toHaveBeenCalledWith('set_image_scope', { assetId: 'img-1', storyId: 's1' });
+    expect(await screen.findByText('Kept for “The Unsigned Letter” only.')).toBeVisible();
   });
 });
 

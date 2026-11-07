@@ -50,11 +50,17 @@ async fn story(t: &TestDb, title: &str) -> StoryCreated {
 /// A story with a cover picture.
 async fn pictured(t: &TestDb, title: &str, shade: u8) -> (StoryCreated, String) {
     let s = story(t, title).await;
-    let img = import_bytes(&t.db, &AssetStore::new(t.dir.path()), png(shade), title)
-        .await
-        .unwrap()
-        .asset
-        .id;
+    let img = import_bytes(
+        &t.db,
+        &AssetStore::new(t.dir.path()),
+        png(shade),
+        title,
+        &crate::db::assets::ImportScope::Shared,
+    )
+    .await
+    .unwrap()
+    .asset
+    .id;
     rows::set_story_visual(&t.db, &s.story_id, &VisualSlot::Cover, Some(&img))
         .await
         .unwrap();

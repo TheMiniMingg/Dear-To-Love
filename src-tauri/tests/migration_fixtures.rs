@@ -69,6 +69,23 @@ async fn v3_fixture_upgrades_to_current() {
     .await
     .unwrap();
     assert_eq!((label.as_str(), links), ("Lantern", 1));
+    // Images from before story-only pictures stay shared with every story.
+    let shared: i64 = sqlx::query_scalar("SELECT shared FROM assets")
+        .fetch_one(db.reader())
+        .await
+        .unwrap();
+    assert_eq!(shared, 1);
+    let teller: (Option<String>, i64) = sqlx::query_as(
+        "SELECT storyteller_profile_id, storyteller_offline FROM stories WHERE id = 's3'",
+    )
+    .fetch_one(db.reader())
+    .await
+    .unwrap();
+    assert_eq!(
+        teller,
+        (None, 0),
+        "older stories follow the app's storyteller"
+    );
 }
 
 #[tokio::test]
@@ -94,6 +111,33 @@ async fn v5_fixture_upgrades_to_current() {
             .await
             .unwrap();
     assert_eq!((label.as_str(), event.as_str()), ("The winter pear", "g3"));
+}
+
+#[tokio::test]
+async fn v6_fixture_upgrades_to_current() {
+    let (db, _dir) = upgrade_fixture(6, include_str!("fixtures/data_v6.sql")).await;
+    let (profile, member): (Option<String>, String) = sqlx::query_as(
+        "SELECT s.storyteller_profile_id, a.story_id FROM stories s \
+         JOIN asset_stories a ON a.story_id = s.id WHERE s.id = 's6'",
+    )
+    .fetch_one(db.reader())
+    .await
+    .unwrap();
+    assert_eq!((profile.as_deref(), member.as_str()), (Some("p6"), "s6"));
+
+    // Deleting the connection sends the story back to the app's storyteller.
+    let mut tx = db.write_txn().await.unwrap();
+    sqlx::query("DELETE FROM provider_profiles WHERE id = 'p6'")
+        .execute(&mut *tx)
+        .await
+        .unwrap();
+    tx.commit().await.unwrap();
+    let profile: Option<String> =
+        sqlx::query_scalar("SELECT storyteller_profile_id FROM stories WHERE id = 's6'")
+            .fetch_one(db.reader())
+            .await
+            .unwrap();
+    assert_eq!(profile, None);
 }
 
 #[tokio::test]

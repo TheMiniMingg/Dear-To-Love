@@ -6,6 +6,7 @@ use sqlx::FromRow;
 use super::{new_id, now, Database};
 use crate::domain::provider::{
     AdapterKind, Billing, GenerationSettings, ProviderProfile, ProviderProfileInput,
+    StorytellerChoice,
 };
 use crate::errors::{AppError, AppResult};
 use crate::services::secrets::{provider_secret_ref, SecretStore};
@@ -220,6 +221,97 @@ pub async fn set_storyteller(db: &Database, profile_id: Option<&str>) -> AppResu
     Ok(())
 }
 
+/// The story's own storyteller choice, or `None` when it follows the app.
+pub async fn story_choice(
+    conn: &mut sqlx::SqliteConnection,
+    story_id: &str,
+) -> AppResult<Option<StorytellerChoice>> {
+    let row: Option<(Option<String>, i64)> = sqlx::query_as(
+        "SELECT storyteller_profile_id, storyteller_offline FROM stories WHERE id = ?",
+    )
+    .bind(story_id)
+    .fetch_optional(&mut *conn)
+    .await?;
+    let Some((profile, offline)) = row else {
+        return Err(AppError::not_found(format!("story {story_id} not found")));
+    };
+    Ok(match (offline != 0, profile) {
+        (true, _) => Some(StorytellerChoice::Offline),
+        (false, Some(id)) => Some(StorytellerChoice::Connection { id }),
+        (false, None) => None,
+    })
+}
+
+/// The connection this story's new replies use (`None`: offline): its own
+/// choice, or the app's storyteller when it has none.
+pub async fn story_storyteller(db: &Database, story_id: &str) -> AppResult<Option<String>> {
+    let mut conn = db.reader().acquire().await?;
+    match story_choice(&mut conn, story_id).await? {
+        Some(StorytellerChoice::Offline) => Ok(None),
+        Some(StorytellerChoice::Connection { id }) => Ok(Some(id)),
+        None => storyteller_tx(&mut conn).await,
+    }
+}
+
+/// [`story_storyteller`] for the story a route belongs to.
+pub async fn route_storyteller(db: &Database, route_id: &str) -> AppResult<Option<String>> {
+    let story_id: Option<String> = sqlx::query_scalar("SELECT story_id FROM routes WHERE id = ?")
+        .bind(route_id)
+        .fetch_optional(db.reader())
+        .await?;
+    let story_id =
+        story_id.ok_or_else(|| AppError::not_found(format!("route {route_id} not found")))?;
+    story_storyteller(db, &story_id).await
+}
+
+/// Sets (or, with `None`, clears) the story's own storyteller.
+pub async fn set_story_choice_tx(
+    conn: &mut sqlx::SqliteConnection,
+    story_id: &str,
+    choice: Option<&StorytellerChoice>,
+) -> AppResult<()> {
+    let (profile, offline) = match choice {
+        None => (None, 0),
+        Some(StorytellerChoice::Offline) => (None, 1),
+        Some(StorytellerChoice::Connection { id }) => {
+            let known: Option<i64> =
+                sqlx::query_scalar("SELECT 1 FROM provider_profiles WHERE id = ?")
+                    .bind(id)
+                    .fetch_optional(&mut *conn)
+                    .await?;
+            if known.is_none() {
+                return Err(AppError::invalid_input(
+                    "that AI connection was removed; choose another storyteller",
+                ));
+            }
+            (Some(id.as_str()), 0)
+        }
+    };
+    let done = sqlx::query(
+        "UPDATE stories SET storyteller_profile_id = ?, storyteller_offline = ? WHERE id = ?",
+    )
+    .bind(profile)
+    .bind(offline)
+    .bind(story_id)
+    .execute(&mut *conn)
+    .await?;
+    if done.rows_affected() == 0 {
+        return Err(AppError::not_found(format!("story {story_id} not found")));
+    }
+    Ok(())
+}
+
+pub async fn set_story_choice(
+    db: &Database,
+    story_id: &str,
+    choice: Option<&StorytellerChoice>,
+) -> AppResult<()> {
+    let mut tx = db.write_txn().await?;
+    set_story_choice_tx(&mut tx, story_id, choice).await?;
+    tx.commit().await?;
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -310,5 +402,65 @@ mod tests {
         let mut bad = input("  ");
         bad.api_key = None;
         assert!(save_profile(&t.db, &secrets, bad).await.is_err());
+    }
+
+    #[tokio::test]
+    async fn a_story_can_choose_its_own_storyteller() {
+        use crate::db::stories::create_story;
+        use crate::domain::story::CreateStoryInput;
+        use crate::domain::story_state::fixtures::lighthouse;
+
+        let t = test_db().await;
+        let secrets = MemoryStore::default();
+        let app = save_profile(&t.db, &secrets, input("Cloud")).await.unwrap();
+        let own = save_profile(&t.db, &secrets, input("Local")).await.unwrap();
+        set_storyteller(&t.db, Some(&app.id)).await.unwrap();
+        let story = create_story(
+            &t.db,
+            CreateStoryInput {
+                title: "Harbor".into(),
+                description: String::new(),
+                base_state: lighthouse(),
+                first_chapter_title: "One".into(),
+                chapter_outlines: vec![],
+            },
+        )
+        .await
+        .unwrap();
+        let id = &story.story_id;
+        assert_eq!(
+            story_storyteller(&t.db, id).await.unwrap(),
+            Some(app.id.clone())
+        );
+
+        set_story_choice(&t.db, id, Some(&StorytellerChoice::Offline))
+            .await
+            .unwrap();
+        assert_eq!(story_storyteller(&t.db, id).await.unwrap(), None);
+        assert_eq!(
+            storyteller(&t.db).await.unwrap(),
+            Some(app.id.clone()),
+            "the app's storyteller is unchanged"
+        );
+
+        let choice = StorytellerChoice::Connection { id: own.id.clone() };
+        set_story_choice(&t.db, id, Some(&choice)).await.unwrap();
+        assert_eq!(
+            story_storyteller(&t.db, id).await.unwrap(),
+            Some(own.id.clone())
+        );
+        let mut conn = t.db.reader().acquire().await.unwrap();
+        assert_eq!(story_choice(&mut conn, id).await.unwrap(), Some(choice));
+        drop(conn);
+
+        // Deleting that connection sends the story back to the app's choice.
+        delete_profile(&t.db, &secrets, &own.id).await.unwrap();
+        assert_eq!(
+            story_storyteller(&t.db, id).await.unwrap(),
+            Some(app.id.clone())
+        );
+        let missing = StorytellerChoice::Connection { id: own.id.clone() };
+        assert!(set_story_choice(&t.db, id, Some(&missing)).await.is_err());
+        assert!(set_story_choice(&t.db, "nope", None).await.is_err());
     }
 }

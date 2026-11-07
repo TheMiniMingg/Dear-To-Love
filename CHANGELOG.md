@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+- **Pictures for one story or for all.** Pictures added from a story's **Pictures**, or
+  while creating a story, belong to that story only; pictures added in **Images** can be used
+  in any story. **Images** shows them apart (for all stories, only in a story, and not in any
+  story) and can share a picture or keep it for one story. A story's pictures stay in the
+  library if the story is deleted.
+- **Pictures and storyteller while creating.** The wizard has a new **Pictures** step: add
+  pictures, pick the cover and background, give each character a portrait, and choose which
+  AI writes this story.
+- **A storyteller per story.** Click the storyteller's name above a story (or **Menu →
+  Storyteller**) to pick another one for that story only. Summaries, recaps and facts carry
+  over, so switching never loses the story.
 - **Eight more worlds**, each with a scenario: Northgate University (school life, with dice
   for exams), The Underhalls (a dungeon delve with orcs, goblins and lizardfolk), Neon Harbor
   (cyberpunk), The Dry Country (post-apocalyptic), Lumen City (superheroes), Dust Creek

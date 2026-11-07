@@ -5,6 +5,7 @@ import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type {
+  AssetDto,
   CreateStoryDraft,
   DraftProblem,
   QuickStartInput,
@@ -18,6 +19,11 @@ vi.mock('@tauri-apps/api/core', () => ({
   Channel: class {
     onmessage: (m: unknown) => void = () => undefined;
   },
+}));
+
+const openDialog = vi.fn();
+vi.mock('@tauri-apps/plugin-dialog', () => ({
+  open: (...args: unknown[]) => openDialog(...args),
 }));
 
 import { CreateWizardScreen } from '../features/create/CreateWizardScreen';
@@ -165,6 +171,19 @@ function compose(input: QuickStartInput): CreateStoryDraft {
 
 let saved: WizardDraft | null;
 let problems: DraftProblem[];
+const picture = (id: string, label: string, shared: boolean): AssetDto => ({
+  id,
+  mime: 'image/png',
+  width: 64,
+  height: 64,
+  byteSize: 2048,
+  label,
+  tags: [],
+  createdAt: '2026-11-06T00:00:00Z',
+  shared,
+  stories: [],
+});
+let library: AssetDto[];
 
 function lastCall(cmd: string): Record<string, unknown> | undefined {
   const calls = invoke.mock.calls.filter((c) => c[0] === cmd);
@@ -175,6 +194,7 @@ describe('Create a story', () => {
   beforeEach(() => {
     saved = null;
     problems = [];
+    library = [picture('img-harbor', 'Harbor', true)];
     invoke.mockReset();
     useUiStore.setState({ screen: { name: 'create' }, history: [] });
     invoke.mockImplementation(async (cmd: string, args: Record<string, unknown>) => {
@@ -195,6 +215,30 @@ describe('Create a story', () => {
           return problems;
         case 'create_story':
           return { storyId: 's', mainRouteId: 'route-9', headEventId: 'e', routeVersion: 1 };
+        case 'list_images':
+          return library;
+        case 'import_images': {
+          const mine = picture('img-me', 'Me', false);
+          library = [mine, ...library];
+          return [{ fileName: 'me.png', asset: mine, alreadyInLibrary: false, error: null }];
+        }
+        case 'list_connections':
+          return [
+            {
+              id: 'p1',
+              label: 'Home server',
+              adapter: 'openai_compatible',
+              baseUrl: 'http://127.0.0.1:8080/v1',
+              modelId: 'story-model',
+              billing: 'local',
+              hasKey: false,
+              settings: {},
+              createdAt: '',
+              updatedAt: '',
+            },
+          ];
+        case 'get_storyteller':
+          return { profileId: null, label: 'Offline storyteller', modelId: null, billing: 'local' };
         default:
           throw { code: 'NOT_FOUND', message: `unknown ${cmd}` };
       }
@@ -228,7 +272,7 @@ describe('Create a story', () => {
     await userEvent.click(screen.getByRole('checkbox', { name: /Sam/ }));
     expect(screen.queryByRole('textbox')).toBeNull();
 
-    await userEvent.click(screen.getByRole('button', { name: '5. Review' }));
+    await userEvent.click(screen.getByRole('button', { name: '6. Review' }));
     expect(await screen.findByLabelText('Story summary')).toHaveTextContent('Night Shift');
     await userEvent.click(await screen.findByRole('button', { name: 'Create story' }));
 
@@ -255,7 +299,7 @@ describe('Create a story', () => {
     expect(screen.getByRole('combobox', { name: 'Pronouns' })).toHaveDisplayValue(
       'Your own: xe/xem',
     );
-    await userEvent.click(screen.getByRole('button', { name: '5. Review' }));
+    await userEvent.click(screen.getByRole('button', { name: '6. Review' }));
     expect(await screen.findByLabelText('Story summary')).toHaveTextContent('(xe/xem)');
   });
 
@@ -313,7 +357,7 @@ describe('Create a story', () => {
     await userEvent.type(screen.getByRole('textbox', { name: /^Name/ }), 'Oona');
     await userEvent.type(screen.getByRole('textbox', { name: 'Age' }), '41');
 
-    await userEvent.click(screen.getByRole('button', { name: '5. Review' }));
+    await userEvent.click(screen.getByRole('button', { name: '6. Review' }));
     await userEvent.click(await screen.findByRole('button', { name: 'Create story' }));
     const draft = lastCall('create_story')?.draft as CreateStoryDraft;
     expect(draft.worldTemplateId).toBeNull();
@@ -387,7 +431,7 @@ describe('Create a story', () => {
       'slow burn{Enter}{Enter}rivals',
     );
     await userEvent.type(screen.getByRole('textbox', { name: 'Hard limits' }), 'gore');
-    await userEvent.click(screen.getByRole('button', { name: '5. Review' }));
+    await userEvent.click(screen.getByRole('button', { name: '6. Review' }));
     expect(await screen.findByLabelText('Story summary')).toHaveTextContent(
       'Romance, Horror · Adults only',
     );
@@ -427,7 +471,7 @@ describe('Create a story', () => {
       'Japanese',
     );
 
-    await userEvent.click(screen.getByRole('button', { name: '5. Review' }));
+    await userEvent.click(screen.getByRole('button', { name: '6. Review' }));
     const summary = await screen.findByLabelText('Story summary');
     expect(summary).toHaveTextContent('Thoughts and dialogue, no narrator');
     expect(summary).toHaveTextContent('in Japanese');
@@ -461,7 +505,7 @@ describe('Create a story', () => {
     await userEvent.click(screen.getByRole('button', { name: '4. Narration' }));
     const dice = await screen.findByRole('checkbox', { name: 'Roll dice for uncertain moments' });
     expect(dice).toBeChecked();
-    await userEvent.click(screen.getByRole('button', { name: '5. Review' }));
+    await userEvent.click(screen.getByRole('button', { name: '6. Review' }));
     const summary = await screen.findByLabelText('Story summary');
     expect(summary).toHaveTextContent('dice rolls');
     expect(summary).toHaveTextContent('Nerve 3');
@@ -486,12 +530,60 @@ describe('Create a story', () => {
   it('Review lists problems and links to the step that fixes them', async () => {
     problems = [{ step: 'character', message: 'Give your character a name.' }];
     render(<CreateWizardScreen />);
-    await userEvent.click(await screen.findByRole('button', { name: '5. Review' }));
+    await userEvent.click(await screen.findByRole('button', { name: '6. Review' }));
     const alert = await screen.findByRole('alert');
     expect(alert).toHaveTextContent('Give your character a name.');
     expect(screen.getByRole('button', { name: 'Create story' })).toBeDisabled();
     await userEvent.click(within(alert).getByRole('button', { name: 'Go to You' }));
     const heading = await screen.findByRole('heading', { name: 'Who do you play?' });
     await waitFor(() => expect(heading).toHaveFocus());
+  });
+
+  it('pictures for this story, a portrait and a storyteller reach the new story', async () => {
+    render(<CreateWizardScreen />);
+    await userEvent.click(await screen.findByRole('button', { name: '5. Pictures' }));
+    await screen.findByRole('heading', { name: 'Pictures and storyteller' });
+
+    // A picture added here belongs to this story only.
+    await userEvent.click(await screen.findByRole('button', { name: /Choose Your portrait/ }));
+    openDialog.mockResolvedValue(['/p/me.png']);
+    await userEvent.click(screen.getByRole('button', { name: 'Add for this story' }));
+    expect(invoke).toHaveBeenCalledWith('import_images', {
+      paths: ['/p/me.png'],
+      scope: { newStory: true },
+    });
+    const own = await screen.findByRole('list', { name: "This story's pictures" });
+    expect(within(own).getByRole('button', { name: 'Me' })).toHaveAttribute('aria-pressed', 'true');
+    expect(
+      within(screen.getByRole('list', { name: 'Pictures for all stories' })).getByRole('button', {
+        name: 'Harbor',
+      }),
+    ).toBeTruthy();
+    await userEvent.click(screen.getByRole('button', { name: 'Use this picture' }));
+
+    // A shared picture as the cover.
+    await userEvent.click(await screen.findByRole('button', { name: 'Choose Cover' }));
+    await userEvent.click(await screen.findByRole('button', { name: 'Harbor' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Use this picture' }));
+    expect(await screen.findByRole('button', { name: 'Remove Cover' })).toBeTruthy();
+
+    // This story uses its own connection.
+    await userEvent.click(await screen.findByRole('radio', { name: /Home server/ }));
+    expect(screen.getByRole('radio', { name: /Same as the app/ })).not.toBeChecked();
+    expect(screen.queryByRole('textbox')).toBeNull();
+
+    await userEvent.click(screen.getByRole('button', { name: '6. Review' }));
+    const summary = await screen.findByLabelText('Story summary');
+    expect(summary).toHaveTextContent('Cover and 1 portrait');
+    await waitFor(() => expect(summary).toHaveTextContent('Home server'));
+    await userEvent.click(await screen.findByRole('button', { name: 'Create story' }));
+
+    const draft = lastCall('create_story')?.draft as CreateStoryDraft;
+    expect(draft.pictures).toEqual([
+      { slot: 'portrait:@player', assetId: 'img-me' },
+      { slot: 'cover', assetId: 'img-harbor' },
+    ]);
+    expect(draft.storyImages).toEqual(['img-me']);
+    expect(draft.storyteller).toEqual({ kind: 'connection', id: 'p1' });
   });
 });

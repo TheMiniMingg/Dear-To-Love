@@ -73,30 +73,31 @@ fn n(v: usize) -> u32 {
 }
 
 pub async fn preview_context(db: &Database, route_id: &str) -> AppResult<ContextPreview> {
-    let (label, model_id, live, settings, pricing) = match providers::storyteller(db).await? {
-        Some(pid) => {
-            let row = providers::get_profile_row(db, &pid).await?;
-            let settings = row.settings();
-            let pricing = match row.billing() {
-                Billing::Local => Pricing::Free,
-                Billing::Paid => {
-                    let mut conn = db.reader().acquire().await?;
-                    match current_rate_card(&mut conn, &row.id, &row.model_id).await? {
-                        Some(card) => Pricing::Rates(card),
-                        None => Pricing::Unknown,
+    let (label, model_id, live, settings, pricing) =
+        match providers::route_storyteller(db, route_id).await? {
+            Some(pid) => {
+                let row = providers::get_profile_row(db, &pid).await?;
+                let settings = row.settings();
+                let pricing = match row.billing() {
+                    Billing::Local => Pricing::Free,
+                    Billing::Paid => {
+                        let mut conn = db.reader().acquire().await?;
+                        match current_rate_card(&mut conn, &row.id, &row.model_id).await? {
+                            Some(card) => Pricing::Rates(card),
+                            None => Pricing::Unknown,
+                        }
                     }
-                }
-            };
-            (row.label, row.model_id, true, settings, pricing)
-        }
-        None => (
-            MOCK_PROVIDER_LABEL.to_string(),
-            "offline".to_string(),
-            false,
-            GenerationSettings::default(),
-            Pricing::Free,
-        ),
-    };
+                };
+                (row.label, row.model_id, true, settings, pricing)
+            }
+            None => (
+                MOCK_PROVIDER_LABEL.to_string(),
+                "offline".to_string(),
+                false,
+                GenerationSettings::default(),
+                Pricing::Free,
+            ),
+        };
     let mut conn = db.reader().acquire().await?;
     let route = get_route(&mut conn, route_id).await?;
     let head = route

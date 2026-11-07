@@ -3,11 +3,11 @@ use tauri::State;
 use ts_rs::TS;
 
 use crate::db::providers;
-use crate::domain::provider::{ProviderProfile, ProviderProfileInput};
+use crate::domain::provider::{ProviderProfile, ProviderProfileInput, StorytellerChoice};
 use crate::errors::{AppResult, ErrorCode};
 use crate::services::adapters::Adapter;
 use crate::services::generation;
-use crate::services::reader::{storyteller_info, StorytellerInfo};
+use crate::services::reader::{story_storyteller_info, storyteller_info, StorytellerInfo};
 use crate::state::AppState;
 
 #[tauri::command]
@@ -42,6 +42,18 @@ pub async fn set_storyteller(
     let db = state.db()?;
     providers::set_storyteller(db, profile_id.as_deref()).await?;
     storyteller_info(db).await
+}
+
+/// One story's own storyteller; `None` makes it follow the app's again.
+#[tauri::command]
+pub async fn set_story_storyteller(
+    state: State<'_, AppState>,
+    story_id: String,
+    choice: Option<StorytellerChoice>,
+) -> AppResult<StorytellerInfo> {
+    let db = state.db()?;
+    providers::set_story_choice(db, &story_id, choice.as_ref()).await?;
+    story_storyteller_info(db, &story_id).await
 }
 
 #[derive(Debug, Clone, Serialize, TS)]

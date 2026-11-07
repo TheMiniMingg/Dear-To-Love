@@ -11,7 +11,7 @@ React screens -> src/api/commands.ts (typed invoke wrappers)
   -> Rust db/contract    startup consistency checks
   -> Rust db/runs        generation runs (CAS state machine)
   -> Rust db/usage       API usage ledger, rate cards, cost estimates
-  -> Rust db/providers   AI connections, chosen storyteller
+  -> Rust db/providers   AI connections, chosen storyteller (app or story)
   -> Rust db/assets      image library rows, story-default pictures,
                          reference scan for safe deletion
   -> Rust db/bookmarks   named places in a route's history
@@ -148,7 +148,10 @@ summaries  after each reply (background, never blocks play): when 16+ turns
 ```text
 import    read file (<= 20 MB) -> detect format from bytes -> decode (limits)
           -> sha256 -> same hash? reuse row : write original + thumbnail
-          (temp file, flush, rename) -> insert row
+          (temp file, flush, rename) -> insert row -> apply scope
+          (all stories | one story | the story being created)
+available shared, or the story is in asset_stories (checked for defaults,
+          route edits and pictures picked while creating)
 picture   effective(slot) = this route's setVisualRef up to the head
                             else the story default (asset_links)
 delete    refused while a default, a starting state or any edit event on
@@ -156,7 +159,8 @@ delete    refused while a default, a starting state or any edit event on
 ```
 
 - Slots: `cover` (story only), `background`, `portrait:<character id>`.
-  See ADR 0006.
+  See ADR 0006, and ADR 0017 for story-only pictures and a storyteller per
+  story.
 
 ## Storypacks and text export
 

@@ -2,11 +2,12 @@
 
 use sqlx::{Row, SqliteConnection};
 
-use super::{new_id, now, Database};
+use super::{assets, new_id, now, providers, Database};
 use crate::domain::events::{ChapterStartPayload, EventKind, EVENT_PAYLOAD_VERSION};
-use crate::domain::story::{CreateStoryInput, StoryCreated, StorySummary};
+use crate::domain::story::{CreateStoryInput, StoryCreated, StorySetup, StorySummary};
 use crate::domain::story_state::{StoryStateV1, STORY_STATE_SCHEMA_VERSION};
-use crate::errors::{AppError, AppResult};
+use crate::domain::visuals::VisualSlot;
+use crate::errors::{AppError, AppResult, ErrorCode};
 use crate::services::prompt::StoryFrame;
 
 const MAX_TITLE: usize = 200;
@@ -14,6 +15,16 @@ const MAX_TITLE: usize = 200;
 /// Creates the story, its main route and the first `chapter_start` event in
 /// one transaction. The base state is immutable from here on.
 pub async fn create_story(db: &Database, input: CreateStoryInput) -> AppResult<StoryCreated> {
+    create_story_with(db, input, &StorySetup::default()).await
+}
+
+/// [`create_story`] plus the choices made while creating it (pictures, the
+/// story's own images, its storyteller), all in the same transaction.
+pub async fn create_story_with(
+    db: &Database,
+    input: CreateStoryInput,
+    setup: &StorySetup,
+) -> AppResult<StoryCreated> {
     let title = input.title.trim();
     if title.is_empty() || title.chars().count() > MAX_TITLE {
         return Err(AppError::invalid_input(format!(
@@ -108,6 +119,7 @@ pub async fn create_story(db: &Database, input: CreateStoryInput) -> AppResult<S
         .bind(&route_id)
         .execute(&mut *tx)
         .await?;
+    apply_setup(&mut tx, &story_id, &input.base_state, setup).await?;
     tx.commit().await?;
 
     Ok(StoryCreated {
@@ -143,6 +155,40 @@ pub async fn get_base_state(db: &Database, story_id: &str) -> AppResult<StorySta
         .await?
         .ok_or_else(|| AppError::not_found(format!("story {story_id} not found")))?;
     StoryStateV1::from_json(row.get::<&str, _>(0))
+}
+
+async fn apply_setup(
+    conn: &mut SqliteConnection,
+    story_id: &str,
+    state: &StoryStateV1,
+    setup: &StorySetup,
+) -> AppResult<()> {
+    for id in &setup.own_images {
+        let row = assets::find(&mut *conn, id).await?.ok_or_else(|| {
+            AppError::new(
+                ErrorCode::AssetMissing,
+                "a picture added for this story is no longer in the library",
+            )
+        })?;
+        // A shared image stays shared: other stories may already use it.
+        if row.shared == 0 {
+            assets::add_to_story(&mut *conn, id, story_id).await?;
+        }
+    }
+    for (slot, asset_id) in &setup.pictures {
+        if let VisualSlot::Portrait(cid) = slot {
+            if !state.characters.contains_key(cid) {
+                return Err(AppError::invalid_input(format!(
+                    "a portrait is set for {cid}, who isn't in the story"
+                )));
+            }
+        }
+        assets::set_link_tx(&mut *conn, story_id, slot, Some(asset_id)).await?;
+    }
+    if setup.storyteller.is_some() {
+        providers::set_story_choice_tx(&mut *conn, story_id, setup.storyteller.as_ref()).await?;
+    }
+    Ok(())
 }
 
 /// The title, premise and the outline of chapter `chapter_ordinal` (when

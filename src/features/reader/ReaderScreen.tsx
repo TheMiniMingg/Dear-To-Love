@@ -31,6 +31,7 @@ import { NarrativeView } from './NarrativeView';
 import { PicturesPanel } from './PicturesPanel';
 import { ScenePictures } from './ScenePictures';
 import { StoryDetailsPanel } from './StoryDetailsPanel';
+import { StorytellerPanel } from './StorytellerPanel';
 
 type Panel =
   | null
@@ -45,6 +46,7 @@ type Panel =
   | 'context'
   | 'export'
   | 'search'
+  | 'storyteller'
   | 'end';
 
 const PANEL_TITLES: Record<Exclude<Panel, null>, string> = {
@@ -59,6 +61,7 @@ const PANEL_TITLES: Record<Exclude<Panel, null>, string> = {
   context: 'Preview context',
   export: 'Export',
   search: 'Story search',
+  storyteller: 'Storyteller',
   end: 'End chapter',
 };
 
@@ -461,11 +464,11 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
           <button
             type="button"
             className="chip chip-button"
-            onClick={() => navigate({ name: 'settings' })}
+            onClick={() => setPanel('storyteller')}
             title={
               view.storyteller.profileId
-                ? `Replies come from ${view.storyteller.label} (${view.storyteller.modelId ?? ''}). Click to change.`
-                : 'Replies come from the built-in offline storyteller. Click to connect an AI model.'
+                ? `Replies come from ${view.storyteller.label} (${view.storyteller.modelId ?? ''}). Click to change it for this story.`
+                : 'Replies come from the built-in offline storyteller. Click to choose another for this story.'
             }
           >
             {view.storyteller.label}
@@ -652,7 +655,11 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
             panel === 'context' || panel === 'details' || panel === 'pictures' || panel === 'end'
           }
           onClose={() =>
-            setPanel(panel === 'menu' || panel === 'edit' || panel === 'end' ? null : 'menu')
+            setPanel(
+              panel === 'menu' || panel === 'edit' || panel === 'end' || panel === 'storyteller'
+                ? null
+                : 'menu',
+            )
           }
           initialFocusId={
             panel === 'menu'
@@ -704,6 +711,9 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
               )}
               <button type="button" onClick={() => setPanel('pictures')}>
                 Pictures
+              </button>
+              <button type="button" onClick={() => setPanel('storyteller')}>
+                Storyteller
               </button>
               <button type="button" onClick={() => setPanel('search')}>
                 Story search
@@ -804,6 +814,17 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
                 setView(v);
                 setSaveStatus(`${status} ${timeNow()}`);
               }}
+            />
+          )}
+          {panel === 'storyteller' && (
+            <StorytellerPanel
+              storyId={view.story.id}
+              current={view.storyteller}
+              onChanged={(info) => {
+                setView((v) => (v ? { ...v, storyteller: info } : v));
+                setSaveStatus(`Storyteller: ${info.label} ${timeNow()}`);
+              }}
+              onOpenSettings={() => navigate({ name: 'settings' })}
             />
           )}
           {panel === 'details' && (

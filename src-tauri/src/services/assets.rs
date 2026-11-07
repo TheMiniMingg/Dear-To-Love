@@ -16,7 +16,7 @@ use image::metadata::Orientation;
 use image::{DynamicImage, ImageDecoder, ImageFormat, ImageReader, Limits};
 use sha2::{Digest, Sha256};
 
-use crate::db::assets::{self, AssetDto, AssetRow, NewAsset};
+use crate::db::assets::{self, AssetDto, AssetRow, ImportScope, NewAsset};
 use crate::db::{new_id, Database};
 use crate::errors::{AppError, AppResult, ErrorCode};
 
@@ -183,11 +183,13 @@ pub struct Imported {
 
 /// Adds an image from memory. The same bytes twice give the same library
 /// image (one stored file); every story link to it stays independent.
+/// `scope` says which stories may use it.
 pub async fn import_bytes(
     db: &Database,
     store: &AssetStore,
     bytes: Vec<u8>,
     label: &str,
+    scope: &ImportScope,
 ) -> AppResult<Imported> {
     if bytes.is_empty() {
         return Err(not_an_image());
@@ -209,7 +211,7 @@ pub async fn import_bytes(
             );
         }
         return Ok(Imported {
-            asset: row.to_dto(),
+            asset: assets::apply_import_scope(db, &row, false, scope).await?,
             already_in_library: true,
         });
     }
@@ -250,14 +252,19 @@ pub async fn import_bytes(
     )
     .await?;
     Ok(Imported {
-        asset: row.to_dto(),
+        asset: assets::apply_import_scope(db, &row, inserted, scope).await?,
         already_in_library: !inserted,
     })
 }
 
 /// Reads and adds one image file. The name (without extension) becomes the
 /// image's label.
-pub async fn import_file(db: &Database, store: &AssetStore, path: &Path) -> AppResult<Imported> {
+pub async fn import_file(
+    db: &Database,
+    store: &AssetStore,
+    path: &Path,
+    scope: &ImportScope,
+) -> AppResult<Imported> {
     let meta = tokio::fs::metadata(path)
         .await
         .map_err(|_| AppError::new(ErrorCode::Io, "the file could not be opened"))?;
@@ -276,7 +283,7 @@ pub async fn import_file(db: &Database, store: &AssetStore, path: &Path) -> AppR
         .and_then(|s| s.to_str())
         .unwrap_or("")
         .to_string();
-    import_bytes(db, store, bytes, &label).await
+    import_bytes(db, store, bytes, &label, scope).await
 }
 
 async fn repair_files(store: &AssetStore, row: &AssetRow, bytes: Vec<u8>) -> AppResult<()> {

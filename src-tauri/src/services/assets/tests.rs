@@ -1,5 +1,6 @@
 use super::*;
 use crate::db::assets as rows;
+use crate::db::assets::ImportScope;
 use crate::db::stories::{create_story, delete_story};
 use crate::db::test_support::{test_db, TestDb};
 use crate::db::timeline::{append_event, fork_route, set_route_hidden, AppendEvent};
@@ -118,10 +119,10 @@ async fn same_image_twice_is_stored_once_and_links_stay_independent() {
     let t = test_db().await;
     let s = store(&t);
     let bytes = png(600, 400, 7);
-    let first = import_bytes(&t.db, &s, bytes.clone(), "Harbor")
+    let first = import_bytes(&t.db, &s, bytes.clone(), "Harbor", &ImportScope::Shared)
         .await
         .unwrap();
-    let second = import_bytes(&t.db, &s, bytes, "Harbor again")
+    let second = import_bytes(&t.db, &s, bytes, "Harbor again", &ImportScope::Shared)
         .await
         .unwrap();
     assert!(!first.already_in_library);
@@ -166,7 +167,7 @@ async fn same_image_twice_is_stored_once_and_links_stay_independent() {
 async fn image_in_any_history_cannot_be_deleted() {
     let t = test_db().await;
     let s = store(&t);
-    let img = import_bytes(&t.db, &s, png(50, 50, 9), "Storm")
+    let img = import_bytes(&t.db, &s, png(50, 50, 9), "Storm", &ImportScope::Shared)
         .await
         .unwrap()
         .asset;
@@ -264,7 +265,7 @@ async fn image_in_any_history_cannot_be_deleted() {
 async fn story_defaults_block_delete_and_name_the_character() {
     let t = test_db().await;
     let s = store(&t);
-    let img = import_bytes(&t.db, &s, jpeg(30, 30), "Mara")
+    let img = import_bytes(&t.db, &s, jpeg(30, 30), "Mara", &ImportScope::Shared)
         .await
         .unwrap()
         .asset;
@@ -304,12 +305,17 @@ async fn files_over_the_limit_are_refused_before_reading() {
     let path = t.dir.path().join("huge.png");
     let f = std::fs::File::create(&path).unwrap();
     f.set_len(MAX_IMAGE_BYTES + 1).unwrap();
-    let e = import_file(&t.db, &store(&t), &path).await.err().unwrap();
+    let e = import_file(&t.db, &store(&t), &path, &ImportScope::Shared)
+        .await
+        .err()
+        .unwrap();
     assert!(e.message.contains("larger than 20 MB"), "{}", e.message);
 
     let ok = t.dir.path().join("Ferry at dusk.png");
     std::fs::write(&ok, png(10, 10, 1)).unwrap();
-    let got = import_file(&t.db, &store(&t), &ok).await.unwrap();
+    let got = import_file(&t.db, &store(&t), &ok, &ImportScope::Shared)
+        .await
+        .unwrap();
     assert_eq!(got.asset.label, "Ferry at dusk");
 }
 
@@ -318,7 +324,7 @@ async fn health_check_finds_missing_files_and_reimport_repairs_them() {
     let t = test_db().await;
     let s = store(&t);
     let bytes = png(20, 20, 4);
-    let img = import_bytes(&t.db, &s, bytes.clone(), "x")
+    let img = import_bytes(&t.db, &s, bytes.clone(), "x", &ImportScope::Shared)
         .await
         .unwrap()
         .asset;
@@ -334,7 +340,9 @@ async fn health_check_finds_missing_files_and_reimport_repairs_them() {
         .unwrap()
         .is_none());
 
-    import_bytes(&t.db, &s, bytes, "x").await.unwrap();
+    import_bytes(&t.db, &s, bytes, "x", &ImportScope::Shared)
+        .await
+        .unwrap();
     assert!(check(&t.db, &s, true).await.unwrap().missing.is_empty());
 }
 
@@ -351,4 +359,245 @@ fn store_paths_stay_inside_the_assets_folder() {
     ] {
         assert!(s.path(bad).is_err(), "{bad}");
     }
+}
+
+/// Pictures for one story stay in that story; shared ones show everywhere.
+#[tokio::test]
+async fn story_only_images_stay_in_their_story() {
+    let t = test_db().await;
+    let s = store(&t);
+    let a = story(&t, "A").await;
+    let b = story(&t, "B").await;
+    let mine = import_bytes(
+        &t.db,
+        &s,
+        png(12, 12, 1),
+        "Mine",
+        &ImportScope::Story(a.story_id.clone()),
+    )
+    .await
+    .unwrap()
+    .asset;
+    assert!(!mine.shared);
+    assert_eq!(
+        mine.stories
+            .iter()
+            .map(|x| x.title.as_str())
+            .collect::<Vec<_>>(),
+        vec!["A"]
+    );
+    let all = import_bytes(&t.db, &s, png(12, 12, 2), "All", &ImportScope::Shared)
+        .await
+        .unwrap()
+        .asset;
+    assert!(all.shared && all.stories.is_empty());
+
+    // Story A can show it; story B can't, as a default or on a route.
+    rows::set_story_visual(&t.db, &a.story_id, &VisualSlot::Cover, Some(&mine.id))
+        .await
+        .unwrap();
+    let e = rows::set_story_visual(&t.db, &b.story_id, &VisualSlot::Cover, Some(&mine.id))
+        .await
+        .unwrap_err();
+    assert!(e.message.contains("another story"), "{}", e.message);
+    let e = crate::services::reader::edit_details(
+        &t.db,
+        &b.story_id,
+        &b.main_route_id,
+        &b.head_event_id,
+        vec![StateEdit::SetVisualRef {
+            slot: "background".into(),
+            asset_id: Some(mine.id.clone()),
+        }],
+        None,
+    )
+    .await
+    .unwrap_err();
+    assert!(e.message.contains("another story"), "{}", e.message);
+    rows::set_story_visual(&t.db, &b.story_id, &VisualSlot::Cover, Some(&all.id))
+        .await
+        .unwrap();
+
+    // The same picture added for story B too: it belongs to both.
+    let again = import_bytes(
+        &t.db,
+        &s,
+        png(12, 12, 1),
+        "Mine",
+        &ImportScope::Story(b.story_id.clone()),
+    )
+    .await
+    .unwrap();
+    assert!(again.already_in_library && !again.asset.shared);
+    assert_eq!(again.asset.stories.len(), 2);
+    // Added for all stories: it is shared from now on.
+    let shared = import_bytes(&t.db, &s, png(12, 12, 1), "Mine", &ImportScope::Shared)
+        .await
+        .unwrap()
+        .asset;
+    assert!(shared.shared && shared.stories.is_empty());
+    // A shared picture added "for this story" stays shared.
+    let still = import_bytes(
+        &t.db,
+        &s,
+        png(12, 12, 2),
+        "All",
+        &ImportScope::Story(a.story_id.clone()),
+    )
+    .await
+    .unwrap()
+    .asset;
+    assert!(still.shared);
+}
+
+/// Making a picture story-only keeps it in every story that shows it.
+#[tokio::test]
+async fn keeping_a_picture_for_one_story_keeps_it_where_it_is_used() {
+    let t = test_db().await;
+    let s = store(&t);
+    let a = story(&t, "A").await;
+    let b = story(&t, "B").await;
+    let img = import_bytes(&t.db, &s, png(12, 12, 3), "Fog", &ImportScope::Shared)
+        .await
+        .unwrap()
+        .asset;
+    rows::set_story_visual(&t.db, &b.story_id, &VisualSlot::Background, Some(&img.id))
+        .await
+        .unwrap();
+    let only = rows::set_scope(&t.db, &img.id, Some(&a.story_id))
+        .await
+        .unwrap();
+    assert!(!only.shared);
+    assert_eq!(
+        only.stories
+            .iter()
+            .map(|x| x.title.as_str())
+            .collect::<Vec<_>>(),
+        vec!["A", "B"]
+    );
+    let back = rows::set_scope(&t.db, &img.id, None).await.unwrap();
+    assert!(back.shared && back.stories.is_empty());
+    assert!(rows::set_scope(&t.db, &img.id, Some("no-such-story"))
+        .await
+        .is_err());
+}
+
+/// A story-only picture outlives its story: it waits in "Not in any story".
+#[tokio::test]
+async fn deleting_a_story_keeps_its_own_pictures_in_no_story() {
+    let t = test_db().await;
+    let s = store(&t);
+    let a = story(&t, "A").await;
+    let img = import_bytes(
+        &t.db,
+        &s,
+        png(12, 12, 4),
+        "Keep",
+        &ImportScope::Story(a.story_id.clone()),
+    )
+    .await
+    .unwrap()
+    .asset;
+    delete_story(&t.db, &a.story_id).await.unwrap();
+    let list = rows::list(&t.db).await.unwrap();
+    let got = list.iter().find(|x| x.id == img.id).unwrap();
+    assert!(!got.shared && got.stories.is_empty());
+    // Nothing shows it, so it can be deleted.
+    delete(&t.db, &s, &img.id).await.unwrap();
+}
+
+/// Pictures, story-only images and the storyteller picked in the wizard are
+/// saved with the new story.
+#[tokio::test]
+async fn a_new_story_keeps_the_pictures_picked_while_creating_it() {
+    use crate::db::stories::create_story_with;
+    use crate::domain::draft::{CreateStoryDraft, DraftPicture};
+    use crate::domain::provider::StorytellerChoice;
+
+    let t = test_db().await;
+    let s = store(&t);
+    let own = import_bytes(&t.db, &s, png(12, 12, 5), "Me", &ImportScope::NewStory)
+        .await
+        .unwrap()
+        .asset;
+    assert!(
+        !own.shared && own.stories.is_empty(),
+        "in no story until it is made"
+    );
+    let cover = import_bytes(&t.db, &s, png(12, 12, 6), "Cover", &ImportScope::Shared)
+        .await
+        .unwrap()
+        .asset;
+
+    let draft_named = |title: &str, setting: &str, name: &str, place: &str| {
+        let mut d = CreateStoryDraft {
+            title: title.into(),
+            first_chapter_title: "Arrival".into(),
+            ..CreateStoryDraft::default()
+        };
+        d.world.setting = setting.into();
+        d.player.name = name.into();
+        d.scene.location = place.into();
+        d
+    };
+    let mut draft = draft_named("Harbor", "A small coastal town", "Wren", "The pier");
+    draft.pictures = vec![
+        DraftPicture {
+            slot: "cover".into(),
+            asset_id: cover.id.clone(),
+        },
+        DraftPicture {
+            slot: "portrait:@player".into(),
+            asset_id: own.id.clone(),
+        },
+        DraftPicture {
+            slot: "portrait:gone".into(),
+            asset_id: own.id.clone(),
+        },
+    ];
+    draft.story_images = vec![own.id.clone()];
+    draft.storyteller = Some(StorytellerChoice::Offline);
+    let setup = draft.setup().unwrap();
+    assert_eq!(
+        setup.pictures.len(),
+        2,
+        "the portrait of a removed character is left out"
+    );
+    let created = create_story_with(&t.db, draft.into_story_input().unwrap(), &setup)
+        .await
+        .unwrap();
+
+    let visuals = rows::story_visuals(&t.db, &created.story_id).await.unwrap();
+    let mut slots: Vec<String> = visuals.iter().map(|v| v.slot.clone()).collect();
+    slots.sort();
+    assert_eq!(
+        slots,
+        vec!["cover".to_string(), "portrait:custom:player".to_string()]
+    );
+    let list = rows::list(&t.db).await.unwrap();
+    let got = list.iter().find(|x| x.id == own.id).unwrap();
+    assert_eq!(got.stories.len(), 1);
+    assert_eq!(got.stories[0].id, created.story_id);
+    assert!(list.iter().find(|x| x.id == cover.id).unwrap().shared);
+    let info = crate::services::reader::story_storyteller_info(&t.db, &created.story_id)
+        .await
+        .unwrap();
+    assert_eq!(info.story_choice, Some(StorytellerChoice::Offline));
+
+    // Another story's own picture can't be used in a new story.
+    let mut other = draft_named("Other", "A big city", "Sam", "A rooftop");
+    other.pictures = vec![DraftPicture {
+        slot: "background".into(),
+        asset_id: own.id.clone(),
+    }];
+    let setup = other.setup().unwrap();
+    let e = create_story_with(&t.db, other.into_story_input().unwrap(), &setup)
+        .await
+        .unwrap_err();
+    assert!(e.message.contains("another story"), "{}", e.message);
+    assert_eq!(
+        crate::db::stories::list_stories(&t.db).await.unwrap().len(),
+        1,
+        "nothing is saved when a picture is refused"
+    );
 }

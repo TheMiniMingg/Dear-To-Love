@@ -9,17 +9,33 @@ use std::collections::{BTreeMap, BTreeSet};
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 
-use super::story::{ChapterOutlineInput, CreateStoryInput};
+use super::provider::StorytellerChoice;
+use super::story::{ChapterOutlineInput, CreateStoryInput, StorySetup};
 use super::story_state::{
     names_a_minor, Character, ContentRating, Control, Narration, Relationship, Scene, Stat,
     StoryStateV1, World, STORY_STATE_SCHEMA_VERSION,
 };
 use super::templates::{check_id, SceneTemplate, PLAYER_PLACEHOLDER};
+use super::visuals::{VisualSlot, PORTRAIT_PREFIX};
 use crate::errors::{AppError, AppResult};
 
 pub const DRAFT_SCHEMA_VERSION: u32 = 1;
 /// Id given to a player character that did not come from a template.
 pub const CUSTOM_PLAYER_ID: &str = "custom:player";
+/// Most pictures and story-only images one draft may name.
+pub const MAX_DRAFT_PICTURES: usize = 64;
+pub const MAX_DRAFT_IMAGES: usize = 200;
+
+/// A picture picked while creating: a slot (`cover`, `background`,
+/// `portrait:<character id>`, with `portrait:@player` for the player) and
+/// a library image.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct DraftPicture {
+    pub slot: String,
+    pub asset_id: String,
+}
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
 #[serde(rename_all = "camelCase", default)]
@@ -46,6 +62,18 @@ pub struct CreateStoryDraft {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
     pub story_type: Option<String>,
+    /// Pictures picked while creating.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    #[ts(as = "Option<Vec<DraftPicture>>", optional)]
+    pub pictures: Vec<DraftPicture>,
+    /// Images added while creating that belong to this story only.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    #[ts(as = "Option<Vec<String>>", optional)]
+    pub story_images: Vec<String>,
+    /// Who writes the replies; absent: the app's storyteller.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub storyteller: Option<StorytellerChoice>,
 }
 
 impl Default for CreateStoryDraft {
@@ -71,6 +99,9 @@ impl Default for CreateStoryDraft {
             first_chapter_title: String::new(),
             chapter_outlines: vec![],
             story_type: None,
+            pictures: vec![],
+            story_images: vec![],
+            storyteller: None,
         }
     }
 }
@@ -84,6 +115,7 @@ pub enum DraftStep {
     Character,
     Story,
     Narration,
+    Pictures,
     Review,
 }
 
@@ -291,6 +323,48 @@ impl CreateStoryDraft {
     }
 
     /// Validate and turn the draft into the input for `create_story`.
+    /// The pictures, story-only images and storyteller picked while
+    /// creating. Portraits of characters no longer in the draft are left
+    /// out.
+    pub fn setup(&self) -> AppResult<StorySetup> {
+        if self.pictures.len() > MAX_DRAFT_PICTURES || self.story_images.len() > MAX_DRAFT_IMAGES {
+            return Err(AppError::invalid_input("this story has too many pictures"));
+        }
+        let player_id = self.player_id();
+        let npc_ids: BTreeSet<String> = self.npcs.iter().map(|n| n.id.trim().to_string()).collect();
+        let mut pictures: Vec<(VisualSlot, String)> = Vec::new();
+        for p in &self.pictures {
+            let key = match p.slot.strip_prefix(PORTRAIT_PREFIX) {
+                Some(PLAYER_PLACEHOLDER) => format!("{PORTRAIT_PREFIX}{player_id}"),
+                _ => p.slot.clone(),
+            };
+            let slot = VisualSlot::parse(&key)?;
+            if let VisualSlot::Portrait(cid) = &slot {
+                if cid != &player_id && !npc_ids.contains(cid) {
+                    continue;
+                }
+            }
+            let asset = p.asset_id.trim();
+            if asset.is_empty() {
+                continue;
+            }
+            pictures.retain(|(s, _)| s != &slot);
+            pictures.push((slot, asset.to_string()));
+        }
+        let mut seen = BTreeSet::new();
+        let own_images = self
+            .story_images
+            .iter()
+            .map(|i| i.trim().to_string())
+            .filter(|i| !i.is_empty() && seen.insert(i.clone()))
+            .collect();
+        Ok(StorySetup {
+            pictures,
+            own_images,
+            storyteller: self.storyteller.clone(),
+        })
+    }
+
     pub fn into_story_input(self) -> AppResult<CreateStoryInput> {
         if let Some(p) = self.check().into_iter().next() {
             return Err(AppError::invalid_input(p.message));
