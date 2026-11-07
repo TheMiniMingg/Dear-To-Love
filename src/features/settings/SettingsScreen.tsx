@@ -15,10 +15,19 @@ type Note = { tone: 'ok' | 'warn' | 'error'; text: string };
 export function SettingsScreen() {
   const goBack = useUiStore((s) => s.goBack);
   const navigate = useUiStore((s) => s.navigate);
+  // The setup guide's Set it up here opens a new connection for that service.
+  const newConnection = useUiStore((s) => s.newConnection);
+  const clearNewConnection = useUiStore((s) => s.clearNewConnection);
   const [connections, setConnections] = useState<ProviderProfile[] | null>(null);
   const [storyteller, setStoryteller] = useState<StorytellerInfo | null>(null);
   const [pictureMaker, setPictureMaker] = useState<string | null>(null);
-  const [editing, setEditing] = useState<ProviderProfile | 'new' | null>(null);
+  const [editing, setEditingState] = useState<ProviderProfile | 'new' | null>(() =>
+    useUiStore.getState().newConnection ? 'new' : null,
+  );
+  const setEditing = (e: ProviderProfile | 'new' | null) => {
+    if (e === null) clearNewConnection();
+    setEditingState(e);
+  };
   const [deleting, setDeleting] = useState<ProviderProfile | null>(null);
   const [notes, setNotes] = useState<Record<string, Note>>({});
   const [busyId, setBusyId] = useState<string | null>(null);
@@ -113,6 +122,9 @@ export function SettingsScreen() {
         </button>
         <h1 id="settings-title">{t('Settings')}</h1>
         <div className="button-row">
+          <button type="button" onClick={() => navigate({ name: 'guide' })}>
+            {t('Setup guide')}
+          </button>
           <button type="button" onClick={() => navigate({ name: 'usage' })}>
             {t('Usage & budget')}
           </button>
@@ -232,6 +244,19 @@ export function SettingsScreen() {
             )}
           </p>
         )}
+        <p className="muted small">
+          {tr('Not sure which to choose, or where to get a key? {guide} walks you through it.', {
+            guide: (
+              <button
+                type="button"
+                className="link-button"
+                onClick={() => navigate({ name: 'guide' })}
+              >
+                {t('The setup guide')}
+              </button>
+            ),
+          })}
+        </p>
         <ul className="connection-list">
           {connections?.map((c) => {
             const n = notes[c.id];
@@ -314,11 +339,13 @@ export function SettingsScreen() {
         >
           <ConnectionForm
             existing={editing === 'new' ? null : editing}
+            preset={editing === 'new' ? (newConnection ?? undefined) : undefined}
             onCancel={() => setEditing(null)}
             onSaved={(p) => {
               setEditing(null);
               setReload((n) => n + 1);
-              if (editing !== 'new') return;
+              // Only once the current choices are known.
+              if (editing !== 'new' || !connections) return;
               // The first connection of each kind is put to use.
               if (makesPictures(p)) {
                 if (pictureMaker === null) void choosePictures(p.id);

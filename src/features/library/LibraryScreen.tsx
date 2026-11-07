@@ -132,6 +132,9 @@ export function LibraryScreen() {
         <button type="button" onClick={() => navigate({ name: 'images' })}>
           {t('Images')}
         </button>
+        <button type="button" onClick={() => navigate({ name: 'guide' })}>
+          {t('Setup guide')}
+        </button>
         <button type="button" disabled={importing} onClick={() => void importPack()}>
           {t('Import storypack')}
         </button>
@@ -158,6 +161,14 @@ export function LibraryScreen() {
               },
             )}
           </p>
+          <p className="muted">
+            {t(
+              'The setup guide shows how to connect an AI model, with links to get a key from each service or to run one on this computer.',
+            )}
+          </p>
+          <button type="button" onClick={() => navigate({ name: 'guide' })}>
+            {t('Open the setup guide')}
+          </button>
         </div>
       )}
       <div ref={listRef} className="story-list" onKeyDown={onKeyDown}>

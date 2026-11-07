@@ -239,6 +239,7 @@ pub fn run() {
             commands::app::save_diagnostics_report,
             commands::app::open_support_page,
             commands::app::open_repository_page,
+            commands::app::open_guide_link,
             commands::app::frontend_ready,
             commands::updates::get_update_status,
             commands::updates::check_for_updates,

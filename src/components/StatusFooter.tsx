@@ -65,6 +65,9 @@ export function StatusFooter() {
       >
         {t('Diagnostics')}
       </button>
+      <button type="button" className="link-button" onClick={() => navigate({ name: 'guide' })}>
+        {t('Setup guide')}
+      </button>
       <button
         type="button"
         className="link-button"

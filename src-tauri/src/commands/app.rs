@@ -106,6 +106,27 @@ pub fn open_repository_page(app: AppHandle) -> AppResult<()> {
         .map_err(|e| AppError::internal(format!("could not open the browser: {e}")))
 }
 
+/// The setup guide's outside pages, by name. The interface reads the same
+/// file (src/features/guide/links.json), so it can only ask for one of these
+/// pages, never for an address of its own.
+const GUIDE_LINKS: &str = include_str!("../../../src/features/guide/links.json");
+
+fn guide_link(id: &str) -> Option<String> {
+    let links: std::collections::HashMap<String, String> =
+        serde_json::from_str(GUIDE_LINKS).ok()?;
+    links.get(id).filter(|u| u.starts_with("https://")).cloned()
+}
+
+/// Opens one of the setup guide's pages (a service's key or model page) in
+/// the system browser.
+#[tauri::command]
+pub fn open_guide_link(app: AppHandle, id: String) -> AppResult<()> {
+    let url = guide_link(&id).ok_or_else(|| AppError::not_found("no such guide page"))?;
+    app.opener()
+        .open_url(url, None::<&str>)
+        .map_err(|e| AppError::internal(format!("could not open the browser: {e}")))
+}
+
 /// Opens the configured "Support development" page in the system browser.
 #[tauri::command]
 pub fn open_support_page(app: AppHandle) -> AppResult<()> {
@@ -155,4 +176,26 @@ pub async fn finish_smoke(app: AppHandle, frontend: bool) {
         }
     };
     app.exit(code);
+}
+
+#[cfg(test)]
+mod guide_link_tests {
+    use super::*;
+
+    #[test]
+    fn guide_links_are_https_pages_looked_up_by_name() {
+        let links: std::collections::HashMap<String, String> =
+            serde_json::from_str(GUIDE_LINKS).expect("links.json parses");
+        assert!(links.len() > 20);
+        for (id, url) in &links {
+            assert!(url.starts_with("https://"), "{id} is not https: {url}");
+            assert!(!url.contains(char::is_whitespace), "{id} has a space");
+        }
+        assert_eq!(
+            guide_link("openai-keys").as_deref(),
+            Some("https://platform.openai.com/api-keys")
+        );
+        assert_eq!(guide_link("https://example.com"), None);
+        assert_eq!(guide_link("nope"), None);
+    }
 }

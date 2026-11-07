@@ -303,6 +303,8 @@ export const commands = {
     call<string>('save_diagnostics_report', { path, report }),
   openSupportPage: () => call<void>('open_support_page'),
   openRepositoryPage: () => call<void>('open_repository_page'),
+  /** Opens a setup guide page (by its name in features/guide/links.json) in the browser. */
+  openGuideLink: (id: string) => call<void>('open_guide_link', { id }),
   /** The interface has loaded. Only the installer smoke test acts on it. */
   frontendReady: () => call<void>('frontend_ready'),
   /** What is known about updates; never goes online. */

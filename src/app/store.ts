@@ -12,7 +12,8 @@ export type Screen =
   | { name: 'settings' }
   | { name: 'usage' }
   | { name: 'images' }
-  | { name: 'backups' };
+  | { name: 'backups' }
+  | { name: 'guide' };
 
 const HISTORY_LIMIT = 10;
 const TEXT_SIZE_KEY = 'dtl.textSize';
@@ -42,6 +43,11 @@ type UiState = {
   setDraft: (routeId: string, text: string) => void;
   clearDraft: (routeId: string) => void;
   stepTextSize: (delta: 1 | -1) => void;
+  /** A service the setup guide asked Settings to add (a connection preset id). */
+  newConnection: string | null;
+  /** Opens Settings with a new connection for this preset. */
+  addConnection: (preset: string) => void;
+  clearNewConnection: () => void;
 };
 
 export const useUiStore = create<UiState>((set) => ({
@@ -50,6 +56,14 @@ export const useUiStore = create<UiState>((set) => ({
   drafts: {},
   textSize: loadTextSize(),
   updates: null,
+  newConnection: null,
+  addConnection: (preset) =>
+    set((s) => ({
+      newConnection: preset,
+      screen: { name: 'settings' },
+      history: [...s.history, s.screen].slice(-HISTORY_LIMIT),
+    })),
+  clearNewConnection: () => set({ newConnection: null }),
   setUpdates: (updates) => set({ updates }),
   navigate: (screen) =>
     set((s) => ({ screen, history: [...s.history, s.screen].slice(-HISTORY_LIMIT) })),

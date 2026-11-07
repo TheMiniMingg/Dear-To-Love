@@ -11,31 +11,45 @@ const DEFAULT_CONTEXT_TOKENS = 16000;
 
 type Props = {
   existing: ProviderProfile | null;
+  /** For a new connection: the service to start from (a preset id). */
+  preset?: string;
   onSaved: (p: ProviderProfile) => void;
   onCancel: () => void;
 };
 
 /** Add or edit a connection to an AI service. The key goes to the OS credential store. */
-export function ConnectionForm({ existing, onSaved, onCancel }: Props) {
+export function ConnectionForm({ existing, preset: startPreset, onSaved, onCancel }: Props) {
   const id = useId();
-  const [label, setLabel] = useState(existing?.label ?? '');
-  const [adapter, setAdapter] = useState<AdapterKind>(existing?.adapter ?? 'openai_compatible');
-  const [baseUrl, setBaseUrl] = useState(existing?.baseUrl ?? '');
-  const [modelId, setModelId] = useState(existing?.modelId ?? '');
-  const [billing, setBilling] = useState<Billing>(existing?.billing ?? 'paid');
+  const start = existing ? null : (PRESETS.find((x) => x.id === startPreset) ?? null);
+  const from = start && start.id !== 'custom' ? start : null;
+  const [label, setLabel] = useState(existing?.label ?? (from ? t(from.label) : ''));
+  const [adapter, setAdapter] = useState<AdapterKind>(
+    existing?.adapter ?? from?.adapter ?? 'openai_compatible',
+  );
+  const [baseUrl, setBaseUrl] = useState(existing?.baseUrl ?? from?.baseUrl ?? '');
+  const [modelId, setModelId] = useState(
+    existing?.modelId ?? (from?.model && makesPictures(from) ? from.model : ''),
+  );
+  const [billing, setBilling] = useState<Billing>(existing?.billing ?? from?.billing ?? 'paid');
   const [apiKey, setApiKey] = useState('');
   const [removeKey, setRemoveKey] = useState(false);
   const [temperature, setTemperature] = useState(String(existing?.settings.temperature ?? 0.9));
-  const [maxTokens, setMaxTokens] = useState(String(existing?.settings.maxOutputTokens ?? 700));
+  const [maxTokens, setMaxTokens] = useState(
+    String(existing?.settings.maxOutputTokens ?? from?.replyTokens ?? 700),
+  );
   const [contextTokens, setContextTokens] = useState(
-    String(existing?.settings.maxContextTokens ?? DEFAULT_CONTEXT_TOKENS),
+    String(existing?.settings.maxContextTokens ?? from?.contextTokens ?? DEFAULT_CONTEXT_TOKENS),
   );
   const [timeoutS, setTimeoutS] = useState(
-    String(Math.round((existing?.settings.timeoutMs ?? 120000) / 1000)),
+    existing
+      ? String(Math.round(existing.settings.timeoutMs / 1000))
+      : from?.group === 'pictures'
+        ? '300'
+        : '120',
   );
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [preset, setPreset] = useState<Preset | null>(null);
+  const [preset, setPreset] = useState<Preset | null>(start);
   const pictures = makesPictures({ adapter });
 
   const applyPreset = (presetId: string) => {
@@ -50,7 +64,8 @@ export function ConnectionForm({ existing, onSaved, onCancel }: Props) {
     // Pictures can take minutes on a home computer.
     if (p.group === 'pictures') setTimeoutS('300');
     if (p.model && makesPictures(p)) setModelId(p.model);
-    if (!label.trim() || PRESETS.some((x) => x.label === label)) setLabel(p.label);
+    if (!label.trim() || PRESETS.some((x) => t(x.label) === label || x.label === label))
+      setLabel(t(p.label));
   };
 
   const submit = async () => {
@@ -101,7 +116,7 @@ export function ConnectionForm({ existing, onSaved, onCancel }: Props) {
           <label htmlFor={`${id}-preset`}>{t('Service')}</label>
           <select
             id={`${id}-preset`}
-            defaultValue="custom"
+            defaultValue={start?.id ?? 'custom'}
             onChange={(e) => applyPreset(e.target.value)}
           >
             {GROUPS.map((g) => (
