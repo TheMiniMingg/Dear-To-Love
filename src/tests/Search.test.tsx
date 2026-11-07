@@ -134,7 +134,7 @@ describe('Story search', () => {
     expect(block('ev-3')).toHaveClass('event-focus');
 
     // The last search is still there when the panel opens again.
-    await userEvent.click(screen.getByRole('button', { name: 'Search (Ctrl+F)' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Search' }));
     const again = await screen.findByRole('dialog', { name: 'Story search' });
     expect(within(again).getByLabelText('Search Main')).toHaveValue('lamp');
     expect(within(again).getAllByRole('listitem').length).toBeGreaterThanOrEqual(2);
@@ -158,7 +158,7 @@ describe('Story search', () => {
     );
 
     // Pause menu -> Story search lists it.
-    await userEvent.click(screen.getByRole('button', { name: 'Open menu (Escape)' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Menu' }));
     await userEvent.click(await screen.findByRole('button', { name: 'Story search' }));
     let dialog = await screen.findByRole('dialog', { name: 'Story search' });
     const list = within(dialog).getByRole('list', { name: 'Bookmarks on Main' });
@@ -171,7 +171,7 @@ describe('Story search', () => {
     await waitFor(() => expect(block('ev-3')).toHaveFocus());
 
     // Rename, then remove.
-    await userEvent.click(screen.getByRole('button', { name: 'Search (Ctrl+F)' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Search' }));
     dialog = await screen.findByRole('dialog', { name: 'Story search' });
     await userEvent.click(
       within(dialog).getByRole('button', { name: 'Rename bookmark The lamp hums like a hive.' }),
@@ -220,7 +220,7 @@ describe('Story search', () => {
     });
     render(<ReaderScreen routeId="route-1" />);
     await screen.findByText('The lamp hums like a hive.');
-    await userEvent.click(screen.getByRole('button', { name: 'Search (Ctrl+F)' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Search' }));
     const dialog = await screen.findByRole('dialog', { name: 'Story search' });
     await userEvent.type(within(dialog).getByLabelText('Search Main'), 'ferry{Enter}');
     expect(await within(dialog).findByRole('status')).toHaveTextContent(

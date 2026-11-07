@@ -524,12 +524,6 @@ export const reader: Messages = {
     '응답은 내장된 오프라인 이야기꾼이 씁니다. 클릭하면 이 스토리의 다른 이야기꾼을 고를 수 있습니다.',
   ],
   'Working…': ['正在处理…', '正在處理…', '処理中…', '처리하는 중…'],
-  'Open menu (Escape)': [
-    '打开菜单（Esc）',
-    '開啟選單（Esc）',
-    'メニューを開く（Esc）',
-    '메뉴 열기 (Esc)',
-  ],
   Menu: ['菜单', '選單', 'メニュー', '메뉴'],
   "You've reached your monthly budget: about {spent} of {limit}.": [
     '已达到每月预算：约 {spent} / {limit}。',
@@ -614,7 +608,6 @@ export const reader: Messages = {
     '이 챕터를 요약하고 저장한 뒤 다음 챕터 시작',
   ],
   'Routes ({n})': ['路线（{n}）', '路線（{n}）', 'ルート（{n}）', '루트 ({n})'],
-  'Search (Ctrl+F)': ['搜索（Ctrl+F）', '搜尋（Ctrl+F）', '検索（Ctrl+F）', '검색 (Ctrl+F)'],
   'Search this route and its bookmarks': [
     '搜索这条路线及其书签',
     '搜尋這條路線及其書籤',

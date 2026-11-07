@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { commands } from '../api/commands';
+import { ariaKeys, useShortcutHelp, withKeys } from '../app/shortcuts';
 import { useUiStore } from '../app/store';
 import type { AppInfo } from '../types';
 import { t, tr } from '../i18n';
@@ -16,6 +17,7 @@ export function StatusFooter() {
   const navigate = useUiStore((s) => s.navigate);
   const updates = useUiStore((s) => s.updates);
   const setUpdates = useUiStore((s) => s.setUpdates);
+  const setHelp = useShortcutHelp((s) => s.setOpen);
   const [info, setInfo] = useState<AppInfo | null>(null);
 
   useEffect(() => {
@@ -62,6 +64,15 @@ export function StatusFooter() {
         onClick={() => navigate({ name: 'diagnostics' })}
       >
         {t('Diagnostics')}
+      </button>
+      <button
+        type="button"
+        className="link-button"
+        onClick={() => setHelp(true)}
+        aria-keyshortcuts={ariaKeys('help')}
+        title={withKeys(t('Keyboard shortcuts'), 'help')}
+      >
+        {t('Keyboard shortcuts')}
       </button>
       {info?.supportUrl && (
         <button

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import {
   CommandError,
   commands,
@@ -7,8 +7,10 @@ import {
   runErrorMessage,
 } from '../../api/commands';
 import { useUiStore } from '../../app/store';
-import { isComposing, isEditableTarget, isModF, isModS } from '../../app/keyboard';
+import { isComposing, isEditableTarget } from '../../app/keyboard';
+import { ariaKeys, isShortcut, useShortcutHelp, withKeys } from '../../app/shortcuts';
 import { Dialog } from '../../components/Dialog';
+import { KeyHint } from '../../components/KeyHint';
 import { ChaptersPanel } from '../routes/ChaptersPanel';
 import { RoutesPanel } from '../routes/RoutesPanel';
 import { SavesPanel } from '../saves/SavesPanel';
@@ -31,6 +33,7 @@ import { NarrativeView } from './NarrativeView';
 import { PicturesPanel } from './PicturesPanel';
 import { ReaderRail } from './ReaderRail';
 import { ScenePictures } from './ScenePictures';
+import { usePictureView } from './stage';
 import { StoryDetailsPanel } from './StoryDetailsPanel';
 import { StoryMemoryPanel } from './StoryMemoryPanel';
 import { StorytellerPanel } from './StorytellerPanel';
@@ -385,40 +388,69 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
       );
     });
 
-  // Global shortcuts: Escape opens the pause menu (dialogs handle their own
-  // Escape first), Ctrl/Cmd+S quick-saves, Ctrl/Cmd+F opens story search,
-  // Up/Down scroll the story.
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (isComposing(e)) return;
-      if (isModS(e)) {
+  // Story shortcuts (the list is in app/shortcuts.ts). Ctrl/Cmd ones work
+  // while typing too; with the pause menu open they switch to their window,
+  // and with any other window open only Quick save works. Escape opens the
+  // pause menu (windows handle their own Escape first) and Up/Down scroll.
+  const onKey = useRef<(e: KeyboardEvent) => void>(() => undefined);
+  // Updated as each render commits, so a key pressed right after the story
+  // loads already sees it.
+  useLayoutEffect(() => {
+    onKey.current = (e: KeyboardEvent) => {
+      if (isComposing(e) || e.defaultPrevented || !view) return;
+      // The Keyboard shortcuts window is on top: leave the story alone.
+      if (useShortcutHelp.getState().open) return;
+      const did = (fn?: () => void) => {
         e.preventDefault();
-        quickSave();
-        return;
+        fn?.();
+      };
+      if (isShortcut(e, 'quickSave')) return did(quickSave);
+      if (panel && panel !== 'menu') return;
+      const waiting = busy || awaitingReply || writing;
+      if (isShortcut(e, 'search')) return did(() => setPanel('search'));
+      if (isShortcut(e, 'saves')) return did(() => setPanel('saves'));
+      if (isShortcut(e, 'routes')) return did(() => setPanel('routes'));
+      if (isShortcut(e, 'memory')) return did(() => setPanel('memory'));
+      if (isShortcut(e, 'details'))
+        return did(() => !awaitingReply && !writing && setPanel('details'));
+      if (isShortcut(e, 'endChapter')) return did(() => !waiting && !viewing && setPanel('end'));
+      if (isShortcut(e, 'pictures')) {
+        const pictures = usePictureView.getState();
+        return did(() => pictures.setShown(!pictures.shown));
+      }
+      if (isShortcut(e, 'larger')) return did(() => stepTextSize(1));
+      if (isShortcut(e, 'smaller')) return did(() => stepTextSize(-1));
+      if (isShortcut(e, 'bookmark')) {
+        const latest = viewing
+          ? undefined
+          : [...view.history].reverse().find((x) => x.kind === 'assistant');
+        return did(() => latest && void toggleBookmark(latest.id));
+      }
+      if (isShortcut(e, 'latest')) {
+        return did(() => {
+          setPanel(null);
+          setViewing(null);
+          // After the windows close and the action box is back.
+          requestAnimationFrame(() => {
+            const el = narrativeHost.current?.querySelector<HTMLElement>('.narrative');
+            if (el) el.scrollTop = el.scrollHeight;
+            document.getElementById('composer-input')?.focus();
+          });
+        });
       }
       if (panel) return;
-      if (isModF(e)) {
-        e.preventDefault();
-        setPanel('search');
-        return;
-      }
-      if (e.key === 'Escape') {
-        e.preventDefault();
-        if (viewing) setViewing(null);
-        else setPanel('menu');
-        return;
-      }
-      if ((e.key === 'ArrowDown' || e.key === 'ArrowUp') && !isEditableTarget(e.target)) {
+      if (isShortcut(e, 'menu')) return did(() => (viewing ? setViewing(null) : setPanel('menu')));
+      if (isShortcut(e, 'scroll') && !isEditableTarget(e.target)) {
         const el = narrativeHost.current?.querySelector<HTMLElement>('.narrative');
-        if (el) {
-          e.preventDefault();
-          el.scrollBy({ top: e.key === 'ArrowDown' ? 80 : -80 });
-        }
+        if (el) did(() => el.scrollBy({ top: e.key === 'ArrowDown' ? 80 : -80 }));
       }
     };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [panel, quickSave, viewing]);
+  });
+  useEffect(() => {
+    const listener = (e: KeyboardEvent) => onKey.current(e);
+    window.addEventListener('keydown', listener);
+    return () => window.removeEventListener('keydown', listener);
+  }, []);
 
   if (!view) {
     return (
@@ -500,7 +532,8 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
           <button
             type="button"
             onClick={() => setPanel('menu')}
-            aria-label={t('Open menu (Escape)')}
+            title={withKeys(t('Pause menu'), 'menu')}
+            aria-keyshortcuts={ariaKeys('menu')}
           >
             {t('Menu')}
           </button>
@@ -665,28 +698,45 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
               .map((c) => c.name)}
           />
           <div className="action-bar">
-            <button type="button" onClick={quickSave} disabled={busy}>
+            <button
+              type="button"
+              onClick={quickSave}
+              disabled={busy}
+              title={withKeys(t('Quick save'), 'quickSave')}
+              aria-keyshortcuts={ariaKeys('quickSave')}
+            >
               {t('Quick save')}
             </button>
-            <button type="button" onClick={() => setPanel('saves')}>
+            <button
+              type="button"
+              onClick={() => setPanel('saves')}
+              title={withKeys(t('Save / Load'), 'saves')}
+              aria-keyshortcuts={ariaKeys('saves')}
+            >
               {t('Save / Load')}
             </button>
             <button
               type="button"
               onClick={() => setPanel('end')}
               disabled={busy || awaitingReply || writing}
-              title={t('Recap this chapter, save, and start the next one')}
+              title={withKeys(t('Recap this chapter, save, and start the next one'), 'endChapter')}
+              aria-keyshortcuts={ariaKeys('endChapter')}
             >
               {t('End chapter')}
             </button>
-            <button type="button" onClick={() => setPanel('routes')}>
+            <button
+              type="button"
+              onClick={() => setPanel('routes')}
+              title={withKeys(t('Routes'), 'routes')}
+              aria-keyshortcuts={ariaKeys('routes')}
+            >
               {t('Routes ({n})', { n: view.routes.filter((r) => !r.hidden).length })}
             </button>
             <button
               type="button"
               onClick={() => setPanel('search')}
-              aria-label={t('Search (Ctrl+F)')}
-              title={t('Search this route and its bookmarks')}
+              title={withKeys(t('Search this route and its bookmarks'), 'search')}
+              aria-keyshortcuts={ariaKeys('search')}
             >
               {t('Search')}
             </button>
@@ -729,25 +779,43 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
               <button id="pause-resume" type="button" onClick={() => setPanel(null)}>
                 {t('Resume')}
               </button>
-              <button type="button" onClick={() => setPanel('saves')}>
+              <button
+                type="button"
+                onClick={() => setPanel('saves')}
+                aria-keyshortcuts={ariaKeys('saves')}
+              >
                 {t('Save / Load')}
+                <KeyHint id="saves" />
               </button>
               <button type="button" onClick={() => setPanel('chapters')}>
                 {t('Chapters')}
               </button>
-              <button type="button" onClick={() => setPanel('routes')}>
+              <button
+                type="button"
+                onClick={() => setPanel('routes')}
+                aria-keyshortcuts={ariaKeys('routes')}
+              >
                 {t('Routes')}
+                <KeyHint id="routes" />
               </button>
               <div className="button-row">
                 <span>{t('Text size')}</span>
                 <button
                   type="button"
                   aria-label={t('Smaller text')}
+                  title={withKeys(t('Smaller text'), 'smaller')}
+                  aria-keyshortcuts={ariaKeys('smaller')}
                   onClick={() => stepTextSize(-1)}
                 >
                   A−
                 </button>
-                <button type="button" aria-label={t('Larger text')} onClick={() => stepTextSize(1)}>
+                <button
+                  type="button"
+                  aria-label={t('Larger text')}
+                  title={withKeys(t('Larger text'), 'larger')}
+                  aria-keyshortcuts={ariaKeys('larger')}
+                  onClick={() => stepTextSize(1)}
+                >
                   A+
                 </button>
               </div>
@@ -756,8 +824,10 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
                 onClick={() => setPanel('details')}
                 disabled={awaitingReply || writing}
                 aria-describedby={awaitingReply || writing ? 'details-hint' : undefined}
+                aria-keyshortcuts={ariaKeys('details')}
               >
                 {t('Story details')}
+                <KeyHint id="details" />
               </button>
               {(awaitingReply || writing) && (
                 <p id="details-hint" className="muted small">
@@ -770,11 +840,21 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
               <button type="button" onClick={() => setPanel('storyteller')}>
                 {t('Storyteller')}
               </button>
-              <button type="button" onClick={() => setPanel('memory')}>
+              <button
+                type="button"
+                onClick={() => setPanel('memory')}
+                aria-keyshortcuts={ariaKeys('memory')}
+              >
                 {t('Story memory')}
+                <KeyHint id="memory" />
               </button>
-              <button type="button" onClick={() => setPanel('search')}>
+              <button
+                type="button"
+                onClick={() => setPanel('search')}
+                aria-keyshortcuts={ariaKeys('search')}
+              >
                 {t('Story search')}
+                <KeyHint id="search" />
               </button>
               <button type="button" onClick={() => setPanel('context')}>
                 {t('Preview context')}
@@ -782,8 +862,21 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
               <button type="button" onClick={() => setPanel('export')}>
                 {t('Export…')}
               </button>
-              <button type="button" onClick={() => navigate({ name: 'settings' })}>
+              <button
+                type="button"
+                onClick={() => navigate({ name: 'settings' })}
+                aria-keyshortcuts={ariaKeys('settings')}
+              >
                 {t('Settings')}
+                <KeyHint id="settings" />
+              </button>
+              <button
+                type="button"
+                onClick={() => useShortcutHelp.getState().setOpen(true)}
+                aria-keyshortcuts={ariaKeys('help')}
+              >
+                {t('Keyboard shortcuts')}
+                <KeyHint id="help" />
               </button>
               <button type="button" onClick={() => navigate({ name: 'diagnostics' })}>
                 {t('Diagnostics')}

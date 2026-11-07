@@ -148,7 +148,7 @@ describe('Story details', () => {
     });
     render(<ReaderScreen routeId="route-1" />);
     await screen.findByRole('region', { name: 'Reply needed' });
-    await userEvent.click(screen.getByRole('button', { name: /Open menu/ }));
+    await userEvent.click(screen.getByRole('button', { name: 'Menu' }));
     expect(await screen.findByRole('button', { name: 'Story details' })).toBeDisabled();
     expect(screen.getByText(/once the waiting action has its reply/)).toBeInTheDocument();
   });

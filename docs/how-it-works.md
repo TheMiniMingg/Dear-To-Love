@@ -378,3 +378,36 @@ asking the storyteller:
 
 **Picture view** on the right side of the story turns the stage off for text only, and on
 again. The choice is kept on this computer.
+
+## Keyboard shortcuts
+
+**F1** (or **Ctrl+/**) shows every shortcut, from any screen; so does **Shortcuts** on the
+right side of the story, **Keyboard shortcuts** in the pause menu and in the footer. On a
+Mac, use **⌘** wherever this says Ctrl; the app shows the keys the way your computer names
+them. Buttons show their keys when you point at them, and the pause menu lists them beside
+each item.
+
+| In a story                              | Keys                |
+| --------------------------------------- | ------------------- |
+| Send what you wrote / new line          | Enter / Shift+Enter |
+| Pause menu                              | Esc                 |
+| Quick save                              | Ctrl+S              |
+| Save / Load                             | Ctrl+L              |
+| Story search                            | Ctrl+F              |
+| Bookmark the latest reply, or remove it | Ctrl+B              |
+| Routes                                  | Ctrl+G              |
+| Story details                           | Ctrl+I              |
+| Story memory                            | Ctrl+Shift+M        |
+| End chapter                             | Ctrl+E              |
+| Picture view on or off                  | Ctrl+P              |
+| Larger / smaller text                   | Ctrl+= / Ctrl+-     |
+| Jump to the latest and write            | Ctrl+J              |
+| Scroll the story                        | ↑ / ↓               |
+
+In the library, **Ctrl+N** starts a new story and ↑/↓ move between stories. Anywhere,
+**Ctrl+,** opens Settings and **Esc** closes a window.
+
+Shortcuts with Ctrl work while you type in the action box. With the pause menu open, they go
+straight to their window; with any other window open, only Quick save works, so a window
+never loses what you typed in it. Letters match by their place on the keyboard, so the
+shortcuts also work with a Korean, Russian or other layout switched on.

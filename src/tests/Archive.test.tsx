@@ -129,7 +129,7 @@ describe('Export from the reader', () => {
   async function openExport() {
     render(<ReaderScreen routeId="route-1" />);
     await screen.findByLabelText('What do you do?');
-    await userEvent.click(screen.getByRole('button', { name: /Open menu/ }));
+    await userEvent.click(screen.getByRole('button', { name: 'Menu' }));
     await userEvent.click(await screen.findByRole('button', { name: 'Export…' }));
     return screen.findByRole('dialog', { name: 'Export' });
   }
