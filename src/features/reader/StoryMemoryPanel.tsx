@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { ScrollText } from 'lucide-react';
 import { formatWhen } from '../../api/backups';
 import { commands, errorMessage } from '../../api/commands';
 import type { RouteView, StoryMemory, SummaryWriter } from '../../types';
@@ -85,7 +86,9 @@ export function StoryMemoryPanel({
       <ThreadLog view={view} disabled={detailsDisabled} onChanged={onChanged} />
 
       <section aria-labelledby="memory-summary">
-        <h3 id="memory-summary">{t('The story so far')}</h3>
+        <h3 id="memory-summary" className="memory-heading">
+          <ScrollText aria-hidden={true} size={18} /> {t('The story so far')}
+        </h3>
         {error && (
           <p role="alert" className="error">
             {error}

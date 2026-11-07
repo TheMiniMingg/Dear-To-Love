@@ -6,7 +6,7 @@
  * like any other change.
  */
 import { useContext, useEffect, useId, useRef, useState } from 'react';
-import { Pencil, Trash2 } from 'lucide-react';
+import { NotebookPen, Pencil, Trash2 } from 'lucide-react';
 import { commands, errorMessage } from '../../api/commands';
 import type { MemoryNote, NoteKind, RouteView, StateEdit } from '../../types';
 import { t } from '../../i18n';
@@ -154,8 +154,8 @@ export function Notebook({
 
   return (
     <section aria-labelledby="memory-notes" className="notebook" ref={root}>
-      <h3 id="memory-notes" tabIndex={-1}>
-        {t('Notebook')}
+      <h3 id="memory-notes" className="memory-heading" tabIndex={-1}>
+        <NotebookPen aria-hidden={true} size={18} /> {t('Notebook')}
       </h3>
       <p className="muted small">
         {manual

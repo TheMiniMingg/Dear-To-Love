@@ -751,13 +751,6 @@ export const app: Messages = {
     '내 라이브러리에 추가 (모든 스토리에서 사용)',
   ],
   'This story only': ['仅限此故事', '僅限此故事', 'このストーリーのみ', '이 스토리만'],
-  'Start one with {newStory} to pick a ready-made story, or {createOwn} to make your own from a blank page, filling in only what you want. You can play offline with the built-in storyteller before connecting an AI model. A story someone shared as a storypack comes in with {importPack}.':
-    [
-      '用{newStory}挑选现成的故事，或用{createOwn}从空白开始创作，只填你想填的内容。在连接 AI 模型之前，也可以用内置的讲述者离线游玩。别人分享的故事包可以用{importPack}导入。',
-      '用{newStory}挑選現成的故事，或用{createOwn}從空白開始創作，只填你想填的內容。在連線 AI 模型之前，也可以用內建的講述者離線遊玩。別人分享的故事包可以用{importPack}匯入。',
-      '{newStory}で既成のストーリーを選ぶか、{createOwn}で白紙から自分のストーリーを作りましょう。入力するのは好きなところだけで大丈夫です。AI モデルをつなぐ前でも、内蔵の語り手でオフラインで遊べます。共有されたストーリーパックは{importPack}から読み込めます。',
-      '{newStory}로 준비된 스토리를 고르거나, {createOwn}로 빈 페이지에서 원하는 것만 채워 나만의 스토리를 만드세요. AI 모델을 연결하기 전에도 내장 이야기꾼으로 오프라인에서 즐길 수 있습니다. 누군가 공유한 스토리팩은 {importPack}로 가져옵니다.',
-    ],
   'Add a picture from this computer. "This story only" keeps it for this story alone. "Your library" shares it with every story, so you can use it again anywhere.':
     [
       '从这台电脑添加图片。“仅限此故事”只给这个故事用。“你的图库”会共享给所有故事，在哪里都能再用。',
@@ -765,4 +758,34 @@ export const app: Messages = {
       'このコンピューターから画像を追加します。「このストーリーのみ」はこのストーリーだけで使います。「ライブラリ」はすべてのストーリーで共有され、どこでも使い回せます。',
       "이 컴퓨터에서 이미지를 추가합니다. '이 스토리만'은 이 스토리에서만 씁니다. '내 라이브러리'는 모든 스토리와 공유되어 어디서든 다시 쓸 수 있습니다.",
     ],
+  'Start your first story': [
+    '开始你的第一个故事',
+    '開始你的第一個故事',
+    '最初のストーリーを始めましょう',
+    '첫 스토리를 시작해 보세요',
+  ],
+  'Play right away with the built-in storyteller, and connect an AI model whenever you like.': [
+    '用内置的讲述者马上就能开始玩，想连接 AI 模型时随时都可以。',
+    '用內建的講述者馬上就能開始玩，想連線 AI 模型時隨時都可以。',
+    '内蔵の語り手ですぐに遊べます。AI モデルはいつでも好きなときにつなげます。',
+    '내장 이야기꾼으로 바로 즐길 수 있고, AI 모델은 언제든 원할 때 연결하면 됩니다.',
+  ],
+  'Pick a ready-made story and begin in a minute.': [
+    '挑一个现成的故事，一分钟就能开始。',
+    '挑一個現成的故事，一分鐘就能開始。',
+    '既成のストーリーを選んで、すぐに始められます。',
+    '준비된 스토리를 골라 바로 시작하세요.',
+  ],
+  'Make your own from a blank page. Fill in only what you want.': [
+    '从空白开始创作自己的故事，只填你想填的内容。',
+    '從空白開始創作自己的故事，只填你想填的內容。',
+    '白紙から自分のストーリーを作れます。入力するのは好きなところだけで大丈夫です。',
+    '빈 페이지에서 나만의 스토리를 만드세요. 원하는 것만 채우면 됩니다.',
+  ],
+  'Import a storypack someone shared': [
+    '导入别人分享的故事包',
+    '匯入別人分享的故事包',
+    '共有されたストーリーパックを読み込む',
+    '누군가 공유한 스토리팩 가져오기',
+  ],
 };

@@ -5,7 +5,7 @@
  * reader shows them as cards; anything else is prose. Mirrors
  * `plain_message_tags` in Rust.
  */
-import type { NoteKind, RollRequest } from '../../types';
+import type { NoteKind, RollRequest, StoryStateV1 } from '../../types';
 import { t } from '../../i18n';
 import { plainStoryText } from '../../i18n/names';
 
@@ -370,6 +370,23 @@ export function nextMoves(text: string): string[] {
     if (idea && !out.some((o) => o.toLowerCase() === idea.toLowerCase())) out.push(idea);
   }
   return out.slice(0, 4);
+}
+
+/**
+ * Ideas for the first move of a chapter, before the storyteller has
+ * offered any: look around, talk to someone in the scene (or ask who is
+ * there), or wait and listen.
+ */
+export function openingIdeas(state: StoryStateV1): string[] {
+  const other = state.scene.participantIds
+    .filter((id) => id !== state.playerCharacterId)
+    .map((id) => state.characters[id]?.name.trim().split(/\s+/)[0])
+    .find(Boolean);
+  return [
+    t('Look around'),
+    other ? t('Talk to {name}', { name: other }) : t('Ask who is there'),
+    t('Wait and listen'),
+  ];
 }
 
 /** True when `text` contains at least one message tag. */

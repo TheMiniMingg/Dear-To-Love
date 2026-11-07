@@ -153,12 +153,16 @@ function CharacterFields({
 }) {
   return (
     <>
-      <TextField
-        label={t('Name')}
-        required
-        value={c.name}
-        onChange={(name) => onChange({ name })}
-      />
+      {/* Name and role are the long ones: two to a row, so neither is cut off. */}
+      <div className="field-row">
+        <TextField
+          label={t('Name')}
+          required
+          value={c.name}
+          onChange={(name) => onChange({ name })}
+        />
+        <TextField label={t('Role')} value={c.role ?? ''} onChange={(role) => onChange({ role })} />
+      </div>
       <div className="field-row">
         <TextField
           label={t('Pronouns')}
@@ -166,7 +170,6 @@ function CharacterFields({
           onChange={(pronouns) => onChange({ pronouns })}
         />
         <TextField label={t('Age')} value={c.age ?? ''} onChange={(age) => onChange({ age })} />
-        <TextField label={t('Role')} value={c.role ?? ''} onChange={(role) => onChange({ role })} />
         <TextField
           label={t('Race or species')}
           value={c.species ?? ''}
@@ -519,7 +522,7 @@ export function StoryDetailsPanel({
         )}
         {tab === 'scene' && (
           <>
-            <div className="field-row">
+            <div className="field-row where-when">
               <TextField
                 label={t('Where')}
                 value={edited.scene.location}
@@ -543,7 +546,7 @@ export function StoryDetailsPanel({
               onChange={(summary) => set({ scene: { ...edited.scene, summary } })}
             />
             <LinesField
-              label={t('Open threads')}
+              label={t('Threads to follow')}
               value={edited.openThreads}
               hint={t('One per line. Story memory lists them too, where you can tick them off.')}
               onChange={(openThreads) => set({ openThreads })}

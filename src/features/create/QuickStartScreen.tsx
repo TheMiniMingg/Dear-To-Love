@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
+import { Shuffle } from 'lucide-react';
 import { commands, errorMessage } from '../../api/commands';
 import { useUiStore } from '../../app/store';
 import { ArrowPicker } from '../../components/ArrowPicker';
 import type { Detail, Perspective, TemplateCatalog } from '../../types';
 import { STORY_TYPES, withStoryType, worldFits } from './ContentFields';
 import { fittingScenarios } from './WizardSteps';
-import { joinList, t, tOptions } from '../../i18n';
+import { t, tOptions } from '../../i18n';
 import { DETAILS, PERSPECTIVES, appStoryLanguage, storyLanguageLabel } from './StyleFields';
 import { trackingSummary } from './TrackingFields';
 
@@ -63,6 +64,20 @@ export function QuickStartScreen() {
   const effectiveDetail = detail ?? world?.narration.detail ?? 'balanced';
 
   const storyLanguage = appStoryLanguage();
+  const genres = withStoryType(world?.narration.genres, storyType);
+
+  /** A random world, scenario and character, for when you can't choose. */
+  const surprise = () => {
+    if (!catalog) return;
+    const pick = <T,>(list: T[]): T | undefined => list[Math.floor(Math.random() * list.length)];
+    // A different world when there is one, so the press shows a change.
+    const others = worlds.filter((w) => w.id !== worldId);
+    const w = pick(others.length > 0 ? others : worlds);
+    if (!w) return;
+    setWorldId(w.id);
+    setScenarioId(pick(fittingScenarios(catalog, w.id))?.id ?? '');
+    setCharacterId(pick(catalog.characters)?.id ?? '');
+  };
 
   const start = async () => {
     setBusy(true);
@@ -91,6 +106,16 @@ export function QuickStartScreen() {
           {t('Back')}
         </button>
         <h1 id="qs-title">{t('Preset Story')}</h1>
+        {catalog && (
+          <button
+            type="button"
+            onClick={surprise}
+            title={t('Pick a world, story and character at random')}
+          >
+            <Shuffle className="btn-icon" aria-hidden={true} />
+            {t('Surprise me')}
+          </button>
+        )}
       </div>
       {error && (
         <p role="alert" className="error">
@@ -160,7 +185,14 @@ export function QuickStartScreen() {
               onChange={setDetail}
             />
           </div>
-          <aside className="preview" aria-label={t('Story preview')}>
+          <aside className="preview preset-preview" aria-label={t('Story preview')}>
+            {genres.length > 0 && (
+              <ul className="genre-tags" aria-label={t('Genre')}>
+                {genres.map((g) => (
+                  <li key={g}>{t(g)}</li>
+                ))}
+              </ul>
+            )}
             <h2>{scenario?.title}</h2>
             <p>{scenario?.description}</p>
             <dl>
@@ -181,14 +213,6 @@ export function QuickStartScreen() {
               )}
               <dt>{t('Tone')}</dt>
               <dd>{world?.narration.tone}</dd>
-              {(storyType || (world?.narration.genres?.length ?? 0) > 0) && (
-                <>
-                  <dt>{t('Genre')}</dt>
-                  <dd>
-                    {joinList(withStoryType(world?.narration.genres, storyType).map((g) => t(g)))}
-                  </dd>
-                </>
-              )}
               {storyLanguage && (
                 <>
                   <dt>{t('Story language')}</dt>

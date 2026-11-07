@@ -12,7 +12,12 @@ export function LanguageSection() {
   const choice = useLanguage((s) => s.choice);
   const setChoice = useLanguage((s) => s.setChoice);
   return (
-    <section className="settings-section" aria-labelledby={`${id}-title`}>
+    <section
+      id="settings-language"
+      className="settings-section"
+      tabIndex={-1}
+      aria-labelledby={`${id}-title`}
+    >
       <h2 id={`${id}-title`}>{t('Language')}</h2>
       <p className="muted">
         {t(

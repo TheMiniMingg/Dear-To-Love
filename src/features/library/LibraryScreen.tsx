@@ -232,27 +232,52 @@ export function LibraryScreen() {
         </p>
       )}
       {stories && stories.length === 0 && (
-        <div className="empty-state">
-          <p>{t('No stories yet.')}</p>
-          <p className="muted">
-            {tr(
-              'Start one with {newStory} to pick a ready-made story, or {createOwn} to make your own from a blank page, filling in only what you want. You can play offline with the built-in storyteller before connecting an AI model. A story someone shared as a storypack comes in with {importPack}.',
-              {
-                newStory: <strong>{t('Preset Story')}</strong>,
-                createOwn: <strong>{t('Custom Story')}</strong>,
-                importPack: <strong>{t('Import storypack')}</strong>,
-              },
-            )}
-          </p>
+        <section className="welcome" aria-labelledby="welcome-title">
+          <p className="welcome-eyebrow">{t('No stories yet.')}</p>
+          <h2 id="welcome-title">{t('Start your first story')}</h2>
           <p className="muted">
             {t(
-              'The setup guide shows how to connect an AI model, with links to get a key from each service or to run one on this computer.',
+              'Play right away with the built-in storyteller, and connect an AI model whenever you like.',
             )}
           </p>
-          <button type="button" onClick={() => navigate({ name: 'guide' })}>
-            {t('Open the setup guide')}
-          </button>
-        </div>
+          <div className="welcome-choices">
+            <button
+              type="button"
+              className="welcome-choice main-choice"
+              onClick={() => navigate({ name: 'quickstart' })}
+            >
+              <Sparkles aria-hidden={true} size={26} strokeWidth={1.75} />
+              <strong>{t('Preset Story')}</strong>
+              <span>{t('Pick a ready-made story and begin in a minute.')}</span>
+            </button>
+            <button
+              type="button"
+              className="welcome-choice"
+              onClick={() => navigate({ name: 'create' })}
+            >
+              <PenLine aria-hidden={true} size={26} strokeWidth={1.75} />
+              <strong>{t('Custom Story')}</strong>
+              <span>{t('Make your own from a blank page. Fill in only what you want.')}</span>
+            </button>
+          </div>
+          <p className="welcome-more muted">
+            <button
+              type="button"
+              className="link-button"
+              disabled={working !== null}
+              onClick={() => void importPack()}
+            >
+              {t('Import a storypack someone shared')}
+            </button>
+            <button
+              type="button"
+              className="link-button"
+              onClick={() => navigate({ name: 'guide' })}
+            >
+              {t('Open the setup guide')}
+            </button>
+          </p>
+        </section>
       )}
       {stories && stories.length > 0 && (
         <div className="library-filter" role="search">

@@ -495,6 +495,44 @@ textarea:focus-visible {
 .preview button {
   margin-top: 1.25rem;
 }
+/* The preset's preview stays in view, Start story and all, beside the pickers. */
+.preset-preview {
+  position: sticky;
+  top: 1rem;
+  align-self: start;
+  padding: 1.25rem 1.4rem 1.4rem;
+  border-radius: var(--radius-lg);
+  border-top: 3px solid var(--accent);
+}
+.preset-preview h2 {
+  margin: 0.4rem 0 0.5rem;
+  font-family: var(--font-story);
+  font-size: 1.6rem;
+  font-weight: 600;
+  line-height: 1.2;
+}
+.preset-preview dt {
+  color: var(--muted);
+  font-size: 0.85em;
+  font-weight: 600;
+  margin-top: 0.7rem;
+}
+.genre-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.genre-tags li {
+  padding: 0.1rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--accent);
+  background: var(--accent-soft);
+}
 
 /* ---------- reader ---------- */
 .reader {
@@ -844,6 +882,10 @@ textarea:focus-visible {
   gap: 0.75rem;
   margin-top: 0.6rem;
 }
+/* A place is longer than a time. */
+.field-row.where-when {
+  grid-template-columns: minmax(0, 2fr) minmax(9rem, 1fr);
+}
 .form input:not([type='checkbox'], [type='radio']),
 .form textarea,
 .form select {
@@ -915,7 +957,38 @@ details.sub-options > summary {
 }
 
 /* Settings */
+/* Jump links to each Settings section; they stay at the top while scrolling. */
+.settings-jump {
+  position: sticky;
+  top: 0.5rem;
+  z-index: 3;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2rem;
+  margin-top: 0.75rem;
+  padding: 0.3rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--surface) 88%, transparent);
+  box-shadow: var(--shadow-sm);
+  backdrop-filter: blur(8px);
+}
+button.jump-link {
+  padding: 0.2rem 0.65rem;
+  border: none;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+button.jump-link:hover {
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+.settings-section:focus {
+  outline: none;
+}
 .settings-section {
+  scroll-margin-top: 4.5rem;
   margin-top: 1.25rem;
   padding: 1.1rem 1.35rem 1.35rem;
   border: 1px solid var(--border);
@@ -1246,8 +1319,14 @@ details.sub-options > summary {
   width: 100%;
   box-sizing: border-box;
 }
+/* Previous, Next and Create story stay in reach on a long step. */
 .wizard-nav {
-  margin-top: 1.5rem;
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  margin-top: 1rem;
+  padding: 1.1rem 0 1rem;
+  background: linear-gradient(to bottom, transparent, var(--bg) 40%);
 }
 .toggle-list {
   display: flex;

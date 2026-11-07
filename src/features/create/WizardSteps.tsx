@@ -465,7 +465,7 @@ export function CharacterStep({ draft, update, catalog, guided }: StepProps) {
           required
           options={guided ? uniq(catalog.characters.map((c) => c.character.name)) : []}
           value={p.name}
-          placeholder={t('What you are called')}
+          placeholder={t('Your name')}
           onChange={(name) => set({ name })}
         />
         <ComboField
@@ -794,7 +794,7 @@ export function StoryStep(props: StepProps) {
           onChange={(firstChapterTitle) => update({ firstChapterTitle })}
         />
         <LinesField
-          label={t('Open threads')}
+          label={t('Threads to follow')}
           value={draft.openThreads}
           rows={3}
           hint={t('Mysteries, promises and goals to follow up. One per line.')}
