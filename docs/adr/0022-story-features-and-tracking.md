@@ -61,6 +61,10 @@ MiniMe asked for:
   `ItemPictureInput` to the picture connection with the same budget rules as portraits. The
   prompt asks for the object alone, with no people, safe for work and no text. The asset is
   kept for the story and set as the story default for that item's slot.
+- **Scenarios can bring tracking.** A scenario template may carry a `tracking` block, which
+  Quick Start and the wizard copy into the new story (a party raid starts with every party
+  member's bars). Picking another scenario in the wizard drops it again unless the player
+  changed it. Template files are checked with the same rules as Story details.
 - `PROMPT_SCHEMA_VERSION` 7 (texts and calls, headings, styles, features, dice settings and
   tracking).
 

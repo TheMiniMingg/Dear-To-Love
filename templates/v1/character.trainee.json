@@ -1,0 +1,33 @@
+{
+  "templateSchemaVersion": 1,
+  "type": "character",
+  "id": "starter:trainee",
+  "label": "The Trainee",
+  "summary": "A late-signed trainee with a great voice and no idea how to survive an agency.",
+  "character": {
+    "id": "starter:trainee",
+    "name": "Seo-yeon Park",
+    "control": "player",
+    "pronouns": "she/her",
+    "age": "20",
+    "role": "Trainee",
+    "description": "A twenty-year-old singer discovered busking in a subway station and signed in a week. Talented, untrained and completely unprepared for the agency life.",
+    "personality": ["warm", "determined", "says what she thinks"],
+    "goals": ["Debut", "Send money home to her mother"],
+    "abilities": ["A voice that makes people stop walking", "Learns choreography fast"],
+    "stats": [
+      {
+        "name": "Charm",
+        "value": 3
+      },
+      {
+        "name": "Nerve",
+        "value": 1
+      },
+      {
+        "name": "Stamina",
+        "value": 1
+      }
+    ]
+  }
+}

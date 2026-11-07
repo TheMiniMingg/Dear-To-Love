@@ -1,0 +1,25 @@
+{
+  "templateSchemaVersion": 1,
+  "type": "world",
+  "id": "starter:aurelia-1934",
+  "label": "The Aurelia, 1934",
+  "summary": "A luxury airship crossing the Atlantic in three days, with a ballroom, forty passengers and one cabin that is suddenly empty.",
+  "world": {
+    "era": "1934",
+    "setting": "The Aurelia, a luxury airship crossing from Southampton to New York",
+    "description": "The Aurelia is the most elegant way to cross the ocean: a ballroom, a smoking room sealed against sparks, a dining room with silver service and promenade windows over the clouds. Forty passengers, sixty crew and three days with nowhere to go but down.",
+    "rules": [
+      "A fair-play mystery: every clue the solution needs is shown to the reader",
+      "No one can leave the ship until New York",
+      "Every passenger has a secret, and most of them are not murder",
+      "1930s manners, money and politics shape what people say"
+    ]
+  },
+  "narration": {
+    "perspective": "third",
+    "detail": "balanced",
+    "tone": "Elegant, witty and taut",
+    "pacing": "normal",
+    "genres": ["Mystery", "Historical", "Thriller"]
+  }
+}

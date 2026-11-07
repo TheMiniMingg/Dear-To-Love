@@ -1,0 +1,141 @@
+{
+  "templateSchemaVersion": 1,
+  "type": "scenario",
+  "id": "starter:ghost-liner",
+  "label": "The Ghost Liner",
+  "summary": "A luxury liner lost sixty years ago drifts out of the Tallow Drift with its lights on. Whoever docks first owns it.",
+  "worlds": ["starter:tallow-drift"],
+  "title": "The Ghost Liner",
+  "description": "The Halcyon Crown, a luxury liner that vanished with two thousand passengers sixty years ago, has just drifted out of the deep Drift with its lights on and its music playing. Salvage law says whoever docks first owns it. The Second Chance is closest. The crew is broke. Nobody wants to say what they are thinking.",
+  "firstChapterTitle": "The Signal",
+  "chapterOutlines": [
+    {
+      "title": "The Signal",
+      "outline": "Pick up the Halcyon Crown's signal and race other crews to it."
+    },
+    {
+      "title": "The Grand Ballroom",
+      "outline": "Board the liner and explore its impossible, perfectly kept halls."
+    },
+    {
+      "title": "The Passengers",
+      "outline": "Find out where two thousand people went, and why the music never stops."
+    },
+    {
+      "title": "Salvage Rights",
+      "outline": "Get the prize, or your lives, back to Gristle Station."
+    }
+  ],
+  "scene": {
+    "location": "The cramped bridge of the salvage tug Second Chance, deep in the Tallow Drift",
+    "summary": "The proximity alarm is chiming. On the screen, a liner the size of a city drifts out of the dark, every window lit, and the radio is playing a waltz."
+  },
+  "openThreads": [
+    "Where did the passengers go?",
+    "Who else is racing for the salvage?",
+    "Why is the music getting louder?"
+  ],
+  "npcs": [
+    {
+      "id": "starter:npc-mags",
+      "name": "Captain Mags Okonkwo",
+      "control": "npc",
+      "pronouns": "she/her",
+      "role": "Captain of the Second Chance",
+      "description": "The tug's captain and owner, a cheerful gambler who owes money to every station in the Drift.",
+      "personality": ["optimistic", "reckless", "loves her crew"],
+      "goals": ["Pay off the Second Chance", "Find one big score"],
+      "abilities": ["Flies through debris like it is a dance"]
+    },
+    {
+      "id": "starter:npc-bolt",
+      "name": "BOLT",
+      "control": "npc",
+      "pronouns": "it/its",
+      "role": "Maintenance robot",
+      "species": "Robot",
+      "description": "The ship's maintenance robot, built from three other robots, with a nervous personality and a vacuum attachment it is very proud of.",
+      "personality": ["anxious", "helpful", "dramatic"],
+      "goals": ["Keep the ship in one piece", "Be appreciated"],
+      "abilities": ["Repairs anything, slowly", "Talks to other machines"]
+    },
+    {
+      "id": "starter:npc-vesna",
+      "name": "Vesna Kade",
+      "control": "npc",
+      "pronouns": "she/her",
+      "role": "Rival salvager",
+      "description": "Captain of the Iron Magpie, a rival crew. Ruthless, stylish and always one step ahead.",
+      "personality": ["cunning", "proud", "honorable in her own way"],
+      "goals": ["Claim the Halcyon Crown first"]
+    }
+  ],
+  "relationships": [
+    {
+      "fromId": "starter:npc-mags",
+      "toId": "@player",
+      "label": "Captain",
+      "status": "Counting on you"
+    },
+    {
+      "fromId": "starter:npc-bolt",
+      "toId": "@player",
+      "label": "Shipmate",
+      "status": "Hopes you like robots"
+    },
+    {
+      "fromId": "starter:npc-vesna",
+      "toId": "@player",
+      "label": "Rival",
+      "status": "Considers you a minor nuisance"
+    }
+  ],
+  "tracking": {
+    "meters": [
+      {
+        "name": "Health",
+        "value": 100,
+        "max": 100
+      },
+      {
+        "name": "Oxygen",
+        "value": 100,
+        "max": 100
+      },
+      {
+        "name": "Credits",
+        "value": 120
+      },
+      {
+        "name": "Hull",
+        "value": 70,
+        "max": 100,
+        "who": "Second Chance"
+      },
+      {
+        "name": "Fuel",
+        "value": 45,
+        "max": 100,
+        "who": "Second Chance"
+      }
+    ],
+    "inventory": true,
+    "items": [
+      {
+        "name": "Plasma cutter",
+        "qty": 1,
+        "description": "Cuts through bulkheads, locks and, carefully, nothing else."
+      },
+      {
+        "name": "Patch kit",
+        "qty": 2,
+        "description": "Seals a hole in a suit or a hull. Smells of burnt glue."
+      },
+      {
+        "name": "Salvage claim beacon",
+        "qty": 1,
+        "description": "Stick it on a wreck and it is legally yours. Probably."
+      }
+    ]
+  }
+}

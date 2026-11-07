@@ -1,0 +1,33 @@
+{
+  "templateSchemaVersion": 1,
+  "type": "character",
+  "id": "starter:hedge-mage",
+  "label": "The Hedge Mage",
+  "summary": "A self-taught elf mage with a borrowed spellbook and more power than control.",
+  "character": {
+    "id": "starter:hedge-mage",
+    "name": "Elowen Brisk",
+    "control": "player",
+    "pronouns": "she/her",
+    "role": "Mage",
+    "species": "Elf",
+    "description": "A self-taught elf mage from a village with no academy, carrying a spellbook she found in a ditch and has not quite finished reading.",
+    "personality": ["curious", "impulsive", "kind to strangers"],
+    "goals": ["Learn what the spellbook really is", "Be taken seriously by real wizards"],
+    "abilities": ["Fire and frost spells", "Talks to birds, badly"],
+    "stats": [
+      {
+        "name": "Smarts",
+        "value": 3
+      },
+      {
+        "name": "Agility",
+        "value": 1
+      },
+      {
+        "name": "Strength",
+        "value": -1
+      }
+    ]
+  }
+}

@@ -1,0 +1,127 @@
+{
+  "templateSchemaVersion": 1,
+  "type": "scenario",
+  "id": "starter:henchmen-union",
+  "label": "Local 404",
+  "summary": "You are a henchperson for Doctor Malvora. The coffee is terrible, the hero is coming and the staff want a union.",
+  "worlds": ["starter:doomspire"],
+  "title": "Local 404",
+  "description": "It is Tuesday at Doomspire Tower. Doctor Malvora is about to launch her tenth plan to take over the city, the heroic Captain Brightstar is on the way to stop her, and the henchpeople are holding their first union meeting in the break room. They want you to be their representative.",
+  "firstChapterTitle": "The Break Room",
+  "chapterOutlines": [
+    {
+      "title": "The Break Room",
+      "outline": "Attend the union meeting and get elected, whether you like it or not."
+    },
+    {
+      "title": "Plan Ten",
+      "outline": "Survive the launch of the doomsday device and the hero's arrival."
+    },
+    {
+      "title": "Negotiations",
+      "outline": "Negotiate with a supervillain in the middle of a battle."
+    },
+    {
+      "title": "Collective Action",
+      "outline": "Decide what the henchpeople of Doomspire really want."
+    }
+  ],
+  "scene": {
+    "location": "The break room on floor 13 of Doomspire Tower, Tuesday, 8:55 a.m.",
+    "summary": "The coffee machine is broken again. Forty henchpeople in matching purple jumpsuits are crammed in. Someone has made a banner: Local 404, Henchpeople United."
+  },
+  "openThreads": [
+    "What is Plan Ten?",
+    "Is Captain Brightstar really a hero?",
+    "Will Doctor Malvora negotiate?"
+  ],
+  "npcs": [
+    {
+      "id": "starter:npc-malvora",
+      "name": "Doctor Malvora",
+      "control": "npc",
+      "pronouns": "she/her",
+      "role": "Supervillain and boss",
+      "description": "A brilliant supervillain with a cape, a laugh and a ten-step plan for everything except human resources.",
+      "personality": ["dramatic", "brilliant", "surprisingly reasonable when flattered"],
+      "goals": ["Take over the city", "Be taken seriously"],
+      "abilities": ["Builds doomsday devices", "Monologues"]
+    },
+    {
+      "id": "starter:npc-gary",
+      "name": "Gary from Accounts",
+      "control": "npc",
+      "pronouns": "he/him",
+      "role": "Union organizer",
+      "description": "A henchperson from Accounts who has read every labor law ever written and keeps a laminated copy in his helmet.",
+      "personality": ["earnest", "nervous", "relentless"],
+      "goals": ["Dental coverage for all"]
+    },
+    {
+      "id": "starter:npc-brightstar",
+      "name": "Captain Brightstar",
+      "control": "npc",
+      "pronouns": "he/him",
+      "role": "Superhero",
+      "description": "The city's most famous superhero, with perfect hair, a perfect smile and no idea that henchpeople have names.",
+      "personality": ["smug", "brave", "oblivious"],
+      "goals": ["Stop Doctor Malvora", "Stay on the front page"],
+      "abilities": ["Flight", "Super strength", "Photogenic"]
+    }
+  ],
+  "relationships": [
+    {
+      "fromId": "starter:npc-malvora",
+      "toId": "@player",
+      "label": "Boss",
+      "status": "Does not know who you are"
+    },
+    {
+      "fromId": "starter:npc-gary",
+      "toId": "@player",
+      "label": "Coworker",
+      "status": "Thinks you are a natural leader"
+    },
+    {
+      "fromId": "starter:npc-brightstar",
+      "toId": "@player",
+      "label": "Hero",
+      "status": "Has punched you before"
+    }
+  ],
+  "tracking": {
+    "meters": [
+      {
+        "name": "Health",
+        "value": 100,
+        "max": 100
+      },
+      {
+        "name": "Paycheck",
+        "value": 12
+      },
+      {
+        "name": "Union members",
+        "value": 40
+      }
+    ],
+    "inventory": true,
+    "items": [
+      {
+        "name": "Purple jumpsuit",
+        "qty": 1,
+        "description": "Standard issue. Itches."
+      },
+      {
+        "name": "Henchperson's ray gun",
+        "qty": 1,
+        "description": "Mostly makes a noise and a light. Occasionally does something worse."
+      },
+      {
+        "name": "Laminated labor law",
+        "qty": 1,
+        "description": "Gary made you a copy."
+      }
+    ]
+  }
+}

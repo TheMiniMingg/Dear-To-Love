@@ -1,0 +1,32 @@
+{
+  "templateSchemaVersion": 1,
+  "type": "character",
+  "id": "starter:skeptic",
+  "label": "The Skeptic",
+  "summary": "A debunker of hauntings and hoaxes who has never met a ghost, so far.",
+  "character": {
+    "id": "starter:skeptic",
+    "name": "Imogen Ward",
+    "control": "player",
+    "pronouns": "she/her",
+    "role": "Investigator",
+    "description": "A professional debunker of hauntings, seances and miracles. She has exposed forty frauds and never once seen anything she could not explain. Yet.",
+    "personality": ["rational", "stubborn", "privately afraid of the dark"],
+    "goals": ["Find the trick behind every mystery", "Find out what really happened to her sister"],
+    "abilities": ["Spots a lie", "Picks locks"],
+    "stats": [
+      {
+        "name": "Smarts",
+        "value": 3
+      },
+      {
+        "name": "Nerve",
+        "value": 1
+      },
+      {
+        "name": "Charm",
+        "value": 0
+      }
+    ]
+  }
+}

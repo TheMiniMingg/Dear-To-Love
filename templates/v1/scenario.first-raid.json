@@ -1,0 +1,190 @@
+{
+  "templateSchemaVersion": 1,
+  "type": "scenario",
+  "id": "starter:first-raid",
+  "label": "The Shifting Deep: First Raid",
+  "summary": "Join a four-person party on their first contract together: clear the goblin-held fifth floor before the Deep moves again.",
+  "worlds": ["starter:greywatch"],
+  "title": "The Shifting Deep",
+  "description": "The Adventurers' Guild has posted a contract: goblins have taken the fifth floor of the Shifting Deep and are raiding the supply camps. You have just been assigned to a party of strangers, and the new moon is three days away.",
+  "firstChapterTitle": "The Contract Board",
+  "chapterOutlines": [
+    {
+      "title": "The Contract Board",
+      "outline": "Meet the party at the Copper Tankard and take the contract."
+    },
+    {
+      "title": "Into the Deep",
+      "outline": "Descend through the shifting floors, traps and treasure rooms."
+    },
+    {
+      "title": "The Goblin Hall",
+      "outline": "Face the goblin warband on the fifth floor, and whoever is leading it."
+    },
+    {
+      "title": "The New Moon",
+      "outline": "Get out with the loot before the Deep rearranges itself around you."
+    }
+  ],
+  "scene": {
+    "location": "The Copper Tankard, the guild tavern in Greywatch, on contract night",
+    "summary": "The contract board is crowded with parties. Your new teammates are at a corner table, arguing about loot shares before they have found any loot."
+  },
+  "openThreads": [
+    "Who is leading the goblins, and why are they organized now?",
+    "What is Ysolde really looking for down there?",
+    "How do you split the loot fairly?"
+  ],
+  "npcs": [
+    {
+      "id": "starter:npc-dorn",
+      "name": "Dorn Ashgrave",
+      "control": "npc",
+      "pronouns": "he/him",
+      "role": "Shield-bearer",
+      "species": "Half-orc",
+      "description": "A huge half-orc with a door-sized shield, a soft voice and a notebook of pressed flowers from every floor of the Deep.",
+      "personality": ["gentle", "unshakable", "protective"],
+      "goals": ["Bring the whole party home", "Find a flower that only grows on the ninth floor"],
+      "abilities": ["Holds a corridor alone", "Shield bash"]
+    },
+    {
+      "id": "starter:npc-wren",
+      "name": "Wren Halloway",
+      "control": "npc",
+      "pronouns": "she/her",
+      "role": "Healer",
+      "description": "A priestess of the Lantern Mother who heals with light, swears like a sailor and keeps exact count of who owes her a drink.",
+      "personality": ["sharp-tongued", "brave", "keeps score"],
+      "goals": ["Pay for her temple's new roof", "Prove she is more than a healer"],
+      "abilities": ["Healing light", "Turns back the restless dead"]
+    },
+    {
+      "id": "starter:npc-ysolde",
+      "name": "Ysolde Vane",
+      "control": "npc",
+      "pronouns": "she/her",
+      "role": "Battle mage",
+      "species": "Elf",
+      "description": "An elf battle mage, expelled from the academy for setting a lecture hall on fire. She insists it was on purpose.",
+      "personality": ["proud", "reckless", "secretly lonely"],
+      "goals": ["Find the spellbook her teacher lost in the Deep"],
+      "abilities": ["Fire and lightning spells", "Reads old runes"]
+    },
+    {
+      "id": "starter:npc-kip",
+      "name": "Kip",
+      "control": "npc",
+      "pronouns": "they/them",
+      "role": "Scout",
+      "species": "Kobold",
+      "description": "A kobold scout who maps the Deep in chalk, disarms traps with their tail and has opinions about every door.",
+      "personality": ["chatty", "nervous", "very good at their job"],
+      "goals": ["Draw the first full map of the Deep"],
+      "abilities": ["Finds traps and hidden doors", "Fits through tiny gaps"]
+    }
+  ],
+  "relationships": [
+    {
+      "fromId": "starter:npc-dorn",
+      "toId": "@player",
+      "label": "Party member",
+      "status": "Already treats you like family"
+    },
+    {
+      "fromId": "starter:npc-wren",
+      "toId": "@player",
+      "label": "Party member",
+      "status": "Waiting to see if you pull your weight"
+    },
+    {
+      "fromId": "starter:npc-ysolde",
+      "toId": "@player",
+      "label": "Party member",
+      "status": "Unimpressed, for now"
+    },
+    {
+      "fromId": "starter:npc-kip",
+      "toId": "@player",
+      "label": "Party member",
+      "status": "Curious and talkative"
+    }
+  ],
+  "tracking": {
+    "meters": [
+      {
+        "name": "Health",
+        "value": 100,
+        "max": 100
+      },
+      {
+        "name": "Mana",
+        "value": 40,
+        "max": 40
+      },
+      {
+        "name": "Gold",
+        "value": 25
+      },
+      {
+        "name": "Health",
+        "value": 140,
+        "max": 140,
+        "who": "Dorn Ashgrave"
+      },
+      {
+        "name": "Health",
+        "value": 80,
+        "max": 80,
+        "who": "Wren Halloway"
+      },
+      {
+        "name": "Mana",
+        "value": 60,
+        "max": 60,
+        "who": "Wren Halloway"
+      },
+      {
+        "name": "Health",
+        "value": 70,
+        "max": 70,
+        "who": "Ysolde Vane"
+      },
+      {
+        "name": "Mana",
+        "value": 80,
+        "max": 80,
+        "who": "Ysolde Vane"
+      },
+      {
+        "name": "Health",
+        "value": 60,
+        "max": 60,
+        "who": "Kip"
+      }
+    ],
+    "inventory": true,
+    "items": [
+      {
+        "name": "Healing draught",
+        "qty": 2,
+        "description": "A red potion in a corked vial. Restores a good deal of health."
+      },
+      {
+        "name": "Torch",
+        "qty": 3,
+        "description": "Burns for about an hour. The Deep eats light."
+      },
+      {
+        "name": "Guild badge",
+        "qty": 1,
+        "description": "A copper badge that proves you are a licensed raider of the Shifting Deep."
+      },
+      {
+        "name": "Rations",
+        "qty": 3,
+        "description": "Hard bread, cheese and dried apples for one day."
+      }
+    ]
+  }
+}

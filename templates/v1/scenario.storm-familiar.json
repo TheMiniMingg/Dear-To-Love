@@ -1,0 +1,124 @@
+{
+  "templateSchemaVersion": 1,
+  "type": "scenario",
+  "id": "starter:storm-familiar",
+  "label": "Familiar Trouble",
+  "summary": "Your first-year binding goes wrong and you bond with a storm spirit that should not exist, the week before House trials.",
+  "worlds": ["starter:saltmarsh-lyceum"],
+  "title": "Familiar Trouble",
+  "description": "Every first-year at the Saltmarsh Lyceum binds a small weather spirit: a breeze, a drizzle, a bit of fog. Yours was supposed to be a breeze. Instead, something enormous and crackling answered, and it is now living in your teapot. Binding a storm spirit is forbidden, House trials are in a week, and your roommate has noticed.",
+  "firstChapterTitle": "The Binding",
+  "chapterOutlines": [
+    {
+      "title": "The Binding",
+      "outline": "The binding ceremony goes wrong in the most spectacular way."
+    },
+    {
+      "title": "Hiding a Storm",
+      "outline": "Keep your familiar secret through classes, rivals and a very nosy professor."
+    },
+    {
+      "title": "House Trials",
+      "outline": "Compete in the trials with a storm in your pocket."
+    },
+    {
+      "title": "The Gale",
+      "outline": "Find out who sent the storm spirit to you, and why."
+    }
+  ],
+  "scene": {
+    "location": "The binding circle on the Lyceum's sea cliff, at dawn",
+    "summary": "Thirty first-years stand in chalk circles, holding bowls of seawater. The wind is calm. It will not stay that way."
+  },
+  "openThreads": [
+    "Why did a storm spirit answer you?",
+    "Who is helping you, and who wants you expelled?"
+  ],
+  "npcs": [
+    {
+      "id": "starter:npc-odessa",
+      "name": "Odessa Finch",
+      "control": "npc",
+      "pronouns": "she/her",
+      "age": "19",
+      "role": "Roommate",
+      "description": "Your roommate, a fog-binder from a fishing family who has decided you are her best friend whether you like it or not.",
+      "personality": ["loud", "loyal", "nosy"],
+      "goals": ["Win the Tide Cup for House Gull"],
+      "abilities": ["Calls fog thick enough to hide a ship"]
+    },
+    {
+      "id": "starter:npc-lucan",
+      "name": "Lucan Ashby-Vere",
+      "control": "npc",
+      "pronouns": "he/him",
+      "age": "20",
+      "role": "Rival",
+      "description": "The top student of the year, from an old magical family, who has never been second at anything until now.",
+      "personality": ["arrogant", "brilliant", "secretly kind"],
+      "goals": ["Stay first in the year", "Escape his family's expectations"],
+      "abilities": ["Calls lightning", "Flawless spellwork"]
+    },
+    {
+      "id": "starter:npc-marrow",
+      "name": "Professor Ida Marrow",
+      "control": "npc",
+      "pronouns": "she/her",
+      "role": "Professor of Bindings",
+      "description": "A tiny, ancient professor with a bound hurricane she keeps in a jar on her desk. She notices everything.",
+      "personality": ["strict", "dry", "unexpectedly fond of troublemakers"],
+      "goals": ["Keep her students alive"]
+    }
+  ],
+  "relationships": [
+    {
+      "fromId": "starter:npc-odessa",
+      "toId": "@player",
+      "label": "Roommate",
+      "status": "Already your best friend"
+    },
+    {
+      "fromId": "starter:npc-lucan",
+      "toId": "@player",
+      "label": "Rival",
+      "status": "Annoyed that you exist"
+    },
+    {
+      "fromId": "starter:npc-marrow",
+      "toId": "@player",
+      "label": "Teacher",
+      "status": "Watching you closely"
+    }
+  ],
+  "tracking": {
+    "meters": [
+      {
+        "name": "Mana",
+        "value": 50,
+        "max": 50
+      },
+      {
+        "name": "House points",
+        "value": 0
+      },
+      {
+        "name": "Storm's mood",
+        "value": 50,
+        "max": 100
+      }
+    ],
+    "inventory": true,
+    "items": [
+      {
+        "name": "Binding chalk",
+        "qty": 1,
+        "description": "Sea-salt chalk for drawing binding circles."
+      },
+      {
+        "name": "Chipped teapot",
+        "qty": 1,
+        "description": "Your storm familiar's favorite place to sleep. It rattles when it dreams."
+      }
+    ]
+  }
+}

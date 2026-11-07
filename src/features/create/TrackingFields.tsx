@@ -56,10 +56,18 @@ export function meterText(m: Meter): string {
     : `${m.name} ${value}`;
 }
 
-/** "Health 100/100, Gold 10, inventory of 2 items", or '' when off. */
-export function trackingSummary(tr: Tracking | undefined): string {
+/**
+ * "Health 100/100, Gold 10, inventory of 2 items", or '' when off. Short:
+ * others' bars are counted by whose they are ("bars for 4 others").
+ */
+export function trackingSummary(tr: Tracking | undefined, short = false): string {
   if (!tr) return '';
-  const parts = tr.meters.filter((m) => m.name.trim()).map(meterText);
+  const meters = tr.meters.filter((m) => m.name.trim());
+  const parts = (short ? meters.filter((m) => !m.who) : meters).map(meterText);
+  const others = new Set(meters.flatMap((m) => (m.who ? [m.who] : []))).size;
+  if (short && others > 0) {
+    parts.push(tn(others, 'bars for {n} other', 'bars for {n} others'));
+  }
   if (tr.inventory) {
     const n = (tr.items ?? []).filter((i) => i.name.trim()).length;
     parts.push(tn(n, 'an inventory with {n} item', 'an inventory with {n} items'));

@@ -1,0 +1,102 @@
+{
+  "templateSchemaVersion": 1,
+  "type": "scenario",
+  "id": "starter:last-free-radio",
+  "label": "Arclight: The Last Free Radio",
+  "summary": "A pirate radio station is the last voice in Arclight that STEWARD does not control. Tonight STEWARD found it.",
+  "worlds": ["starter:arclight"],
+  "title": "The Last Free Radio",
+  "description": "Static Hour is a pirate radio show broadcast from a different rooftop every night, the last voice in Arclight that STEWARD does not write. You are its producer. Tonight, mid-broadcast, every drone in the district turns toward your rooftop.",
+  "firstChapterTitle": "Static Hour",
+  "chapterOutlines": [
+    {
+      "title": "Static Hour",
+      "outline": "Finish the broadcast, or run."
+    },
+    {
+      "title": "Across the Rooftops",
+      "outline": "Escape with the transmitter across a city that sees everything."
+    },
+    {
+      "title": "Back on Air",
+      "outline": "Find a way to broadcast the truth to the whole city."
+    }
+  ],
+  "scene": {
+    "location": "A rooftop in the Glasswater district, during a live broadcast, in pouring rain",
+    "summary": "The host is mid-sentence. The transmitter hums under a tarp. Across the street, a hundred drone lights blink on at once."
+  },
+  "openThreads": [
+    "Who gave away the rooftop?",
+    "What truth is worth the risk of one more broadcast?"
+  ],
+  "npcs": [
+    {
+      "id": "starter:npc-dj-lux",
+      "name": "Lux Okoro",
+      "control": "npc",
+      "pronouns": "she/her",
+      "role": "Radio host",
+      "description": "The voice of Static Hour: warm, funny and fearless on air, and terrified off it.",
+      "personality": ["charismatic", "anxious", "kind"],
+      "goals": ["Keep the show on air", "Keep her identity secret"]
+    },
+    {
+      "id": "starter:npc-rook",
+      "name": "Rook",
+      "control": "npc",
+      "pronouns": "he/him",
+      "age": "22",
+      "role": "Courier",
+      "description": "A wiry courier who runs the rooftops on spring-heeled boots and knows every gap between buildings.",
+      "personality": ["cocky", "loyal", "fast"],
+      "goals": ["Prove he is part of the resistance, not just a delivery boy"],
+      "abilities": ["Parkour", "Knows every rooftop route"]
+    }
+  ],
+  "relationships": [
+    {
+      "fromId": "starter:npc-dj-lux",
+      "toId": "@player",
+      "label": "Co-host",
+      "status": "Trusts you with her life"
+    },
+    {
+      "fromId": "starter:npc-rook",
+      "toId": "@player",
+      "label": "Friend",
+      "status": "Would follow you anywhere"
+    }
+  ],
+  "tracking": {
+    "meters": [
+      {
+        "name": "Health",
+        "value": 100,
+        "max": 100
+      },
+      {
+        "name": "Heat",
+        "value": 40,
+        "max": 100
+      },
+      {
+        "name": "Listeners",
+        "value": 2400
+      }
+    ],
+    "inventory": true,
+    "items": [
+      {
+        "name": "Pocket transmitter",
+        "qty": 1,
+        "description": "A brick-sized radio that can broadcast across three districts for ten minutes."
+      },
+      {
+        "name": "EMP charge",
+        "qty": 1,
+        "description": "Knocks out drones and cameras in a small radius for a minute."
+      }
+    ]
+  }
+}

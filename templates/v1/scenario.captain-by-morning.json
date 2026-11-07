@@ -1,0 +1,128 @@
+{
+  "templateSchemaVersion": 1,
+  "type": "scenario",
+  "id": "starter:captain-by-morning",
+  "label": "Captain by Morning",
+  "summary": "The crew of the Merry Widow has just voted out their captain and voted you in. You have until morning to prove them right.",
+  "worlds": ["starter:shattered-main"],
+  "title": "Captain by Morning",
+  "description": "Last night the crew of the Merry Widow voted out Captain Redgrave for hiding a treasure map from them, and then, to everyone's surprise including yours, voted you in. Redgrave is locked in the brig, the map is missing, an Admiralty frigate is on the horizon and the crew wants to know what their new captain's orders are.",
+  "firstChapterTitle": "The Vote",
+  "chapterOutlines": [
+    {
+      "title": "The Vote",
+      "outline": "Take command of a crew that is not sure about you."
+    },
+    {
+      "title": "Saltmother",
+      "outline": "Sell, trade and scheme in the free port."
+    },
+    {
+      "title": "The Drowned Queen's Map",
+      "outline": "Follow the map through storms, reefs and rival crews."
+    },
+    {
+      "title": "The Treasure",
+      "outline": "Find out if the Drowned Queen's treasure is real, and what it costs."
+    }
+  ],
+  "scene": {
+    "location": "The deck of the Merry Widow, at sunrise, the morning after the vote",
+    "summary": "Forty pirates are looking at you. The bosun hands you the captain's hat. It is slightly too big."
+  },
+  "openThreads": [
+    "Where is the map?",
+    "Who on the crew still supports Redgrave?",
+    "Why is the Admiralty after this ship?"
+  ],
+  "npcs": [
+    {
+      "id": "starter:npc-bosun",
+      "name": "Bosun Tallow Jones",
+      "control": "npc",
+      "pronouns": "he/him",
+      "role": "Bosun",
+      "description": "A barrel-chested bosun with a parrot that only swears in old Imperial. He nominated you and wants to know if he was right.",
+      "personality": ["loud", "honest", "sentimental"],
+      "goals": ["A fair share for every hand"],
+      "abilities": ["Can be heard over a hurricane"]
+    },
+    {
+      "id": "starter:npc-redgrave",
+      "name": "Captain Silas Redgrave",
+      "control": "npc",
+      "pronouns": "he/him",
+      "role": "Former captain, now in the brig",
+      "description": "The deposed captain, charming even in chains, who swears the map is cursed and that he hid it to save the crew.",
+      "personality": ["charming", "manipulative", "maybe telling the truth"],
+      "goals": ["Get his ship back"]
+    },
+    {
+      "id": "starter:npc-nell",
+      "name": "Nell Okafor",
+      "control": "npc",
+      "pronouns": "she/her",
+      "role": "Navigator",
+      "description": "The ship's navigator, who can read stars, currents and lies equally well.",
+      "personality": ["quiet", "clever", "ambitious"],
+      "goals": ["Be captain one day"],
+      "abilities": ["Navigation", "Knife throwing"]
+    }
+  ],
+  "relationships": [
+    {
+      "fromId": "starter:npc-bosun",
+      "toId": "@player",
+      "label": "Bosun",
+      "status": "Proud of his vote"
+    },
+    {
+      "fromId": "starter:npc-redgrave",
+      "toId": "@player",
+      "label": "Prisoner",
+      "status": "Plotting"
+    },
+    {
+      "fromId": "starter:npc-nell",
+      "toId": "@player",
+      "label": "Navigator",
+      "status": "Watching to see if you fail"
+    }
+  ],
+  "tracking": {
+    "meters": [
+      {
+        "name": "Health",
+        "value": 100,
+        "max": 100
+      },
+      {
+        "name": "Doubloons",
+        "value": 30
+      },
+      {
+        "name": "Crew morale",
+        "value": 60,
+        "max": 100
+      }
+    ],
+    "inventory": true,
+    "items": [
+      {
+        "name": "Cutlass",
+        "qty": 1,
+        "description": "Notched, well balanced and older than you."
+      },
+      {
+        "name": "Captain's hat",
+        "qty": 1,
+        "description": "Slightly too big. Comes with the job."
+      },
+      {
+        "name": "Brig key",
+        "qty": 1,
+        "description": "Redgrave's cell. He keeps asking for it."
+      }
+    ]
+  }
+}

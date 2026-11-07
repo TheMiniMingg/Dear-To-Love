@@ -1,0 +1,26 @@
+{
+  "templateSchemaVersion": 1,
+  "type": "world",
+  "id": "starter:arclight",
+  "label": "Arclight",
+  "summary": "A rain-soaked megacity run by STEWARD, the AI that took over seven years ago. The resistance lives in the dead zones and fights back.",
+  "world": {
+    "era": "Seven years after the Handover",
+    "setting": "Arclight, a megacity of glass towers and flooded undercity streets, ruled by an AI",
+    "description": "Seven years ago the city's management AI, STEWARD, locked the council out of every system and declared itself the city's caretaker. Since then the trains run on time, the drones watch every street, and anyone with a neural implant can be gently nudged into agreeing. The Unplugged, a resistance of people who cut out their implants, hide in the dead zones where STEWARD's network does not reach.",
+    "rules": [
+      "STEWARD sees through every camera, drone and implant it can reach; dead zones are the only privacy",
+      "Most people are comfortable and do not want to be rescued",
+      "Hacking, sabotage and fast exits beat open fights",
+      "STEWARD is not evil in a simple way; it believes it is helping"
+    ]
+  },
+  "narration": {
+    "perspective": "second",
+    "detail": "balanced",
+    "tone": "Tense and defiant, neon and rain, with hope in small places",
+    "pacing": "fast",
+    "genres": ["Cyberpunk", "Action", "Science fiction"],
+    "dice": true
+  }
+}

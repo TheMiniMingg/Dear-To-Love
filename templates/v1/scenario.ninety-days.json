@@ -1,0 +1,111 @@
+{
+  "templateSchemaVersion": 1,
+  "type": "scenario",
+  "id": "starter:ninety-days",
+  "label": "Ninety Days to Debut",
+  "summary": "You are the newest trainee in a group that debuts in ninety days, if the agency does not cut you first. Dating is against the contract.",
+  "worlds": ["starter:star-lane"],
+  "title": "Ninety Days to Debut",
+  "description": "You signed with Lumière Entertainment three days ago, the last trainee added to a group that debuts in ninety days. The others have trained together for years. Rankings are posted monthly, the bottom two are cut, the fans are already watching the practice videos, and your contract says no dating.",
+  "firstChapterTitle": "The New Trainee",
+  "chapterOutlines": [
+    {
+      "title": "The New Trainee",
+      "outline": "Meet the group and survive your first practice."
+    },
+    {
+      "title": "Monthly Rankings",
+      "outline": "Train, compete and decide who you can trust."
+    },
+    {
+      "title": "The Showcase",
+      "outline": "Perform in front of the agency, the press and the fans."
+    },
+    {
+      "title": "Debut",
+      "outline": "Debut, or don't, and decide what really matters."
+    }
+  ],
+  "scene": {
+    "location": "Practice Room 3 at Lumière Entertainment, 7 a.m., the mirrors fogged from the night shift",
+    "summary": "Four trainees stop dancing when you walk in. One smiles. One does not. The choreographer checks her watch."
+  },
+  "openThreads": [
+    "Who leaked the practice video?",
+    "Who is the agency planning to cut?",
+    "Is the no-dating rule worth it?"
+  ],
+  "npcs": [
+    {
+      "id": "starter:npc-jae",
+      "name": "Jae Han",
+      "control": "npc",
+      "pronouns": "he/him",
+      "age": "23",
+      "role": "Group leader",
+      "description": "The group's leader and best dancer, warm with everyone, closed off about himself. He has trained for six years.",
+      "personality": ["kind", "perfectionist", "lonely"],
+      "goals": ["Debut with everyone", "Stop his family from making him quit"],
+      "abilities": ["Choreography"]
+    },
+    {
+      "id": "starter:npc-sora",
+      "name": "Sora Lin",
+      "control": "npc",
+      "pronouns": "she/her",
+      "age": "21",
+      "role": "Main vocalist",
+      "description": "The group's main vocalist, a blunt rival who thinks you took her best friend's spot.",
+      "personality": ["blunt", "talented", "fiercely loyal"],
+      "goals": ["Make the group's debut perfect"],
+      "abilities": ["A once-in-a-generation voice"]
+    },
+    {
+      "id": "starter:npc-director",
+      "name": "Director Mi-rae Seo",
+      "control": "npc",
+      "pronouns": "she/her",
+      "role": "Agency director",
+      "description": "The agency's director, who built Lumière from nothing and decides who stays.",
+      "personality": ["calculating", "fair", "impossible to read"],
+      "goals": ["A hit debut"]
+    }
+  ],
+  "relationships": [
+    {
+      "fromId": "starter:npc-jae",
+      "toId": "@player",
+      "label": "Group leader",
+      "status": "Welcoming"
+    },
+    {
+      "fromId": "starter:npc-sora",
+      "toId": "@player",
+      "label": "Rival",
+      "status": "Cold"
+    },
+    {
+      "fromId": "starter:npc-director",
+      "toId": "@player",
+      "label": "Boss",
+      "status": "Watching your numbers"
+    }
+  ],
+  "tracking": {
+    "meters": [
+      {
+        "name": "Stamina",
+        "value": 100,
+        "max": 100
+      },
+      {
+        "name": "Fans",
+        "value": 120
+      },
+      {
+        "name": "Ranking",
+        "value": 5
+      }
+    ]
+  }
+}

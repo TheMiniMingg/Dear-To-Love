@@ -7,6 +7,7 @@ import { STORY_TYPES, withStoryType, worldFits } from './ContentFields';
 import { fittingScenarios } from './WizardSteps';
 import { joinList, t, tOptions } from '../../i18n';
 import { DETAILS, PERSPECTIVES, appStoryLanguage, storyLanguageLabel } from './StyleFields';
+import { trackingSummary } from './TrackingFields';
 
 /** Quick Start: pick presets with arrows or menus. No typing required. */
 export function QuickStartScreen() {
@@ -172,6 +173,12 @@ export function QuickStartScreen() {
               </dd>
               <dt>{t('First chapter')}</dt>
               <dd>{scenario?.firstChapterTitle}</dd>
+              {scenario?.tracking && (
+                <>
+                  <dt>{t('Tracking')}</dt>
+                  <dd>{trackingSummary(scenario.tracking, true)}</dd>
+                </>
+              )}
               <dt>{t('Tone')}</dt>
               <dd>{world?.narration.tone}</dd>
               {(storyType || (world?.narration.genres?.length ?? 0) > 0) && (

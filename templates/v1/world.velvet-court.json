@@ -1,0 +1,25 @@
+{
+  "templateSchemaVersion": 1,
+  "type": "world",
+  "id": "starter:velvet-court",
+  "label": "The Velvet Court",
+  "summary": "A city where vampire houses rule the night by an old treaty with the living, and the treaty is up for renewal.",
+  "world": {
+    "era": "The three hundredth year of the Night Treaty",
+    "setting": "Ravenna, a city of canals and candlelit palaces, ruled by day by mortals and by night by the Velvet Court",
+    "description": "Three centuries ago the vampire houses and the living of Ravenna signed the Night Treaty: the houses keep the city safe after dark, and the living keep their secret. Every fifty years a mortal envoy must renew it before the Court. The houses are elegant, ancient and endlessly scheming, and not all of them want the treaty renewed.",
+    "rules": [
+      "Vampires are charming, old and dangerous; they keep their word to the letter, never the spirit",
+      "Invitations, titles and favors are the real currency of the Court",
+      "Feeding happens offscreen and only with consent",
+      "Every character is an adult"
+    ]
+  },
+  "narration": {
+    "perspective": "second",
+    "detail": "detailed",
+    "tone": "Lush, dangerous and slow-burning",
+    "pacing": "slow",
+    "genres": ["Romance", "Horror", "Drama"]
+  }
+}

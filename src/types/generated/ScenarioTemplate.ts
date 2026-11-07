@@ -3,9 +3,16 @@ import type { ChapterOutlineInput } from "./ChapterOutlineInput";
 import type { Character } from "./Character";
 import type { Relationship } from "./Relationship";
 import type { SceneTemplate } from "./SceneTemplate";
+import type { Tracking } from "./Tracking";
 
 export type ScenarioTemplate = { templateSchemaVersion: number, id: string, label: string, summary: string, 
 /**
  * Worlds this scenario was written for; empty means any world.
  */
-worlds: Array<string>, title: string, description: string, firstChapterTitle: string, chapterOutlines: Array<ChapterOutlineInput>, scene: SceneTemplate, openThreads: Array<string>, npcs: Array<Character>, relationships: Array<Relationship>, };
+worlds: Array<string>, title: string, description: string, firstChapterTitle: string, chapterOutlines: Array<ChapterOutlineInput>, scene: SceneTemplate, openThreads: Array<string>, npcs: Array<Character>, relationships: Array<Relationship>, 
+/**
+ * What the story starts tracking (bars, counters, items), for
+ * scenarios written as adventures. Unset: nothing is tracked unless
+ * the player turns it on.
+ */
+tracking?: Tracking, };

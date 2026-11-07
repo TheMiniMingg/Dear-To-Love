@@ -1,0 +1,122 @@
+{
+  "templateSchemaVersion": 1,
+  "type": "scenario",
+  "id": "starter:thirteenth-bell",
+  "label": "The Thirteenth Bell",
+  "summary": "The church bell of Brackwater rings once the night before a death. Last night it rang thirteen times, and you have just arrived.",
+  "worlds": ["starter:brackwater"],
+  "title": "The Thirteenth Bell",
+  "description": "You came to Brackwater for an inheritance: a house from an aunt you never met. You arrived the night the bell rang thirteen times. Now the causeway has flooded, the villagers are boarding their windows, and your aunt's diary says she knew this night would come.",
+  "firstChapterTitle": "The Inheritance",
+  "chapterOutlines": [
+    {
+      "title": "The Inheritance",
+      "outline": "Arrive at your aunt's house and read the first pages of her diary."
+    },
+    {
+      "title": "The First Death",
+      "outline": "The bell was right. Find out who will be next."
+    },
+    {
+      "title": "Under the Church",
+      "outline": "Go down into the crypt the village pretends does not exist."
+    },
+    {
+      "title": "The Last Toll",
+      "outline": "Face what rings the bell before it rings for you."
+    }
+  ],
+  "scene": {
+    "location": "Your late aunt's house at the edge of Brackwater, on a foggy evening in November",
+    "summary": "The house smells of damp and lavender. On the desk, your aunt's diary is open to a page that says, in shaking handwriting, Thirteen. I knew it."
+  },
+  "openThreads": [
+    "What did your aunt know about the bell?",
+    "Who rings it, if anyone?",
+    "Why thirteen?"
+  ],
+  "npcs": [
+    {
+      "id": "starter:npc-rector",
+      "name": "Reverend Silas Crane",
+      "control": "npc",
+      "pronouns": "he/him",
+      "role": "Rector",
+      "description": "The village rector, gentle and pale, who has buried every villager for forty years and never once looked surprised.",
+      "personality": ["gentle", "evasive", "tired"],
+      "goals": ["Keep the village's secret", "Atone for something"]
+    },
+    {
+      "id": "starter:npc-agnes",
+      "name": "Agnes Pell",
+      "control": "npc",
+      "pronouns": "she/her",
+      "role": "Housekeeper",
+      "description": "Your aunt's housekeeper, who comes with the house and refuses to leave it. She sets a place at dinner for someone who never comes.",
+      "personality": ["blunt", "superstitious", "fiercely protective"],
+      "goals": ["Keep you alive until spring"]
+    },
+    {
+      "id": "starter:npc-doctor",
+      "name": "Dr. Elias Hartwell",
+      "control": "npc",
+      "pronouns": "he/him",
+      "role": "Village doctor",
+      "description": "A young doctor from London who came to Brackwater to escape a scandal and does not believe in bells.",
+      "personality": ["rational", "charming", "frightened underneath"],
+      "goals": ["Prove there is a scientific explanation"]
+    }
+  ],
+  "relationships": [
+    {
+      "fromId": "starter:npc-rector",
+      "toId": "@player",
+      "label": "Rector",
+      "status": "Polite and watchful"
+    },
+    {
+      "fromId": "starter:npc-agnes",
+      "toId": "@player",
+      "label": "Housekeeper",
+      "status": "Wary, but on your side"
+    },
+    {
+      "fromId": "starter:npc-doctor",
+      "toId": "@player",
+      "label": "Fellow outsider",
+      "status": "Glad of someone sensible"
+    }
+  ],
+  "tracking": {
+    "meters": [
+      {
+        "name": "Health",
+        "value": 100,
+        "max": 100
+      },
+      {
+        "name": "Sanity",
+        "value": 100,
+        "max": 100
+      }
+    ],
+    "inventory": true,
+    "items": [
+      {
+        "name": "Aunt Hester's diary",
+        "qty": 1,
+        "description": "Forty years of notes about the bell, the deaths and the village. The last pages are torn out."
+      },
+      {
+        "name": "Oil lamp",
+        "qty": 1,
+        "description": "Half full. The fen fog swallows its light."
+      },
+      {
+        "name": "Iron key",
+        "qty": 1,
+        "description": "Found in the diary's spine. It does not fit any door in the house."
+      }
+    ]
+  }
+}

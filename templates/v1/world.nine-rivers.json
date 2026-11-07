@@ -1,0 +1,26 @@
+{
+  "templateSchemaVersion": 1,
+  "type": "world",
+  "id": "starter:nine-rivers",
+  "label": "The Nine Rivers",
+  "summary": "A land of martial sects, wandering swordsmen and old grudges, where a stolen technique manual can start a war.",
+  "world": {
+    "era": "An age of sects and wandering heroes",
+    "setting": "The Nine Rivers, a land of misty mountains, river towns and rival martial sects",
+    "description": "The great martial sects of the Nine Rivers keep the peace, more or less, through tournaments, marriages and very long memories. Masters can run across rooftops and cut a falling leaf in three. Each sect guards its secret techniques in a manual, and a stolen manual is reason enough for a feud that lasts a generation.",
+    "rules": [
+      "Martial arts are near-magical; qi lets masters do the impossible",
+      "Honor, loyalty and debts of gratitude bind everyone",
+      "Teahouses and inns are where news, challenges and trouble start",
+      "Fights are graceful and fast; the clever fighter beats the strong one"
+    ]
+  },
+  "narration": {
+    "perspective": "second",
+    "detail": "balanced",
+    "tone": "Graceful and fierce, with honor and old grudges",
+    "pacing": "normal",
+    "genres": ["Action", "Fantasy", "Historical"],
+    "dice": true
+  }
+}

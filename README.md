@@ -60,26 +60,46 @@ your first action.
 
 ![Quick Start](docs/screenshots/quickstart.png)
 
-Sixteen worlds are included, each with its own scenario:
+33 worlds are included, each with at least one scenario, and 27 characters to play. Scenarios
+marked ★ start with health, items and more already set up, like an RPG: a dungeon party with
+everyone's health and mana, an inventory of potions and torches, a ship's hull and fuel, or a
+vampire house's favor. You can change or remove any of it.
 
-| World                | Genres                                      | Scenario                |
-| -------------------- | ------------------------------------------- | ----------------------- |
-| Harbor Town          | Mystery, Romance, Slice of life             | The Unsigned Letter     |
-| The Glass Orchard    | Fantasy, Drama                              | The Memory Harvest      |
-| Meridian Station     | Science fiction, Mystery                    | Night Shift on Meridian |
-| Ashcombe, 1923       | Historical, Romance, Comedy                 | The Summer Guest        |
-| Hollow Pines         | Horror, Mystery                             | Dead Air                |
-| The Ember Road       | Fantasy, Adventure                          | The Last Caravan        |
-| Larkport             | Romance, Comedy, Drama                      | The Wrong Reservation   |
-| Vesper City          | Science fiction, Noir, Thriller             | Ghost in the Ledger     |
-| Northgate University | School life, Romance, Comedy, Slice of life | Midterm Week            |
-| The Underhalls       | Adventure, Fantasy, Action                  | The Lantern Job         |
-| Neon Harbor          | Cyberpunk, Thriller, Science fiction        | Clean Slate             |
-| The Dry Country      | Post-apocalyptic, Adventure, Drama          | The Water Run           |
-| Lumen City           | Superhero, Action, Comedy                   | Night of the Blackout   |
-| Dust Creek           | Western, Adventure, Drama                   | The Stage from Redwater |
-| The Lantern Palace   | Historical, Drama, Romance                  | The Empress's Tea       |
-| Maple & Fern         | Dating sim, Romance, Slice of life          | First Week at the Café  |
+| World                   | Genres                                      | Scenario                              |
+| ----------------------- | ------------------------------------------- | ------------------------------------- |
+| Harbor Town             | Mystery, Romance, Slice of life             | The Unsigned Letter                   |
+| The Glass Orchard       | Fantasy, Drama                              | The Memory Harvest                    |
+| Meridian Station        | Science fiction, Mystery                    | Night Shift on Meridian               |
+| Ashcombe, 1923          | Historical, Romance, Comedy                 | The Summer Guest                      |
+| Hollow Pines            | Horror, Mystery                             | Dead Air                              |
+| The Ember Road          | Fantasy, Adventure                          | The Last Caravan                      |
+| Larkport                | Romance, Comedy, Drama                      | The Wrong Reservation                 |
+| Vesper City             | Science fiction, Noir, Thriller             | Ghost in the Ledger                   |
+| Northgate University    | School life, Romance, Comedy, Slice of life | Midterm Week                          |
+| The Underhalls          | Adventure, Fantasy, Action                  | The Lantern Job                       |
+| Neon Harbor             | Cyberpunk, Thriller, Science fiction        | Clean Slate                           |
+| The Dry Country         | Post-apocalyptic, Adventure, Drama          | The Water Run                         |
+| Lumen City              | Superhero, Action, Comedy                   | Night of the Blackout                 |
+| Dust Creek              | Western, Adventure, Drama                   | The Stage from Redwater               |
+| The Lantern Palace      | Historical, Drama, Romance                  | The Empress's Tea                     |
+| Maple & Fern            | Dating sim, Romance, Slice of life          | First Week at the Café                |
+| Greywatch               | Fantasy, Adventure, Action                  | The Shifting Deep ★; The Lost Party ★ |
+| Arclight                | Cyberpunk, Action, Science fiction          | Going Dark ★; The Last Free Radio ★   |
+| The Saltmarsh Lyceum    | School life, Fantasy, Romance               | Familiar Trouble ★                    |
+| Brackwater, 1891        | Horror, Mystery, Historical                 | The Thirteenth Bell ★                 |
+| Juniper Heights, Day 41 | Post-apocalyptic, Horror, Action            | The Supply Run ★                      |
+| The Tallow Drift        | Science fiction, Adventure, Comedy          | The Ghost Liner ★                     |
+| Star Lane               | Romance, Drama, Slice of life               | Ninety Days to Debut ★                |
+| The Tumbledown Isles    | Slice of life, Fantasy, Comedy              | The Potion Shop on Pell Island ★      |
+| The Velvet Court        | Romance, Horror, Drama                      | The Treaty Night ★                    |
+| The Aurelia, 1934       | Mystery, Historical, Thriller               | The Empty Cabin ★                     |
+| The Shattered Main      | Adventure, Action, Comedy                   | Captain by Morning ★                  |
+| The Nine Rivers         | Action, Fantasy, Historical                 | The Stolen Manual ★                   |
+| The Rosaline Court      | Romance, Fantasy, Comedy                    | The Villainess Wakes ★                |
+| Calder Falls            | Mystery, Science fiction, Drama             | Tuesday, Again ★                      |
+| Isla Monarch            | Thriller, Action, Drama                     | One Night at the Monarch ★            |
+| Doomspire Tower         | Superhero, Comedy, Action                   | Local 404 ★                           |
+| The Ashen Throne        | Fantasy, Drama, Action                      | The Regent's First Winter ★           |
 
 The Underhalls is home to orcs, goblins and lizardfolk, and the player characters include an
 orc delver, a goblin tinkerer and a lizardfolk scout. Guided creation offers more than 40 races

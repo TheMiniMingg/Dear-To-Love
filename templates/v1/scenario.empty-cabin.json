@@ -1,0 +1,110 @@
+{
+  "templateSchemaVersion": 1,
+  "type": "scenario",
+  "id": "starter:empty-cabin",
+  "label": "The Empty Cabin",
+  "summary": "Halfway across the Atlantic a passenger vanishes from a cabin locked from the inside. The captain asks you to find out how.",
+  "worlds": ["starter:aurelia-1934"],
+  "title": "The Empty Cabin",
+  "description": "On the second night aboard the Aurelia, the financier Lionel Ashworth vanished from his cabin, which was locked from the inside, two thousand feet above the ocean. The captain cannot turn back and cannot call the police. He has asked you to find out what happened before the ship lands in New York.",
+  "firstChapterTitle": "Cabin 14",
+  "chapterOutlines": [
+    {
+      "title": "Cabin 14",
+      "outline": "Examine the locked cabin and what was left behind."
+    },
+    {
+      "title": "The Passengers",
+      "outline": "Question the guests, the crew and the stowaway nobody admits exists."
+    },
+    {
+      "title": "Over the Clouds",
+      "outline": "A second crime raises the stakes."
+    },
+    {
+      "title": "Landfall",
+      "outline": "Gather everyone in the ballroom and name the truth before New York."
+    }
+  ],
+  "scene": {
+    "location": "Corridor B on the Aurelia, outside Cabin 14, at two in the morning",
+    "summary": "The steward has the master key in a shaking hand. The captain is waiting. Behind the door, nothing but the hum of the engines."
+  },
+  "openThreads": [
+    "How do you leave a locked room on an airship?",
+    "Who benefits from Ashworth's disappearance?"
+  ],
+  "npcs": [
+    {
+      "id": "starter:npc-captain",
+      "name": "Captain Henrik Lund",
+      "control": "npc",
+      "pronouns": "he/him",
+      "role": "Captain of the Aurelia",
+      "description": "The Aurelia's Norwegian captain, who has never lost a passenger and is quietly furious about it.",
+      "personality": ["proud", "precise", "decent"],
+      "goals": ["Land in New York without a scandal"]
+    },
+    {
+      "id": "starter:npc-vivienne",
+      "name": "Vivienne Marchetti",
+      "control": "npc",
+      "pronouns": "she/her",
+      "role": "Film star",
+      "description": "A glamorous film star traveling under a false name, who was seen arguing with Ashworth at dinner.",
+      "personality": ["dazzling", "evasive", "sharper than she lets on"],
+      "goals": ["Keep her real name out of the papers"]
+    },
+    {
+      "id": "starter:npc-ashworth-secretary",
+      "name": "Arthur Pym",
+      "control": "npc",
+      "pronouns": "he/him",
+      "role": "Ashworth's secretary",
+      "description": "The missing man's secretary, who seems more relieved than worried.",
+      "personality": ["meek", "nervous", "precise"],
+      "goals": ["Find a certain document before anyone else does"]
+    }
+  ],
+  "relationships": [
+    {
+      "fromId": "starter:npc-captain",
+      "toId": "@player",
+      "label": "Client",
+      "status": "Desperate for discretion"
+    },
+    {
+      "fromId": "starter:npc-vivienne",
+      "toId": "@player",
+      "label": "Suspect",
+      "status": "Flirting to distract you"
+    },
+    {
+      "fromId": "starter:npc-ashworth-secretary",
+      "toId": "@player",
+      "label": "Suspect",
+      "status": "Avoiding your eyes"
+    }
+  ],
+  "tracking": {
+    "meters": [
+      {
+        "name": "Clues",
+        "value": 0
+      }
+    ],
+    "inventory": true,
+    "items": [
+      {
+        "name": "Passenger list",
+        "qty": 1,
+        "description": "Forty names, six of them false."
+      },
+      {
+        "name": "Notebook",
+        "qty": 1,
+        "description": "For clues, suspicions and the occasional sketch of a suspect's shoes."
+      }
+    ]
+  }
+}

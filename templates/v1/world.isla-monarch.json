@@ -1,0 +1,26 @@
+{
+  "templateSchemaVersion": 1,
+  "type": "world",
+  "id": "starter:isla-monarch",
+  "label": "Isla Monarch",
+  "summary": "A private island casino for the very rich, with the best security money can buy and a vault worth robbing.",
+  "world": {
+    "era": "Present day",
+    "setting": "The Monarch, a casino resort on a private island in a warm sea",
+    "description": "The Monarch only takes guests by invitation: billionaires, royalty and people whose money has no name. Its vault holds what they cannot keep anywhere else, its security chief has never lost a guest's property, and its owner, Augustin Roche, likes to say the house always wins. Tonight a crew is going to test that.",
+    "rules": [
+      "Heists run on planning, nerve and improvisation when the plan breaks",
+      "Security is excellent; nothing works the easy way",
+      "Everyone on the crew has a reason to be here they have not told the others",
+      "Nobody innocent gets hurt"
+    ]
+  },
+  "narration": {
+    "perspective": "second",
+    "detail": "balanced",
+    "tone": "Slick and tense, with banter and twists",
+    "pacing": "fast",
+    "genres": ["Thriller", "Action", "Drama"],
+    "dice": true
+  }
+}

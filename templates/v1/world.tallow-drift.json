@@ -1,0 +1,26 @@
+{
+  "templateSchemaVersion": 1,
+  "type": "world",
+  "id": "starter:tallow-drift",
+  "label": "The Tallow Drift",
+  "summary": "A junk belt of dead ships and broken stations, worked by salvage crews with more debt than sense.",
+  "world": {
+    "era": "The long quiet after the Colony Wars",
+    "setting": "The Tallow Drift, an asteroid belt full of wrecks, and the salvage tug Second Chance",
+    "description": "The Colony Wars ended forty years ago and left the Tallow Drift full of wrecks: warships, liners, mining rigs and things nobody can name. Salvage crews work it for parts and bounties, sell at Gristle Station, and try not to think about the ships that went in to salvage and became salvage themselves.",
+    "rules": [
+      "Space is cold, quiet and unforgiving; air and fuel are always counted",
+      "Ship systems break at the worst moment and are fixed with tape and swearing",
+      "Salvage law is simple: whoever docks first owns it",
+      "Some wrecks are not as empty as they look"
+    ]
+  },
+  "narration": {
+    "perspective": "second",
+    "detail": "balanced",
+    "tone": "Scrappy and funny, with a cold edge of the uncanny",
+    "pacing": "normal",
+    "genres": ["Science fiction", "Adventure", "Comedy"],
+    "dice": true
+  }
+}

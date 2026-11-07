@@ -155,24 +155,54 @@ three kinds, and any mix works:
 
 - **Worlds**: setting, era, description, rules, and narration defaults including genres.
 - **Scenarios**: title, premise, opening scene, open questions, other characters, chapter
-  plan. A scenario can be tied to one world.
+  plan, and optionally the bars, counters and items it starts with. A scenario can be tied to
+  one world.
 - **Characters**: who you play.
 
 Bundled with the app:
 
-| World             | Genres                          | Scenario                |
-| ----------------- | ------------------------------- | ----------------------- |
-| Harbor Town       | Mystery, Romance, Slice of life | The Unsigned Letter     |
-| The Glass Orchard | Fantasy, Drama                  | The Memory Harvest      |
-| Meridian Station  | Science fiction, Mystery        | Night Shift on Meridian |
-| Ashcombe, 1923    | Historical, Romance, Comedy     | The Summer Guest        |
-| Hollow Pines      | Horror, Mystery                 | Dead Air                |
-| The Ember Road    | Fantasy, Adventure              | The Last Caravan        |
-| Larkport          | Romance, Comedy, Drama          | The Wrong Reservation   |
-| Vesper City       | Science fiction, Noir, Thriller | Ghost in the Ledger     |
+| World                   | Genres                                      | Scenario                              |
+| ----------------------- | ------------------------------------------- | ------------------------------------- |
+| Harbor Town             | Mystery, Romance, Slice of life             | The Unsigned Letter                   |
+| The Glass Orchard       | Fantasy, Drama                              | The Memory Harvest                    |
+| Meridian Station        | Science fiction, Mystery                    | Night Shift on Meridian               |
+| Ashcombe, 1923          | Historical, Romance, Comedy                 | The Summer Guest                      |
+| Hollow Pines            | Horror, Mystery                             | Dead Air                              |
+| The Ember Road          | Fantasy, Adventure                          | The Last Caravan                      |
+| Larkport                | Romance, Comedy, Drama                      | The Wrong Reservation                 |
+| Vesper City             | Science fiction, Noir, Thriller             | Ghost in the Ledger                   |
+| Northgate University    | School life, Romance, Comedy, Slice of life | Midterm Week                          |
+| The Underhalls          | Adventure, Fantasy, Action                  | The Lantern Job                       |
+| Neon Harbor             | Cyberpunk, Thriller, Science fiction        | Clean Slate                           |
+| The Dry Country         | Post-apocalyptic, Adventure, Drama          | The Water Run                         |
+| Lumen City              | Superhero, Action, Comedy                   | Night of the Blackout                 |
+| Dust Creek              | Western, Adventure, Drama                   | The Stage from Redwater               |
+| The Lantern Palace      | Historical, Drama, Romance                  | The Empress's Tea                     |
+| Maple & Fern            | Dating sim, Romance, Slice of life          | First Week at the Café                |
+| Greywatch               | Fantasy, Adventure, Action                  | The Shifting Deep ★; The Lost Party ★ |
+| Arclight                | Cyberpunk, Action, Science fiction          | Going Dark ★; The Last Free Radio ★   |
+| The Saltmarsh Lyceum    | School life, Fantasy, Romance               | Familiar Trouble ★                    |
+| Brackwater, 1891        | Horror, Mystery, Historical                 | The Thirteenth Bell ★                 |
+| Juniper Heights, Day 41 | Post-apocalyptic, Horror, Action            | The Supply Run ★                      |
+| The Tallow Drift        | Science fiction, Adventure, Comedy          | The Ghost Liner ★                     |
+| Star Lane               | Romance, Drama, Slice of life               | Ninety Days to Debut ★                |
+| The Tumbledown Isles    | Slice of life, Fantasy, Comedy              | The Potion Shop on Pell Island ★      |
+| The Velvet Court        | Romance, Horror, Drama                      | The Treaty Night ★                    |
+| The Aurelia, 1934       | Mystery, Historical, Thriller               | The Empty Cabin ★                     |
+| The Shattered Main      | Adventure, Action, Comedy                   | Captain by Morning ★                  |
+| The Nine Rivers         | Action, Fantasy, Historical                 | The Stolen Manual ★                   |
+| The Rosaline Court      | Romance, Fantasy, Comedy                    | The Villainess Wakes ★                |
+| Calder Falls            | Mystery, Science fiction, Drama             | Tuesday, Again ★                      |
+| Isla Monarch            | Thriller, Action, Drama                     | One Night at the Monarch ★            |
+| Doomspire Tower         | Superhero, Comedy, Action                   | Local 404 ★                           |
+| The Ashen Throne        | Fantasy, Drama, Action                      | The Regent's First Winter ★           |
 
-and eight characters to play, from a new lighthouse keeper to a sellsword and a late-night
-radio host.
+and 27 characters to play, from a new lighthouse keeper to an elf hedge mage, a netrunner, a
+pirate quartermaster and a duke's daughter with a terrible reputation. Scenarios marked ★
+start with **Keep track of health, items and more** turned on, with bars, counters and items
+written for them (the party's health and mana in Greywatch, the ship's hull in the Tallow
+Drift, each vampire house's favor in the Velvet Court). Quick Start and the wizard show what
+a scenario tracks before you start, and you can change or remove any of it.
 
 ### How templates are made
 
@@ -199,6 +229,21 @@ A world looks like this:
     "pacing": "slow",
     "genres": ["Horror", "Mystery"]
   }
+}
+```
+
+A scenario can start the story with bars, counters and items. Add a `tracking` block in the
+same shape Story details uses (`who` names a party member, or a ship or house):
+
+```json
+"tracking": {
+  "meters": [
+    { "name": "Health", "value": 100, "max": 100 },
+    { "name": "Gold", "value": 25 },
+    { "name": "Health", "value": 140, "max": 140, "who": "Dorn Ashgrave" }
+  ],
+  "inventory": true,
+  "items": [{ "name": "Healing draught", "qty": 2, "description": "Restores a good deal of health." }]
 }
 ```
 

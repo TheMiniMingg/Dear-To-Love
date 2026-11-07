@@ -1,0 +1,33 @@
+{
+  "templateSchemaVersion": 1,
+  "type": "character",
+  "id": "starter:dukes-daughter",
+  "label": "The Duke's Daughter",
+  "summary": "A sharp-tongued noblewoman with a terrible reputation, a good heart and a plan to change her fate.",
+  "character": {
+    "id": "starter:dukes-daughter",
+    "name": "Lady Cordelia Ashgrove",
+    "control": "player",
+    "pronouns": "she/her",
+    "age": "20",
+    "role": "Duke's daughter",
+    "description": "The proud daughter of a powerful duke, famous for her temper and her cruelty to rivals. Lately she has been behaving very differently, as if she were a new person.",
+    "personality": ["sharp", "proud", "kinder than her reputation"],
+    "goals": ["Escape the fate everyone expects", "Find out who she can trust"],
+    "abilities": ["Court etiquette", "Reads people's ambitions"],
+    "stats": [
+      {
+        "name": "Charm",
+        "value": 2
+      },
+      {
+        "name": "Smarts",
+        "value": 2
+      },
+      {
+        "name": "Nerve",
+        "value": 1
+      }
+    ]
+  }
+}

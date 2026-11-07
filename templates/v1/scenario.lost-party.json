@@ -1,0 +1,134 @@
+{
+  "templateSchemaVersion": 1,
+  "type": "scenario",
+  "id": "starter:lost-party",
+  "label": "The Shifting Deep: The Lost Party",
+  "summary": "A famous party went into the Deep and only their map came back. The guild pays double to find out what happened.",
+  "worlds": ["starter:greywatch"],
+  "title": "The Lost Party",
+  "description": "The Gilded Spear, Greywatch's most famous party, went down a month ago. Yesterday their map came back up the shaft by itself, covered in fresh notes in a handwriting nobody recognizes. The guild is paying double for a party to follow it.",
+  "firstChapterTitle": "The Map That Came Back",
+  "chapterOutlines": [
+    {
+      "title": "The Map That Came Back",
+      "outline": "Study the map and assemble the rescue party."
+    },
+    {
+      "title": "The Drowned Floor",
+      "outline": "Follow the notes through a flooded floor full of things that hunt by sound."
+    },
+    {
+      "title": "The Gilded Spear",
+      "outline": "Find the lost party, and the truth about who wrote the notes."
+    }
+  ],
+  "scene": {
+    "location": "The guild hall in Greywatch, at the long table where the map is pinned down with daggers",
+    "summary": "The map twitches now and then, as if something is still writing on it. The guildmaster wants volunteers."
+  },
+  "openThreads": ["Who is writing on the map?", "Is anyone from the Gilded Spear still alive?"],
+  "npcs": [
+    {
+      "id": "starter:npc-maelis",
+      "name": "Guildmaster Maelis Orr",
+      "control": "npc",
+      "pronouns": "she/her",
+      "role": "Guildmaster",
+      "description": "A retired raider with one hand, a silver hook and a reputation for never losing a party. She has just lost one.",
+      "personality": ["stern", "guilty", "loyal to her raiders"],
+      "goals": ["Bring the Gilded Spear home", "Keep the guild's name clean"]
+    },
+    {
+      "id": "starter:npc-dorn",
+      "name": "Dorn Ashgrave",
+      "control": "npc",
+      "pronouns": "he/him",
+      "role": "Shield-bearer",
+      "species": "Half-orc",
+      "description": "A huge half-orc with a door-sized shield, a soft voice and a notebook of pressed flowers from every floor of the Deep.",
+      "personality": ["gentle", "unshakable", "protective"],
+      "goals": ["Bring the whole party home", "Find a flower that only grows on the ninth floor"],
+      "abilities": ["Holds a corridor alone", "Shield bash"]
+    },
+    {
+      "id": "starter:npc-kip",
+      "name": "Kip",
+      "control": "npc",
+      "pronouns": "they/them",
+      "role": "Scout",
+      "species": "Kobold",
+      "description": "A kobold scout who maps the Deep in chalk, disarms traps with their tail and has opinions about every door.",
+      "personality": ["chatty", "nervous", "very good at their job"],
+      "goals": ["Draw the first full map of the Deep"],
+      "abilities": ["Finds traps and hidden doors", "Fits through tiny gaps"]
+    }
+  ],
+  "relationships": [
+    {
+      "fromId": "starter:npc-maelis",
+      "toId": "@player",
+      "label": "Guildmaster",
+      "status": "Desperate enough to trust you"
+    },
+    {
+      "fromId": "starter:npc-dorn",
+      "toId": "@player",
+      "label": "Party member",
+      "status": "Steady and kind"
+    },
+    {
+      "fromId": "starter:npc-kip",
+      "toId": "@player",
+      "label": "Party member",
+      "status": "Fascinated by the map"
+    }
+  ],
+  "tracking": {
+    "meters": [
+      {
+        "name": "Health",
+        "value": 100,
+        "max": 100
+      },
+      {
+        "name": "Mana",
+        "value": 40,
+        "max": 40
+      },
+      {
+        "name": "Gold",
+        "value": 40
+      },
+      {
+        "name": "Health",
+        "value": 140,
+        "max": 140,
+        "who": "Dorn Ashgrave"
+      },
+      {
+        "name": "Health",
+        "value": 60,
+        "max": 60,
+        "who": "Kip"
+      }
+    ],
+    "inventory": true,
+    "items": [
+      {
+        "name": "The Gilded Spear's map",
+        "qty": 1,
+        "description": "A map of the Deep that someone, or something, is still writing on."
+      },
+      {
+        "name": "Healing draught",
+        "qty": 2,
+        "description": "A red potion in a corked vial. Restores a good deal of health."
+      },
+      {
+        "name": "Rope",
+        "qty": 1,
+        "description": "Fifty feet of good guild rope."
+      }
+    ]
+  }
+}

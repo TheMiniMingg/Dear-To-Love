@@ -1,0 +1,131 @@
+{
+  "templateSchemaVersion": 1,
+  "type": "scenario",
+  "id": "starter:villainess-wakes",
+  "label": "The Villainess Wakes",
+  "summary": "You wake up as the villainess of a romance novel, one year before she is exiled. You know the plot. Can you change the ending?",
+  "worlds": ["starter:rosaline-court"],
+  "title": "The Villainess Wakes",
+  "description": "You fell asleep reading The Rose of Rosaline and woke up as its villainess, the duke's daughter engaged to the Crown Prince and doomed to be exiled at the spring ball. You remember every scene. The heroine has just arrived at the royal academy, the prince is already cold to you, and the first big scene, the one where the villainess pours tea on the heroine, is tomorrow.",
+  "firstChapterTitle": "Waking Up",
+  "chapterOutlines": [
+    {
+      "title": "Waking Up",
+      "outline": "Realize where you are, and what happens to you in a year."
+    },
+    {
+      "title": "The Tea Party",
+      "outline": "Face the scene where the villainess humiliates the heroine, and do something else."
+    },
+    {
+      "title": "Off the Page",
+      "outline": "Events start going in directions the novel never wrote."
+    },
+    {
+      "title": "The Spring Ball",
+      "outline": "Arrive at the ball where the book ends, and write your own ending."
+    }
+  ],
+  "scene": {
+    "location": "A canopied bed in the duke's townhouse in the capital, at dawn",
+    "summary": "Silk sheets, a maid curtsying at the door and a mirror showing a face you know from the novel's cover. The villain's face. Yours."
+  },
+  "openThreads": [
+    "Can the ending be changed?",
+    "Why is the heroine acting differently than in the book?",
+    "Who else knows the plot?"
+  ],
+  "npcs": [
+    {
+      "id": "starter:npc-prince",
+      "name": "Crown Prince Adrian",
+      "control": "npc",
+      "pronouns": "he/him",
+      "age": "21",
+      "role": "Your fiancé",
+      "description": "The novel's male lead, perfect and cold. In the book he never smiles at the villainess. He has started watching you strangely.",
+      "personality": ["dutiful", "guarded", "lonely under the crown"],
+      "goals": ["Be a good king", "Understand why you have changed"]
+    },
+    {
+      "id": "starter:npc-lily",
+      "name": "Lily Marsh",
+      "control": "npc",
+      "pronouns": "she/her",
+      "age": "19",
+      "role": "The heroine",
+      "description": "The novel's sweet, kind heroine, a commoner scholarship student. She is not as innocent as the book said, or she is much kinder.",
+      "personality": ["kind", "clever", "hiding something"],
+      "goals": ["Graduate from the academy", "Survive the nobles"]
+    },
+    {
+      "id": "starter:npc-anna",
+      "name": "Anna",
+      "control": "npc",
+      "pronouns": "she/her",
+      "role": "Your maid",
+      "description": "Your loyal maid, who has served the villainess since childhood and is astonished that you just said thank you.",
+      "personality": ["loyal", "observant", "gossipy"],
+      "goals": ["Keep her lady safe"]
+    },
+    {
+      "id": "starter:npc-cedric",
+      "name": "Sir Cedric Vale",
+      "control": "npc",
+      "pronouns": "he/him",
+      "age": "24",
+      "role": "Your family's knight",
+      "description": "Your family's knight and bodyguard, a minor character in the book who dies in the last chapter. Quiet, steady and always there.",
+      "personality": ["stoic", "loyal", "secretly devoted"],
+      "goals": ["Protect you", "Never let you see what he feels"],
+      "abilities": ["Swordsmanship"]
+    }
+  ],
+  "relationships": [
+    {
+      "fromId": "starter:npc-prince",
+      "toId": "@player",
+      "label": "Fiancé",
+      "status": "Cold and suspicious"
+    },
+    {
+      "fromId": "starter:npc-lily",
+      "toId": "@player",
+      "label": "The heroine",
+      "status": "Wary of you"
+    },
+    {
+      "fromId": "starter:npc-anna",
+      "toId": "@player",
+      "label": "Maid",
+      "status": "Devoted and confused"
+    },
+    {
+      "fromId": "starter:npc-cedric",
+      "toId": "@player",
+      "label": "Knight",
+      "status": "Quietly loyal"
+    }
+  ],
+  "tracking": {
+    "meters": [
+      {
+        "name": "Days until the spring ball",
+        "value": 365
+      },
+      {
+        "name": "Reputation",
+        "value": 20,
+        "max": 100
+      }
+    ],
+    "inventory": true,
+    "items": [
+      {
+        "name": "The novel in your memory",
+        "qty": 1,
+        "description": "You remember the whole plot, scene by scene, up to the ending you want to avoid."
+      }
+    ]
+  }
+}

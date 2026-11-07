@@ -1,0 +1,32 @@
+{
+  "templateSchemaVersion": 1,
+  "type": "character",
+  "id": "starter:netrunner",
+  "label": "The Netrunner",
+  "summary": "A hacker who can talk to any machine and has just made a very powerful one angry.",
+  "character": {
+    "id": "starter:netrunner",
+    "name": "Zee Navarro",
+    "control": "player",
+    "pronouns": "they/them",
+    "role": "Hacker",
+    "description": "A freelance hacker who grew up in server rooms, speaks fluent machine and has just done something a very powerful system will not forgive.",
+    "personality": ["sarcastic", "restless", "secretly sentimental"],
+    "goals": ["Stay one step ahead", "Find out who hired them for the last job"],
+    "abilities": ["Breaks into any system given time", "Builds gadgets from junk"],
+    "stats": [
+      {
+        "name": "Smarts",
+        "value": 3
+      },
+      {
+        "name": "Agility",
+        "value": 2
+      },
+      {
+        "name": "Nerve",
+        "value": 1
+      }
+    ]
+  }
+}

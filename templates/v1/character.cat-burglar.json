@@ -1,0 +1,32 @@
+{
+  "templateSchemaVersion": 1,
+  "type": "character",
+  "id": "starter:cat-burglar",
+  "label": "The Cat Burglar",
+  "summary": "A thief with impeccable manners, perfect balance and a code: never steal from people who need it.",
+  "character": {
+    "id": "starter:cat-burglar",
+    "name": "Sasha Vey",
+    "control": "player",
+    "pronouns": "she/her",
+    "role": "Thief",
+    "description": "A cat burglar with impeccable manners, perfect balance and a code: steal only from people who will not miss it, and never carry a weapon.",
+    "personality": ["charming", "daring", "principled"],
+    "goals": ["One perfect job", "Get back what was stolen from her family"],
+    "abilities": ["Climbing", "Locks and alarms", "Disappearing in a crowd"],
+    "stats": [
+      {
+        "name": "Agility",
+        "value": 3
+      },
+      {
+        "name": "Charm",
+        "value": 1
+      },
+      {
+        "name": "Nerve",
+        "value": 2
+      }
+    ]
+  }
+}

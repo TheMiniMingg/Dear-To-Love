@@ -1,0 +1,25 @@
+{
+  "templateSchemaVersion": 1,
+  "type": "world",
+  "id": "starter:rosaline-court",
+  "label": "The Rosaline Court",
+  "summary": "The kingdom from a romance novel you once read, where you have just woken up as the villainess it ends badly for.",
+  "world": {
+    "era": "The year the novel begins",
+    "setting": "The Kingdom of Rosaline, its royal academy and the palace of the Crown Prince",
+    "description": "You know this place: you read about it in a romance novel, The Rose of Rosaline. The sweet heroine wins the Crown Prince, and the jealous villainess is exiled in disgrace at the spring ball one year from now. You have just woken up as that villainess, in her bed and in her life, with the whole plot in your head.",
+    "rules": [
+      "You remember the novel's plot; the world does not know it is a story",
+      "Changing events changes the plot, and not always the way you expect",
+      "Court manners, gossip and reputation are everything",
+      "Every character is an adult, and none of them are as simple as the book made them"
+    ]
+  },
+  "narration": {
+    "perspective": "second",
+    "detail": "balanced",
+    "tone": "Witty and romantic, with a sharp eye for court drama",
+    "pacing": "normal",
+    "genres": ["Romance", "Fantasy", "Comedy"]
+  }
+}

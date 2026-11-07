@@ -1,0 +1,25 @@
+{
+  "templateSchemaVersion": 1,
+  "type": "world",
+  "id": "starter:calder-falls",
+  "label": "Calder Falls",
+  "summary": "A quiet mountain town where you keep waking up on the same Tuesday. At 11:42 at night, someone dies, and the day starts over.",
+  "world": {
+    "era": "Present day, one Tuesday in October",
+    "setting": "Calder Falls, a small mountain town with one diner, one motel and one very long Tuesday",
+    "description": "In Calder Falls it is always Tuesday, the 14th of October. The diner serves pumpkin pie, the high school has a football game, a storm rolls in at nine, and at 11:42 someone dies. Then you wake up in your motel room at 6:00 and it is Tuesday again. Nobody else remembers. Yet.",
+    "rules": [
+      "The day repeats; only you remember, and what you learn carries over",
+      "People do the same things unless you change something",
+      "The loop has rules, and discovering them is part of the story",
+      "Small choices can change everything by midnight"
+    ]
+  },
+  "narration": {
+    "perspective": "first",
+    "detail": "balanced",
+    "tone": "Wry, melancholy and tense",
+    "pacing": "normal",
+    "genres": ["Mystery", "Science fiction", "Drama"]
+  }
+}

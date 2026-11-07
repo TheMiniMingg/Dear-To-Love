@@ -1,0 +1,25 @@
+{
+  "templateSchemaVersion": 1,
+  "type": "world",
+  "id": "starter:brackwater",
+  "label": "Brackwater, 1891",
+  "summary": "A fen village where the church bell rings by itself the night before someone dies, and has just rung thirteen times.",
+  "world": {
+    "era": "1891",
+    "setting": "Brackwater, a fen village at the end of a causeway, three days' ride from the nearest town",
+    "description": "Brackwater sits on an island of firm ground in the fens, reached by one causeway that floods in winter. The villagers are polite, pious and very careful never to be out after the bell. For two hundred years it has rung once, by itself, the night before a death. Last night it rang thirteen times.",
+    "rules": [
+      "Horror builds slowly: dread first, answers late",
+      "The supernatural is never fully explained",
+      "The villagers know more than they say, and lie for each other",
+      "Victorian manners hold even when things are falling apart"
+    ]
+  },
+  "narration": {
+    "perspective": "first",
+    "detail": "detailed",
+    "tone": "Slow, cold gothic dread with flashes of grim wit",
+    "pacing": "slow",
+    "genres": ["Horror", "Mystery", "Historical"]
+  }
+}

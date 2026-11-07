@@ -1,0 +1,32 @@
+{
+  "templateSchemaVersion": 1,
+  "type": "character",
+  "id": "starter:henchperson",
+  "label": "The Henchperson",
+  "summary": "A henchperson with a purple jumpsuit, a ray gun and a surprising amount of common sense.",
+  "character": {
+    "id": "starter:henchperson",
+    "name": "Gus Pemberton",
+    "control": "player",
+    "pronouns": "he/him",
+    "role": "Henchperson",
+    "description": "A henchperson who answered a job ad that said 'exciting opportunities in a fast-paced environment'. He has been blasted through four walls and still thinks of it as a good job.",
+    "personality": ["cheerful", "unlucky", "decent"],
+    "goals": ["Get a raise", "Make it to retirement in one piece"],
+    "abilities": ["Takes a hit", "Knows every corridor of the lair"],
+    "stats": [
+      {
+        "name": "Luck",
+        "value": 2
+      },
+      {
+        "name": "Strength",
+        "value": 1
+      },
+      {
+        "name": "Nerve",
+        "value": 0
+      }
+    ]
+  }
+}
