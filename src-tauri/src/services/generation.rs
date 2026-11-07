@@ -34,7 +34,7 @@ use crate::domain::events::{AssistantPayload, EventBody, EventKind, PlayerPayloa
 use crate::domain::provider::{
     Billing, GenerateRequest, GenerationSettings, ModelMessage, Role, StreamMessage,
 };
-use crate::domain::text::strip_roll_tags;
+use crate::domain::text::strip_app_tags;
 use crate::errors::{AppError, AppResult, ErrorCode};
 use crate::services::adapters::{offline::Offline, Adapter, Charge, Completion};
 use crate::services::mock_storyteller::{self, MOCK_PROVIDER_LABEL};
@@ -160,7 +160,7 @@ pub async fn submit_action(
             route_id: route_id.into(),
             expected_head_id: expected_head_id.into(),
             body: EventBody::Player(PlayerPayload {
-                text: strip_roll_tags(text),
+                text: strip_app_tags(text),
                 roll,
             }),
             generation_run_id: None,

@@ -2,7 +2,7 @@ import { useContext, type ReactNode } from 'react';
 import type { RollRequest } from '../../types';
 import { Thumb } from '../images/ImageGrid';
 import { RollAsk, RollResult } from './DiceCards';
-import { parseBlocks, rollRequestOf, samePerson, type Block } from './messages';
+import { APP_TAGS, parseBlocks, rollRequestOf, samePerson, type Block } from './messages';
 import { PortraitsContext } from './portraits';
 import { msg, t } from '../../i18n';
 
@@ -97,14 +97,30 @@ export function RichText({
   playerName: string;
   streaming?: boolean;
   onRoll?: (request: RollRequest) => void;
-  /** False for the player's own words: only the app's roll counts, so a typed roll tag is left out. */
+  /**
+   * False for the player's own words: only the app's roll and the
+   * storyteller's changes to bars and items count, so such typed tags are
+   * left out.
+   */
   rolls?: boolean;
 }) {
-  const blocks = parseBlocks(text, streaming).filter((b) => rolls || b.kind !== 'roll');
+  const blocks = parseBlocks(text, streaming).filter(
+    (b) => rolls || !(APP_TAGS as string[]).includes(b.kind),
+  );
   const lastAsk = blocks.findLastIndex((b) => b.kind === 'roll' && !!rollRequestOf(b.attrs));
   const out: ReactNode[] = [];
   let group: Group | null = null;
   let lastPeer = '';
+  let changes: ReactNode[] = [];
+  const flushChanges = () => {
+    if (!changes.length) return;
+    out.push(
+      <p key={`changes-${out.length}`} className="tracker-changes">
+        {changes}
+      </p>,
+    );
+    changes = [];
+  };
 
   const flush = () => {
     if (!group) return;
@@ -268,12 +284,20 @@ export function RichText({
           </p>
         ) : null;
       }
+      case 'meter':
+      case 'item':
       case 'text':
         return null;
     }
   };
 
   blocks.forEach((b, i) => {
+    if (b.kind === 'meter' || b.kind === 'item') {
+      const chip = <TrackerChip key={i} kind={b.kind} attrs={b.attrs} body={b.body} />;
+      if (b.attrs.name || b.attrs.gain || b.attrs.lose) changes.push(chip);
+      return;
+    }
+    if (b.kind !== 'prose' || b.text.trim()) flushChanges();
     if (b.kind === 'prose') {
       if (!b.text.trim()) return;
       flush();
@@ -294,5 +318,54 @@ export function RichText({
     out.push(card(b, i));
   });
   flush();
+  flushChanges();
   return <>{out}</>;
+}
+
+/** "Health −12", "Gold +35" or "Kira · Health → 40". */
+function meterChange(a: Record<string, string>): { text: string; mood: string } {
+  const who = a.who ? `${a.who} · ` : '';
+  const change = Number.parseInt((a.change ?? '').replace('−', '-'), 10);
+  if (Number.isFinite(change) && change !== 0) {
+    const sign = change > 0 ? '+' : '−';
+    return {
+      text: `${who}${a.name} ${sign}${Math.abs(change)}`,
+      mood: change > 0 ? 'up' : 'down',
+    };
+  }
+  if (a.set) return { text: `${who}${a.name} → ${a.set}`, mood: 'set' };
+  if (a.max) return { text: `${who}${a.name} / ${a.max}`, mood: 'set' };
+  return { text: `${who}${a.name}`, mood: 'set' };
+}
+
+/** One change to a tracked bar or item, where the story says it happened. */
+function TrackerChip({
+  kind,
+  attrs: a,
+  body,
+}: {
+  kind: 'meter' | 'item';
+  attrs: Record<string, string>;
+  body: string;
+}) {
+  if (kind === 'meter') {
+    const { text, mood } = meterChange(a);
+    return <span className={`tracker-chip ${mood}`}>{text}</span>;
+  }
+  const qty = Math.max(1, Number.parseInt(a.qty ?? '1', 10) || 1);
+  const gained = !!a.gain;
+  const name = a.gain || a.lose || '';
+  const label = gained ? t('Got {item}', { item: name }) : t('Lost {item}', { item: name });
+  return (
+    <span
+      className={`tracker-chip item ${gained ? 'up' : 'down'}`}
+      title={body || undefined}
+      aria-label={body ? `${label}: ${body}` : label}
+    >
+      <span aria-hidden="true">
+        {gained ? '+' : '−'}
+        {a.qty === 'all' ? '' : qty} {name}
+      </span>
+    </span>
+  );
 }

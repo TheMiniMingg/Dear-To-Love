@@ -11,6 +11,7 @@ use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use ts_rs::TS;
 
+use super::tracking::Tracking;
 use crate::errors::{AppError, AppResult};
 
 pub const STORY_STATE_SCHEMA_VERSION: u32 = 1;
@@ -33,6 +34,10 @@ pub struct StoryStateV1 {
     pub open_threads: Vec<String>,
     /// Optional asset ids by slot (e.g. `"cover"`, `"background"`).
     pub visual_refs: BTreeMap<String, String>,
+    /// Bars, counters and an inventory, when the story keeps them.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub tracking: Option<Tracking>,
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize, TS)]
@@ -494,6 +499,9 @@ impl StoryStateV1 {
         {
             crate::domain::dice::DiceSpec::parse(dice)?;
         }
+        if let Some(tracking) = &self.tracking {
+            tracking.validate()?;
+        }
         if let Some(language) = &self.narration.language {
             if language.chars().count() > 60 {
                 return bad("the story language is longer than 60 characters".into());
@@ -707,6 +715,7 @@ pub fn sample_lighthouse() -> StoryStateV1 {
         },
         open_threads: vec!["Who lit the lamp?".into()],
         visual_refs: BTreeMap::new(),
+        tracking: None,
     }
 }
 

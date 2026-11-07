@@ -555,6 +555,7 @@ async fn describe(
         VisualSlot::Portrait(id) => {
             format!("Portrait of {}", character_name(conn, story_id, id).await?)
         }
+        VisualSlot::Item(key) => format!("Picture of {key}"),
     })
 }
 

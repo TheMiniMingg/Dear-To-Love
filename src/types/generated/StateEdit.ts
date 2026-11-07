@@ -4,10 +4,11 @@ import type { KnownFact } from "./KnownFact";
 import type { Narration } from "./Narration";
 import type { Relationship } from "./Relationship";
 import type { Scene } from "./Scene";
+import type { Tracking } from "./Tracking";
 import type { World } from "./World";
 
 /**
  * One explicit change to structured story state, effective from the
  * `edit` event forward on that branch only.
  */
-export type StateEdit = { "op": "setWorld", world: World, } | { "op": "setNarration", narration: Narration, } | { "op": "upsertCharacter", character: Character, } | { "op": "removeCharacter", characterId: string, } | { "op": "setRelationships", relationships: Array<Relationship>, } | { "op": "upsertFact", fact: KnownFact, } | { "op": "removeFact", factId: string, } | { "op": "setScene", scene: Scene, } | { "op": "setOpenThreads", openThreads: Array<string>, } | { "op": "setVisualRef", slot: string, assetId: string | null, };
+export type StateEdit = { "op": "setWorld", world: World, } | { "op": "setNarration", narration: Narration, } | { "op": "upsertCharacter", character: Character, } | { "op": "removeCharacter", characterId: string, } | { "op": "setRelationships", relationships: Array<Relationship>, } | { "op": "upsertFact", fact: KnownFact, } | { "op": "removeFact", factId: string, } | { "op": "setScene", scene: Scene, } | { "op": "setOpenThreads", openThreads: Array<string>, } | { "op": "setVisualRef", slot: string, assetId: string | null, } | { "op": "setTracking", tracking?: Tracking, };

@@ -21,6 +21,7 @@ import type {
   ImageImport,
   ImageScope,
   PortraitInput,
+  ItemPictureInput,
   Prompt,
   StorypackExport,
   StorypackImport,
@@ -210,6 +211,10 @@ export const commands = {
   previewPortrait: (input: PortraitInput) => call<Prompt>('preview_portrait', { input }),
   /** One request to the picture connection; the picture joins the library. */
   makePortrait: (input: PortraitInput) => call<AssetDto>('make_portrait', { input }),
+  /** What an inventory item's picture would be made from. Sends nothing. */
+  previewItemPicture: (input: ItemPictureInput) => call<Prompt>('preview_item_picture', { input }),
+  /** One request to the picture connection for an item; the picture joins the story's library. */
+  makeItemPicture: (input: ItemPictureInput) => call<AssetDto>('make_item_picture', { input }),
   /** Writes the whole story to a `.storypack` file at `path` (from the save dialog). */
   exportStorypack: (storyId: string, path: string) =>
     call<StorypackExport>('export_storypack', { storyId, path }),

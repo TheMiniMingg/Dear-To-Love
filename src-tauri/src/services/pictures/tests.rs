@@ -282,6 +282,58 @@ async fn a_portrait_is_made_kept_for_its_story_and_recorded() {
     );
 }
 
+#[test]
+fn item_prompts_describe_the_object_alone() {
+    let p = item_prompt(
+        "  Rusty   Key ",
+        "an iron key, warm to the touch",
+        &harbor(),
+        PortraitStyle::Sketch,
+    );
+    assert_eq!(
+        p.text,
+        "A single item, Rusty Key, centered on a plain, softly lit background, a pencil sketch \
+         on paper. It is an iron key, warm to the touch. Made the way things are in Age of sail, \
+         a harbor town. The object alone, no people, safe for work, no text."
+    );
+    assert!(p.avoid.contains("people"));
+    let long = item_prompt(
+        "Map",
+        &"x".repeat(5000),
+        &World::default(),
+        PortraitStyle::Painted,
+    );
+    assert!(long.text.ends_with("safe for work, no text."));
+    assert!(long.text.chars().count() <= 1500);
+}
+
+#[tokio::test]
+async fn an_item_picture_is_made_for_its_story() {
+    let env = Env::new().await;
+    let body = serde_json::json!({ "data": [{ "b64_json": b64(&png()) }] }).to_string();
+    let server = serve(vec![Reply::json(200, &body)]).await;
+    let id = env
+        .connect(AdapterKind::OpenaiImages, &server.base_url, "gpt-image-1")
+        .await;
+    set_picture_maker(&env.t.db, Some(&id)).await.unwrap();
+    let input = ItemPictureInput {
+        name: "Rusty Key".into(),
+        description: "An iron key.".into(),
+        world: harbor(),
+        style: PortraitStyle::Painted,
+        story_id: env.story.story_id.clone(),
+        budget_override: false,
+    };
+    let made = make_item_picture(&env.t.db, &env.store, &env.secrets, "s1", &input)
+        .await
+        .unwrap();
+    assert_eq!(made.asset.label, "Rusty Key");
+    assert_eq!(made.asset.tags, vec!["Item".to_string()]);
+    assert!(!made.asset.shared, "made for one story");
+    let sent: Value = serde_json::from_str(&server.requests()[0].body).unwrap();
+    assert!(sent["prompt"].as_str().unwrap().contains("Rusty Key"));
+}
+
 #[tokio::test]
 async fn stable_diffusion_portraits_for_a_new_story_wait_for_it() {
     let env = Env::new().await;

@@ -2473,3 +2473,155 @@ img.msg-avatar {
 .has-backdrop .guide-option {
   background: color-mix(in srgb, var(--bg) 70%, transparent);
 }
+
+/* RPG tracking: setting it up (TrackingFields). */
+.tracker-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: center;
+}
+.tracker-row input {
+  min-width: 0;
+}
+.tracker-row input:first-child {
+  flex: 2 1 9rem;
+}
+.tracker-row input[type='number'] {
+  flex: 0 1 6rem;
+  width: 6rem;
+}
+.tracker-row .tracker-who {
+  flex: 1 1 7rem;
+}
+.tracker-row .tracker-description {
+  flex: 3 1 12rem;
+}
+
+/* Changes where the story says they happened (RichText). */
+.tracker-changes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin: 0.6em 0;
+}
+.tracker-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.1rem 0.6rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  font-size: 0.85em;
+  font-variant-numeric: tabular-nums;
+}
+.tracker-chip.up {
+  color: var(--pass);
+  border-color: color-mix(in srgb, var(--pass) 45%, var(--border));
+}
+.tracker-chip.down {
+  color: var(--fail);
+  border-color: color-mix(in srgb, var(--fail) 45%, var(--border));
+}
+.tracker-chip.item {
+  font-weight: 600;
+}
+
+/* The player's bars above the action box, and the full list. */
+.tracker-hud {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 1rem;
+  font-size: 0.88rem;
+}
+.hud-meters,
+.meter-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.hud-meter {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-variant-numeric: tabular-nums;
+}
+.hud-name {
+  font-weight: 600;
+}
+.hud-track {
+  display: inline-block;
+  width: 6rem;
+  height: 0.55rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--border) 70%, transparent);
+  overflow: hidden;
+}
+.hud-fill {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+  border-radius: inherit;
+}
+.hud-meter.low .hud-fill {
+  background: var(--fail);
+}
+.hud-meter.low .hud-value {
+  color: var(--fail);
+}
+.hud-open {
+  margin-left: auto;
+  padding: 0.2rem 0.7rem;
+}
+.inventory-panel .tracker-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.meter-owner {
+  margin: 0.2rem 0 0.3rem;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+.inventory-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.inventory-item {
+  display: grid;
+  grid-template-columns: 5rem minmax(0, 1fr);
+  gap: 0.75rem;
+  align-items: start;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.6rem 0.75rem;
+}
+.inventory-thumb img,
+.inventory-thumb .thumb-empty,
+.inventory-thumb .thumb-missing {
+  width: 5rem;
+  height: 5rem;
+  object-fit: cover;
+  border-radius: 6px;
+}
+.inventory-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.inventory-text p {
+  margin: 0;
+}
+.inventory-qty {
+  font-weight: normal;
+  color: var(--muted);
+}

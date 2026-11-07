@@ -4,6 +4,7 @@ import type { KnownFact } from "./KnownFact";
 import type { Narration } from "./Narration";
 import type { Relationship } from "./Relationship";
 import type { Scene } from "./Scene";
+import type { Tracking } from "./Tracking";
 import type { World } from "./World";
 
 export type StoryStateV1 = { schemaVersion: number, playerCharacterId: string, world: World, narration: Narration, 
@@ -14,4 +15,8 @@ characters: { [key in string]: Character }, relationships: Array<Relationship>, 
 /**
  * Optional asset ids by slot (e.g. `"cover"`, `"background"`).
  */
-visualRefs: { [key in string]: string }, };
+visualRefs: { [key in string]: string }, 
+/**
+ * Bars, counters and an inventory, when the story keeps them.
+ */
+tracking?: Tracking, };

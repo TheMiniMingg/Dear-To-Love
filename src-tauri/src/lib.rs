@@ -220,6 +220,8 @@ pub fn run() {
             commands::assets::set_story_picture,
             commands::assets::preview_portrait,
             commands::assets::make_portrait,
+            commands::assets::preview_item_picture,
+            commands::assets::make_item_picture,
             commands::archive::export_storypack,
             commands::archive::import_storypack,
             commands::archive::export_route_text,

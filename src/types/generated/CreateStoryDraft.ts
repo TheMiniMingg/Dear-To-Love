@@ -6,6 +6,7 @@ import type { Narration } from "./Narration";
 import type { Relationship } from "./Relationship";
 import type { SceneTemplate } from "./SceneTemplate";
 import type { StorytellerChoice } from "./StorytellerChoice";
+import type { Tracking } from "./Tracking";
 import type { World } from "./World";
 
 export type CreateStoryDraft = { draftSchemaVersion: number, 
@@ -32,4 +33,8 @@ storyImages?: Array<string>,
 /**
  * Who writes the replies; absent: the app's storyteller.
  */
-storyteller?: StorytellerChoice, };
+storyteller?: StorytellerChoice, 
+/**
+ * Bars, counters and an inventory, RPG style.
+ */
+tracking?: Tracking, };

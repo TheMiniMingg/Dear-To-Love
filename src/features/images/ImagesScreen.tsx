@@ -95,12 +95,14 @@ export function placeText(place: string): string {
       ? t(w)
       : w.startsWith('Portrait of ')
         ? t('Portrait of {name}', { name: w.slice('Portrait of '.length) })
-        : w;
+        : w.startsWith('Picture of ')
+          ? t('Picture of {name}', { name: w.slice('Picture of '.length) })
+          : w;
   let m = /^(.*) \(story default\)$/.exec(place);
   if (m) return t('{what} (story default)', { what: what(m[1]!) });
   m = /^(.*) \(story start\)$/.exec(place);
   if (m) return t('{what} (story start)', { what: what(m[1]!) });
-  m = /^(Cover|Background|A picture|Portrait of .*?) on route (.*)$/.exec(place);
+  m = /^(Cover|Background|A picture|(?:Portrait|Picture) of .*?) on route (.*)$/.exec(place);
   if (m) return t('{what} on route {route}', { what: what(m[1]!), route: m[2]! });
   return what(place);
 }
