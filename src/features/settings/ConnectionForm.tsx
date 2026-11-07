@@ -165,6 +165,13 @@ export function ConnectionForm({ existing, preset: startPreset, onSaved, onCance
             )}
           </p>
         )}
+        {adapter === 'openai_compatible' && /\/\/api\.openai\.com(\/|$)/i.test(baseUrl.trim()) && (
+          <p className="muted small">
+            {t(
+              "OpenAI's GPT-5, GPT-6 and o-series models think before they write. For them the app sends no temperature, asks for low reasoning effort and allows 2,000 more tokens for the thinking, which usage and the budget count.",
+            )}
+          </p>
+        )}
         {adapter === 'ollama' && (
           <p className="muted small">
             {tr(

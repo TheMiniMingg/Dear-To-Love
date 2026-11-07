@@ -1122,4 +1122,11 @@ export const settings: Messages = {
     'ドアの上のベルが鳴り、一瞬、カフェ全体が静まりかえる。',
     '문 위의 종이 울리고, 잠시 카페 전체가 조용해진다.',
   ],
+  "OpenAI's GPT-5, GPT-6 and o-series models think before they write. For them the app sends no temperature, asks for low reasoning effort and allows 2,000 more tokens for the thinking, which usage and the budget count.":
+    [
+      'OpenAI 的 GPT-5、GPT-6 和 o 系列模型会先思考再写作。对这些模型，应用不发送温度，请求低推理强度，并为思考额外预留 2,000 个 token，用量和预算都会计入。',
+      'OpenAI 的 GPT-5、GPT-6 和 o 系列模型會先思考再寫作。對這些模型，應用程式不傳送溫度，要求低推理強度，並為思考額外預留 2,000 個 token，用量和預算都會計入。',
+      'OpenAI の GPT-5、GPT-6、o シリーズのモデルは、書く前に考えます。これらのモデルには温度を送らず、推論の強さを「低」にし、考えるための 2,000 トークンを追加で確保します。この分も使用量と予算に含まれます。',
+      'OpenAI의 GPT-5, GPT-6, o 시리즈 모델은 쓰기 전에 먼저 생각합니다. 이 모델들에는 온도를 보내지 않고, 추론 강도를 낮게 요청하며, 생각할 토큰 2,000개를 더 허용합니다. 이 부분도 사용량과 예산에 포함됩니다.',
+    ],
 };

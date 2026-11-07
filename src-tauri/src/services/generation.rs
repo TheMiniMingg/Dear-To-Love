@@ -492,14 +492,14 @@ pub async fn generate(
             return Err(e);
         }
     };
-    let request = GenerateRequest {
+    let request = resolved.adapter.fit_request(GenerateRequest {
         model_id: resolved.model_id.clone(),
         messages,
         max_output_tokens: resolved.settings.max_output_tokens,
         temperature: resolved.settings.temperature,
         timeout_ms: resolved.settings.timeout_ms,
         context_tokens: Some(resolved.settings.max_context_tokens),
-    };
+    });
 
     // Register the cancel handle before going live so a cancel can't slip
     // between the status change and registration.
@@ -818,6 +818,7 @@ pub(crate) async fn call_once(
     why: CallPurpose<'_>,
 ) -> AppResult<(Completion, String)> {
     let adapter = live_adapter(row, secrets)?;
+    let req = &adapter.fit_request(req.clone());
     let ledger = usage::open_request(
         db,
         NewRequest {

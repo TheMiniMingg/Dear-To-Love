@@ -257,35 +257,88 @@ fn official_openai_uses_max_completion_tokens() {
 }
 
 #[test]
-fn openai_reasoning_models_get_their_default_temperature() {
+fn openai_reasoning_models_get_their_default_temperature_and_low_effort() {
     let official = OpenAiCompatible::new("https://api.openai.com/v1", None).unwrap();
-    for model in ["gpt-5", "gpt-5.1-mini", "o3", "o4-mini", "o1-preview"] {
+    for model in [
+        "gpt-5",
+        "gpt-5.1-mini",
+        "gpt-5.6-sol",
+        "gpt-6-astra",
+        "gpt-6-luna",
+        "gpt-6.1-terra",
+        "gpt-6.1-sol",
+        "o3",
+        "o4-mini",
+        "o1-preview",
+    ] {
         let r = GenerateRequest {
             model_id: model.into(),
             ..req()
         };
-        assert!(
-            official.request_body(&r).get("temperature").is_none(),
-            "{model}"
-        );
+        let body = official.request_body(&r);
+        assert!(body.get("temperature").is_none(), "{model}");
+        assert_eq!(body["reasoning_effort"], "low", "{model}");
+        assert!(official.thinks_first(model), "{model}");
     }
-    for model in ["gpt-4.1", "gpt-5-chat-latest", "o3x-custom"] {
+    for model in [
+        "gpt-4.1",
+        "gpt-4o",
+        "gpt-5-chat-latest",
+        "o3x-custom",
+        "o1-mini",
+    ] {
         let r = GenerateRequest {
             model_id: model.into(),
             ..req()
         };
-        assert!(
-            official.request_body(&r).get("temperature").is_some(),
-            "{model}"
-        );
+        let body = official.request_body(&r);
+        assert!(body.get("temperature").is_some(), "{model}");
+        assert!(body.get("reasoning_effort").is_none(), "{model}");
     }
     // Other services keep the setting, whatever the model is called.
     let other = OpenAiCompatible::new("https://openrouter.ai/api/v1", None).unwrap();
     let r = GenerateRequest {
-        model_id: "openai/gpt-5".into(),
+        model_id: "openai/gpt-6.1-terra".into(),
         ..req()
     };
-    assert!(other.request_body(&r).get("temperature").is_some());
+    let body = other.request_body(&r);
+    assert!(body.get("temperature").is_some());
+    assert!(body.get("reasoning_effort").is_none());
+}
+
+#[test]
+fn reasoning_models_get_room_to_reason_that_the_budget_reserves() {
+    use crate::services::adapters::{Adapter, REASONING_ROOM};
+    let official = Adapter::live(
+        crate::domain::provider::AdapterKind::OpenaiCompatible,
+        "https://api.openai.com/v1",
+        None,
+    )
+    .unwrap();
+    let r = official.fit_request(GenerateRequest {
+        model_id: "gpt-6.1-terra".into(),
+        ..req()
+    });
+    assert_eq!(r.max_output_tokens, 300 + REASONING_ROOM);
+    assert_eq!(r.temperature, None);
+    // A model that writes at once, or another service, is sent as asked.
+    let plain = official.fit_request(GenerateRequest {
+        model_id: "gpt-4.1".into(),
+        ..req()
+    });
+    assert_eq!(plain.max_output_tokens, 300);
+    let local = Adapter::live(
+        crate::domain::provider::AdapterKind::OpenaiCompatible,
+        "http://localhost:1234/v1",
+        None,
+    )
+    .unwrap();
+    let r = local.fit_request(GenerateRequest {
+        model_id: "gpt-6.1-terra".into(),
+        ..req()
+    });
+    assert_eq!(r.max_output_tokens, 300);
+    assert!(r.temperature.is_some());
 }
 
 #[tokio::test]

@@ -182,7 +182,25 @@ pub enum Adapter {
     Pictures(super::pictures::PictureMaker),
 }
 
+/// Extra tokens an OpenAI reasoning model may spend reasoning before it
+/// writes. Reasoning counts against the token limit, so without this room a
+/// short limit can end before any story is written. The budget reserves it.
+pub const REASONING_ROOM: u32 = 2_000;
+
 impl Adapter {
+    /// The request as this connection should send it: room to reason first
+    /// for a model that does. Callers reserve the budget for what this
+    /// returns, so the reservation covers the reasoning too.
+    pub fn fit_request(&self, mut req: GenerateRequest) -> GenerateRequest {
+        if let Self::OpenAi(a) = self {
+            if a.thinks_first(&req.model_id) {
+                req.max_output_tokens = req.max_output_tokens.saturating_add(REASONING_ROOM);
+                req.temperature = None;
+            }
+        }
+        req
+    }
+
     /// The network adapter for a saved connection.
     pub fn live(kind: AdapterKind, base_url: &str, api_key: Option<String>) -> AppResult<Self> {
         Ok(match kind {
