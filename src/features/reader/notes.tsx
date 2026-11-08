@@ -217,20 +217,24 @@ export function MemoryLine({
           </span>
         );
       })}
-      {onOpen && (
-        <button type="button" className="memory-action" onClick={onOpen}>
-          {t('See notes')}
-        </button>
-      )}
-      {undo && (
-        <button
-          type="button"
-          className="memory-action"
-          onClick={undo}
-          title={t('Take back what this reply noted; the story itself stays')}
-        >
-          {t('Undo')}
-        </button>
+      {(onOpen || undo) && (
+        <span className="memory-actions">
+          {onOpen && (
+            <button type="button" className="memory-action" onClick={onOpen}>
+              {t('See notes')}
+            </button>
+          )}
+          {undo && (
+            <button
+              type="button"
+              className="memory-action"
+              onClick={undo}
+              title={t('Take back what this reply noted; the story itself stays')}
+            >
+              {t('Undo')}
+            </button>
+          )}
+        </span>
       )}
     </p>
   );

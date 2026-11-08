@@ -239,6 +239,16 @@ describe('First-time tips', () => {
     expect(localStorage.getItem('dtl.tourDone')).toBe('1');
     expect(document.querySelector('.tour-target')).toBeNull();
   });
+
+  it('moves past the first tip once the player sends an action', () => {
+    useTour.setState({ step: 0 });
+    useTour.getState().acted();
+    expect(useTour.getState().step).toBe(1);
+    // Later tips wait for Next.
+    useTour.getState().acted();
+    expect(useTour.getState().step).toBe(1);
+    useTour.setState({ step: null });
+  });
 });
 
 describe('Feelings', () => {

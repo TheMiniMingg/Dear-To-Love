@@ -2604,6 +2604,11 @@ img.msg-avatar {
   border-style: dashed;
   color: var(--muted);
 }
+.memory-actions {
+  display: inline-flex;
+  gap: 0.45rem;
+  white-space: nowrap;
+}
 .memory-action {
   border: none;
   padding: 0;

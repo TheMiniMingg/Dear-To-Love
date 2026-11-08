@@ -40,7 +40,15 @@ combined. Most findings were small fixes. These changed how something works.
 - **Report a problem** (footer and palette) puts the sanitized diagnostics report above the
   player's own words. It can be copied, saved, or copied before opening the repository's
   new-issue page, a fixed URL opened from Rust. Nothing is sent by the app.
-
+- **Long stories keep fitting.** A story a few hundred turns in, with thirty people, a full
+  notebook and twenty chapters, needed more than the default 16,000-token context for its
+  setup alone, so it stopped with `CONTEXT_TOO_LONG`. The cast now gets a quarter of the
+  room and the confirmed facts a tenth, like the notes' fifth: the player and the people in
+  the scene are always sent in full, then those the scene names, and the rest in brief
+  (pronouns, species, role); the newest facts are kept and the rest counted. When the setup
+  still takes more than half the room, it is packed tighter: the shares are halved, every
+  earlier chapter goes in brief and only the newest twelve open threads are listed. Stories
+  that fit are sent exactly as before (`PROMPT_SCHEMA_VERSION` 14).
 - **Installing updates.** Testers should get fixes without downloading again, so the
   roadmap's "no auto-update installation" rule ends here, with the player in charge. The
   Tauri updater plugin is registered with an empty public key; a release built with the

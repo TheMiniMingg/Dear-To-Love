@@ -21,6 +21,12 @@
   their portraits match the story, and a description no longer ends in two full stops.
 - **Testing a connection explains more.** The result is in your language, a wrong Google
   Gemini key is reported as a refused key, and a paid connection with no key saved says so.
+- Fixed: a long story with a big cast could outgrow the default context and stop with "the
+  story setup … needs about N tokens". The people not in the scene are now sent in brief, and
+  the oldest facts, chapters and threads more briefly, so the story keeps its summary and
+  newest turns. Nothing is removed from the story itself.
+- The first tip moves on once you send your first action, and **See notes** and **Undo**
+  stay together on the memory line.
 - Fixed: replies from OpenAI's GPT-6 models (the preset's default) failed or came back
   empty. The app now treats every GPT-5, GPT-6 and o-series model as one that thinks first:
   no temperature, low reasoning effort, and 2,000 more tokens for the thinking.

@@ -47,6 +47,8 @@ export const useTour = create<{
   step: number | null;
   start: () => void;
   next: () => void;
+  /** The player sent an action: the first tip (how to write one) is done. */
+  acted: () => void;
   finish: () => void;
 }>((set, get) => ({
   step: seen() ? null : 0,
@@ -56,6 +58,9 @@ export const useTour = create<{
     if (step === null) return;
     if (step + 1 >= STEPS.length) get().finish();
     else set({ step: step + 1 });
+  },
+  acted: () => {
+    if (get().step === 0) get().next();
   },
   finish: () => {
     try {

@@ -594,6 +594,7 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
         options,
       });
       if (fromComposer) clearDraft(routeId);
+      useTour.getState().acted();
       setView(sub.view);
       void generate(sub.runId);
     });
