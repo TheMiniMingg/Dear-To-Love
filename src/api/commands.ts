@@ -364,6 +364,10 @@ export const commands = {
   setUpdateChecks: (enabled: boolean) => call<UpdateStatus>('set_update_checks', { enabled }),
   acknowledgeUpdate: (version: string) => call<UpdateStatus>('acknowledge_update', { version }),
   openReleasePage: () => call<void>('open_release_page'),
+  /** Whether this copy can install a new release itself (signed updates). */
+  canInstallUpdates: () => call<boolean>('can_install_updates'),
+  /** Downloads, checks and installs the newest release; its version, or null if none. */
+  installUpdate: () => call<string | null>('install_update'),
 };
 
 /** `$0.0123` for small amounts, `$12.34` from $100 up. Estimates only. */

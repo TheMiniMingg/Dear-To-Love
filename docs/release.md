@@ -63,6 +63,29 @@ Once a release exists, the next step is an upgrade from the previous published v
 its package first, seed with it, then install the new one. That needs a previous release that
 supports `--smoke-test`, so it starts with the release after 0.1.0.
 
+## In-app updates
+
+A release built with an update signing key lets the app install the next release itself
+(**Settings → Updates → Install … and restart**): the build signs its updater files, and the
+release gets a `latest.json` that the app reads from
+`https://github.com/TheMiniMingg/Dear-To-Love/releases/latest/download/latest.json`. The app
+checks each download against the public key built into it before installing. Without the key
+the app links to the release page, as before. Set it up once, before the first release that
+testers install, because a copy can only update itself if it was built with the key:
+
+1. On your own computer, run `pnpm tauri signer generate -w ~/.tauri/dear-to-love.key` and
+   choose a password. Keep the `.key` file and the password somewhere safe (a password
+   manager). If they are lost, installed copies can't take updates and everyone has to
+   download the next version by hand once.
+2. In the repository's Settings → Secrets and variables → Actions:
+   - secret `TAURI_SIGNING_PRIVATE_KEY`: the contents of `dear-to-love.key`;
+   - secret `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`: its password;
+   - variable (not a secret) `TAURI_UPDATER_PUBKEY`: the contents of `dear-to-love.key.pub`.
+
+`latest.json` is attached to the draft release, and the app only sees it once the release is
+published (drafts and prereleases are never "latest"). Copies installed from the Linux `.deb`
+or `.rpm` ask for an administrator password to update.
+
 ## Signing
 
 Without signing secrets the builds are unsigned (macOS builds are ad-hoc signed), and the

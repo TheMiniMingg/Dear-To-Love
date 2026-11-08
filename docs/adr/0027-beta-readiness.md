@@ -41,7 +41,21 @@ combined. Most findings were small fixes. These changed how something works.
   player's own words. It can be copied, saved, or copied before opening the repository's
   new-issue page, a fixed URL opened from Rust. Nothing is sent by the app.
 
+- **Installing updates.** Testers should get fixes without downloading again, so the
+  roadmap's "no auto-update installation" rule ends here, with the player in charge. The
+  Tauri updater plugin is registered with an empty public key; a release built with the
+  update signing key (repository secret and variable, see `docs/release.md`) gets the key,
+  signs its updater files, and publishes a `latest.json` built by
+  `scripts/updater-manifest.mjs`. Only such a release build offers **Install … and
+  restart** in Settings → Updates (the footer notice leads there). Nothing is downloaded
+  until the player presses it, the download is checked against the built-in key, and the
+  checks themselves stay off until turned on. The plugin's commands are not exposed to the
+  page; the Rust side runs it.
+
 ## Consequences
 
 - Stories made before this keep their numbered ids for people added mid-story.
 - A storypack with `madeFrom` is refused by an older app, like any newer field.
+- Copies from a release built without the update key can't update themselves; their next
+  update is a manual download. The key must be kept safe: without it, no build can update
+  the copies already installed.

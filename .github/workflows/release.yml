@@ -15,6 +15,7 @@ on:
       - .github/workflows/release.yml
       - scripts/check-version.mjs
       - scripts/release-notes.mjs
+      - scripts/updater-manifest.mjs
       - scripts/lib/**
       - scripts/smoke/**
       - src-tauri/tauri.conf.json
@@ -125,15 +126,40 @@ jobs:
           $config | ConvertTo-Json -Depth 4 | Out-File -Encoding ascii $file
           "TAURI_EXTRA_CONFIG=$file" | Out-File -Append -Encoding utf8 $env:GITHUB_ENV
 
+      # In-app updates need the update signing key and its public key (see
+      # docs/release.md). Without them the app links to the release page.
+      - name: Update signing
+        shell: bash
+        env:
+          HAS_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY != '' }}
+          UPDATER_PUBKEY: ${{ vars.TAURI_UPDATER_PUBKEY }}
+        run: |
+          if [ "$HAS_KEY" = "true" ] && [ -n "$UPDATER_PUBKEY" ]; then
+            node -e '
+              const fs = require("fs"), path = require("path");
+              const file = path.join(process.env.RUNNER_TEMP, "updater.json");
+              const config = { bundle: { createUpdaterArtifacts: true },
+                plugins: { updater: { pubkey: process.env.UPDATER_PUBKEY.trim() } } };
+              fs.writeFileSync(file, JSON.stringify(config));
+              fs.appendFileSync(process.env.GITHUB_ENV, `TAURI_UPDATER_CONFIG=${file}\n`);
+            '
+            echo "Updater files will be signed."
+          else
+            echo "No update signing key: this build links to the release page for updates."
+          fi
+
       - name: Build installers
         shell: bash
         env:
           # linuxdeploy (AppImage) runs without FUSE on the runner.
           APPIMAGE_EXTRACT_AND_RUN: 1
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         run: |
           args=(--bundles "${{ matrix.bundles }}")
           if [ -n "${{ matrix.target }}" ]; then args+=(--target "${{ matrix.target }}"); fi
           if [ -n "$TAURI_EXTRA_CONFIG" ]; then args+=(--config "$TAURI_EXTRA_CONFIG"); fi
+          if [ -n "$TAURI_UPDATER_CONFIG" ]; then args+=(--config "$TAURI_UPDATER_CONFIG"); fi
           pnpm tauri build "${args[@]}"
       - uses: actions/upload-artifact@v4
         with:
@@ -146,6 +172,8 @@ jobs:
             ${{ matrix.bundle_dir }}/nsis/*-setup.exe
             ${{ matrix.bundle_dir }}/msi/*.msi
             ${{ matrix.bundle_dir }}/dmg/*.dmg
+            ${{ matrix.bundle_dir }}/macos/*.app.tar.gz
+            ${{ matrix.bundle_dir }}/**/*.sig
 
   # Install each package on a clean machine, start it twice around a
   # reinstall, and check its own report (T49).
@@ -211,6 +239,7 @@ jobs:
           flags=()
           if [ "$SIGNED" = "true" ]; then flags+=(--signed); fi
           node scripts/release-notes.mjs "$version" "${flags[@]}" > notes.md
+          node scripts/updater-manifest.mjs dist "$version" "$GITHUB_REF_NAME" "$GITHUB_REPOSITORY" notes.md
           release=(--draft --verify-tag)
           if [[ "$version" == *-* ]]; then release+=(--prerelease); fi
           gh release create "$GITHUB_REF_NAME" dist/* "${release[@]}" \

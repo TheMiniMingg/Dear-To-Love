@@ -50,7 +50,10 @@ and the roadmap differ, this file wins.
 - **Updates** are off until turned on; Check now always works. The newest of
   the first 100 releases wins by SemVer; drafts, prereleases and pages off the
   repository are ignored. The notice lives in the footer, and Got it stores the
-  highest acknowledged version. There is no auto-update. The **diagnostics
+  highest acknowledged version. Nothing installs by itself: a build made with
+  the update signing key offers **Install … and restart**, which downloads the
+  release's signed file for this system and checks it before installing
+  (ADR 0027). The **diagnostics
   report** is built and sanitized in Rust and shown in full before it is copied
   or saved.
 - **In-story edits** use one `edit` event per Apply, with a short note listing

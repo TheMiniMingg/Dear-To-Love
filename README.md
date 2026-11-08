@@ -44,6 +44,9 @@ Japanese and Korean, and stories can be written in many more languages.
 > no installer on the [Releases page](https://github.com/TheMiniMingg/Dear-To-Love/releases)
 > yet. Until then you can [build it from source](#build-from-source).
 
+Testing the beta? [The beta guide](docs/beta-testing.md) covers installing, a first story and
+reporting problems in ten minutes.
+
 <details>
 <summary>Which file to pick, and opening an unsigned build</summary>
 
@@ -65,8 +68,10 @@ The builds are not code-signed yet, so your system warns you the first time:
   `xattr -dr com.apple.quarantine "/Applications/Dear to Love.app"` in Terminal once.
 - **Linux AppImage:** some distributions need `libfuse2` (`sudo apt install libfuse2`).
 
-Installing a newer version keeps your stories. The app never updates itself; turn on update
-checks in **Settings → Updates** to be told when a new release is out.
+Installing a newer version keeps your stories. Turn on update checks in **Settings → Updates**
+to be told when a new release is out. From there, **Install … and restart** installs it in one
+step (the download is checked against the app's own signature first); otherwise download it
+from the release page.
 
 </details>
 

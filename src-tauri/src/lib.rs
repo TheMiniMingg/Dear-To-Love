@@ -85,6 +85,7 @@ pub fn run() {
         .manage(commands::app::Smoke(std::sync::Mutex::new(smoke)))
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .register_asynchronous_uri_scheme_protocol("dtlimg", |ctx, request, responder| {
             let app = ctx.app_handle().clone();
             let path = request.uri().path().to_string();
@@ -257,6 +258,8 @@ pub fn run() {
             commands::updates::set_update_checks,
             commands::updates::acknowledge_update,
             commands::updates::open_release_page,
+            commands::updates::can_install_updates,
+            commands::updates::install_update,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Dear to Love");

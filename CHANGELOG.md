@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- **Install updates from the app.** When a new release is out, **Settings → Updates** can
+  install it and restart (the footer notice leads there). The download is checked against the
+  app's own signature first, and nothing is downloaded until you ask. This needs a release
+  built with the update signing key.
 - **Report a problem.** The footer (and Ctrl/Cmd+K) has **Report a problem**: say what
   happened, and the app adds the short diagnostics report, with no story text, keys or paths.
   **Copy** it into a message, **Save as file…**, or **Copy and open GitHub** for a new issue.

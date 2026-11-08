@@ -60,10 +60,12 @@ const available = (version: string, acknowledged: string | null = null): UpdateS
 
 let status: UpdateStatus;
 let appInfo: AppInfo;
+let canInstall = false;
 
 beforeEach(() => {
   status = off;
   appInfo = info;
+  canInstall = false;
   useUiStore.setState({ updates: null });
   invoke.mockReset();
   saveDialog.mockReset();
@@ -85,7 +87,12 @@ beforeEach(() => {
       case 'open_support_page':
       case 'open_repository_page':
       case 'open_issue_page':
+      case 'restart_app':
         return null;
+      case 'can_install_updates':
+        return canInstall;
+      case 'install_update':
+        return status.latest?.version ?? null;
       case 'run_diagnostics':
         return [];
       case 'diagnostics_report':
@@ -176,6 +183,25 @@ describe('Settings: updates and about', () => {
     expect(screen.getByRole('status')).toHaveTextContent('newest release seen before was v1.10.0');
     expect(screen.queryByRole('button', { name: /View release/ })).not.toBeInTheDocument();
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
+  it('installs a newer release and restarts, when this copy can (signed updates)', async () => {
+    canInstall = true;
+    status = available('1.10.0');
+    render(<UpdatesSection />);
+    const install = await screen.findByRole('button', { name: 'Install v1.10.0 and restart' });
+    expect(screen.getByRole('button', { name: 'View release v1.10.0' })).toBeInTheDocument();
+    await userEvent.click(install);
+    expect(invoke).toHaveBeenCalledWith('install_update', undefined);
+    await vi.waitFor(() => expect(invoke).toHaveBeenCalledWith('restart_app', undefined));
+    expect(screen.getByText('Installed v1.10.0. Restarting…')).toBeInTheDocument();
+  });
+
+  it('offers only the release page when this copy cannot install updates', async () => {
+    status = available('1.10.0');
+    render(<UpdatesSection />);
+    expect(await screen.findByRole('button', { name: 'View release v1.10.0' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Install v/ })).toBeNull();
   });
 
   it('About shows the version and license and opens the repository', async () => {
