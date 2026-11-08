@@ -27,6 +27,8 @@
   newest turns. Nothing is removed from the story itself.
 - The first tip moves on once you send your first action, and **See notes** and **Undo**
   stay together on the memory line.
+- Fixed: jumping to a reply (a bookmark, a search result or a chapter) could push the whole
+  reader up, hiding the story's title and the menu until the story was opened again.
 - Fixed: replies from OpenAI's GPT-6 models (the preset's default) failed or came back
   empty. The app now treats every GPT-5, GPT-6 and o-series model as one that thinks first:
   no temperature, low reasoning effort, and 2,000 more tokens for the thinking.

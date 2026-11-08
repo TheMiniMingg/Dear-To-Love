@@ -545,6 +545,11 @@ textarea:focus-visible {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  /* Not a scroll container either: jumping to a reply must never shift the
+     whole reader up under its header. Clipping alone would let it grow to
+     its content, so it keeps to the window. */
+  overflow: clip;
+  min-height: 0;
 }
 .reader-status {
   display: flex;
@@ -588,6 +593,9 @@ textarea:focus-visible {
   display: flex;
 }
 .narrative {
+  /* Holds its own positioned bits (screen-reader labels, tooltips), so they
+     scroll with the story instead of sticking out below the reader. */
+  position: relative;
   flex: 1;
   overflow-y: auto;
   scroll-behavior: auto;

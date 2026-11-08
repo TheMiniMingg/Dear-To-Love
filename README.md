@@ -90,6 +90,66 @@ from the release page.
 
 ![Preset Story: The Unsigned Letter as a cover in Midnight, with its genres, cast, first page and Start story](docs/screenshots/quickstart.webp)
 
+_Preset Story: pick with the arrows, see the cover, cast and first page, then Start story._
+
+## A story, step by step
+
+**1. Say what you do.** Type an action and press Enter: `I wave Mina over to the corner
+table.` The buttons above the box choose what kind of action it is (**Do or say**, **Send a
+text**, **Call** or **Think**), and **Short**, **Normal** or **Long** sets how much the next
+reply writes. With nothing typed, **Keep going** lets the story move on by itself. Here Mina
+is texting back, and the scene and her portrait sit above the story.
+
+![Mina is typing a text at Maple & Fern, with her portrait in the scene above; the action box with Do or say, Send a text, Call and Think below](docs/screenshots/typing.webp)
+
+_Picture view, a text coming in, and the action box._
+
+**2. Read the reply.** The storyteller answers and plays everyone else, but never decides
+for you. Under the reply, **Memory updated** shows what it wrote down (a person, a promise,
+the ring you gave), with **See notes** and **Undo**. Everything it remembers is in **Story
+memory**, where you can change any of it.
+
+![A reply that noted Mina, the silver ring and the moment you gave it, with See notes and Undo](docs/screenshots/memory-line.webp)
+
+_The memory line under a reply._
+
+**3. Meet someone new.** When the story brings in someone new, a card offers to add them to
+the cast, or change them first. With a picture connection, **Make their portrait too** draws
+them from the card's description, and the portrait shows beside their lines. Above the box,
+two or three ideas for your next move wait: pick one to put it in the box, or write your own.
+
+![Hazel Okafor, a florist, joins the story: her card with Make their portrait too ticked, a new thread on the memory line, and three ideas above the box](docs/screenshots/newcomer-portrait.webp)
+
+_A new character's card, a new thread to follow, and ideas for the next move._
+
+![After Add to the cast: Hazel's portrait in the scene above the story and beside her lines, with notes that she joined and that her picture changed](docs/screenshots/portrait-ready.webp)
+
+_Once she joins, her portrait shows in the scene and beside her lines._
+
+**4. Not what you wanted? Try again.** **Another reply** writes it again, shorter or longer,
+with a hint such as "More romantic". Every version is kept as a route, and **Routes** shows
+them as a list, a map or a timeline, so you can go back to any choice. You can also change
+your last action, or take the turn back.
+
+![Another reply: Short, Normal or Long, and a hint such as More romantic, on a new route that keeps the first](docs/screenshots/story-tools-another.webp)
+
+_Another reply, with a hint for this reply only._
+
+**5. End the chapter.** When a chapter feels finished, **End chapter** has the storyteller
+write a recap you can edit and suggest the next chapter's title. Later chapters remember the
+recap, and when the notebook has grown it offers to tidy it: keep or undo each change.
+
+![Ending a chapter: the recap, the next chapter's title and Tidy the notebook, which merges two notes about Mara and shortens the letter's](docs/screenshots/notebook-tidy.webp)
+
+_The recap, the next chapter's title and a tidier notebook._
+
+Something not working? **Report a problem** at the bottom of every screen copies a short
+report (versions and check results, never your story or keys) with your own words.
+
+![Report a problem: what happened in your own words, the report it adds, and Copy, Save as file and Copy and open GitHub](docs/screenshots/report-problem.webp)
+
+_Report a problem: your words first, then the report, and nothing is sent until you paste it._
+
 ## Playing
 
 Write actions in plain words, as long or short as you like, or speak:
@@ -158,39 +218,63 @@ story can also **Send a text**, **Call** someone, **Think** a thought of your ow
 
 ![The same app in Rose, Midnight and Parchment: a café romance, a late-night radio story and a fantasy raid](docs/screenshots/themes.webp)
 
+_The same app in Rose, Midnight and Parchment: a café romance, a late-night radio story and a fantasy raid._
+
 ![Neon, Café and Gothic: a cyberpunk heist, a potion shop on an island and a ghost story](docs/screenshots/themes-more.webp)
+
+_Neon, Café and Gothic: a cyberpunk heist, a potion shop on an island and a ghost story._
 
 ![Settings → Look with all six themes and Give each story a look that fits its genre](docs/screenshots/settings-look.webp)
 
+_Settings → Look with all six themes and Give each story a look that fits its genre._
+
 ![A chapter opening: the chapter number, its title, an ornament and a large first letter](docs/screenshots/reader-look.webp)
+
+_A chapter opening: the chapter number, its title, an ornament and a large first letter._
 
 ![Settings → Look: themes, then text size, column width and line spacing beside a sample of a story](docs/screenshots/settings-reading.webp)
 
+_Settings → Look: themes, then text size, column width and line spacing beside a sample of a story._
+
 ![The library as cards: covers, how far each story got and its last line](docs/screenshots/library.webp)
 
-![A reply that noted Mina, the silver ring and the moment you gave it, with See notes and Undo](docs/screenshots/memory-line.webp)
+_The library as cards: covers, how far each story got and its last line._
 
 ![The notebook in Story memory, beside the story: Mina with her portrait, a place, a thing and a timeline that marks Chapter 1](docs/screenshots/notebook.webp)
 
-![A reply that opened a thread and brought in Hazel, a florist: a card offers to add her to the cast, and three ideas for the next move sit above the box](docs/screenshots/details.webp)
+_The notebook in Story memory, beside the story: Mina with her portrait, a place, a thing and a timeline that marks Chapter 1._
 
 ![Threads to follow in Story memory: open threads to tick off, a box to add one, and a settled thread](docs/screenshots/threads.webp)
 
+_Threads to follow in Story memory: open threads to tick off, a box to add one, and a settled thread._
+
 ![A portrait's description, rewritten before it is made, with the safe-for-work sentence the app always adds](docs/screenshots/picture-description.webp)
+
+_A portrait's description, rewritten before it is made, with the safe-for-work sentence the app always adds._
 
 ![A reply that noted Mara, the letter and the lamp room, and moved Mara's heart bar up by 10](docs/screenshots/feelings.webp)
 
+_A reply that noted Mara, the letter and the lamp room, and moved Mara's heart bar up by 10._
+
 ![How Mara Quill feels about you in Story details: how she knows you, how she feels now and a Heart bar at 65](docs/screenshots/feelings-details.webp)
 
-![Ending a chapter: the recap, the next chapter's title and Tidy the notebook, which merges two notes about Mara and shortens the letter's](docs/screenshots/notebook-tidy.webp)
+_How Mara Quill feels about you in Story details: how she knows you, how she feels now and a Heart bar at 65._
 
 ![Ctrl+K finds the chapters, Replay a chapter and End chapter as you type](docs/screenshots/palette.webp)
 
+_Ctrl+K finds the chapters, Replay a chapter and End chapter as you type._
+
 ![The chapter list under the story's title: both chapters and Replay a chapter](docs/screenshots/chapter-jump.webp)
+
+_The chapter list under the story's title: both chapters and Replay a chapter._
 
 ![The first of four tips at the start of your first story](docs/screenshots/tour.webp)
 
+_The first of four tips at the start of your first story._
+
 ![A route saved as an e-book: the cover, the title page and the first chapter](docs/screenshots/book.webp)
+
+_A route saved as an e-book: the cover, the title page and the first chapter._
 
 ### Texts and calls
 
@@ -200,7 +284,11 @@ only answer when you start (a checkbox).
 
 ![Text messages from Rowan, a text you sent back, and his reply](docs/screenshots/messages.webp)
 
+_Text messages from Rowan, a text you sent back, and his reply._
+
 ![An incoming call card, then the call itself](docs/screenshots/call.webp)
+
+_An incoming call card, then the call itself._
 
 ### Adventures with health, mana and items
 
@@ -217,7 +305,11 @@ can track things too, such as affection or a gift you were given.
 
 ![A dungeon fight: Mana and Health go down, Gold goes up](docs/screenshots/rpg.webp)
 
+_A dungeon fight: Mana and Health go down, Gold goes up._
+
 ![Status and inventory, with every party member's bars and a picture of the healing draught](docs/screenshots/inventory.webp)
+
+_Status and inventory, with every party member's bars and a picture of the healing draught._
 
 ## Stories to start from
 
@@ -287,12 +379,16 @@ fails, the offline storyteller fills in from the preset story closest to what yo
 
 ![Custom Story: Fill in the rest filled the title, opening scene and two people, and the preview shows them](docs/screenshots/create.webp)
 
+_Custom Story: Fill in the rest filled the title, opening scene and two people, and the preview shows them._
+
 **RPG mode** is a switch on the first step for stats, health, mana, items and dice rolls.
 Each stat says what it is for (Strength is raw power; Fitness is stamina and athletics) and
 adds to the rolls that use it; common bars such as Health and Mana are one click away. Leave
 it off for a story without numbers.
 
 ![RPG mode: stats that explain themselves, bars and starting items](docs/screenshots/rpg-mode.webp)
+
+_RPG mode: stats that explain themselves, bars and starting items._
 
 A **chapter plan** is optional, and only a guide: if the story heads somewhere else, the
 storyteller follows the story, and you can rename each next chapter when one ends.
@@ -318,6 +414,8 @@ tense, how much detail, the pacing, the tone and the story's language.
 
 ![The style picker on Mixed, with an example and the style in your own words](docs/screenshots/styles.webp)
 
+_The style picker on Mixed, with an example and the style in your own words._
+
 ### Every feature is a checkbox
 
 **Features** turns each part on or off: other characters' inner thoughts, texts and calls as
@@ -330,6 +428,8 @@ rolls, and whether you see the number needed before rolling. The app rolls fairl
 enforces those rules itself.
 
 ![Features: a checkbox for each part of the story](docs/screenshots/features.webp)
+
+_Features: a checkbox for each part of the story._
 
 ### What kind of story
 
@@ -358,6 +458,8 @@ bundled templates are written in English and the storyteller tells them in the s
 language. The offline storyteller writes in English.
 
 ![Settings in Japanese](docs/screenshots/settings-ja.webp)
+
+_Settings in Japanese._
 
 ## Connect an AI
 
@@ -412,6 +514,8 @@ the app's Setup guide.
 
 ![Which model should I use?, opened in the Setup guide](docs/screenshots/guide-models.webp)
 
+_Which model should I use?, opened in the Setup guide._
+
 </details>
 
 ### Pictures
@@ -430,6 +534,8 @@ always asked for as safe for work.
 **Settings → Background picture** can also put a picture of your own behind every screen.
 
 ![Choosing a portrait: add a picture for this story only or to your library, or pick one from either](docs/screenshots/picture-buttons.webp)
+
+_Choosing a portrait: add a picture for this story only or to your library, or pick one from either._
 
 ## Playing offline
 
@@ -456,7 +562,9 @@ backups.
 - **A full disk loses nothing:** the change that could not be saved is rolled back, you are
   told plainly, and backups wait until there is room. **Diagnostics** warns when space is low.
 - **No length limit:** older turns are summarized, and the newest are always sent word for
-  word. If a story's setup cannot fit the model's context, the app says so before sending.
+  word. When a long story's cast and notes grow big, the people not in the scene are sent in
+  brief so the summary still fits. If a story's setup still cannot fit the model's context,
+  the app says so before sending.
 
 [How it works](docs/how-it-works.md) explains storage, memory, limits, templates, dice and
 content settings in detail, including what the storyteller is told with each reply.
@@ -480,8 +588,9 @@ More in [`docs/dev.md`](docs/dev.md); releases are described in
 ## Help and development
 
 - Problems and ideas: [GitHub issues](https://github.com/TheMiniMingg/Dear-To-Love/issues).
-  Attach the report from **Diagnostics → Copy report…**: it never contains story text, keys or
-  file paths.
+  **Report a problem** at the bottom of every screen puts your own words under a short report
+  (versions and check results, never story text, keys or file paths) and copies it, or opens a
+  new issue with it. Beta testers: see [the beta guide](docs/beta-testing.md).
 - How it works: [`docs/how-it-works.md`](docs/how-it-works.md). Architecture and decisions:
   [`docs/architecture.md`](docs/architecture.md), [`docs/adr/`](docs/adr/),
   [`docs/roadmap-v4.md`](docs/roadmap-v4.md) and
