@@ -52,7 +52,11 @@ be GIFs, and there were six looks.
   tone, danger, society, everyday life, other), matched as whole words in Latin scripts and
   as text elsewhere, so a player's own rule finds its kind without asking. Rules are edited
   where they are, and the suggestions are browsed with the same tools. The image library,
-  the long pickers and the character list in Story details get the same search.
+  the long pickers and the character list in Story details get the same search. So that a
+  few hundred rules keep up with typing, the list filters on a deferred copy of the search
+  (`useDeferredValue`), each rule's kind is worked out once and remembered, and unchanged
+  rows and the suggestions skip rendering (`memo` with handlers that stay the same).
+  **Show all** clears the search and the kind together.
 - **GIF pictures.** Migration 0010 rebuilds `assets` to allow `image/gif` (SQLite can't
   change a CHECK in place; foreign keys are off for the rebuild, and no row is dropped). The
   original file is kept as it is, so a moving GIF keeps every frame; the thumbnail is the

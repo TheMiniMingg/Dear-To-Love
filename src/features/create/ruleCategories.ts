@@ -294,7 +294,16 @@ const PATTERNS = KINDS.map((k) => {
   return { id: k.id, pattern: new RegExp(parts.join('|'), 'iu') };
 });
 
+/** Kinds already worked out, so long lists don't test every pattern on each render. */
+const known = new Map<string, RuleCategory>();
+const KNOWN_MAX = 2000;
+
 /** The kind of a rule, from its words. */
 export function ruleCategory(rule: string): RuleCategory {
-  return PATTERNS.find((p) => p.pattern.test(rule))?.id ?? 'other';
+  const hit = known.get(rule);
+  if (hit) return hit;
+  const kind = PATTERNS.find((p) => p.pattern.test(rule))?.id ?? 'other';
+  if (known.size >= KNOWN_MAX) known.clear();
+  known.set(rule, kind);
+  return kind;
 }

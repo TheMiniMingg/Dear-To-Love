@@ -3,7 +3,7 @@
   "type": "scenario",
   "id": "starter:silver-claim",
   "label": "The Silver Claim",
-  "summary": "You inherit a silver claim in the hills above Dust Creek, and three different people say they own it first.",
+  "summary": "You inherit a silver claim in the hills above Dust Creek, and three different people say it was theirs first.",
   "worlds": ["starter:dust-creek"],
   "title": "The Silver Claim",
   "description": "Your uncle’s will leaves you a mining claim, a mule and a map with one corner torn off. The bank wants the claim, a rancher swears it is on his land, and the mine itself has not been opened in a year.",

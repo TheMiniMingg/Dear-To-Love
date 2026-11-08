@@ -1586,7 +1586,7 @@ export const settings: Messages = {
     '음소거 무음 알림음 읽기 음성',
   ],
   'Voices (optional)': ['语音（可选）', '語音（選用）', '音声（任意）', '음성(선택)'],
-  'API key, paid by the character read': [
+  'API key, paid per character read': [
     'API 密钥，按朗读的字数计费',
     'API 金鑰，按朗讀的字數計費',
     'API キー、読み上げた文字数で課金',
@@ -1770,11 +1770,11 @@ export const settings: Messages = {
     'AI 音声は {name} から。読み上げはすべて「使用量」に記録されます。',
     'AI 음성은 {name}에서 옵니다. 읽을 때마다 사용량에 기록됩니다.',
   ],
-  'Choose a voice connection for it: Edit.': [
-    '请为它选择语音连接：点“编辑”。',
-    '請為它選擇語音連線：點「編輯」。',
-    '音声の接続を選んでください：「編集」から。',
-    '음성 연결을 고르세요: 편집.',
+  'Choose a voice connection for it with Edit.': [
+    '点“编辑”为它选择语音连接。',
+    '點「編輯」為它選擇語音連線。',
+    '「編集」から音声の接続を選んでください。',
+    '편집에서 음성 연결을 고르세요.',
   ],
   'The computer’s own voices: free and offline.': [
     '电脑自带的语音：免费，离线可用。',

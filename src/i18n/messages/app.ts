@@ -897,7 +897,7 @@ export const app: Messages = {
   ],
   'Keep it as it is': ['保持不变', '保持不變', '今のままにする', '그대로 두기'],
   'Use it for {name}': ['用于{name}', '用於{name}', '「{name}」に使う', '{name}에 쓰기'],
-  'Shortcuts with {mod} work while you type in the action box too. An open window takes its own keys first. Change sets your own keys; they are kept on this computer.':
+  'Shortcuts with {mod} work while you type in the action box too. An open window takes its own keys first. Use Change to pick your own keys; they are kept on this computer.':
     [
       '带 {mod} 的快捷键在行动框中输入时也能使用。打开的窗口会先处理自己的按键。点“修改”可以设置你自己的按键，它们保存在这台电脑上。',
       '帶 {mod} 的快速鍵在行動框中輸入時也能使用。開啟的視窗會先處理自己的按鍵。點「修改」可以設定你自己的按鍵，它們儲存在這台電腦上。',

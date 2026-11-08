@@ -264,7 +264,7 @@ function ShortcutsWindow({ onClose }: { onClose: () => void }) {
       )}
       <p className="muted small">
         {t(
-          'Shortcuts with {mod} work while you type in the action box too. An open window takes its own keys first. Change sets your own keys; they are kept on this computer.',
+          'Shortcuts with {mod} work while you type in the action box too. An open window takes its own keys first. Use Change to pick your own keys; they are kept on this computer.',
           { mod: isMac() ? '⌘' : 'Ctrl' },
         )}
       </p>

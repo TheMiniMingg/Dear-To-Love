@@ -132,7 +132,7 @@ function Service({
             : preset.group === 'pictures'
               ? t('API key, paid per picture')
               : preset.group === 'voices'
-                ? t('API key, paid by the character read')
+                ? t('API key, paid per character read')
                 : t('API key, paid per use')}
         </span>
         {recommended && <span className="badge">{t('Recommended')}</span>}

@@ -2511,9 +2511,46 @@ details.more-options > summary {
   align-items: center;
   gap: 0.5rem;
 }
-.rule-row input {
+.rule-row .rule-text {
   flex: 1 1 auto;
   min-width: 0;
+  display: grid;
+}
+/* The rule box grows with its text: a hidden copy in the same cell sets the height. */
+.rule-text::after {
+  content: attr(data-text) ' ';
+  visibility: hidden;
+  border: 1px solid transparent;
+}
+.rule-text > textarea,
+.rule-text::after {
+  grid-area: 1 / 1 / 2 / 2;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  padding: 0.45rem 0.65rem;
+  font: inherit;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+}
+.rule-text > textarea {
+  resize: none;
+  overflow: hidden;
+}
+/* Every rule box the same width, with the kinds in one column beside them. */
+@supports (grid-template-columns: subgrid) {
+  .rules-field .rule-list {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+  }
+  .rule-row {
+    display: grid;
+    grid-column: 1 / -1;
+    grid-template-columns: subgrid;
+  }
+  .rule-row .rule-kind {
+    justify-self: start;
+  }
 }
 .rule-kind {
   flex: 0 0 auto;
@@ -2545,5 +2582,8 @@ details.more-options > summary {
 @media (max-width: 560px) {
   .rule-kind {
     display: none;
+  }
+  .rules-field .rule-list {
+    grid-template-columns: minmax(0, 1fr) auto;
   }
 }

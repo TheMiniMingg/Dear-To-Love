@@ -1920,4 +1920,5 @@ export const create: Messages = {
     'キャラクターを探す（{count}）',
     '캐릭터 찾기 ({count})',
   ],
+  'Show all': ['显示全部', '顯示全部', 'すべて表示', '모두 보기'],
 };

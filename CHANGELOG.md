@@ -18,7 +18,10 @@
   danger, romance and more, worked out from the words) and an order, and each rule is
   edited where it is. Suggested rules are browsed the same way. The image library, the long
   pickers in Custom Story and the character list in Story details can be searched too.
-- **GIF pictures.** The image library takes GIFs, and moving ones keep moving.
+  **Show all** clears a search and a kind in one click, a long rule wraps so all of it
+  shows, and a list of a few hundred rules keeps up with typing.
+- **GIF pictures.** The image library takes GIFs, and moving ones keep moving, also as a
+  cover in a storypack.
 - **Six more looks:** Forest, Ocean, Lavender, Ember, Terminal and the high-contrast Ink.
   Stories that take a look from their genre use them too.
 - **Twelve more preset storylines**, among them Storm Season, The Quiet Signal, The Lodge

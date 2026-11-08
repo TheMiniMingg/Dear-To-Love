@@ -132,10 +132,17 @@ describe('the storyteller’s rules', () => {
         .getAllByRole('textbox')
         .map((i) => (i as HTMLInputElement).value),
     ).toEqual(['Monsters exist', 'Dragons hoard books, not gold']);
-    await userEvent.selectOptions(
-      within(group).getByRole('combobox', { name: 'Category of your rules' }),
-      '',
-    );
+    // Show all puts back the whole list: no words, any kind.
+    await userEvent.click(within(group).getByRole('button', { name: 'Show all' }));
+    expect(within(list).getAllByRole('listitem')).toHaveLength(6);
+    expect(
+      (
+        within(group).getByRole('combobox', {
+          name: 'Category of your rules',
+        }) as HTMLSelectElement
+      ).value,
+    ).toBe('');
+    expect(within(group).queryByRole('button', { name: 'Show all' })).toBeNull();
     await userEvent.selectOptions(
       within(group).getByRole('combobox', { name: 'Order of your rules' }),
       'az',
@@ -150,6 +157,9 @@ describe('the storyteller’s rules', () => {
     await userEvent.clear(rule);
     await userEvent.type(rule, 'Rumors are always true');
     expect(screen.getByTestId('value')).toHaveTextContent('"Rumors are always true"');
+    // A rule wraps to show all of it, but stays one line.
+    await userEvent.type(rule, '{Enter}, mostly');
+    expect((rule as HTMLTextAreaElement).value).toBe('Rumors are always true, mostly');
 
     // Suggestions are browsed the same way, and added with one click.
     await userEvent.click(within(group).getByText(/Browse suggested rules/));

@@ -309,7 +309,7 @@ function PackSummary({ pack, connections }: { pack: VoicePack; connections: Prov
               ? t('AI voices from {name}; each reading is recorded in Usage.', {
                   name: connection.label,
                 })
-              : t('Choose a voice connection for it: Edit.')
+              : t('Choose a voice connection for it with Edit.')
             : t('The computer’s own voices: free and offline.'),
         ].join(' ')}
       </p>

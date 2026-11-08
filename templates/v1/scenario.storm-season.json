@@ -3,7 +3,7 @@
   "type": "scenario",
   "id": "starter:storm-season",
   "label": "Storm Season",
-  "summary": "A storm cuts Wrenmouth off for three days, and you are the one who has to keep the bakery, the ferry and a stranded stranger going.",
+  "summary": "A storm cuts Wrenmouth off for three days, and it falls to you to keep the bakery open, the town fed and a stranded stranger out of trouble.",
   "worlds": ["starter:harbor-town"],
   "title": "Storm Season",
   "description": "The worst storm in twenty years closes the ferry and the coast road. The power flickers, the bakery has the only working oven in town, and the stranger who washed up in a dinghy will not say where they came from.",

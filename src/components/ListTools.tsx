@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useDeferredValue, useMemo, useState } from 'react';
 import { t } from '../i18n';
 
 /** Text without accents or case, for matching what the player types. */
@@ -31,6 +31,8 @@ type ViewOptions<T> = {
  */
 export function useListView<T>(items: T[], opts: ViewOptions<T>) {
   const [query, setQuery] = useState('');
+  // The box shows each key at once; a long list catches up a moment later.
+  const searched = useDeferredValue(query);
   const [category, setCategory] = useState('');
   const sortIds = Object.keys(opts.sorts ?? {});
   const [sort, setSort] = useState(sortIds[0] ?? '');
@@ -44,12 +46,12 @@ export function useListView<T>(items: T[], opts: ViewOptions<T>) {
   const shown = useMemo(() => {
     const list = items.filter(
       (item) =>
-        matchesQuery(text(item), query) &&
+        matchesQuery(text(item), searched) &&
         (!category || !categoryOf || categoryOf(item) === category),
     );
     const compare = sorts?.[sort];
     return compare ? [...list].sort(compare) : list;
-  }, [items, text, query, category, categoryOf, sorts, sort]);
+  }, [items, text, searched, category, categoryOf, sorts, sort]);
   return { query, setQuery, category, setCategory, sort, setSort, shown, counts };
 }
 
@@ -133,9 +135,21 @@ export function ListTools({
         </select>
       )}
       {filtered && (
-        <span className="muted small" role="status">
-          {t('{shown} of {total}', { shown: String(shown), total: String(total) })}
-        </span>
+        <>
+          <span className="muted small" role="status">
+            {t('{shown} of {total}', { shown: String(shown), total: String(total) })}
+          </span>
+          <button
+            type="button"
+            className="link-button small"
+            onClick={() => {
+              onQuery('');
+              onCategory?.('');
+            }}
+          >
+            {t('Show all')}
+          </button>
+        </>
       )}
     </div>
   );
