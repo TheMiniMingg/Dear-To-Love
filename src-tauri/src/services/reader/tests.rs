@@ -564,3 +564,120 @@ async fn a_reply_moves_how_someone_feels_and_its_undo_moves_it_back() {
     .unwrap_err();
     assert!(err.message.contains("changed since"), "{}", err.message);
 }
+
+/// A reply appended to `route_id` after `head`.
+async fn reply_on(t: &TestDb, s: &StoryCreated, route_id: &str, head: &str, text: &str) -> String {
+    use crate::domain::events::AssistantPayload;
+    append_event(
+        &t.db,
+        AppendEvent {
+            story_id: s.story_id.clone(),
+            route_id: route_id.into(),
+            expected_head_id: head.into(),
+            body: EventBody::Assistant(AssistantPayload {
+                text: text.into(),
+                finish_reason: None,
+                provider_label: None,
+                model_id: None,
+            }),
+            generation_run_id: None,
+        },
+    )
+    .await
+    .unwrap()
+    .event_id
+}
+
+async fn played_at(t: &TestDb, route_id: &str, at: &str) {
+    sqlx::query("UPDATE routes SET updated_at = ? WHERE id = ?")
+        .bind(at)
+        .bind(route_id)
+        .execute(t.db.writer())
+        .await
+        .unwrap();
+}
+
+/// Another reply: each version of a reply can be flipped to, and opens the
+/// route where it was played last.
+#[tokio::test]
+async fn another_reply_gives_versions_to_flip_between() {
+    use crate::db::timeline::{regenerate_fork, set_route_hidden};
+    let (t, s) = story().await;
+    let first = exchange(&t, &s, &s.head_event_id, "The lamp gutters.").await;
+    let main = route_view(&t.db, &s.main_route_id).await.unwrap();
+    assert!(
+        main.reply_versions.is_empty(),
+        "one version, nothing to flip"
+    );
+
+    let other = regenerate_fork(&t.db, &s.story_id, &s.main_route_id, &first)
+        .await
+        .unwrap();
+    let action = other.head_event_id.clone().unwrap();
+    // While the new reply is being written there is still only one version.
+    assert!(route_view(&t.db, &other.id)
+        .await
+        .unwrap()
+        .reply_versions
+        .is_empty());
+    let second = reply_on(&t, &s, &other.id, &action, "The lamp flares.").await;
+
+    let main = route_view(&t.db, &s.main_route_id).await.unwrap();
+    assert_eq!(
+        main.reply_versions,
+        vec![ReplyVersions {
+            event_id: first.clone(),
+            route_ids: vec![s.main_route_id.clone(), other.id.clone()],
+            current: 0,
+        }]
+    );
+    let alt = route_view(&t.db, &other.id).await.unwrap();
+    assert_eq!(
+        alt.reply_versions,
+        vec![ReplyVersions {
+            event_id: second.clone(),
+            route_ids: vec![s.main_route_id.clone(), other.id.clone()],
+            current: 1,
+        }]
+    );
+
+    // Played on from the second version, on a branch of its own: flipping
+    // back from the first opens that branch, where the player was last.
+    let later = fork_route(&t.db, &s.story_id, &other.id, &second, None)
+        .await
+        .unwrap();
+    played_at(&t, &other.id, "2030-01-01T00:00:00Z").await;
+    played_at(&t, &later.id, "2030-01-02T00:00:00Z").await;
+    let main = route_view(&t.db, &s.main_route_id).await.unwrap();
+    assert_eq!(main.reply_versions[0].route_ids[1], later.id);
+
+    // Hidden routes are not offered.
+    set_route_hidden(&t.db, &s.story_id, &later.id, true)
+        .await
+        .unwrap();
+    let main = route_view(&t.db, &s.main_route_id).await.unwrap();
+    assert_eq!(main.reply_versions[0].route_ids[1], other.id);
+    set_route_hidden(&t.db, &s.story_id, &other.id, true)
+        .await
+        .unwrap();
+    let main = route_view(&t.db, &s.main_route_id).await.unwrap();
+    assert!(main.reply_versions.is_empty());
+}
+
+/// Editing a reply keeps the old words on a hidden branch: not a version.
+#[tokio::test]
+async fn an_edited_reply_is_not_a_second_version() {
+    let (t, s) = story().await;
+    let first = exchange(&t, &s, &s.head_event_id, "The lamp gutters.").await;
+    let view = crate::services::generation::edit_reply(
+        &t.db,
+        &s.story_id,
+        &s.main_route_id,
+        &first,
+        &first,
+        "The lamp gutters and goes out.",
+    )
+    .await
+    .unwrap();
+    assert!(view.reply_versions.is_empty());
+}

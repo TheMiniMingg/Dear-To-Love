@@ -2,6 +2,7 @@
 import type { AwaitingReply } from "./AwaitingReply";
 import type { ChapterDto } from "./ChapterDto";
 import type { EventDto } from "./EventDto";
+import type { ReplyVersions } from "./ReplyVersions";
 import type { RouteDto } from "./RouteDto";
 import type { StateView } from "./StateView";
 import type { StoryHeader } from "./StoryHeader";
@@ -13,4 +14,8 @@ export type RouteView = { story: StoryHeader, route: RouteDto, routes: Array<Rou
  * Story-default pictures. A route's own choices are in
  * `state.state.visualRefs` and win over these.
  */
-visuals: Array<StoryVisual>, };
+visuals: Array<StoryVisual>, 
+/**
+ * Replies on this route that have other versions to flip to.
+ */
+replyVersions: Array<ReplyVersions>, };

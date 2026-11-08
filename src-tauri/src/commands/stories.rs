@@ -5,6 +5,7 @@ use crate::domain::draft::{CreateStoryDraft, DraftProblem, DraftStep, WizardDraf
 use crate::domain::story::{StoryCreated, StorySummary};
 use crate::domain::templates::{QuickStartInput, TemplateCatalog};
 use crate::errors::AppResult;
+use crate::services::characters::{self, CharacterCard, StoryCharacter};
 use crate::services::memory::SummaryEnv;
 use crate::services::story_setup::{self, FilledDraft};
 use crate::state::AppState;
@@ -107,4 +108,24 @@ pub async fn rename_story(
 #[tauri::command]
 pub async fn delete_story(state: State<'_, AppState>, story_id: String) -> AppResult<()> {
     stories::delete_story(state.db()?, &story_id).await
+}
+
+/// Everyone in the player's stories, to bring into a new one.
+#[tauri::command]
+pub async fn list_story_characters(state: State<'_, AppState>) -> AppResult<Vec<StoryCharacter>> {
+    characters::story_characters(state.db()?).await
+}
+
+/// Read a character card file (`.png` or `.json`) for a new story. Nothing
+/// is saved; `player_name` stands in for the card's `{{user}}`.
+#[tauri::command]
+pub async fn read_character_card(
+    path: String,
+    player_name: Option<String>,
+) -> AppResult<CharacterCard> {
+    tokio::task::spawn_blocking(move || {
+        characters::read_card(std::path::Path::new(&path), player_name.as_deref())
+    })
+    .await
+    .map_err(|e| crate::errors::AppError::internal(format!("could not read the card: {e}")))?
 }

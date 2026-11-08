@@ -428,6 +428,11 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
   }, [routeId, bookmarksReload]);
 
   const bookmarked = useMemo(() => new Set(bookmarks.map((b) => b.eventId)), [bookmarks]);
+  const replyVersions = view?.replyVersions;
+  const versions = useMemo(
+    () => new Map((replyVersions ?? []).map((v) => [v.eventId, v])),
+    [replyVersions],
+  );
 
   const goToRoute = useCallback(
     (v: RouteView) => {
@@ -1315,6 +1320,8 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
                 currentState={view.state.state}
                 sceneHeadings={!!view.state.state.narration?.sceneHeadings}
                 speechLang={speechLang(view.state.state.narration?.language)}
+                versions={viewing ? undefined : versions}
+                onOpenVersion={(id) => navigate({ name: 'reader', routeId: id })}
                 ideasShown={ideas.length > 0}
                 newcomers={
                   viewing || writing || busy || awaitingReply

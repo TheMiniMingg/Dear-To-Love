@@ -2,6 +2,19 @@
 
 ## Unreleased
 
+- **Flip between versions of a reply.** When a reply has been written again (**Another
+  reply**, or **Keep going** again after **Take back**), ‹ 1 / 2 › under it goes to each
+  version. Every version stays on its own route, so nothing in the story changes until you
+  pick one.
+- **Bring a character you already made.** In Custom Story, **From your stories** plays as, or
+  brings in, someone from another of your stories, and **From a character card** reads a
+  PNG or JSON character card (V1 to V3) with its picture, scenario and opening. Only the
+  name, description, personality, scenario and opening are kept, `{{user}}` becomes your
+  name, and a card that reads as under 18 is refused.
+- **Fixed:** on a bookmarked reply, the other tools under it (Another reply, Edit and the
+  rest) never showed, even on hover.
+- The end-to-end dice test now waits for the roll button to show before reading it.
+
 - **A setup guide that starts with what matters.** The Setup guide opens with the short
   version (play free now, connect an AI, stay within budget, your keys stay here), then a few
   **recommended models** with what a reply costs and a **Set up** button that fills in the

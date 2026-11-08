@@ -17,7 +17,7 @@ Japanese and Korean, and stories can be written in many more languages.
 ## Highlights
 
 - **Start in a few clicks** from 33 worlds, 35 scenarios and 27 characters, or build your
-  own story from scratch.
+  own story from scratch. Bring a character from another story, or from a character card.
 - **Tell it your way**: narrated, script (like the story above), roleplay chat, thoughts and
   dialogue, mostly messages, or a classic text adventure, each with an example before you
   choose.
@@ -127,9 +127,10 @@ _A new character's card, a new thread to follow, and ideas for the next move._
 _Once she joins, her portrait shows in the scene and beside her lines._
 
 **4. Not what you wanted? Try again.** **Another reply** writes it again, shorter or longer,
-with a hint such as "More romantic". Every version is kept as a route, and **Routes** shows
-them as a list, a map or a timeline, so you can go back to any choice. You can also change
-your last action, or take the turn back.
+with a hint such as "More romantic". Every version is kept as a route, and the arrows under
+the reply (‹ 1 / 2 ›) flip between them. **Routes** shows them as a list, a map or a
+timeline, so you can go back to any choice. You can also change your last action, or take
+the turn back.
 
 ![Another reply: Short, Normal or Long, and a hint such as More romantic, on a new route that keeps the first](docs/screenshots/story-tools-another.webp)
 
@@ -166,7 +167,8 @@ story can also **Send a text**, **Call** someone, **Think** a thought of your ow
   until it is in. Each story opens where you left it, with your unsent text kept.
 - **Save anywhere**: quick-save with Ctrl/Cmd+S, Save / Load, and five autosaves.
 - **Branch** from any reply, ask for **another reply**, or **change an earlier action**. Each
-  makes a new route and keeps the original. **Routes** shows them as a list, a map of how
+  makes a new route and keeps the original. A reply with more than one version shows
+  ‹ 1 / 2 › under it to flip between them. **Routes** shows them as a list, a map of how
   they branch, or a timeline.
 - **End a chapter** when it feels finished: the storyteller writes a recap, you can edit it,
   and later chapters remember it. When the notebook has grown, it also offers to tidy it up:
@@ -376,6 +378,13 @@ premise become an opening scene and two or three people to meet. Your own words 
 typed them, everything it fills in can be changed, and **Undo** takes it all back. On Review,
 **Fill in everything left** does every step at once. Without a connection, or if the call
 fails, the offline storyteller fills in from the preset story closest to what you wrote.
+
+**Bring someone you already made.** On the **You** step, **From your stories** plays as a
+character from another of your stories, and **From a character card** reads a character
+card (the common PNG or JSON format) with its picture, scenario and opening. Under
+**People**, the same two buttons bring someone in for you to meet. Only the name,
+description, personality, scenario and opening come across, never a card's own
+instructions, and a card that reads as under 18 is refused.
 
 ![Custom Story: Fill in the rest filled the title, opening scene and two people, and the preview shows them](docs/screenshots/create.webp)
 

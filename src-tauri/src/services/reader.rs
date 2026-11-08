@@ -24,6 +24,9 @@ use crate::domain::visuals::VisualSlot;
 use crate::errors::{AppError, AppResult};
 use crate::services::mock_storyteller::MOCK_PROVIDER_LABEL;
 
+mod versions;
+pub use versions::ReplyVersions;
+
 #[derive(Debug, Clone, Serialize, TS, FromRow)]
 #[serde(rename_all = "camelCase")]
 #[ts(export)]
@@ -77,6 +80,8 @@ pub struct RouteView {
     /// Story-default pictures. A route's own choices are in
     /// `state.state.visualRefs` and win over these.
     pub visuals: Vec<StoryVisual>,
+    /// Replies on this route that have other versions to flip to.
+    pub reply_versions: Vec<ReplyVersions>,
 }
 
 /// The app's storyteller (Settings).
@@ -151,8 +156,10 @@ pub async fn route_view(db: &Database, route_id: &str) -> AppResult<RouteView> {
         }
         _ => None,
     };
+    let routes = list_routes(db, &route.story_id).await?;
     Ok(RouteView {
-        routes: list_routes(db, &route.story_id).await?,
+        reply_versions: versions::reply_versions(db, &route, &routes, &history).await?,
+        routes,
         chapters: route_chapters(db, route_id).await?,
         state: crate::db::state::state_at(db, &route.story_id, &head).await?,
         storyteller: story_storyteller_info(db, &story.id).await?,

@@ -14,6 +14,7 @@ import type {
   BudgetPolicy,
   BudgetStatus,
   ChapterRecapDraft,
+  CharacterCard,
   ConnectionCheck,
   ContextPreview,
   CreateStoryDraft,
@@ -44,6 +45,7 @@ import type {
   SaveView,
   SearchResults,
   StateEdit,
+  StoryCharacter,
   StoryCreated,
   StoryMemory,
   StorySummary,
@@ -179,6 +181,11 @@ export const commands = {
   fillStoryDraft: (draft: CreateStoryDraft, step: DraftStep | null, offline = false) =>
     call<FilledDraft>('fill_story_draft', { draft, step, offline }),
   createStory: (draft: CreateStoryDraft) => call<StoryCreated>('create_story', { draft }),
+  /** Everyone in the player's stories, to bring into a new one. */
+  listStoryCharacters: () => call<StoryCharacter[]>('list_story_characters'),
+  /** A character card file (.png or .json); `{{user}}` becomes `playerName`. */
+  readCharacterCard: (path: string, playerName: string | null) =>
+    call<CharacterCard>('read_character_card', { path, playerName }),
   getWizardDraft: () => call<WizardDraft | null>('get_wizard_draft'),
   saveWizardDraft: (wizard: WizardDraft) => call<WizardDraft>('save_wizard_draft', { wizard }),
   clearWizardDraft: () => call<void>('clear_wizard_draft'),

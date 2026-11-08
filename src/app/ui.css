@@ -507,11 +507,13 @@
 .turn-actions:focus-within {
   opacity: 1;
 }
-/* A bookmark stays in view. */
-.turn-actions:has([aria-pressed='true']) {
+/* A bookmark, and the versions of a reply, stay in view; the other
+   buttons still show on hover (kept weaker than the hover rules below). */
+.turn-actions:has([aria-pressed='true'], .reply-versions) {
   opacity: 1;
 }
-.turn-actions:has([aria-pressed='true']) .turn-action:not([aria-pressed='true']) {
+.turn-actions:where(:has([aria-pressed='true'], .reply-versions))
+  .turn-action:where(:not([aria-pressed='true'])) {
   opacity: 0;
 }
 .turn-assistant:hover .turn-action,
@@ -543,6 +545,41 @@
 }
 .turn-assistant > .turn-actions {
   justify-content: flex-start;
+}
+
+/* ---------- versions of a reply (Another reply) ---------- */
+.reply-versions {
+  display: inline-flex;
+  align-items: center;
+  margin-inline-end: 0.3rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-variant-numeric: tabular-nums;
+}
+.version-step {
+  display: inline-grid;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: inherit;
+}
+.version-step:hover:not(:disabled) {
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+.version-step:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+.version-count {
+  min-width: 2.4em;
+  text-align: center;
 }
 
 /* ---------- script lines with portraits ---------- */

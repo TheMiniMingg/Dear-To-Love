@@ -26,6 +26,9 @@ test('an adventure asks for a roll and the app rolls it', async () => {
   await waitForText(b, '.turn-assistant', 'Roll for');
   const roll = await b.$('.turn-assistant .msg-roll.ask button');
   await roll.waitForEnabled();
+  // WebDriver reads only displayed text, and the story fades in from
+  // opacity 0, so wait for the button to show before reading it.
+  await roll.waitForDisplayed();
   assert.equal(await roll.getText(), 'Roll 1d20');
   await roll.click();
 
