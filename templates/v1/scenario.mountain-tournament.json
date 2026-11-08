@@ -1,0 +1,82 @@
+{
+  "templateSchemaVersion": 1,
+  "type": "scenario",
+  "id": "starter:mountain-tournament",
+  "label": "The Tournament at Cloudgate",
+  "summary": "Every sect of the Nine Rivers sends its best to the Cloudgate tournament. You were sent as a joke, and you mean to win.",
+  "worlds": ["starter:nine-rivers"],
+  "title": "The Tournament at Cloudgate",
+  "description": "The great tournament on Cloudgate Mountain decides which sect leads the Nine Rivers for ten years. Your small sect sent you because no one else would go. The favorites are deadly, the judges are bribed, and someone is poisoning the tea.",
+  "firstChapterTitle": "The Thousand Steps",
+  "chapterOutlines": [
+    {
+      "title": "The Thousand Steps",
+      "outline": "Climb to Cloudgate, meet your rivals, and draw your first opponent."
+    },
+    {
+      "title": "The Poisoned Cup",
+      "outline": "A favorite falls ill, and every sect suspects another."
+    },
+    {
+      "title": "The Final Bout",
+      "outline": "Fight for your sect, and expose whoever wants the tournament to fail."
+    }
+  ],
+  "scene": {
+    "location": "The courtyard at the top of Cloudgate Mountain",
+    "summary": "Morning mist, banners of twelve sects snapping in the wind. A judge reads your sect’s name, and somebody laughs."
+  },
+  "openThreads": ["Who is poisoning the competitors?", "Which judges have been bought?"],
+  "npcs": [
+    {
+      "id": "starter:npc-lan",
+      "name": "Lan Yue",
+      "control": "npc",
+      "pronouns": "she/her",
+      "role": "Champion of the Jade Lotus sect",
+      "description": "The favorite to win, polite to everyone and impossible to read.",
+      "personality": ["composed", "proud", "secretly lonely"],
+      "goals": ["Win without dishonor"],
+      "abilities": ["Flowing Water Sword", "Can fight blindfolded"]
+    },
+    {
+      "id": "starter:npc-bao",
+      "name": "Old Bao",
+      "control": "npc",
+      "pronouns": "he/him",
+      "role": "Tea seller",
+      "description": "Has sold tea at every tournament for forty years and hears everything.",
+      "personality": ["cheerful", "sly", "kind"],
+      "goals": ["See one honest tournament before he dies"],
+      "abilities": ["Knows every poison by its smell"]
+    }
+  ],
+  "relationships": [
+    {
+      "fromId": "starter:npc-lan",
+      "toId": "@player",
+      "label": "Rival",
+      "status": "Curious about the outsider"
+    },
+    {
+      "fromId": "starter:npc-bao",
+      "toId": "@player",
+      "label": "Friend",
+      "status": "Likes underdogs"
+    }
+  ],
+  "tracking": {
+    "meters": [
+      {
+        "name": "Health",
+        "value": 100,
+        "max": 100
+      },
+      {
+        "name": "Qi",
+        "value": 50,
+        "max": 50
+      }
+    ]
+  }
+}

@@ -1,0 +1,94 @@
+{
+  "templateSchemaVersion": 1,
+  "type": "scenario",
+  "id": "starter:drowned-queen-map",
+  "label": "The Drowned Queen’s Map",
+  "summary": "You win half of a treasure map in a card game in Saltmother. The other half belongs to the most dangerous captain on the Shattered Main.",
+  "worlds": ["starter:shattered-main"],
+  "title": "The Drowned Queen’s Map",
+  "description": "Half a map, a borrowed sloop and a crew of four who joined for the free rum. The other half is tattooed on the arm of Captain Esme Blackwood, who wants your half and would rather not cut you to get it. The Admiralty wants both.",
+  "firstChapterTitle": "The Card Game",
+  "chapterOutlines": [
+    {
+      "title": "The Card Game",
+      "outline": "Win the map, get out of the tavern alive, and find yourself a ship."
+    },
+    {
+      "title": "The Fog Banks",
+      "outline": "Strike a deal with Blackwood, or race her through the islands."
+    },
+    {
+      "title": "The Drowned Queen",
+      "outline": "Reach the treasure before the Admiralty does, and see who keeps their word."
+    }
+  ],
+  "scene": {
+    "location": "The Gilded Gull tavern on the Saltmother docks",
+    "summary": "Midnight. The last hand is on the table. Your opponent has just bet half of a very old map."
+  },
+  "openThreads": ["Is the map real?", "Will Blackwood keep her word?"],
+  "npcs": [
+    {
+      "id": "starter:npc-esme",
+      "name": "Captain Esme Blackwood",
+      "control": "npc",
+      "pronouns": "she/her",
+      "role": "Pirate captain",
+      "description": "Elected captain six times and unelected never.",
+      "personality": ["bold", "clever", "keeps her word to the letter"],
+      "goals": ["Find the Drowned Queen’s treasure first"],
+      "abilities": ["Best navigator on the Main", "Deadly with a cutlass"]
+    },
+    {
+      "id": "starter:npc-pim",
+      "name": "Pim Gallow",
+      "control": "npc",
+      "pronouns": "he/him",
+      "role": "Your new first mate",
+      "description": "Joined your crew ten minutes ago for the rum. Turns out he can actually sail.",
+      "personality": ["cheerful", "superstitious", "brave"],
+      "goals": ["See the treasure", "Not be hanged"],
+      "abilities": ["Climbs rigging like a cat", "Knows a sea shanty for everything"]
+    }
+  ],
+  "relationships": [
+    {
+      "fromId": "starter:npc-esme",
+      "toId": "@player",
+      "label": "Rival",
+      "status": "Amused and interested"
+    },
+    {
+      "fromId": "starter:npc-pim",
+      "toId": "@player",
+      "label": "Crew",
+      "status": "Already loyal"
+    }
+  ],
+  "tracking": {
+    "meters": [
+      {
+        "name": "Health",
+        "value": 100,
+        "max": 100
+      },
+      {
+        "name": "Gold",
+        "value": 15
+      }
+    ],
+    "inventory": true,
+    "items": [
+      {
+        "name": "Half a treasure map",
+        "qty": 1,
+        "description": "The western half of the Drowned Queen’s map, inked on sharkskin."
+      },
+      {
+        "name": "Cutlass",
+        "qty": 1,
+        "description": "Nicked, but sharp."
+      }
+    ]
+  }
+}

@@ -1,0 +1,94 @@
+{
+  "templateSchemaVersion": 1,
+  "type": "scenario",
+  "id": "starter:glowing-ruins",
+  "label": "The Glowing Ruins",
+  "summary": "A ruin on the Ember Road has started to glow again, the way it did in the mage war. The waystation hires you to find out why before the caravans stop coming.",
+  "worlds": ["starter:ember-road"],
+  "title": "The Glowing Ruins",
+  "description": "Three hundred years after the mage war, the old watchtower at Cinder Ford is lit from within. Caravans are turning back. The waystation keeper can pay, the scholar can explain, and something inside the tower is waiting.",
+  "firstChapterTitle": "Cinder Ford",
+  "chapterOutlines": [
+    {
+      "title": "Cinder Ford",
+      "outline": "Take the job, and cross the ford at dusk to see the glow up close."
+    },
+    {
+      "title": "The Tower Stair",
+      "outline": "Climb through rooms the war left behind, and the people who got there first."
+    },
+    {
+      "title": "The Heart of the Glow",
+      "outline": "Find what woke the tower, and decide whether to put it back to sleep."
+    }
+  ],
+  "scene": {
+    "location": "The common room of the Cinder Ford waystation",
+    "summary": "Evening. Through the shutters the old tower on the far bank glows a soft, wrong orange. The keeper puts a purse of silver on your table."
+  },
+  "openThreads": ["What woke the tower?", "Who reached the ruins before you?"],
+  "npcs": [
+    {
+      "id": "starter:npc-tamsin",
+      "name": "Tamsin Reed",
+      "control": "npc",
+      "pronouns": "she/her",
+      "role": "Waystation keeper",
+      "description": "Runs Cinder Ford and will lose everything if the caravans stop.",
+      "personality": ["blunt", "warm", "shrewd"],
+      "goals": ["Keep the road open"],
+      "abilities": ["Knows every caravan master by name"]
+    },
+    {
+      "id": "starter:npc-orrin",
+      "name": "Orrin Fane",
+      "control": "npc",
+      "pronouns": "he/him",
+      "role": "Scholar of the mage war",
+      "description": "Has read everything about the tower and never been inside it.",
+      "personality": ["eager", "absent-minded", "braver than he looks"],
+      "goals": ["See the tower’s workings with his own eyes"],
+      "abilities": ["Reads the old mage script", "Knows which wards still bite"]
+    }
+  ],
+  "relationships": [
+    {
+      "fromId": "starter:npc-tamsin",
+      "toId": "@player",
+      "label": "Employer",
+      "status": "Paying well, hoping you are worth it"
+    },
+    {
+      "fromId": "starter:npc-orrin",
+      "toId": "@player",
+      "label": "Companion",
+      "status": "Thrilled to finally have a guide"
+    }
+  ],
+  "tracking": {
+    "meters": [
+      {
+        "name": "Health",
+        "value": 100,
+        "max": 100
+      },
+      {
+        "name": "Silver",
+        "value": 30
+      }
+    ],
+    "inventory": true,
+    "items": [
+      {
+        "name": "Lantern",
+        "qty": 1,
+        "description": "Shuttered, with oil for a night."
+      },
+      {
+        "name": "Rope",
+        "qty": 1,
+        "description": "Fifty feet of good hemp rope."
+      }
+    ]
+  }
+}

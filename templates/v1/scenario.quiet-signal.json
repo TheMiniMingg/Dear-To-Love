@@ -1,0 +1,71 @@
+{
+  "templateSchemaVersion": 1,
+  "type": "scenario",
+  "id": "starter:quiet-signal",
+  "label": "The Quiet Signal",
+  "summary": "Meridian’s antenna picks up a signal from inside the gas giant. Only you and the station’s oldest engineer believe it is a message.",
+  "worlds": ["starter:meridian-station"],
+  "title": "The Quiet Signal",
+  "description": "For eleven minutes every station night, a pattern rises out of Halcyon’s static. The director calls it weather. The pattern is answering the station’s own test pings.",
+  "firstChapterTitle": "Eleven Minutes",
+  "chapterOutlines": [
+    {
+      "title": "Eleven Minutes",
+      "outline": "Catch the signal yourself, and find the one person who has been logging it for years."
+    },
+    {
+      "title": "The Director’s Weather",
+      "outline": "Find out why the station’s records of the signal keep disappearing."
+    },
+    {
+      "title": "Reply",
+      "outline": "Decide whether to answer, and what to say."
+    }
+  ],
+  "scene": {
+    "location": "The antenna control room on Meridian’s outer ring",
+    "summary": "Station night. Halcyon fills the window, banded and slow. On the console, the static is starting to repeat."
+  },
+  "openThreads": ["What is making the signal?", "Who is deleting the logs?"],
+  "npcs": [
+    {
+      "id": "starter:npc-osei",
+      "name": "Kwame Osei",
+      "control": "npc",
+      "pronouns": "he/him",
+      "role": "Senior engineer",
+      "description": "Has been on Meridian longer than anyone and keeps paper notes because paper cannot be wiped.",
+      "personality": ["patient", "stubborn", "dry humor"],
+      "goals": ["Prove the signal is real before he retires"],
+      "abilities": [
+        "Can fix any system on the station",
+        "Remembers every crew member who ever served here"
+      ]
+    },
+    {
+      "id": "starter:npc-vale",
+      "name": "Director Imara Vale",
+      "control": "npc",
+      "pronouns": "she/her",
+      "role": "Station director",
+      "description": "Calm, polished and very sure that there is nothing to see.",
+      "personality": ["controlled", "persuasive", "tired"],
+      "goals": ["Keep the station’s funding", "Keep the crew calm"],
+      "abilities": ["Knows exactly what the supply ship brings, and when"]
+    }
+  ],
+  "relationships": [
+    {
+      "fromId": "starter:npc-osei",
+      "toId": "@player",
+      "label": "Colleague",
+      "status": "Relieved someone finally believes him"
+    },
+    {
+      "fromId": "starter:npc-vale",
+      "toId": "@player",
+      "label": "Superior",
+      "status": "Watching you closely"
+    }
+  ]
+}

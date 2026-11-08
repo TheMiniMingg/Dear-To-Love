@@ -177,6 +177,22 @@ delete    refused while a default, a starting state or any edit event on
   attempt (`character_suggestion`), and the bytes go through the import
   above with the story's scope.
 
+## Voices
+
+```text
+reply      speakerSegments(text, cast names): "Name:" lines, quotes next to a
+           name, else the narrator -> neighbouring pieces of one voice joined
+pack       narrator + voice per name, from the computer, `elevenlabs` or
+           `openai_speech` (a connection like any other, never the storyteller)
+computer   one SpeechSynthesisUtterance per piece, with the pack's voice
+AI         speak_text per piece (budget check, one `character_suggestion`
+           ledger row) -> WAV bytes -> played while the next is fetched;
+           the last 60 pieces are kept in memory
+file       .dtlvoices: {format, version, pack} with names and voice ids only
+```
+
+- `dtl.sound` off stops a reading and silences the reply chime. See ADR 0030.
+
 ## Storypacks and text export
 
 ```text

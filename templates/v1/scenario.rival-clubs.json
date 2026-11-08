@@ -1,0 +1,68 @@
+{
+  "templateSchemaVersion": 1,
+  "type": "scenario",
+  "id": "starter:rival-clubs",
+  "label": "The Club Wars",
+  "summary": "Your club at Northgate will be shut down unless it wins the spring showcase, and the rival club has your ex as its president.",
+  "worlds": ["starter:northgate"],
+  "title": "The Club Wars",
+  "description": "The student council is cutting clubs. Yours, the Night Owls film society, has six members and a projector held together with tape. Your rival is the polished Northgate Drama Guild, and the one person you never wanted to see again runs it.",
+  "firstChapterTitle": "The Council Meeting",
+  "chapterOutlines": [
+    {
+      "title": "The Council Meeting",
+      "outline": "Hear the news, rally your six members, and run into your ex."
+    },
+    {
+      "title": "Rehearsal Week",
+      "outline": "Make a showcase out of nothing while the Guild plays dirty, or doesn’t."
+    },
+    {
+      "title": "Showcase Night",
+      "outline": "Put on the show, and settle things with the rival club one way or another."
+    }
+  ],
+  "scene": {
+    "location": "A basement screening room under the Northgate library",
+    "summary": "Late afternoon. The projector rattles. Five club members look at you after reading the council’s email."
+  },
+  "openThreads": ["Can the club be saved?", "Is the Guild really behind the rumors?"],
+  "npcs": [
+    {
+      "id": "starter:npc-theo",
+      "name": "Theo Lindqvist",
+      "control": "npc",
+      "pronouns": "he/him",
+      "role": "President of the Drama Guild",
+      "description": "Your ex. Charming in public, surprisingly unsure in private.",
+      "personality": ["ambitious", "theatrical", "sincere underneath"],
+      "goals": ["Win the showcase", "Find out if you still hate him"],
+      "abilities": ["Can make any room listen"]
+    },
+    {
+      "id": "starter:npc-priya",
+      "name": "Priya Nair",
+      "control": "npc",
+      "pronouns": "she/her",
+      "role": "Night Owls member",
+      "description": "Third-year engineering student who keeps the projector alive by force of will.",
+      "personality": ["loyal", "deadpan", "competitive"],
+      "goals": ["Save the club that saved her first year"],
+      "abilities": ["Fixes anything with wires"]
+    }
+  ],
+  "relationships": [
+    {
+      "fromId": "starter:npc-theo",
+      "toId": "@player",
+      "label": "Ex",
+      "status": "Complicated"
+    },
+    {
+      "fromId": "starter:npc-priya",
+      "toId": "@player",
+      "label": "Friend",
+      "status": "Ready to fight for the club"
+    }
+  ]
+}

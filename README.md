@@ -16,7 +16,7 @@ Japanese and Korean, and stories can be written in many more languages.
 
 ## Highlights
 
-- **Start in a few clicks** from 33 worlds, 35 scenarios and 27 characters, or build your
+- **Start in a few clicks** from 33 worlds, 47 scenarios and 27 characters, or build your
   own story from scratch. Bring a character from another story, or from a character card.
 - **Tell it your way**: narrated, script (like the story above), roleplay chat, thoughts and
   dialogue, mostly messages, or a classic text adventure, each with an example before you
@@ -33,9 +33,10 @@ Japanese and Korean, and stories can be written in many more languages.
 - **Characters with feelings**: a bar for how each character feels about you, from cold to
   devoted or from suspicious to complete trust, that moves as the story goes.
 - **Made for reading**: a book font, chapters that open like a book's, each character's name
-  in their own color, and six themes (Rose, Midnight, Parchment, Neon, Café and Gothic). A
-  story can take the look that fits its genre, any reply can be read aloud, and any route
-  can be saved as an e-book.
+  in their own color, and twelve themes (Rose, Midnight, Parchment, Neon, Café, Gothic,
+  Forest, Ocean, Lavender, Ember, Terminal and the high-contrast Ink). A story can take the
+  look that fits its genre, any reply can be read aloud in a voice for each character, and
+  any route can be saved as an e-book.
 - **Every feature can be switched off** with a checkbox.
 
 ## Download
@@ -203,18 +204,33 @@ story can also **Send a text**, **Call** someone, **Think** a thought of your ow
 - **Search and bookmarks**, and **Export** a route as text, as an e-book (`.epub`, with a
   cover, a title page, a page for each chapter and the reading font, for any e-reader or book
   app), or a whole story as a `.storypack` to share.
-- **Read aloud.** The speaker under a reply reads it with your computer's own voices, so it
-  works offline and costs nothing. Pick the voice and speed in **Settings → Sound**.
+- **Read aloud, with a voice for everyone.** The speaker under a reply reads it with your
+  computer's own voices, offline and free. A **voice pack** (**Settings → Sound**) gives the
+  narrator and each character a voice of their own: the computer's, or AI voices from
+  ElevenLabs (including voices you design or clone there) or a free voice server on your
+  computer such as Kokoro. Lines are matched to whoever says them ("Mina: …", or quoted
+  speech next to a name). A pack saves to a `.dtlvoices` file to share, which names the
+  voices only, never your key. Each AI reading is recorded in **Usage**.
+- **Sound on or off with one switch** in **Settings → Sound** (or **Turn sound off** in
+  Ctrl/Cmd+K): off means no chime and nothing read aloud.
 - **Find anything with Ctrl/Cmd+K**: a story, a chapter, a window or a setting, as you type.
-- **Keyboard shortcuts** for almost everything; press **F1** to see them. Your first story
+- **Keyboard shortcuts** for almost everything; press **F1** to see them, and **Change** any
+  of them to keys of your own (press the new keys; a clash asks first). Your first story
   starts with four short tips; **Skip tips** hides them for good.
+- **Find things in long lists.** The storyteller's rules can be searched, narrowed to a kind
+  (magic, danger, romance, technology and more) and sorted, and edited where they are; the
+  image library searches names, kinds and stories, shows only moving GIFs or one kind, and
+  sorts by date or name.
 - **Looks.** Stories are set in Literata, a font made for long reading, and each chapter
   opens with its number, its title and a large first letter. Everyone in the cast gets a
   color for their name, picked from the name; change it under **Name color** in **Story
-  details**. **Settings → Look** has six themes: Rose (light or dark with your computer),
-  Midnight, Parchment, Neon, Café and Gothic. With **Give each story a look that fits its
-  genre** on, horror and mysteries read in Gothic, science fiction in Neon, thrillers in
-  Midnight, fantasy and history on Parchment, cozy stories in Café and romance in Rose;
+  details**. **Settings → Look** has twelve themes: Rose (light or dark with your computer),
+  Midnight, Parchment, Neon, Café, Gothic, Forest, Ocean, Lavender, Ember, Terminal (green on
+  black in a typewriter face) and Ink (black on white, the strongest contrast). With **Give
+  each story a look that fits its genre** on, horror and mysteries read in Gothic, science
+  fiction in Neon, thrillers in Midnight, fantasy and history on Parchment, action and war in
+  Ember, text adventures in Terminal, nature stories in Forest, beach and sea stories in
+  Ocean, whimsical and fae stories in Lavender, cozy stories in Café and romance in Rose;
   **Look** beside the story picks another for that story. Text size, column width and line
   spacing are there too, and in **Settings → Look** beside a sample of a story.
 
@@ -226,9 +242,9 @@ _The same app in Rose, Midnight and Parchment: a café romance, a late-night rad
 
 _Neon, Café and Gothic: a cyberpunk heist, a potion shop on an island and a ghost story._
 
-![Settings → Look with all six themes and Give each story a look that fits its genre](docs/screenshots/settings-look.webp)
+![Settings → Look with all twelve themes and Give each story a look that fits its genre](docs/screenshots/settings-look.webp)
 
-_Settings → Look with all six themes and Give each story a look that fits its genre._
+_Settings → Look with all twelve themes and Give each story a look that fits its genre._
 
 ![A chapter opening: the chapter number, its title, an ornament and a large first letter](docs/screenshots/reader-look.webp)
 
@@ -278,6 +294,18 @@ _The first of four tips at the start of your first story._
 
 _A route saved as an e-book: the cover, the title page and the first chapter._
 
+![A voice pack with AI voices from a voice server: a narrator, and a voice each for Inès and Rook, added from their story](docs/screenshots/voice-pack.webp)
+
+_A voice pack with AI voices from a voice server: a narrator, and a voice each for Inès and Rook, added from their story._
+
+![Changing Routes to Ctrl+B in the shortcuts window, which asks first because Ctrl+B already bookmarks](docs/screenshots/shortcut-change.webp)
+
+_Changing Routes to Ctrl+B in the shortcuts window, which asks first because Ctrl+B already bookmarks._
+
+![The storyteller's rules in Story details, searched for “romance”, with each rule's kind and the suggestions to browse below](docs/screenshots/rules-find.webp)
+
+_The storyteller's rules in Story details, searched for “romance”, with each rule's kind and the suggestions to browse below._
+
 ### Texts and calls
 
 Characters text in short bursts, in their own voice, and calls read like real speech. Their
@@ -315,47 +343,47 @@ _Status and inventory, with every party member's bars and a picture of the heali
 
 ## Stories to start from
 
-Preset Story includes 33 worlds, each with at least one scenario, and 27 characters to play.
+Preset Story includes 33 worlds with 47 scenarios between them, and 27 characters to play.
 Scenarios marked ★ start with health, items and more already set up.
 
 <details>
 <summary>All worlds and scenarios</summary>
 
-| World                   | Genres                                      | Scenario                              |
-| ----------------------- | ------------------------------------------- | ------------------------------------- |
-| Harbor Town             | Mystery, Romance, Slice of life             | The Unsigned Letter                   |
-| The Glass Orchard       | Fantasy, Drama                              | The Memory Harvest                    |
-| Meridian Station        | Science fiction, Mystery                    | Night Shift on Meridian               |
-| Ashcombe, 1923          | Historical, Romance, Comedy                 | The Summer Guest                      |
-| Hollow Pines            | Horror, Mystery                             | Dead Air                              |
-| The Ember Road          | Fantasy, Adventure                          | The Last Caravan                      |
-| Larkport                | Romance, Comedy, Drama                      | The Wrong Reservation                 |
-| Vesper City             | Science fiction, Noir, Thriller             | Ghost in the Ledger                   |
-| Northgate University    | School life, Romance, Comedy, Slice of life | Midterm Week                          |
-| The Underhalls          | Adventure, Fantasy, Action                  | The Lantern Job                       |
-| Neon Harbor             | Cyberpunk, Thriller, Science fiction        | Clean Slate                           |
-| The Dry Country         | Post-apocalyptic, Adventure, Drama          | The Water Run                         |
-| Lumen City              | Superhero, Action, Comedy                   | Night of the Blackout                 |
-| Dust Creek              | Western, Adventure, Drama                   | The Stage from Redwater               |
-| The Lantern Palace      | Historical, Drama, Romance                  | The Empress's Tea                     |
-| Maple & Fern            | Dating sim, Romance, Slice of life          | First Week at the Café                |
-| Greywatch               | Fantasy, Adventure, Action                  | The Shifting Deep ★; The Lost Party ★ |
-| Arclight                | Cyberpunk, Action, Science fiction          | Going Dark ★; The Last Free Radio ★   |
-| The Saltmarsh Lyceum    | School life, Fantasy, Romance               | Familiar Trouble ★                    |
-| Brackwater, 1891        | Horror, Mystery, Historical                 | The Thirteenth Bell ★                 |
-| Juniper Heights, Day 41 | Post-apocalyptic, Horror, Action            | The Supply Run ★                      |
-| The Tallow Drift        | Science fiction, Adventure, Comedy          | The Ghost Liner ★                     |
-| Star Lane               | Romance, Drama, Slice of life               | Ninety Days to Debut ★                |
-| The Tumbledown Isles    | Slice of life, Fantasy, Comedy              | The Potion Shop on Pell Island ★      |
-| The Velvet Court        | Romance, Horror, Drama                      | The Treaty Night ★                    |
-| The Aurelia, 1934       | Mystery, Historical, Thriller               | The Empty Cabin ★                     |
-| The Shattered Main      | Adventure, Action, Comedy                   | Captain by Morning ★                  |
-| The Nine Rivers         | Action, Fantasy, Historical                 | The Stolen Manual ★                   |
-| The Rosaline Court      | Romance, Fantasy, Comedy                    | The Villainess Wakes ★                |
-| Calder Falls            | Mystery, Science fiction, Drama             | Tuesday, Again ★                      |
-| Isla Monarch            | Thriller, Action, Drama                     | One Night at the Monarch ★            |
-| Doomspire Tower         | Superhero, Comedy, Action                   | Local 404 ★                           |
-| The Ashen Throne        | Fantasy, Drama, Action                      | The Regent's First Winter ★           |
+| World                   | Genres                                      | Scenario                                                |
+| ----------------------- | ------------------------------------------- | ------------------------------------------------------- |
+| Harbor Town             | Mystery, Romance, Slice of life             | The Unsigned Letter; Storm Season                       |
+| The Glass Orchard       | Fantasy, Drama                              | The Memory Harvest                                      |
+| Meridian Station        | Science fiction, Mystery                    | Night Shift on Meridian; The Quiet Signal               |
+| Ashcombe, 1923          | Historical, Romance, Comedy                 | The Summer Guest                                        |
+| Hollow Pines            | Horror, Mystery                             | Dead Air; The Lodge on Cutter Ridge                     |
+| The Ember Road          | Fantasy, Adventure                          | The Last Caravan; The Glowing Ruins ★                   |
+| Larkport                | Romance, Comedy, Drama                      | The Wrong Reservation; The Wedding Speech               |
+| Vesper City             | Science fiction, Noir, Thriller             | Ghost in the Ledger; Witness in the Rain ★              |
+| Northgate University    | School life, Romance, Comedy, Slice of life | Midterm Week; The Club Wars                             |
+| The Underhalls          | Adventure, Fantasy, Action                  | The Lantern Job                                         |
+| Neon Harbor             | Cyberpunk, Thriller, Science fiction        | Clean Slate                                             |
+| The Dry Country         | Post-apocalyptic, Adventure, Drama          | The Water Run                                           |
+| Lumen City              | Superhero, Action, Comedy                   | Night of the Blackout                                   |
+| Dust Creek              | Western, Adventure, Drama                   | The Stage from Redwater; The Silver Claim ★             |
+| The Lantern Palace      | Historical, Drama, Romance                  | The Empress's Tea                                       |
+| Maple & Fern            | Dating sim, Romance, Slice of life          | First Week at the Café; The Midnight Book Club          |
+| Greywatch               | Fantasy, Adventure, Action                  | The Shifting Deep ★; The Lost Party ★                   |
+| Arclight                | Cyberpunk, Action, Science fiction          | Going Dark ★; The Last Free Radio ★                     |
+| The Saltmarsh Lyceum    | School life, Fantasy, Romance               | Familiar Trouble ★                                      |
+| Brackwater, 1891        | Horror, Mystery, Historical                 | The Thirteenth Bell ★                                   |
+| Juniper Heights, Day 41 | Post-apocalyptic, Horror, Action            | The Supply Run ★                                        |
+| The Tallow Drift        | Science fiction, Adventure, Comedy          | The Ghost Liner ★                                       |
+| Star Lane               | Romance, Drama, Slice of life               | Ninety Days to Debut ★                                  |
+| The Tumbledown Isles    | Slice of life, Fantasy, Comedy              | The Potion Shop on Pell Island ★; The Harvest Lantern ★ |
+| The Velvet Court        | Romance, Horror, Drama                      | The Treaty Night ★                                      |
+| The Aurelia, 1934       | Mystery, Historical, Thriller               | The Empty Cabin ★                                       |
+| The Shattered Main      | Adventure, Action, Comedy                   | Captain by Morning ★; The Drowned Queen’s Map ★         |
+| The Nine Rivers         | Action, Fantasy, Historical                 | The Stolen Manual ★; The Tournament at Cloudgate ★      |
+| The Rosaline Court      | Romance, Fantasy, Comedy                    | The Villainess Wakes ★                                  |
+| Calder Falls            | Mystery, Science fiction, Drama             | Tuesday, Again ★                                        |
+| Isla Monarch            | Thriller, Action, Drama                     | One Night at the Monarch ★                              |
+| Doomspire Tower         | Superhero, Comedy, Action                   | Local 404 ★                                             |
+| The Ashen Throne        | Fantasy, Drama, Action                      | The Regent's First Winter ★                             |
 
 </details>
 
