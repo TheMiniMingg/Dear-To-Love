@@ -803,7 +803,7 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
         storyId: view.story.id,
         routeId: view.route.id,
         expectedHeadId: view.state.headEventId,
-        changes: joinCast(view.state.state, c),
+        changes: joinCast(view.state.state, c, characterId),
         note: t('added {name} to the cast', { name: c.name.trim() }),
       });
       setView(v);

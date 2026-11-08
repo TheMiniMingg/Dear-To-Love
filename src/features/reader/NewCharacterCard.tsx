@@ -96,8 +96,7 @@ export function newcomersIn(text: string, cast: string[], skipped: string[]): Ne
  * The changes that add someone to the cast as a side character, in the
  * scene now, under an id no one in the story has.
  */
-export function joinCast(s: StoryStateV1, c: NewCharacter): StateEdit[] {
-  const id = newcomerId(s);
+export function joinCast(s: StoryStateV1, c: NewCharacter, id = newcomerId(s)): StateEdit[] {
   const text = (v: string) => v.trim() || undefined;
   const character: Character = {
     id,
@@ -117,11 +116,22 @@ export function joinCast(s: StoryStateV1, c: NewCharacter): StateEdit[] {
   ];
 }
 
-/** The id the next person to join the cast gets. */
-export function newcomerId(s: StoryStateV1): string {
-  let n = 1;
-  while (`custom:npc-${n}` in s.characters) n++;
-  return `custom:npc-${n}`;
+/**
+ * The id for someone who joins the cast during the story. Other routes may
+ * add other people, so the id is random rather than the next number: a
+ * story-wide portrait chosen for this person never lands on someone else.
+ */
+export function newcomerId(
+  s: StoryStateV1,
+  taken: (id: string) => boolean = (id) => id in s.characters,
+): string {
+  for (;;) {
+    const part = Array.from(crypto.getRandomValues(new Uint8Array(4)), (b) =>
+      b.toString(16).padStart(2, '0'),
+    ).join('');
+    const id = `custom:npc-${part}`;
+    if (!taken(id)) return id;
+  }
 }
 
 export function NewCharacterCards({

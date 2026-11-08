@@ -15,6 +15,7 @@ import { castColors, NAME_COLORS, nameStyle } from './nameColors';
 import { Thumb } from '../images/ImageGrid';
 import { picture, portraitSlot } from './pictures';
 import { FeelingFields, towardsPlayer, withFeeling } from './feelings';
+import { newcomerId } from './NewCharacterCard';
 
 export type DetailsTab = 'characters' | 'world' | 'narration' | 'scene' | 'facts';
 type Tab = DetailsTab;
@@ -287,7 +288,7 @@ export function StoryDetailsPanel({
     });
 
   const addCharacter = () => {
-    const cid = unusedId('custom:npc-', (x) => x in edited.characters || x in original.characters);
+    const cid = newcomerId(edited, (x) => x in edited.characters || x in original.characters);
     set({
       characters: {
         ...edited.characters,

@@ -293,6 +293,7 @@ describe('Someone new', () => {
     expect(screen.queryByRole('region', { name: 'Someone new: Sam' })).toBeNull();
 
     await userEvent.click(within(card).getByRole('button', { name: 'Add to the cast' }));
+    const newId = expect.stringMatching(/^custom:npc-[0-9a-f]{8}$/) as unknown as string;
     expect(edits.at(-1)).toEqual({
       storyId: 'story-1',
       routeId: 'route-1',
@@ -302,7 +303,7 @@ describe('Someone new', () => {
         {
           op: 'upsertCharacter',
           character: {
-            id: 'custom:npc-1',
+            id: newId,
             name: 'Rowan Ellis',
             control: 'npc',
             role: 'ferry pilot',
@@ -320,7 +321,7 @@ describe('Someone new', () => {
             location: 'The pier',
             time: 'Dawn',
             summary: '',
-            participantIds: ['pc', 'custom:npc-1'],
+            participantIds: ['pc', newId],
           },
         },
       ],
@@ -387,7 +388,13 @@ describe('Someone new', () => {
     expect(edits[1]).toMatchObject({
       expectedHeadId: 'ev-3',
       note: 'Portrait of Rowan Ellis',
-      changes: [{ op: 'setVisualRef', slot: 'portrait:custom:npc-1', assetId: 'img-rowan' }],
+      changes: [
+        {
+          op: 'setVisualRef',
+          slot: expect.stringMatching(/^portrait:custom:npc-[0-9a-f]{8}$/),
+          assetId: 'img-rowan',
+        },
+      ],
     });
     expect(await screen.findByText(/Rowan Ellis’s portrait is ready/)).toBeInTheDocument();
   });
@@ -419,7 +426,7 @@ describe('Someone new', () => {
     expect(within(card).getByRole('button', { name: 'Add to the cast' })).toBeDisabled();
   });
 
-  it('joins under an id no one has, in the scene now', () => {
+  it('joins under a random id, so other routes never share it, in the scene now', () => {
     const s = viewWith().state.state;
     s.characters['custom:npc-1'] = { ...s.characters.pc!, id: 'custom:npc-1', control: 'npc' };
     const changes = joinCast(s, {
@@ -429,11 +436,13 @@ describe('Someone new', () => {
       age: '',
       appearance: '',
     });
+    const id = changes[0]?.op === 'upsertCharacter' ? changes[0].character.id : '';
+    expect(id).toMatch(/^custom:npc-[0-9a-f]{8}$/);
     expect(changes).toEqual([
       {
         op: 'upsertCharacter',
         character: {
-          id: 'custom:npc-2',
+          id,
           name: 'Rowan',
           control: 'npc',
           personality: [],
@@ -441,7 +450,7 @@ describe('Someone new', () => {
           abilities: [],
         },
       },
-      { op: 'setScene', scene: { ...s.scene, participantIds: ['pc', 'custom:npc-2'] } },
+      { op: 'setScene', scene: { ...s.scene, participantIds: ['pc', id] } },
     ]);
   });
 });
