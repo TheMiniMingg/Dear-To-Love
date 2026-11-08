@@ -2398,3 +2398,85 @@ details.more-options > summary {
   color: var(--muted);
   font-size: 0.875rem;
 }
+
+/* ---------- batch 7: changing shortcuts ---------- */
+.shortcut-edit {
+  display: inline-flex;
+  gap: 0.6rem;
+  margin-left: 0.6rem;
+  font-size: 0.85em;
+}
+.shortcut-capture {
+  padding: 0.1rem 0.6rem;
+  border: 1px dashed var(--accent);
+  font-size: 0.85em;
+}
+.shortcut-clash {
+  margin-top: 0.75rem;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.shortcut-clash p {
+  margin: 0 0 0.5rem;
+}
+
+/* ---------- batch 7: sound and voice packs ---------- */
+.sound-options {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+.sound-options:disabled {
+  opacity: 0.6;
+}
+.read-aloud-problem {
+  margin-top: 0.4rem;
+}
+.read-aloud-problem p {
+  margin: 0 0 0.35rem;
+}
+.read-aloud-button[aria-busy='true'] {
+  animation: pulse-soft 1.2s ease-in-out infinite;
+}
+@keyframes pulse-soft {
+  50% {
+    opacity: 0.45;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .read-aloud-button[aria-busy='true'] {
+    animation: none;
+  }
+}
+.voice-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 0.6rem;
+}
+.voice-row select,
+.voice-row input {
+  flex: 1 1 12rem;
+  min-width: 0;
+  max-width: 22rem;
+}
+.voice-cast {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+}
+.voice-cast legend {
+  font-weight: 600;
+  padding: 0;
+}
+.voice-cast-list {
+  list-style: none;
+  margin: 0.4rem 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}

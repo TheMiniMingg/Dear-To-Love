@@ -556,12 +556,12 @@ export const create: Messages = {
     '削除されたストーリーのもの、または作成されなかったストーリー用に追加されたものです。共有するか削除してください。',
     '삭제된 스토리의 이미지이거나, 만들지 않은 스토리용으로 추가한 이미지입니다. 공유하거나 삭제하세요.',
   ],
-  "PNG, JPEG or WebP, up to 20 MB each. Images stay on this computer. Pictures added here can be used in any story; pictures added from a story's Pictures (or while creating a story) stay in that story unless you share them. Adding the same picture twice keeps one copy.":
+  "PNG, JPEG, WebP or GIF (moving ones too), up to 20 MB each. Images stay on this computer. Pictures added here can be used in any story; pictures added from a story's Pictures (or while creating a story) stay in that story unless you share them. Adding the same picture twice keeps one copy.":
     [
-      'PNG、JPEG 或 WebP，每张最大 20 MB。图片只保存在这台电脑上。在这里添加的图片可用于任何故事；从故事的“图片”中（或创建故事时）添加的图片只属于该故事，除非你共享它们。同一张图片添加两次只会保留一份。',
-      'PNG、JPEG 或 WebP，每張最大 20 MB。圖片只保存在這台電腦上。在這裡新增的圖片可用於任何故事；從故事的「圖片」中（或建立故事時）新增的圖片只屬於該故事，除非你共用它們。同一張圖片新增兩次只會保留一份。',
-      'PNG、JPEG、WebP（各 20 MB まで）。画像はこのコンピューターに保存されます。ここで追加した画像はどのストーリーでも使えます。ストーリーの「画像」から（またはストーリー作成中に）追加した画像は、共有しない限りそのストーリー専用です。同じ画像を 2 回追加しても 1 つだけ保存されます。',
-      "PNG, JPEG, WebP, 각 20MB까지. 이미지는 이 컴퓨터에 저장됩니다. 여기서 추가한 이미지는 어떤 스토리에서도 쓸 수 있고, 스토리의 '이미지'에서(또는 스토리를 만들 때) 추가한 이미지는 공유하지 않는 한 그 스토리 전용입니다. 같은 이미지를 두 번 추가해도 하나만 저장됩니다.",
+      'PNG、JPEG、WebP 或 GIF（动图也可以），每张最大 20 MB。图片只保存在这台电脑上。在这里添加的图片可用于任何故事；从故事的“图片”中（或创建故事时）添加的图片只属于该故事，除非你共享它们。同一张图片添加两次只会保留一份。',
+      'PNG、JPEG、WebP 或 GIF（動圖也可以），每張最大 20 MB。圖片只保存在這台電腦上。在這裡新增的圖片可用於任何故事；從故事的「圖片」中（或建立故事時）新增的圖片只屬於該故事，除非你共用它們。同一張圖片新增兩次只會保留一份。',
+      'PNG、JPEG、WebP、GIF（動く GIF も可、各 20 MB まで）。画像はこのコンピューターに保存されます。ここで追加した画像はどのストーリーでも使えます。ストーリーの「画像」から（またはストーリー作成中に）追加した画像は、共有しない限りそのストーリー専用です。同じ画像を 2 回追加しても 1 つだけ保存されます。',
+      "PNG, JPEG, WebP, GIF(움직이는 GIF 포함), 각 20MB까지. 이미지는 이 컴퓨터에 저장됩니다. 여기서 추가한 이미지는 어떤 스토리에서도 쓸 수 있고, 스토리의 '이미지'에서(또는 스토리를 만들 때) 추가한 이미지는 공유하지 않는 한 그 스토리 전용입니다. 같은 이미지를 두 번 추가해도 하나만 저장됩니다.",
     ],
   'No images yet.': [
     '还没有图片。',

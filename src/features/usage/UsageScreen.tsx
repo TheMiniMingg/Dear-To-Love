@@ -16,7 +16,7 @@ const PURPOSES: Record<string, string> = {
   story_reply: msg('Story reply'),
   memory_summary: msg('Story summary'),
   manual_test: msg('Test message'),
-  character_suggestion: msg('Story ideas and pictures'),
+  character_suggestion: msg('Story ideas, pictures and voices'),
 };
 
 const SOURCES: Record<string, string> = {

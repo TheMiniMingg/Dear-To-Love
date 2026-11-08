@@ -24,6 +24,11 @@ pub enum AdapterKind {
     /// Pictures: Stable Diffusion WebUI (AUTOMATIC1111, Forge, SD.Next),
     /// `POST {baseUrl}/sdapi/v1/txt2img`.
     StableDiffusion,
+    /// Voices: an OpenAI-style speech API, `POST {baseUrl}/audio/speech`
+    /// (Kokoro-FastAPI and other voice servers that copy it).
+    OpenaiSpeech,
+    /// Voices: ElevenLabs, `POST {baseUrl}/text-to-speech/{voice}`.
+    Elevenlabs,
 }
 
 impl AdapterKind {
@@ -34,6 +39,8 @@ impl AdapterKind {
             Self::Anthropic => "anthropic",
             Self::OpenaiImages => "openai_images",
             Self::StableDiffusion => "stable_diffusion",
+            Self::OpenaiSpeech => "openai_speech",
+            Self::Elevenlabs => "elevenlabs",
         }
     }
 
@@ -44,6 +51,8 @@ impl AdapterKind {
             "anthropic" => Some(Self::Anthropic),
             "openai_images" => Some(Self::OpenaiImages),
             "stable_diffusion" => Some(Self::StableDiffusion),
+            "openai_speech" => Some(Self::OpenaiSpeech),
+            "elevenlabs" => Some(Self::Elevenlabs),
             _ => None,
         }
     }
@@ -51,6 +60,16 @@ impl AdapterKind {
     /// Makes pictures rather than story replies.
     pub fn makes_pictures(self) -> bool {
         matches!(self, Self::OpenaiImages | Self::StableDiffusion)
+    }
+
+    /// Reads text aloud rather than writing story replies.
+    pub fn speaks(self) -> bool {
+        matches!(self, Self::OpenaiSpeech | Self::Elevenlabs)
+    }
+
+    /// Can write a story's replies (not a picture or voice connection).
+    pub fn writes_stories(self) -> bool {
+        !self.makes_pictures() && !self.speaks()
     }
 }
 

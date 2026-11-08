@@ -26,3 +26,5 @@ pub mod support_report;
 pub mod tidy;
 pub mod tokens;
 pub mod updates;
+pub mod voice_packs;
+pub mod voices;

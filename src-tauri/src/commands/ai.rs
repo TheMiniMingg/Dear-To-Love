@@ -4,10 +4,12 @@ use ts_rs::TS;
 
 use crate::db::providers;
 use crate::domain::provider::{ProviderProfile, ProviderProfileInput, StorytellerChoice};
-use crate::errors::{AppResult, ErrorCode};
+use crate::errors::{AppError, AppResult, ErrorCode};
 use crate::services::adapters::Adapter;
 use crate::services::generation;
 use crate::services::reader::{story_storyteller_info, storyteller_info, StorytellerInfo};
+use crate::services::voice_packs::{self, VoicePackFile};
+use crate::services::voices::{self, SpeakInput, VoiceInfo};
 use crate::state::AppState;
 
 #[tauri::command]
@@ -131,4 +133,43 @@ pub async fn test_connection(state: State<'_, AppState>, id: String) -> AppResul
 #[tauri::command]
 pub async fn send_test_message(state: State<'_, AppState>, id: String) -> AppResult<String> {
     generation::send_test_message(state.db()?, state.secrets.as_ref(), &state.session_id, &id).await
+}
+
+/// Reads one stretch of text aloud with a voice connection. The answer is
+/// WAV audio, sent as raw bytes. One usage-ledger row.
+#[tauri::command]
+pub async fn speak_text(
+    state: State<'_, AppState>,
+    input: SpeakInput,
+) -> AppResult<tauri::ipc::Response> {
+    let audio = voices::speak(
+        state.db()?,
+        state.secrets.as_ref(),
+        &state.session_id,
+        &input,
+    )
+    .await?;
+    Ok(tauri::ipc::Response::new(audio))
+}
+
+/// The voices a voice connection offers. Free: no text is sent.
+#[tauri::command]
+pub async fn list_voices(state: State<'_, AppState>, id: String) -> AppResult<Vec<VoiceInfo>> {
+    voices::connection_voices(state.db()?, state.secrets.as_ref(), &id).await
+}
+
+/// Saves a voice pack to a file to keep or share. It names voices only.
+#[tauri::command]
+pub async fn export_voice_pack(path: String, pack: VoicePackFile) -> AppResult<()> {
+    tokio::task::spawn_blocking(move || voice_packs::write(std::path::Path::new(&path), &pack))
+        .await
+        .map_err(|e| AppError::internal(format!("could not save the voice pack: {e}")))?
+}
+
+/// Reads a voice pack file. Nothing is saved until the player keeps it.
+#[tauri::command]
+pub async fn import_voice_pack(path: String) -> AppResult<VoicePackFile> {
+    tokio::task::spawn_blocking(move || voice_packs::read(std::path::Path::new(&path)))
+        .await
+        .map_err(|e| AppError::internal(format!("could not read the voice pack: {e}")))?
 }

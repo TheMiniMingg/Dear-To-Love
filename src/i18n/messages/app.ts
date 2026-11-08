@@ -447,11 +447,11 @@ export const app: Messages = {
   'Story reply': ['故事回复', '故事回覆', 'ストーリーの返信', '스토리 답장'],
   'Story summary': ['故事摘要', '故事摘要', 'ストーリーの要約', '스토리 요약'],
   'Test message': ['测试消息', '測試訊息', 'テストメッセージ', '테스트 메시지'],
-  'Story ideas and pictures': [
-    '故事点子和图片',
-    '故事點子和圖片',
-    '物語のアイデアと画像',
-    '이야기 아이디어와 그림',
+  'Story ideas, pictures and voices': [
+    '故事点子、图片和语音',
+    '故事點子、圖片和語音',
+    '物語のアイデア、画像、音声',
+    '이야기 아이디어, 그림, 음성',
   ],
   'Provider-reported': ['服务商报告', '服務商回報', 'プロバイダー報告', '제공자 보고'],
   Estimated: ['估算', '估算', '推定', '추정'],
@@ -617,13 +617,6 @@ export const app: Messages = {
     '{label} ({keys})',
   ],
   'Keyboard shortcuts': ['键盘快捷键', '鍵盤快速鍵', 'キーボードショートカット', '키보드 단축키'],
-  'Shortcuts with {mod} work while you type in the action box too. An open window takes its own keys first.':
-    [
-      '带 {mod} 的快捷键在行动框中输入时也能使用。打开的窗口会先处理自己的按键。',
-      '帶 {mod} 的快速鍵在行動框中輸入時也能使用。開啟的視窗會先處理自己的按鍵。',
-      '{mod} を使うショートカットは、行動欄に入力中でも使えます。開いているウィンドウでは、そのウィンドウのキーが優先されます。',
-      '{mod} 단축키는 행동 입력란에 입력하는 중에도 작동합니다. 열린 창에서는 그 창의 키가 먼저 적용됩니다.',
-    ],
   Shortcuts: ['快捷键', '快速鍵', 'ショートカット', '단축키'],
   'Writing a reply…': ['正在写回复…', '正在寫回覆…', '返信を執筆中…', '답장을 쓰는 중…'],
   'Last played': ['最近游玩', '最近遊玩', '最後にプレイした順', '최근 플레이순'],
@@ -850,4 +843,77 @@ export const app: Messages = {
       '설치해도 이야기, 설정, 키는 그대로 남습니다. 내려받은 파일은 설치하기 전에 앱 자체 서명으로 확인합니다.',
     ],
   'Update…': ['更新…', '更新…', 'アップデート…', '업데이트…'],
+  'No key': ['没有按键', '沒有按鍵', 'キーなし', '키 없음'],
+  'Press the new keys for {name}, or Esc to keep them': [
+    '按下 {name} 的新按键，或按 Esc 保持不变',
+    '按下 {name} 的新按鍵，或按 Esc 保持不變',
+    '{name} の新しいキーを押してください。Esc で今のままにします',
+    '{name}의 새 키를 누르세요. Esc를 누르면 그대로 둡니다',
+  ],
+  'Press the keys…': ['请按下按键…', '請按下按鍵…', 'キーを押してください…', '키를 누르세요…'],
+  'Change the keys for {name}': [
+    '更改 {name} 的按键',
+    '變更 {name} 的按鍵',
+    '{name} のキーを変える',
+    '{name} 키 바꾸기',
+  ],
+  'Put back the usual keys for {name}': [
+    '恢复 {name} 的默认按键',
+    '恢復 {name} 的預設按鍵',
+    '{name} のキーを元に戻す',
+    '{name} 키를 원래대로',
+  ],
+  Reset: ['恢复默认', '恢復預設', '元に戻す', '원래대로'],
+  '{name} is now {keys}, and {other} has no key.': [
+    '{name} 现在是 {keys}，{other} 没有按键了。',
+    '{name} 現在是 {keys}，{other} 沒有按鍵了。',
+    '{name} は {keys} になり、{other} にはキーがなくなりました。',
+    '{name}은(는) 이제 {keys}이고, {other}에는 키가 없습니다.',
+  ],
+  '{name} is now {keys}.': [
+    '{name} 现在是 {keys}。',
+    '{name} 現在是 {keys}。',
+    '{name} は {keys} になりました。',
+    '{name}은(는) 이제 {keys}입니다.',
+  ],
+  'Hold {mod} or {alt} with that key, so typing in a story doesn’t set it off. Function keys (F1 to F12) work alone.':
+    [
+      '请同时按住 {mod} 或 {alt}，这样在故事里打字时不会误触发。功能键（F1 到 F12）可以单独使用。',
+      '請同時按住 {mod} 或 {alt}，這樣在故事裡打字時不會誤觸發。功能鍵（F1 到 F12）可以單獨使用。',
+      'そのキーは {mod} か {alt} と一緒に押してください。物語に入力しているときに誤って動かないようにするためです。ファンクションキー（F1〜F12）は単独で使えます。',
+      '그 키는 {mod}나 {alt}와 함께 누르세요. 이야기에 입력할 때 잘못 실행되지 않게 하기 위해서입니다. 기능 키(F1~F12)는 혼자 써도 됩니다.',
+    ],
+  '{keys} is kept for the system or for editing text; choose other keys.': [
+    '{keys} 留给系统或文字编辑使用；请换别的按键。',
+    '{keys} 保留給系統或文字編輯使用；請換別的按鍵。',
+    '{keys} はシステムや文字の編集に使われます。別のキーを選んでください。',
+    '{keys}은(는) 시스템이나 글 편집에 쓰입니다. 다른 키를 고르세요.',
+  ],
+  '{keys} already does {other}. Use it for {name} instead?': [
+    '{keys} 已经用于{other}。改为用于{name}吗？',
+    '{keys} 已經用於{other}。改為用於{name}嗎？',
+    '{keys} はすでに「{other}」に使われています。かわりに「{name}」に使いますか？',
+    '{keys}은(는) 이미 {other}에 쓰입니다. 대신 {name}에 쓸까요?',
+  ],
+  'Keep it as it is': ['保持不变', '保持不變', '今のままにする', '그대로 두기'],
+  'Use it for {name}': ['用于{name}', '用於{name}', '「{name}」に使う', '{name}에 쓰기'],
+  'Shortcuts with {mod} work while you type in the action box too. An open window takes its own keys first. Change sets your own keys; they are kept on this computer.':
+    [
+      '带 {mod} 的快捷键在行动框中输入时也能使用。打开的窗口会先处理自己的按键。点“修改”可以设置你自己的按键，它们保存在这台电脑上。',
+      '帶 {mod} 的快速鍵在行動框中輸入時也能使用。開啟的視窗會先處理自己的按鍵。點「修改」可以設定你自己的按鍵，它們儲存在這台電腦上。',
+      '{mod} を使うショートカットは、行動欄に入力中でも使えます。開いているウィンドウでは、そのウィンドウのキーが優先されます。「変更」で自分のキーを設定でき、このコンピューターに保存されます。',
+      '{mod} 단축키는 행동 입력란에 입력하는 중에도 작동합니다. 열린 창에서는 그 창의 키가 먼저 적용됩니다. 바꾸기로 나만의 키를 정할 수 있고, 이 컴퓨터에 저장됩니다.',
+    ],
+  'Every shortcut has its usual keys again.': [
+    '所有快捷键都已恢复默认按键。',
+    '所有快速鍵都已恢復預設按鍵。',
+    'すべてのショートカットが元のキーに戻りました。',
+    '모든 단축키가 원래 키로 돌아왔습니다.',
+  ],
+  'Put back all the usual keys': [
+    '全部恢复默认按键',
+    '全部恢復預設按鍵',
+    'すべてのキーを元に戻す',
+    '모든 키를 원래대로',
+  ],
 };

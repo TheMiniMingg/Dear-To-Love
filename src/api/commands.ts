@@ -44,6 +44,7 @@ import type {
   SaveDto,
   SaveView,
   SearchResults,
+  SpeakInput,
   StateEdit,
   StoryCharacter,
   StoryCreated,
@@ -63,6 +64,8 @@ import type {
   UpdateStatus,
   UsageScope,
   UsageSummary,
+  VoiceInfo,
+  VoicePackFile,
   WizardDraft,
 } from '../types';
 import { msg, t, tKnown } from '../i18n';
@@ -336,6 +339,14 @@ export const commands = {
     call<string | null>('set_picture_maker', { profileId }),
   testConnection: (id: string) => call<ConnectionCheck>('test_connection', { id }),
   sendTestMessage: (id: string) => call<string>('send_test_message', { id }),
+  /** One stretch of text read aloud by a voice connection, as WAV audio. */
+  speakText: (input: SpeakInput) => call<ArrayBuffer>('speak_text', { input }),
+  /** The voices a voice connection offers. Free: nothing is read. */
+  listVoices: (id: string) => call<VoiceInfo[]>('list_voices', { id }),
+  /** Saves a voice pack file; it names voices only, never keys or connections. */
+  exportVoicePack: (path: string, pack: VoicePackFile) =>
+    call<void>('export_voice_pack', { path, pack }),
+  importVoicePack: (path: string) => call<VoicePackFile>('import_voice_pack', { path }),
 
   getUsageSummary: (scope: UsageScope, profileId: string | null = null) =>
     call<UsageSummary>('get_usage_summary', { scope, profileId }),

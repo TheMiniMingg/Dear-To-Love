@@ -74,7 +74,7 @@ describe('Images screen', () => {
             fileName: 'notes.txt',
             asset: null,
             alreadyInLibrary: false,
-            error: "this file isn't a PNG, JPEG or WebP image",
+            error: "this file isn't a PNG, JPEG, WebP or GIF image",
           },
         ];
       }
@@ -92,7 +92,9 @@ describe('Images screen', () => {
     });
     const status = await screen.findByText(/Added 1 image\./);
     expect(status).toHaveTextContent('1 was already in your library and is reused.');
-    expect(screen.getByText("notes.txt: This file isn't a PNG, JPEG or WebP image.")).toBeVisible();
+    expect(
+      screen.getByText("notes.txt: This file isn't a PNG, JPEG, WebP or GIF image."),
+    ).toBeVisible();
 
     // The first new image is selected and described.
     const details = await screen.findByRole('region', { name: 'Image: Harbor at dusk' });

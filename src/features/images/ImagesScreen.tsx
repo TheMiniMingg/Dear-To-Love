@@ -23,6 +23,7 @@ const FORMAT: Record<string, string> = {
   'image/png': 'PNG',
   'image/jpeg': 'JPEG',
   'image/webp': 'WebP',
+  'image/gif': 'GIF',
 };
 
 /**
@@ -195,7 +196,7 @@ export function ImagesScreen() {
       </div>
       <p className="muted">
         {t(
-          "PNG, JPEG or WebP, up to 20 MB each. Images stay on this computer. Pictures added here can be used in any story; pictures added from a story's Pictures (or while creating a story) stay in that story unless you share them. Adding the same picture twice keeps one copy.",
+          "PNG, JPEG, WebP or GIF (moving ones too), up to 20 MB each. Images stay on this computer. Pictures added here can be used in any story; pictures added from a story's Pictures (or while creating a story) stay in that story unless you share them. Adding the same picture twice keeps one copy.",
         )}
       </p>
       <ImportResult result={result} />

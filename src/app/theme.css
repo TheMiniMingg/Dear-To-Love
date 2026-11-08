@@ -11,7 +11,8 @@
  * --name-mix  how much of a name colour shows against --fg
  *
  * Rose, Midnight and Parchment came first; Neon (science fiction), Café
- * (cozy, everyday stories) and Gothic (horror and mysteries) followed.
+ * (cozy, everyday stories) and Gothic (horror and mysteries) followed, then
+ * Forest, Ocean, Lavender, Ember, Terminal and Ink (high contrast).
  */
 
 :root,
@@ -168,6 +169,153 @@
   --name-mix: 60%;
   --page-glow: radial-gradient(1000px 560px at 50% -18%, rgb(150 20 35 / 0.18), transparent 70%);
   --shadow-color: 350deg 40% 2%;
+}
+
+/* Forest: pine greens and gold, for nature and woodland stories. */
+:root[data-theme='forest'],
+[data-theme-preview='forest'] {
+  color-scheme: dark;
+  --bg: #0f1712;
+  --surface: #16211a;
+  --surface-2: #1e2b22;
+  --fg: #e7efe6;
+  --muted: #9fb09f;
+  --accent: #d4b25a;
+  --accent-strong: #e3c574;
+  --on-accent: #1a1405;
+  --border: #2a3a2f;
+  --pass: #8fd18a;
+  --warn: #e9b562;
+  --fail: #ff8a7a;
+  --skipped: #9fb09f;
+  --name-mix: 60%;
+  --page-glow:
+    radial-gradient(1000px 560px at 80% -15%, rgb(212 178 90 / 0.1), transparent 70%),
+    radial-gradient(900px 520px at 5% 110%, rgb(60 140 80 / 0.12), transparent 70%);
+  --shadow-color: 140deg 40% 2%;
+}
+
+/* Ocean: sea glass and sand, for summers, islands and the sea. */
+:root[data-theme='ocean'],
+[data-theme-preview='ocean'] {
+  color-scheme: light;
+  --bg: #eef5f7;
+  --surface: #fbfdfd;
+  --surface-2: #e1edf0;
+  --fg: #12303a;
+  --muted: #4f6b74;
+  --accent: #0e7490;
+  --accent-strong: #0b5f76;
+  --on-accent: #ffffff;
+  --border: #cfe0e5;
+  --pass: #2f7a3a;
+  --warn: #8f5a07;
+  --fail: #b3261e;
+  --skipped: #4f6b74;
+  --name-mix: 78%;
+  --page-glow: radial-gradient(1200px 640px at 20% -18%, rgb(180 230 240 / 0.6), transparent 70%);
+  --shadow-color: 195deg 40% 25%;
+}
+
+/* Lavender: lilac and violet, for dreamy and whimsical stories. */
+:root[data-theme='lavender'],
+[data-theme-preview='lavender'] {
+  color-scheme: light;
+  --bg: #f6f3fb;
+  --surface: #ffffff;
+  --surface-2: #ede7f6;
+  --fg: #261f33;
+  --muted: #665c78;
+  --accent: #7048b5;
+  --accent-strong: #5b3896;
+  --on-accent: #ffffff;
+  --border: #e2d9f0;
+  --pass: #2e7d32;
+  --warn: #9a5b00;
+  --fail: #c0392b;
+  --skipped: #665c78;
+  --name-mix: 82%;
+  --page-glow: radial-gradient(
+    1200px 620px at 70% -15%,
+    color-mix(in srgb, var(--accent) 9%, transparent),
+    transparent 70%
+  );
+  --shadow-color: 270deg 30% 30%;
+}
+
+/* Ember: soot and firelight, for action, war and heroes. */
+:root[data-theme='ember'],
+[data-theme-preview='ember'] {
+  color-scheme: dark;
+  --bg: #14100d;
+  --surface: #1d1712;
+  --surface-2: #271f18;
+  --fg: #f2e8de;
+  --muted: #b09d8c;
+  --accent: #f08a3c;
+  --accent-strong: #f6a463;
+  --on-accent: #1c0c02;
+  --border: #3a2e24;
+  --pass: #93cf86;
+  --warn: #f2c14e;
+  --fail: #ff8a7a;
+  --skipped: #b09d8c;
+  --name-mix: 60%;
+  --page-glow: radial-gradient(1000px 540px at 50% 115%, rgb(240 120 40 / 0.16), transparent 70%);
+  --shadow-color: 25deg 40% 2%;
+}
+
+/* Terminal: green on black, like an old computer, for text adventures. */
+:root[data-theme='terminal'],
+[data-theme-preview='terminal'] {
+  color-scheme: dark;
+  --bg: #050806;
+  --surface: #0a110c;
+  --surface-2: #102016;
+  --fg: #b6f5c4;
+  --muted: #6fa57c;
+  --accent: #39ff7a;
+  --accent-strong: #8dffb0;
+  --on-accent: #021207;
+  --border: #1c3524;
+  --pass: #39ff7a;
+  --warn: #ffd166;
+  --fail: #ff6b6b;
+  --skipped: #6fa57c;
+  --name-mix: 55%;
+  --page-glow: radial-gradient(900px 500px at 50% -20%, rgb(57 255 122 / 0.08), transparent 70%);
+  --shadow-color: 140deg 60% 1%;
+}
+
+/* Ink: black on white with the strongest contrast, for easy reading. */
+:root[data-theme='ink'],
+[data-theme-preview='ink'] {
+  color-scheme: light;
+  --bg: #ffffff;
+  --surface: #ffffff;
+  --surface-2: #f0f0f0;
+  --fg: #000000;
+  --muted: #3d3d3d;
+  --accent: #0033cc;
+  --accent-strong: #002699;
+  --on-accent: #ffffff;
+  --border: #8a8a8a;
+  --pass: #1b5e20;
+  --warn: #7a4100;
+  --fail: #b00020;
+  --skipped: #3d3d3d;
+  --name-mix: 70%;
+  --page-glow: none;
+  --shadow-color: 0deg 0% 20%;
+}
+
+/* Terminal sets its headings and the story in a typewriter face. */
+:root[data-theme='terminal'] {
+  --font-story: ui-monospace, 'Cascadia Mono', 'SF Mono', Menlo, 'DejaVu Sans Mono', monospace;
+}
+:root[data-theme='terminal'] :is(h1, h2, h3),
+[data-theme-preview='terminal'] .swatch-title {
+  font-family: ui-monospace, 'Cascadia Mono', 'SF Mono', Menlo, 'DejaVu Sans Mono', monospace;
 }
 
 /* Gothic sets its headings in the story's serif. */

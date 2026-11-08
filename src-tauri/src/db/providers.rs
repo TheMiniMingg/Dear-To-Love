@@ -153,7 +153,7 @@ pub async fn save_profile(
     }
     // A connection changed between writing stories and making pictures
     // stops doing the job it can no longer do.
-    if input.adapter.makes_pictures() {
+    if !input.adapter.writes_stories() {
         if storyteller_tx(&mut tx).await?.as_deref() == Some(id.as_str()) {
             set_pref_id_tx(&mut tx, STORYTELLER_KEY, None).await?;
         }
@@ -163,7 +163,10 @@ pub async fn save_profile(
         .bind(&id)
         .execute(&mut *tx)
         .await?;
-    } else if pref_id_tx(&mut tx, PICTURE_MAKER_KEY).await?.as_deref() == Some(id.as_str()) {
+    }
+    if !input.adapter.makes_pictures()
+        && pref_id_tx(&mut tx, PICTURE_MAKER_KEY).await?.as_deref() == Some(id.as_str())
+    {
         set_pref_id_tx(&mut tx, PICTURE_MAKER_KEY, None).await?;
     }
     tx.commit().await?;
@@ -242,7 +245,8 @@ async fn adapter_tx(conn: &mut sqlx::SqliteConnection, id: &str) -> AppResult<Op
 
 fn not_a_storyteller() -> AppError {
     AppError::invalid_input(
-        "that connection makes pictures, not story replies; choose one that writes stories",
+        "that connection makes pictures or reads aloud, not story replies; choose one that \
+         writes stories",
     )
 }
 
@@ -254,7 +258,7 @@ pub async fn storyteller(db: &Database) -> AppResult<Option<String>> {
 
 pub async fn set_storyteller(db: &Database, profile_id: Option<&str>) -> AppResult<()> {
     if let Some(id) = profile_id {
-        if get_profile_row(db, id).await?.adapter()?.makes_pictures() {
+        if !get_profile_row(db, id).await?.adapter()?.writes_stories() {
             return Err(not_a_storyteller());
         }
     }
@@ -344,7 +348,7 @@ pub async fn set_story_choice_tx(
                         "that AI connection was removed; choose another storyteller",
                     ))
                 }
-                Some(kind) if kind.makes_pictures() => return Err(not_a_storyteller()),
+                Some(kind) if !kind.writes_stories() => return Err(not_a_storyteller()),
                 Some(_) => {}
             }
             (Some(id.as_str()), 0)

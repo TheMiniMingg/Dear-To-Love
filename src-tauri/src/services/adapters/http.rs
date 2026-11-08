@@ -86,7 +86,17 @@ pub fn provider_message(body: &str) -> Option<String> {
     e.get("message")
         .and_then(Value::as_str)
         .or_else(|| e.as_str())
+        .or_else(|| detail_message(v.get("detail")?))
         .map(short)
+}
+
+/// FastAPI servers (and ElevenLabs) answer `{"detail": "…"}`,
+/// `{"detail": {"message": "…"}}` or `{"detail": [{"msg": "…"}]}`.
+fn detail_message(d: &Value) -> Option<&str> {
+    let d = d.as_array().and_then(|a| a.first()).unwrap_or(d);
+    d.as_str()
+        .or_else(|| d.get("message").and_then(Value::as_str))
+        .or_else(|| d.get("msg").and_then(Value::as_str))
 }
 
 pub fn looks_like_context_limit(body: &str) -> bool {

@@ -1,7 +1,7 @@
 import { msg } from '../../i18n';
 import type { AdapterKind, Billing } from '../../types';
 
-export type PresetGroup = 'local' | 'labs' | 'hosted' | 'pictures' | 'other';
+export type PresetGroup = 'local' | 'labs' | 'hosted' | 'pictures' | 'voices' | 'other';
 
 export type Preset = {
   id: string;
@@ -32,6 +32,7 @@ export const GROUP_LABELS: Record<PresetGroup, string> = {
   labs: msg('AI labs (API key, paid per use)'),
   hosted: msg('Open models, hosted (API key)'),
   pictures: msg('Pictures (portraits and items)'),
+  voices: msg('Voices (reading aloud)'),
   other: msg('Anything else'),
 };
 
@@ -261,6 +262,35 @@ export const PRESETS: Preset[] = [
     model: 'default',
     note: msg(
       'Makes portraits on this computer, for free. Start the WebUI with --api. The model "default" uses whichever one it has loaded.',
+    ),
+  },
+  {
+    id: 'elevenlabs',
+    label: 'ElevenLabs',
+    group: 'voices',
+    adapter: 'elevenlabs',
+    baseUrl: 'https://api.elevenlabs.io/v1',
+    billing: 'paid',
+    needsKey: true,
+    contextTokens: 16_000,
+    model: 'eleven_flash_v2_5',
+    suggestions: ['eleven_flash_v2_5', 'eleven_multilingual_v2', 'eleven_v3'],
+    note: msg(
+      'AI voices for voice packs, including voices you design or clone there. ElevenLabs charges by the character read; the app records every reading but can’t price it.',
+    ),
+  },
+  {
+    id: 'kokoro',
+    label: msg('Kokoro voice server'),
+    group: 'voices',
+    adapter: 'openai_speech',
+    baseUrl: 'http://127.0.0.1:8880/v1',
+    billing: 'local',
+    needsKey: false,
+    contextTokens: 16_000,
+    model: 'kokoro',
+    note: msg(
+      'AI voices on this computer, for free: run Kokoro-FastAPI (or any OpenAI-style speech server) and choose its voices in a voice pack.',
     ),
   },
   {

@@ -447,7 +447,7 @@ fn valid_rel(rel: &str, dir: &str) -> bool {
         && hash
             .chars()
             .all(|c| c.is_ascii_digit() || ('a'..='f').contains(&c))
-        && matches!(ext, "png" | "jpg" | "webp")
+        && matches!(ext, "png" | "jpg" | "webp" | "gif")
 }
 
 // ------------------------------------------------------------ restore

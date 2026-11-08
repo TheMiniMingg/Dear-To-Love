@@ -15,7 +15,15 @@ vi.mock('@tauri-apps/api/core', () => ({
 }));
 
 import { App } from '../app/App';
-import { ariaKeys, isCombo, keyLabel, useShortcutHelp } from '../app/shortcuts';
+import {
+  ariaKeys,
+  comboFromEvent,
+  isCombo,
+  isShortcut,
+  keyLabel,
+  useShortcutHelp,
+  useShortcutKeys,
+} from '../app/shortcuts';
 import { useUiStore } from '../app/store';
 import { ReaderScreen } from '../features/reader/ReaderScreen';
 import { usePictureView } from '../features/reader/stage';
@@ -39,6 +47,24 @@ describe('the key matcher', () => {
     expect(isCombo(key({ key: 'F1' }), 'F1')).toBe(true);
     expect(isCombo(key({ key: 'Enter', shiftKey: true }), 'Shift+Enter')).toBe(true);
     expect(isCombo(key({ key: 'Enter' }), 'Shift+Enter')).toBe(false);
+    // Alt counts where it is asked for; a digit matches by position too.
+    expect(isCombo(key({ key: 'å', code: 'KeyA', altKey: true }), 'Alt+A')).toBe(true);
+    expect(
+      isCombo(key({ key: '!', code: 'Digit1', ctrlKey: true, shiftKey: true }), 'Mod+Shift+1'),
+    ).toBe(true);
+  });
+
+  it('spells a key press the way the list does', () => {
+    expect(comboFromEvent(key({ key: 'k', code: 'KeyK', ctrlKey: true, altKey: true }))).toBe(
+      'Mod+Alt+K',
+    );
+    expect(comboFromEvent(key({ key: 'ㅏ', code: 'KeyK', metaKey: true }))).toBe('Mod+K');
+    expect(comboFromEvent(key({ key: '?', code: 'Slash', ctrlKey: true, shiftKey: true }))).toBe(
+      'Mod+?',
+    );
+    expect(comboFromEvent(key({ key: 'F5', code: 'F5' }))).toBe('F5');
+    expect(comboFromEvent(key({ key: 'Shift', shiftKey: true }))).toBeNull();
+    expect(keyLabel('Mod+Alt+K')).toBe('Ctrl+Alt+K');
   });
 
   it('names keys the way this computer shows them', () => {
@@ -147,6 +173,8 @@ describe('story shortcuts', () => {
 
 describe('the Keyboard shortcuts window', () => {
   beforeEach(() => {
+    localStorage.removeItem('dtl.shortcuts');
+    useShortcutKeys.setState({ custom: {} });
     invoke.mockReset();
     useUiStore.setState({ screen: { name: 'library' }, history: [] });
     invoke.mockImplementation(async (cmd: string) => {
@@ -177,5 +205,64 @@ describe('the Keyboard shortcuts window', () => {
     expect(useUiStore.getState().screen).toEqual({ name: 'quickstart' });
     await userEvent.keyboard('{Control>},{/Control}');
     expect(useUiStore.getState().screen).toEqual({ name: 'settings' });
+  });
+
+  it('changes a shortcut to keys the player presses, and puts them back', async () => {
+    render(<App />);
+    await screen.findByText('No stories yet.');
+    await userEvent.keyboard('{F1}');
+    const help = screen.getByRole('dialog', { name: 'Keyboard shortcuts' });
+    // Keys typing needs can't be changed.
+    expect(within(help).queryByRole('button', { name: /Change the keys for Send/ })).toBeNull();
+
+    await userEvent.click(
+      within(help).getByRole('button', { name: 'Change the keys for Quick save' }),
+    );
+    const listen = within(help).getByRole('button', { name: /Press the new keys for Quick save/ });
+    expect(listen).toHaveFocus();
+    // A letter alone would go off while typing.
+    await userEvent.keyboard('b');
+    expect(within(help).getByRole('alert')).toHaveTextContent(/Hold Ctrl or Alt/);
+    expect(screen.getByRole('dialog', { name: 'Keyboard shortcuts' })).toBeInTheDocument();
+
+    await userEvent.click(
+      within(help).getByRole('button', { name: 'Change the keys for Quick save' }),
+    );
+    await userEvent.keyboard('{Control>}c{/Control}');
+    expect(within(help).getByRole('alert')).toHaveTextContent(/kept for the system or for editing/);
+
+    await userEvent.click(
+      within(help).getByRole('button', { name: 'Change the keys for Quick save' }),
+    );
+    await userEvent.keyboard('{Control>}{Alt>}k{/Alt}{/Control}');
+    expect(within(help).getByText('Quick save').nextElementSibling).toHaveTextContent('Ctrl+Alt+K');
+    expect(JSON.parse(localStorage.getItem('dtl.shortcuts') ?? '{}')).toEqual({
+      quickSave: ['Mod+Alt+K'],
+    });
+    expect(
+      isShortcut(key({ key: 'k', code: 'KeyK', ctrlKey: true, altKey: true }), 'quickSave'),
+    ).toBe(true);
+    expect(isShortcut(key({ key: 's', ctrlKey: true }), 'quickSave')).toBe(false);
+
+    // Keys another shortcut has ask first, and leave that one without.
+    await userEvent.click(
+      within(help).getByRole('button', { name: 'Change the keys for Story search' }),
+    );
+    await userEvent.keyboard('{Control>}g{/Control}');
+    const ask = within(help).getByRole('alert');
+    expect(ask).toHaveTextContent('Ctrl+G already does Routes. Use it for Story search instead?');
+    await userEvent.click(within(ask).getByRole('button', { name: 'Use it for Story search' }));
+    expect(within(help).getByText('Routes').nextElementSibling).toHaveTextContent('No key');
+    expect(within(help).getByText('Story search').nextElementSibling).toHaveTextContent('Ctrl+G');
+
+    await userEvent.click(
+      within(help).getByRole('button', { name: 'Put back the usual keys for Quick save' }),
+    );
+    expect(within(help).getByText('Quick save').nextElementSibling).toHaveTextContent('Ctrl+S');
+    await userEvent.click(
+      within(help).getByRole('button', { name: 'Put back all the usual keys' }),
+    );
+    expect(within(help).getByText('Routes').nextElementSibling).toHaveTextContent('Ctrl+G');
+    expect(useShortcutKeys.getState().custom).toEqual({});
   });
 });

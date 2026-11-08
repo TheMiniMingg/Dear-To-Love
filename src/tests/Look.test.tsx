@@ -64,19 +64,25 @@ describe('themes', () => {
   it('suggests a theme from the first genre that has one', () => {
     expect(themeForGenres(['Horror', 'Romance'])).toBe('gothic');
     expect(themeForGenres(['Mystery'])).toBe('gothic');
-    expect(themeForGenres(['Action', 'Fantasy'])).toBe('parchment');
+    expect(themeForGenres(['Fantasy', 'Action'])).toBe('parchment');
+    expect(themeForGenres(['Action', 'Fantasy'])).toBe('ember');
     expect(themeForGenres(['Science fiction'])).toBe('neon');
     expect(themeForGenres(['Thriller'])).toBe('midnight');
     expect(themeForGenres(['slice of life'])).toBe('cafe');
     expect(themeForGenres(['Romance'])).toBe('rose');
-    expect(themeForGenres(['Superhero', 'Action'])).toBeNull();
+    expect(themeForGenres(['Superhero', 'Action'])).toBe('ember');
+    expect(themeForGenres(['Text adventure'])).toBe('terminal');
+    expect(themeForGenres(['Cottagecore'])).toBe('forest');
+    expect(themeForGenres(['Beach'])).toBe('ocean');
+    expect(themeForGenres(['Whimsical'])).toBe('lavender');
+    expect(themeForGenres(['Musical'])).toBeNull();
     expect(themeForGenres(undefined)).toBeNull();
   });
 
   it('gives a story its own look, else one that fits, else the app theme', () => {
     const look = { theme: 'parchment' as const, fitGenre: true, stories: {} };
     expect(storyTheme(look, 's1', ['Cyberpunk'])).toBe('neon');
-    expect(storyTheme(look, 's1', ['Superhero'])).toBe('parchment');
+    expect(storyTheme(look, 's1', ['Musical'])).toBe('parchment');
     expect(storyTheme({ ...look, fitGenre: false }, 's1', ['Cyberpunk'])).toBe('parchment');
     expect(storyTheme({ ...look, stories: { s1: 'rose' } }, 's1', ['Cyberpunk'])).toBe('rose');
     expect(storyTheme({ ...look, stories: { s1: 'app' } }, 's1', ['Cyberpunk'])).toBe('parchment');
@@ -100,7 +106,19 @@ describe('themes', () => {
     );
     const group = screen.getByRole('group', { name: 'Theme' });
     expect(within(group).getByRole('radio', { name: /Rose/ })).toBeChecked();
-    for (const name of [/Midnight/, /Parchment/, /Neon/, /Café/, /Gothic/]) {
+    for (const name of [
+      /Midnight/,
+      /Parchment/,
+      /Neon/,
+      /Café/,
+      /Gothic/,
+      /Forest/,
+      /Ocean/,
+      /Lavender/,
+      /Ember/,
+      /Terminal/,
+      /Ink/,
+    ]) {
       expect(within(group).getByRole('radio', { name })).toBeInTheDocument();
     }
     await userEvent.click(within(group).getByRole('radio', { name: /Midnight/ }));

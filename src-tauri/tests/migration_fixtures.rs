@@ -252,3 +252,49 @@ fn every_migration_has_a_fixture() {
         assert!(p.exists(), "missing fixture {}", p.display());
     }
 }
+
+#[tokio::test]
+async fn v10_fixture_upgrades_to_current() {
+    let (db, _dir) = upgrade_fixture(10, include_str!("fixtures/data_v10.sql")).await;
+    let mimes: Vec<String> = sqlx::query_scalar("SELECT mime FROM assets ORDER BY created_at")
+        .fetch_all(db.reader())
+        .await
+        .unwrap();
+    assert_eq!(mimes, ["image/gif", "image/png"]);
+}
+
+/// Rebuilding the image library for GIFs keeps every picture, every story
+/// link and every story-only picture's stories.
+#[tokio::test]
+async fn gif_rebuild_keeps_pictures_and_their_links() {
+    let (db, _dir) = upgrade_fixture(3, include_str!("fixtures/data_v3.sql")).await;
+    let links: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM asset_links")
+        .fetch_one(db.reader())
+        .await
+        .unwrap();
+    assert_eq!(links, 1);
+    let (db6, _dir6) = upgrade_fixture(6, include_str!("fixtures/data_v6.sql")).await;
+    let owned: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM asset_stories")
+        .fetch_one(db6.reader())
+        .await
+        .unwrap();
+    assert!(owned > 0, "story-only pictures keep their stories");
+    // The new table takes GIFs, and still refuses other kinds of file.
+    let insert = |id: &'static str, mime: &'static str| {
+        sqlx::query(
+            "INSERT INTO assets (id, sha256, original_rel, mime, width, height, byte_size, \
+             created_at) VALUES (?, ?, 'originals/x', ?, 1, 1, 1, '2026-11-08T00:00:00Z')",
+        )
+        .bind(id)
+        .bind(format!("{id:0>64}"))
+        .bind(mime)
+    };
+    insert("g1", "image/gif")
+        .execute(db6.writer())
+        .await
+        .unwrap();
+    assert!(insert("s1", "image/svg+xml")
+        .execute(db6.writer())
+        .await
+        .is_err());
+}

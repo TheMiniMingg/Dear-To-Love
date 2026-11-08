@@ -183,6 +183,7 @@ pub fn image_file(sha256: &str, mime: &str) -> AppResult<String> {
         "image/png" => "png",
         "image/jpeg" => "jpg",
         "image/webp" => "webp",
+        "image/gif" => "gif",
         _ => {
             return Err(invalid(format!(
                 "an image has an unsupported type {mime:?}"

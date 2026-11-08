@@ -1,7 +1,7 @@
 import { useId, useState } from 'react';
 import { commands, errorMessage } from '../../api/commands';
 import type { AdapterKind, Billing, ProviderProfile, ProviderProfileInput } from '../../types';
-import { makesPictures } from './kinds';
+import { makesPictures, makesVoices } from './kinds';
 import { GROUP_LABELS, PRESETS, type Preset, type PresetGroup } from './presets';
 import { knownModel } from './models';
 import { StepByStep, guideFor } from '../guide/StepByStep';
@@ -42,7 +42,9 @@ export function ConnectionForm({
   );
   const [baseUrl, setBaseUrl] = useState(existing?.baseUrl ?? from?.baseUrl ?? '');
   const [modelId, setModelId] = useState(
-    existing?.modelId ?? startModel ?? (from?.model && makesPictures(from) ? from.model : ''),
+    existing?.modelId ??
+      startModel ??
+      (from?.model && (makesPictures(from) || makesVoices(from)) ? from.model : ''),
   );
   const [billing, setBilling] = useState<Billing>(existing?.billing ?? from?.billing ?? 'paid');
   const [apiKey, setApiKey] = useState('');
@@ -65,9 +67,12 @@ export function ConnectionForm({
   const [error, setError] = useState<string | null>(null);
   const [preset, setPreset] = useState<Preset | null>(start);
   const pictures = makesPictures({ adapter });
+  const voices = makesVoices({ adapter });
+  /** Pictures and voices have no replies, so no reply settings. */
+  const noReplies = pictures || voices;
   const guide = existing ? undefined : guideFor(preset?.id);
   const thinking =
-    !pictures &&
+    !noReplies &&
     (adapter === 'anthropic' ||
       (adapter === 'openai_compatible' && THINKING_HOSTS.test(baseUrl.trim())));
 
@@ -82,7 +87,7 @@ export function ConnectionForm({
     setMaxTokens(String(p.replyTokens ?? 700));
     // Pictures can take minutes on a home computer.
     if (p.group === 'pictures') setTimeoutS('300');
-    if (p.model && makesPictures(p)) setModelId(p.model);
+    if (p.model && (makesPictures(p) || makesVoices(p))) setModelId(p.model);
     if (!label.trim() || PRESETS.some((x) => t(x.label) === label || x.label === label))
       setLabel(t(p.label));
   };
@@ -170,7 +175,16 @@ export function ConnectionForm({
           <option value="ollama">Ollama</option>
           <option value="openai_images">{t('Images API, OpenAI-style (pictures)')}</option>
           <option value="stable_diffusion">{t('Stable Diffusion WebUI (pictures)')}</option>
+          <option value="elevenlabs">{t('ElevenLabs (voices)')}</option>
+          <option value="openai_speech">{t('Voice server, OpenAI-style (voices)')}</option>
         </select>
+        {voices && (
+          <p className="muted small">
+            {t(
+              'Reads replies aloud in AI voices. It never writes story replies; choose it in a voice pack in Settings, under Sound.',
+            )}
+          </p>
+        )}
         {pictures && (
           <p className="muted small">
             {t(
@@ -224,7 +238,11 @@ export function ConnectionForm({
                 ? 'https://api.anthropic.com/v1'
                 : adapter === 'stable_diffusion'
                   ? 'http://127.0.0.1:7860'
-                  : 'https://api.example.com/v1'
+                  : adapter === 'elevenlabs'
+                    ? 'https://api.elevenlabs.io/v1'
+                    : adapter === 'openai_speech'
+                      ? 'http://127.0.0.1:8880/v1'
+                      : 'https://api.example.com/v1'
           }
           inputMode="url"
           spellCheck={false}
@@ -323,7 +341,9 @@ export function ConnectionForm({
           />
           {pictures
             ? t("Paid API (each picture is recorded; the app can't price pictures)")
-            : t('Paid API (usage is estimated from your rates)')}
+            : voices
+              ? t('Paid API (each reading is recorded; the app can’t price voices)')
+              : t('Paid API (usage is estimated from your rates)')}
         </label>
         <label className="check">
           <input
@@ -338,7 +358,7 @@ export function ConnectionForm({
       <details>
         <summary>{t('Advanced')}</summary>
         <div className="field-row">
-          {!pictures && (
+          {!noReplies && (
             <>
               <div className="field">
                 <label htmlFor={`${id}-temp`}>{t('Temperature')}</label>
@@ -389,7 +409,7 @@ export function ConnectionForm({
             />
           </div>
         </div>
-        {!pictures && (
+        {!noReplies && (
           <p id={`${id}-context-hint`} className="muted small">
             {t(
               "The context limit covers the prompt and the reply. Use the model's context length, or the length your local server loads it with. Older story turns are summarized to fit; a lower limit also keeps paid requests cheaper.",
