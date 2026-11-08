@@ -304,6 +304,28 @@ describe('Storytelling tools', () => {
     );
     await waitFor(() => expect(within(form).getByLabelText('Name')).toHaveFocus());
   });
+
+  it('flips between versions of a reply, each on its own route', async () => {
+    const view = played();
+    view.replyVersions = [
+      { eventId: 'ev-3', routeIds: ['route-0', 'route-1', 'route-2'], current: 1 },
+    ];
+    backend(view);
+    render(<ReaderScreen routeId="route-1" />);
+    const versions = await screen.findByRole('group', { name: 'Version 2 of 3 of this reply' });
+    expect(versions).toHaveTextContent('2 / 3');
+    await userEvent.click(within(versions).getByRole('button', { name: 'Next version' }));
+    expect(useUiStore.getState().screen).toEqual({ name: 'reader', routeId: 'route-2' });
+    await userEvent.click(within(versions).getByRole('button', { name: 'Previous version' }));
+    expect(useUiStore.getState().screen).toEqual({ name: 'reader', routeId: 'route-0' });
+  });
+
+  it('shows no versions for a reply with only one', async () => {
+    backend(played());
+    render(<ReaderScreen routeId="route-1" />);
+    await screen.findByLabelText('What do you do?');
+    expect(screen.queryByRole('group', { name: /of this reply/ })).not.toBeInTheDocument();
+  });
 });
 
 describe('Storytelling tools, the small parts', () => {

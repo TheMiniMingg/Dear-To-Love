@@ -167,6 +167,8 @@ pub fn run() {
             commands::stories::compose_story_draft,
             commands::stories::check_story_draft,
             commands::stories::fill_story_draft,
+            commands::stories::list_story_characters,
+            commands::stories::read_character_card,
             commands::stories::create_story,
             commands::stories::get_wizard_draft,
             commands::stories::save_wizard_draft,

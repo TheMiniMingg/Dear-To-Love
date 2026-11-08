@@ -54,5 +54,6 @@ export function fakeRouteView(extra: EventDto[] = []): RouteView {
       head.kind === 'player' ? { inputEventId: head.id, activeRun: null, lastRun: null } : null,
     storyteller: { profileId: null, label: 'Offline storyteller', modelId: null, billing: 'local' },
     visuals: [],
+    replyVersions: [],
   };
 }

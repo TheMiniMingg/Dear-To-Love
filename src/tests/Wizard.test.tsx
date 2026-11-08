@@ -931,4 +931,127 @@ describe('Create a story', () => {
     expect(draft.pictures).toEqual([{ slot: 'portrait:@player', assetId: 'img-made' }]);
     expect(draft.storyImages).toEqual(['img-made']);
   });
+
+  it('brings someone from another story, and plays as someone already made', async () => {
+    const base = invoke.getMockImplementation()!;
+    const mara = {
+      id: 'starter:npc-mara',
+      name: 'Mara Quill',
+      control: 'npc',
+      role: 'Ferry captain',
+      description: 'Keeps the lighthouse.',
+      personality: ['stubborn'],
+      goals: [],
+      abilities: [],
+    };
+    const ivo = { ...mara, id: 'pc', name: 'Ivo Brand', control: 'player', role: 'Diver' };
+    invoke.mockImplementation(async (cmd: string, args: Record<string, unknown>) =>
+      cmd === 'list_story_characters'
+        ? [
+            { storyId: 's1', storyTitle: 'The Letter', wasPlayer: true, character: ivo },
+            { storyId: 's1', storyTitle: 'The Letter', wasPlayer: false, character: mara },
+          ]
+        : base(cmd, args),
+    );
+    render(<CreateWizardScreen />);
+    await userEvent.click(await screen.findByRole('button', { name: '2. You' }));
+    await userEvent.click(await screen.findByRole('button', { name: 'From your stories' }));
+    const list = await screen.findByRole('list', { name: 'Characters in your stories' });
+    expect(
+      within(list).getByRole('button', { name: /Ivo Brand.*you, in “The Letter”/ }),
+    ).toBeTruthy();
+    await userEvent.click(within(list).getByRole('button', { name: /Ivo Brand/ }));
+    expect(screen.getByRole('combobox', { name: /^Name/ })).toHaveValue('Ivo Brand');
+    expect(screen.getByText(/^Ivo Brand from “The Letter” is in this story now/)).toBeTruthy();
+
+    await userEvent.click(screen.getByRole('button', { name: '3. Story' }));
+    await userEvent.click(await screen.findByRole('button', { name: 'From your stories' }));
+    await userEvent.click(
+      within(await screen.findByRole('list', { name: 'Characters in your stories' })).getByRole(
+        'button',
+        { name: /Mara Quill/ },
+      ),
+    );
+    await userEvent.click(screen.getByRole('button', { name: '6. Review' }));
+    await userEvent.click(await screen.findByRole('button', { name: 'Create story' }));
+    const draft = lastCall('create_story')?.draft as CreateStoryDraft;
+    // They keep this story's place for the player, not the old story's id.
+    expect(draft.player).toMatchObject({ name: 'Ivo Brand', role: 'Diver', control: 'player' });
+    expect(draft.player.id).not.toBe('pc');
+    expect(draft.npcs).toEqual([{ ...mara, id: 'custom:npc-1', control: 'npc' }]);
+  });
+
+  it('a character card brings its character, opening and picture', async () => {
+    const base = invoke.getMockImplementation()!;
+    invoke.mockImplementation(async (cmd: string, args: Record<string, unknown>) =>
+      cmd === 'read_character_card'
+        ? {
+            character: {
+              id: '',
+              name: 'Mara Quill',
+              control: 'npc',
+              description: 'Keeps the lighthouse.',
+              personality: ['kind'],
+              goals: [],
+              abilities: [],
+            },
+            scenario: 'Juno arrives on the last ferry.',
+            greeting: '*Mara looks up.* "You are late."',
+            hasPicture: true,
+          }
+        : base(cmd, args),
+    );
+    render(<CreateWizardScreen />);
+    await userEvent.click(await screen.findByRole('button', { name: '2. You' }));
+    await userEvent.type(await screen.findByRole('combobox', { name: /^Name/ }), 'Juno');
+    await userEvent.click(screen.getByRole('button', { name: '3. Story' }));
+    openDialog.mockResolvedValue('/cards/mara.png');
+    await userEvent.click(await screen.findByRole('button', { name: /From a character card/ }));
+    expect(lastCall('read_character_card')).toEqual({
+      path: '/cards/mara.png',
+      playerName: 'Juno',
+    });
+    expect(lastCall('import_images')).toEqual({
+      paths: ['/cards/mara.png'],
+      scope: { newStory: true },
+    });
+    const note = await screen.findByText(/^Mara Quill is in this story now/);
+    expect(note).toHaveTextContent('Mara Quill is in this story now.');
+    expect(note).toHaveTextContent('The card’s picture is their portrait.');
+    expect(note).toHaveTextContent('Its first message is the opening scene.');
+    expect(screen.getByRole('textbox', { name: 'Opening scene' })).toHaveValue(
+      '*Mara looks up.* "You are late."',
+    );
+    await userEvent.click(screen.getByRole('button', { name: '6. Review' }));
+    await userEvent.click(await screen.findByRole('button', { name: 'Create story' }));
+    const draft = lastCall('create_story')?.draft as CreateStoryDraft;
+    expect(draft.npcs[0]).toMatchObject({ id: 'custom:npc-1', name: 'Mara Quill', control: 'npc' });
+    expect(draft.description).toBe('Juno arrives on the last ferry.');
+    expect(draft.pictures).toEqual([{ slot: 'portrait:custom:npc-1', assetId: 'img-me' }]);
+    expect(draft.storyImages).toEqual(['img-me']);
+  });
+
+  it('a card that is not a card, or reads as under 18, says so', async () => {
+    const base = invoke.getMockImplementation()!;
+    let reply = 'this file is not a character card';
+    invoke.mockImplementation(async (cmd: string, args: Record<string, unknown>) => {
+      if (cmd === 'read_character_card') throw { code: 'INVALID_INPUT', message: reply };
+      return base(cmd, args);
+    });
+    render(<CreateWizardScreen />);
+    await userEvent.click(await screen.findByRole('button', { name: '3. Story' }));
+    openDialog.mockResolvedValue('/cards/notes.json');
+    await userEvent.click(await screen.findByRole('button', { name: /From a character card/ }));
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'This file is not a character card. Choose a card saved as .png or .json.',
+    );
+    reply = "this character reads as under 18, so it can't be used";
+    await userEvent.click(screen.getByRole('button', { name: /From a character card/ }));
+    await waitFor(() =>
+      expect(screen.getByRole('alert')).toHaveTextContent(
+        'This character reads as under 18, so they can’t be brought into a story.',
+      ),
+    );
+    expect(screen.queryByRole('textbox', { name: /^Name/ })).toBeNull();
+  });
 });

@@ -66,6 +66,8 @@ test('story details, another reply and route safety', async () => {
   await waitForReply(b);
   const alt = await textOf(b, '[data-testid="narrative"]');
   assert.doesNotMatch(alt, /Story details changed/, 'the edit stays on Main');
+  // The new reply is the second version of that reply.
+  await waitForText(b, '[data-testid="narrative"] .reply-versions', '2 / 2');
 
   await click('button*=Routes');
   await waitForText(b, '[role="dialog"]', 'Another reply: “');
@@ -80,5 +82,15 @@ test('story details, another reply and route safety', async () => {
   await click('//div[@role="dialog"]//button[normalize-space()="Switch"]');
   await waitForText(b, '[data-testid="route-label"]', 'Main');
   await waitForText(b, '[data-testid="narrative"]', 'Story details changed');
-  assert.equal(await textOf(b, '[data-testid="narrative"]'), mainText);
+  // Main reads as before, and its reply now shows it is the first of two.
+  assert.equal(
+    await textOf(b, '[data-testid="narrative"] .reply-versions'),
+    'Previous version1 / 2Next version',
+  );
+  const storyText = await b.execute(() => {
+    const copy = document.querySelector('[data-testid="narrative"]').cloneNode(true);
+    copy.querySelectorAll('.reply-versions').forEach((v) => v.remove());
+    return copy.textContent;
+  });
+  assert.equal(storyText, mainText);
 });

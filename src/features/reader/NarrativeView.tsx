@@ -12,6 +12,8 @@ import {
 import {
   Bookmark,
   BookmarkCheck,
+  ChevronLeft,
+  ChevronRight,
   GitBranch,
   NotebookPen,
   PenLine,
@@ -24,7 +26,14 @@ import {
 import { errorMessage } from '../../api/commands';
 import { isComposing } from '../../app/keyboard';
 import { canReadAloud, useReadAloud } from '../../app/readAloud';
-import type { EventDto, MemoryNote, ProviderProfile, RollRequest, StoryStateV1 } from '../../types';
+import type {
+  EventDto,
+  MemoryNote,
+  ProviderProfile,
+  ReplyVersions,
+  RollRequest,
+  StoryStateV1,
+} from '../../types';
 import { RollResult } from './DiceCards';
 import { NameColorsContext, nameStyle } from './nameColors';
 import { MemoryLine, notesOnly, type ThreadLists } from './notes';
@@ -83,6 +92,10 @@ type Props = {
   ideasShown?: boolean;
   /** The story's language for the computer's voice ("ja-JP"), when known. */
   speechLang?: string;
+  /** Replies with other versions (from Another reply), by reply id. */
+  versions?: ReadonlyMap<string, ReplyVersions>;
+  /** Open the route that has another version of a reply. */
+  onOpenVersion?: (routeId: string) => void;
 };
 
 export type Newcomers = {
@@ -241,6 +254,8 @@ function EventBlock({
   sceneHeadings,
   newcomers,
   speechLang,
+  versions,
+  onOpenVersion,
 }: {
   e: EventDto;
   focused: boolean;
@@ -319,6 +334,47 @@ function EventBlock({
       <Pencil {...ACTION_ICON} />,
       () => setEditing(true),
     );
+  const flip = (() => {
+    const v = versions?.get(e.id);
+    if (!v || !onOpenVersion || v.routeIds.length < 2) return null;
+    const n = v.current;
+    const total = v.routeIds.length;
+    const go = (i: number) => {
+      const id = v.routeIds[i];
+      if (id) onOpenVersion(id);
+    };
+    return (
+      <span
+        className="reply-versions"
+        role="group"
+        aria-label={t('Version {n} of {total} of this reply', { n: n + 1, total })}
+      >
+        <button
+          type="button"
+          className="version-step"
+          disabled={n === 0}
+          onClick={() => go(n - 1)}
+          title={t('The version before; each opens on its own route')}
+        >
+          <ChevronLeft aria-hidden={true} size={16} />
+          <span className="visually-hidden">{t('Previous version')}</span>
+        </button>
+        <span className="version-count" aria-hidden="true">
+          {n + 1} / {total}
+        </span>
+        <button
+          type="button"
+          className="version-step"
+          disabled={n === total - 1}
+          onClick={() => go(n + 1)}
+          title={t('The version after; each opens on its own route')}
+        >
+          <ChevronRight aria-hidden={true} size={16} />
+          <span className="visually-hidden">{t('Next version')}</span>
+        </button>
+      </span>
+    );
+  })();
   switch (e.kind) {
     case 'chapter_start': {
       const recap = e.payload.previousChapterRecap?.trim();
@@ -423,8 +479,9 @@ function EventBlock({
               onAdd={newcomers.onAdd}
             />
           )}
-          {!editing && (canReadAloud() || branch || regenerate || edit || bookmark) && (
+          {!editing && (canReadAloud() || branch || regenerate || edit || bookmark || flip) && (
             <div className="turn-actions">
+              {flip}
               <ReadAloudButton id={e.id} text={e.payload.text} lang={speechLang} />
               {edit}
               {regenerate}
@@ -505,6 +562,8 @@ export function NarrativeView({
   newcomers,
   ideasShown = false,
   speechLang,
+  versions,
+  onOpenVersion,
 }: Props) {
   const opening = events[0]?.kind === 'chapter_start' && events[0].payload.ordinal === 1;
   const notStarted = !draft && !events.some((e) => e.kind === 'player');
@@ -671,6 +730,8 @@ export function NarrativeView({
                 sceneHeadings={sceneHeadings}
                 newcomers={newcomers}
                 speechLang={speechLang}
+                versions={versions}
+                onOpenVersion={onOpenVersion}
                 latest={i >= events.length - 2 && i === lastOfKind(events, e.kind)}
                 opensChapter={opensChapter}
               />

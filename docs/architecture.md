@@ -82,6 +82,9 @@ Another reply   regenerate_reply: fork at the action the reply answered +
                 pending run on the new route, in one transaction
 Change action   edit_action: fork before the action + new player event +
                 pending run, in one transaction (any action, not just the last)
+Versions        route_view.replyVersions: replies with the same parent action,
+                each mapped to the visible route that played it last (read only;
+                the reader opens that route, ADR 0029)
 ```
 
 - All three only add events or routes; nothing earlier is rewritten. An edit

@@ -48,7 +48,8 @@ import {
   storyLanguageLabel,
   tellingOf,
 } from './StyleFields';
-import { BACKGROUND_SLOT, COVER_SLOT, livePictures } from './PicturesStep';
+import { BACKGROUND_SLOT, COVER_SLOT, livePictures, portraitOf } from './PicturesStep';
+import { BringCharacter, personFields, type Brought, type FilledFromCard } from './BringCharacter';
 import { TrackingFields, defaultTracking, trackingSummary } from './TrackingFields';
 import { joinList, msg, t, tKnown, tn } from '../../i18n';
 
@@ -64,6 +65,41 @@ export const PLAYER = '@player';
 const PRONOUNS = ['she/her', 'he/him', 'they/them'];
 
 const copy = <T,>(v: T): T => JSON.parse(JSON.stringify(v)) as T;
+
+/** A card's scenario and first message, for the story fields still empty. */
+function storyFromCard(draft: CreateStoryDraft, b: Brought): Partial<CreateStoryDraft> {
+  const patch: Partial<CreateStoryDraft> = {};
+  if (b.scenario && !draft.description.trim()) patch.description = b.scenario;
+  if (b.greeting && !draft.scene.summary.trim())
+    patch.scene = { ...draft.scene, summary: b.greeting };
+  return patch;
+}
+
+const filledFrom = (patch: Partial<CreateStoryDraft>): FilledFromCard => ({
+  about: patch.description !== undefined,
+  opening: patch.scene !== undefined,
+});
+
+/** A brought card's picture as the portrait in `slot`. */
+function withPortrait(
+  draft: CreateStoryDraft,
+  slot: string,
+  b: Brought,
+): Partial<CreateStoryDraft> {
+  if (!b.portrait) return {};
+  const { assetId, storyOnly } = b.portrait;
+  return {
+    pictures: [...(draft.pictures ?? []).filter((p) => p.slot !== slot), { slot, assetId }],
+    ...(storyOnly ? { storyImages: [...new Set([...(draft.storyImages ?? []), assetId])] } : {}),
+  };
+}
+
+/** Someone brought in, as a fresh character with `id` and `control`. */
+const broughtPerson = (b: Brought, id: string, control: Character['control']): Character => ({
+  ...personFields(b.character),
+  id,
+  control,
+});
 
 /**
  * Fill the world section (and its narration defaults) from a template.
@@ -476,6 +512,20 @@ export function CharacterStep({ draft, update, catalog, guided }: StepProps) {
           onChange={(id) => update(applyCharacter(catalog, id))}
         />
       )}
+      <BringCharacter
+        forYou
+        playerName=""
+        onBring={(b) => {
+          const story = storyFromCard(draft, b);
+          update({
+            ...story,
+            ...withPortrait(draft, portraitOf(PLAYER), b),
+            characterTemplateId: null,
+            player: broughtPerson(b, p.id, p.control),
+          });
+          return filledFrom(story);
+        }}
+      />
       <div className="field-row">
         <ComboField
           label={t('Name')}
@@ -653,6 +703,20 @@ function OthersEditor({ draft, update, catalog, guided }: StepProps) {
         >
           {t('Add a character')}
         </button>
+        <BringCharacter
+          forYou={false}
+          playerName={draft.player.name}
+          onBring={(b) => {
+            const id = nextNpcId(draft.npcs);
+            const story = storyFromCard(draft, b);
+            update({
+              ...story,
+              ...withPortrait(draft, portraitOf(id), b),
+              npcs: [...draft.npcs, broughtPerson(b, id, 'npc')],
+            });
+            return filledFrom(story);
+          }}
+        />
       </fieldset>
       {guided && extras.length > 0 && (
         <fieldset className="field toggle-list">

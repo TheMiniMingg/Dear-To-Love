@@ -4,6 +4,7 @@ pub mod assets;
 pub mod backups;
 pub mod book;
 pub mod chapters;
+pub mod characters;
 pub mod context;
 pub mod diagnostics;
 pub mod disk;
