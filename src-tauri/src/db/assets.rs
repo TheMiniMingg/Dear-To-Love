@@ -565,7 +565,7 @@ pub async fn usages(conn: &mut SqliteConnection, asset_id: &str) -> AppResult<Ve
     Ok(out)
 }
 
-/// "Cover", "Background" or "Portrait of <name>".
+/// "Cover", "Background", "Portrait of <name>", or the picture of an item or a place.
 async fn describe(
     conn: &mut SqliteConnection,
     story_id: &str,
@@ -578,6 +578,7 @@ async fn describe(
             format!("Portrait of {}", character_name(conn, story_id, id).await?)
         }
         VisualSlot::Item(key) => format!("Picture of {key}"),
+        VisualSlot::Place(key) => format!("Picture of the place {key}"),
     })
 }
 

@@ -15,6 +15,7 @@ vi.mock('@tauri-apps/api/core', () => ({
 }));
 
 import { ReaderScreen } from '../features/reader/ReaderScreen';
+import { useReadAloud } from '../app/readAloud';
 import { useUiStore } from '../app/store';
 
 const action: EventDto = {
@@ -99,6 +100,46 @@ describe('Reader live replies', () => {
     await act(async () => gen!.resolve(fakeRouteView([action, reply])));
     expect(screen.queryByTestId('reply-draft')).not.toBeInTheDocument();
     expect(screen.getByText('The door creaks open.')).toBeInTheDocument();
+  });
+
+  it('reads a new reply aloud when Settings say so', async () => {
+    const spoken: string[] = [];
+    class Utterance {
+      voice: unknown = null;
+      lang = '';
+      rate = 1;
+      onend: (() => void) | null = null;
+      onerror: (() => void) | null = null;
+      constructor(public text: string) {}
+    }
+    vi.stubGlobal('SpeechSynthesisUtterance', Utterance);
+    vi.stubGlobal('speechSynthesis', {
+      cancel: vi.fn(),
+      getVoices: () => [],
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      speak: (u: Utterance) => spoken.push(u.text),
+    });
+    useReadAloud.getState().setAutoRead(true);
+    try {
+      backend(fakeRouteView());
+      render(<ReaderScreen routeId="route-1" />);
+      const box = await screen.findByLabelText('What do you do?');
+      await userEvent.click(box);
+      await userEvent.keyboard('Open the door{Enter}');
+      await vi.waitFor(() => expect(gen).not.toBeNull());
+      expect(spoken).toEqual([]);
+      await act(async () => gen!.resolve(fakeRouteView([action, reply])));
+      expect(spoken).toEqual(['The door creaks open.']);
+      expect(screen.getByRole('button', { name: 'Stop reading' })).toHaveAttribute(
+        'aria-pressed',
+        'true',
+      );
+    } finally {
+      useReadAloud.getState().stop();
+      useReadAloud.getState().setAutoRead(false);
+      vi.unstubAllGlobals();
+    }
   });
 
   it('Stop cancels; the action stays and can be retried', async () => {

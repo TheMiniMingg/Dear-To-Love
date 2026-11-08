@@ -1648,6 +1648,18 @@ button.jump-link:hover {
   gap: 0.15rem;
   min-width: 0;
 }
+.picture-places {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border);
+}
+.picture-places > .small-heading,
+.picture-places > p {
+  margin: 0;
+}
 .picture-chooser {
   display: flex;
   flex-direction: column;

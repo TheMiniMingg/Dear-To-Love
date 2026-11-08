@@ -157,6 +157,45 @@ fn first_sentence_and_clip() {
     assert_eq!(first_sentence("v1.2 is out! Yes.", 50), "v1.2 is out!");
 }
 
+/// A summary or a recap is asked about the story's words: message tags
+/// become plain labels, and the asides beside a reply are left out.
+#[test]
+fn transcript_reads_tags_as_words_and_leaves_the_asides_out() {
+    let row = |i: usize, body: EventBody| crate::db::timeline::EventRow {
+        id: format!("e{i}"),
+        story_id: "s".into(),
+        origin_route_id: "r".into(),
+        parent_event_id: None,
+        kind: body.kind().as_str().to_string(),
+        payload_json: body.payload_json(),
+        generation_run_id: None,
+        created_at: String::new(),
+    };
+    let chunk = vec![
+        row(
+            0,
+            EventBody::Player(PlayerPayload::new("<text to=\"Mara\">Are you up?</text>")),
+        ),
+        row(
+            1,
+            EventBody::Assistant(AssistantPayload {
+                text: "<text from=\"Mara\">Always.</text>\n\nThe lamp flickers.\n\
+                       <remember kind=\"place\" name=\"Lamp room\">Draughty</remember>\n\
+                       <next>Climb down</next>"
+                    .into(),
+                finish_reason: None,
+                provider_label: None,
+                model_id: None,
+            }),
+        ),
+    ];
+    let text = transcript(&chunk, "Nell", 500).unwrap();
+    assert_eq!(
+        text,
+        "Nell: [Text to Mara] Are you up?\n\nNarrator: [Text from Mara] Always.\n\nThe lamp flickers."
+    );
+}
+
 #[tokio::test]
 async fn boundaries_fall_every_eighth_turn_and_keep_eight_verbatim() {
     let env = Env::new().await;

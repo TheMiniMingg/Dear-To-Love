@@ -35,9 +35,11 @@ type Prefs = {
   /** A voice's `voiceURI`, or null for the computer's default. */
   voice: string | null;
   speed: ReadingSpeed;
+  /** Read each new reply aloud as it lands, without a click. */
+  autoRead: boolean;
 };
 
-const DEFAULTS: Prefs = { voice: null, speed: 'normal' };
+const DEFAULTS: Prefs = { voice: null, speed: 'normal', autoRead: false };
 
 function load(): Prefs {
   try {
@@ -47,6 +49,7 @@ function load(): Prefs {
       speed: READING_SPEEDS.some((s) => s.id === raw?.speed)
         ? (raw?.speed as ReadingSpeed)
         : DEFAULTS.speed,
+      autoRead: raw?.autoRead === true,
     };
   } catch {
     return DEFAULTS;
@@ -139,6 +142,7 @@ type ReadAloudState = Prefs & {
   problem: ReadProblem | null;
   setVoice: (voice: string | null) => void;
   setSpeed: (speed: ReadingSpeed) => void;
+  setAutoRead: (autoRead: boolean) => void;
   /**
    * Read `text` aloud as `id`, stopping anything else first. With a voice
    * pack chosen, each character's lines are read in their own voice.
@@ -213,13 +217,13 @@ function aiPieces(text: string, max = 900): string[] {
 
 export const useReadAloud = create<ReadAloudState>((set, get) => {
   const keep = (next: Partial<Prefs>) => {
-    const { voice, speed } = { ...get(), ...next };
+    const { voice, speed, autoRead } = { ...get(), ...next };
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({ voice, speed }));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ voice, speed, autoRead }));
     } catch {
       // A preference only.
     }
-    set({ voice, speed });
+    set({ voice, speed, autoRead });
   };
 
   const finish = (mine: number) => {
@@ -350,6 +354,7 @@ export const useReadAloud = create<ReadAloudState>((set, get) => {
     problem: null,
     setVoice: (voice) => keep({ voice }),
     setSpeed: (speed) => keep({ speed }),
+    setAutoRead: (autoRead) => keep({ autoRead }),
     stop: () => {
       session += 1;
       synth()?.cancel();

@@ -123,6 +123,8 @@ function ReadAloudSettings() {
   const connections = useConnectionList(reload);
   const active = packs.find((p) => p.id === activeId) ?? null;
   const computer = canReadAloud();
+  const autoRead = useReadAloud((s) => s.autoRead);
+  const setAutoRead = useReadAloud((s) => s.setAutoRead);
 
   const importPack = async () => {
     setNote(null);
@@ -171,6 +173,20 @@ function ReadAloudSettings() {
       <p className="muted small">
         {t(
           'The speaker under a reply reads it aloud. A voice pack gives the narrator and each character a voice of their own, from this computer or from an AI voice service such as ElevenLabs, with your own or cloned voices.',
+        )}
+      </p>
+      <label className="check">
+        <input
+          type="checkbox"
+          checked={autoRead}
+          aria-describedby={`${id}-auto-hint`}
+          onChange={(e) => setAutoRead(e.target.checked)}
+        />
+        {t('Read each new reply aloud')}
+      </label>
+      <p id={`${id}-auto-hint`} className="muted small check-hint">
+        {t(
+          'A reply is read as soon as it is written, in the story you are reading. The speaker under a reply still reads it again, or stops it.',
         )}
       </p>
       <label htmlFor={`${id}-pack`}>{t('Voices')}</label>

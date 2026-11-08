@@ -6,7 +6,19 @@ import { ImportResult, useAddImages } from '../images/ImagesScreen';
 import { MadeFrom } from '../images/MadeFrom';
 import { MakePortrait } from '../images/MakePortrait';
 import type { AssetDto, RouteView } from '../../types';
-import { BACKGROUND, COVER, picture, portraitSlot, slotName, type Picture } from './pictures';
+import { isComposing } from '../../app/keyboard';
+import {
+  BACKGROUND,
+  COVER,
+  PLACE_PREFIX,
+  picture,
+  placeFromKey,
+  placeKey,
+  placeSlot,
+  portraitSlot,
+  slotName,
+  type Picture,
+} from './pictures';
 import { t, tr } from '../../i18n';
 import { routeName } from '../../i18n/names';
 
@@ -14,17 +26,51 @@ type Props = {
   view: RouteView;
   /** The head is an action waiting for its reply: the route can't change yet. */
   awaitingReply: boolean;
+  /** Places the story has been (from its scene marks), the latest first. */
+  places?: string[];
   onChanged: (view: RouteView, status: string) => void;
 };
 
 type Scope = 'route' | 'default';
 
 /**
- * Reader -> Pictures: the background, each character's portrait and the
- * cover. A route's own choice applies from now on that route only; a story
- * default shows on every route that hasn't chosen its own.
+ * The places that can have a picture: where the story is now, the places
+ * it has been, the places in its memory notes, and the ones that already
+ * have a picture; each once, by its key, under the name it was first seen.
  */
-export function PicturesPanel({ view, awaitingReply, onChanged }: Props) {
+export function placeChoices(view: RouteView, places: string[]): { slot: string; name: string }[] {
+  const state = view.state.state;
+  const named: string[] = [
+    state.scene?.location ?? '',
+    ...places,
+    ...(state.notes ?? []).filter((n) => n.kind === 'place').map((n) => n.name),
+  ];
+  const withPictures = [
+    ...Object.keys(state.visualRefs ?? {}),
+    ...(view.visuals ?? []).map((v) => v.slot),
+  ]
+    .filter((s) => s.startsWith(PLACE_PREFIX))
+    .map((s) => placeFromKey(s.slice(PLACE_PREFIX.length)));
+  const out: { slot: string; name: string }[] = [];
+  const seen = new Set<string>();
+  for (const name of [...named.map((n) => n.trim()), ...withPictures]) {
+    if (!name) continue;
+    const key = placeKey(name);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push({ slot: `${PLACE_PREFIX}${key}`, name });
+  }
+  return out;
+}
+
+/**
+ * Reader -> Pictures: the background, each character's portrait, the
+ * cover, and a picture for each place the story goes (shown instead of
+ * the background while the story is there). A route's own choice applies
+ * from now on that route only; a story default shows on every route that
+ * hasn't chosen its own.
+ */
+export function PicturesPanel({ view, awaitingReply, places = [], onChanged }: Props) {
   const id = useId();
   const [images, setImages] = useState<AssetDto[] | null>(null);
   const [choosing, setChoosing] = useState<string | null>(null);
@@ -32,6 +78,7 @@ export function PicturesPanel({ view, awaitingReply, onChanged }: Props) {
   const [scope, setScope] = useState<Scope>('route');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [newPlace, setNewPlace] = useState('');
   const panelRef = useRef<HTMLDivElement>(null);
   /** The slot whose Choose button gets focus back when the chooser closes. */
   const lastSlot = useRef<string | null>(null);
@@ -82,10 +129,17 @@ export function PicturesPanel({ view, awaitingReply, onChanged }: Props) {
   );
   // The same order as the Pictures step when a story is made.
   const slots = [COVER, BACKGROUND, ...characters.map((c) => portraitSlot(c.id))];
+  const placeRows = placeChoices(view, places);
+  const here = state.scene?.location?.trim() ? placeSlot(state.scene.location) : null;
   const route = routeName(view.route.label);
+  /** A slot's name: a place's as it was seen in the story, not its key. */
+  const nameOf = (slot: string) => {
+    const place = placeRows.find((p) => p.slot === slot)?.name;
+    return place ? t('Picture of {name}', { name: place }) : slotName(view, slot);
+  };
 
   const apply = async (slot: string, assetId: string | null, where: Scope) => {
-    const name = slotName(view, slot);
+    const name = nameOf(slot);
     setBusy(true);
     setError(null);
     try {
@@ -142,8 +196,16 @@ export function PicturesPanel({ view, awaitingReply, onChanged }: Props) {
     }
   };
 
+  const addPlace = () => {
+    const name = newPlace.trim();
+    if (!name) return;
+    const slot = placeSlot(name);
+    setNewPlace('');
+    open(slot, picture(view, slot));
+  };
+
   if (choosing) {
-    const name = slotName(view, choosing);
+    const name = nameOf(choosing);
     const routeScoped = choosing !== COVER;
     const portrayed = choosing.startsWith('portrait:')
       ? state.characters?.[choosing.slice('portrait:'.length)]
@@ -237,51 +299,96 @@ export function PicturesPanel({ view, awaitingReply, onChanged }: Props) {
     );
   }
 
+  const row = (slot: string, name: string, note?: string) => {
+    const p = picture(view, slot);
+    return (
+      <li key={slot} className="picture-row">
+        <div className="picture-thumb">
+          {p.assetId ? (
+            <Thumb assetId={p.assetId} alt={name} />
+          ) : (
+            <span className="thumb-empty" aria-hidden="true">
+              {t('None')}
+            </span>
+          )}
+        </div>
+        <div className="picture-text">
+          <strong>{name}</strong>
+          <span className="muted small">
+            {[note, sourceText(slot, p, route)].filter(Boolean).join(' ')}
+          </span>
+        </div>
+        <div className="button-row">
+          <button
+            type="button"
+            data-slot={slot}
+            aria-label={t('Choose {name}', { name })}
+            onClick={() => open(slot, p)}
+          >
+            {t('Choose…')}
+          </button>
+          {p.source !== 'none' && (
+            <button
+              type="button"
+              aria-label={t('Remove {name}', { name })}
+              disabled={busy}
+              onClick={() => remove(slot, p)}
+            >
+              {t('Remove')}
+            </button>
+          )}
+        </div>
+      </li>
+    );
+  };
+
   return (
     <div className="pictures-panel" ref={panelRef}>
       <ul className="picture-list" aria-label={t('Pictures')}>
-        {slots.map((slot) => {
-          const p = picture(view, slot);
-          const name = slotName(view, slot);
-          return (
-            <li key={slot} className="picture-row">
-              <div className="picture-thumb">
-                {p.assetId ? (
-                  <Thumb assetId={p.assetId} alt={name} />
-                ) : (
-                  <span className="thumb-empty" aria-hidden="true">
-                    {t('None')}
-                  </span>
-                )}
-              </div>
-              <div className="picture-text">
-                <strong>{name}</strong>
-                <span className="muted small">{sourceText(slot, p, route)}</span>
-              </div>
-              <div className="button-row">
-                <button
-                  type="button"
-                  data-slot={slot}
-                  aria-label={t('Choose {name}', { name })}
-                  onClick={() => open(slot, p)}
-                >
-                  {t('Choose…')}
-                </button>
-                {p.source !== 'none' && (
-                  <button
-                    type="button"
-                    aria-label={t('Remove {name}', { name })}
-                    disabled={busy}
-                    onClick={() => remove(slot, p)}
-                  >
-                    {t('Remove')}
-                  </button>
-                )}
-              </div>
-            </li>
-          );
-        })}
+        {slots.map((slot) => row(slot, slotName(view, slot)))}
       </ul>
+      <section className="picture-places" aria-labelledby={`${id}-places`}>
+        <h3 id={`${id}-places`} className="small-heading">
+          {t('Places')}
+        </h3>
+        <p className="muted small">
+          {t(
+            'While the story is at a place with a picture of its own, the stage shows it instead of the background. The storyteller marks each change of scene with its place.',
+          )}
+        </p>
+        {placeRows.length > 0 && (
+          <ul className="picture-list" aria-label={t('Places')}>
+            {placeRows.map((p) =>
+              row(
+                p.slot,
+                t('Picture of {name}', { name: p.name }),
+                p.slot === here ? t('The story is here now.') : undefined,
+              ),
+            )}
+          </ul>
+        )}
+        <div className="multi-add">
+          <label htmlFor={`${id}-place`} className="visually-hidden">
+            {t('Another place')}
+          </label>
+          <input
+            id={`${id}-place`}
+            value={newPlace}
+            maxLength={80}
+            placeholder={t('Another place, for example: the pier')}
+            onChange={(e) => setNewPlace(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !isComposing(e)) {
+                e.preventDefault();
+                addPlace();
+              }
+            }}
+          />
+          <button type="button" disabled={!newPlace.trim()} onClick={addPlace}>
+            {t('Choose a picture…')}
+          </button>
+        </div>
+      </section>
       {error && (
         <p role="alert" className="error">
           {error}

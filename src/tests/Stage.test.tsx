@@ -15,7 +15,9 @@ vi.mock('@tauri-apps/api/core', () => ({
 }));
 
 import { ReaderScreen } from '../features/reader/ReaderScreen';
-import { stageFocus, usePictureView } from '../features/reader/stage';
+import { sceneBackground } from '../features/reader/pictures';
+import { placeChoices } from '../features/reader/PicturesPanel';
+import { scenePlaces, stageFocus, usePictureView } from '../features/reader/stage';
 import { useUiStore } from '../app/store';
 
 const cast = [
@@ -121,5 +123,47 @@ describe('the picture view in the reader', () => {
     expect(localStorage.getItem('dtl.readerPictures')).toBe('off');
     await userEvent.click(toggle);
     expect(await screen.findByRole('group', { name: 'Scene pictures' })).toBeVisible();
+  });
+});
+
+describe('pictures for places', () => {
+  it('lists the places the story has been, the latest first and each once', () => {
+    const events = [
+      reply('ev-2', '<scene place="The pier" time="Dawn"/>\n\nGulls.'),
+      reply('ev-3', '<scene place="the lamp room"/>\n\nStairs.'),
+      reply('ev-4', '<scene place="The Pier"/>\n\nBack again.'),
+    ];
+    expect(scenePlaces(events)).toEqual(['The Pier', 'the lamp room']);
+    const v = view();
+    v.visuals = [...(v.visuals ?? []), { slot: 'place:the cellar', assetId: 'img-cellar' }];
+    // Where the story is now comes first, then the places it has been and
+    // the ones with a picture; a place is named as it was first seen.
+    expect(placeChoices(v, scenePlaces(events)).map((p) => [p.slot, p.name])).toEqual([
+      ['place:the lamp room', 'The lamp room'],
+      ['place:the pier', 'The Pier'],
+      ['place:the cellar', 'The cellar'],
+    ]);
+    // Without a picture of its own, the place shows the background.
+    expect(sceneBackground(v).assetId).toBe('img-bg');
+  });
+
+  it('the stage shows the place’s own picture while the story is there', async () => {
+    invoke.mockReset();
+    invoke.mockImplementation(async (cmd: string) => {
+      if (cmd === 'get_route_view') {
+        const v = view();
+        v.visuals = [...(v.visuals ?? []), { slot: 'place:the lamp room', assetId: 'img-lamp' }];
+        return v;
+      }
+      if (cmd === 'list_bookmarks') return [];
+      throw { code: 'NOT_FOUND', message: cmd };
+    });
+    usePictureView.getState().setShown(true);
+    render(<ReaderScreen routeId="route-1" />);
+    const stage = await screen.findByRole('group', { name: 'Scene pictures' });
+    expect(within(stage).getByRole('img', { name: 'Scene: The lamp room' })).toHaveAttribute(
+      'src',
+      'dtlimg://localhost/full/img-lamp',
+    );
   });
 });

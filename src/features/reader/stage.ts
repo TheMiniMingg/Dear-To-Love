@@ -8,7 +8,7 @@
 import { create } from 'zustand';
 import type { EventDto, RouteView } from '../../types';
 import { parseBlocks } from './messages';
-import { picture, portraitSlot } from './pictures';
+import { picture, placeKey, portraitSlot } from './pictures';
 
 /** Replies looked at, newest last; older ones no longer decide who is on stage. */
 const LOOK_BACK = 30;
@@ -86,6 +86,27 @@ export function stageFocus(replies: string[], cast: Cast[]): string | null {
     if (recent.length > AWAY) recent.shift();
   }
   return focus;
+}
+
+/**
+ * The places the story has been, from the scene marks in its replies, the
+ * latest first, each once (by its key, so "The pier" and "the pier" are one).
+ */
+export function scenePlaces(events: EventDto[]): string[] {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const text of replyTexts(events).reverse()) {
+    for (const b of parseBlocks(text).reverse()) {
+      if (b.kind !== 'scene') continue;
+      const place = b.attrs.place?.trim();
+      if (!place) continue;
+      const key = placeKey(place);
+      if (seen.has(key)) continue;
+      seen.add(key);
+      out.push(place);
+    }
+  }
+  return out;
 }
 
 /** The replies in a route's history (and the one being written), oldest first. */

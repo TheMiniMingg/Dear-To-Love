@@ -339,6 +339,53 @@ describe('Pictures in the reader', () => {
     );
   });
 
+  it('a place gets a picture of its own, shown while the story is there', async () => {
+    let view = readerView();
+    invoke.mockImplementation(async (cmd: string, args: Record<string, unknown>) => {
+      if (cmd === 'get_route_view') return view;
+      if (cmd === 'list_images') return [harbor, mara];
+      if (cmd === 'edit_story_details') {
+        const [c] = args.changes as StateEdit[];
+        if (c?.op === 'setVisualRef' && c.assetId) view = readerView({ [c.slot]: c.assetId });
+        return view;
+      }
+      throw { code: 'NOT_FOUND', message: cmd };
+    });
+    render(<ReaderScreen routeId="route-1" />);
+    await screen.findByLabelText('What do you do?');
+    await userEvent.click(screen.getByRole('button', { name: 'Menu' }));
+    await userEvent.click(await screen.findByRole('button', { name: 'Pictures' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Pictures' });
+    const places = within(dialog).getByRole('list', { name: 'Places' });
+    expect(places).toHaveTextContent('Picture of The lamp room');
+    expect(places).toHaveTextContent('The story is here now.');
+    await userEvent.click(
+      within(places).getByRole('button', { name: 'Choose Picture of The lamp room' }),
+    );
+    await userEvent.click(await within(dialog).findByRole('button', { name: 'Harbor at dusk' }));
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Use this picture' }));
+    expect(invoke).toHaveBeenCalledWith('edit_story_details', {
+      storyId: 'story-1',
+      routeId: 'route-1',
+      expectedHeadId: 'ev-1',
+      changes: [{ op: 'setVisualRef', slot: 'place:the lamp room', assetId: 'img-1' }],
+      note: 'Picture of The lamp room',
+    });
+    const scene = await screen.findByRole('group', { name: 'Scene pictures' });
+    expect(within(scene).getByRole('img', { name: 'Scene: The lamp room' })).toHaveAttribute(
+      'src',
+      'dtlimg://localhost/full/img-1',
+    );
+    // A place the story has not reached yet can have its picture ready.
+    await userEvent.type(
+      within(dialog).getByRole('textbox', { name: 'Another place' }),
+      'the pier{Enter}',
+    );
+    expect(
+      within(dialog).getByRole('heading', { name: 'Choose: Picture of The pier' }),
+    ).toBeInTheDocument();
+  });
+
   it('shows picture-only changes as picture notes in the story', async () => {
     const edit: EventDto = {
       id: 'ev-2',

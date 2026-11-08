@@ -161,8 +161,9 @@ story can also **Send a text**, **Call** someone, **Think** a thought of your ow
 **Roll dice**.
 
 - **Picture view.** With a background or portraits chosen, a stage above the story shows the
-  scene and whoever you are with, and switches when someone new appears. **Picture view**
-  beside the story (or Ctrl/Cmd+P) switches to text only and back.
+  scene and whoever you are with, and switches when someone new appears. Give a place a
+  picture of its own under **Pictures → Places** and the stage shows it whenever the story is
+  there. **Picture view** beside the story (or Ctrl/Cmd+P) switches to text only and back.
 - **Several stories at once.** **Stories** beside the story goes back to the library. A reply
   keeps writing while you play something else, and the library shows "Writing a reply…"
   until it is in. Each story opens where you left it, with your unsent text kept.
@@ -210,7 +211,8 @@ story can also **Send a text**, **Call** someone, **Think** a thought of your ow
   ElevenLabs (including voices you design or clone there) or a free voice server on your
   computer such as Kokoro. Lines are matched to whoever says them ("Mina: …", or quoted
   speech next to a name). A pack saves to a `.dtlvoices` file to share, which names the
-  voices only, never your key. Each AI reading is recorded in **Usage**.
+  voices only, never your key. Each AI reading is recorded in **Usage**. **Read each new
+  reply aloud** reads every reply as it lands.
 - **Sound on or off with one switch** in **Settings → Sound** (or **Turn sound off** in
   Ctrl/Cmd+K): off means no chime and nothing read aloud.
 - **Find anything with Ctrl/Cmd+K**: a story, a chapter, a window or a setting, as you type.
@@ -579,6 +581,13 @@ always asked for as safe for work.
 **Settings → Background picture** can also put a picture of your own behind every screen.
 
 ![Choosing a portrait: add a picture for this story only or to your library, or pick one from either](docs/screenshots/picture-buttons.webp)
+
+**Pictures → Places** in a story gives any place a picture of its own: where the story is
+now, the places it has been, or one you name ahead of time. While the story is at a place
+with a picture, the stage shows it instead of the background, following the storyteller's
+scene marks.
+
+![Pictures → Places: the bakery, where the story is now, can have a picture of its own, and another place can be named ahead of time](docs/screenshots/pictures-places.webp)
 
 _Choosing a portrait: add a picture for this story only or to your library, or pick one from either._
 

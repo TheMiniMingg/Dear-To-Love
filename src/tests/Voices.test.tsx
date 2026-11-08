@@ -113,6 +113,18 @@ describe('Sound on or off', () => {
     useReadAloud.getState().read('ev-1', 'Hello.', undefined, { pack: null });
     expect(useReadAloud.getState().reading).toBeNull();
   });
+
+  it('reading each new reply aloud is a choice kept on this computer', async () => {
+    invoke.mockResolvedValue([]);
+    render(<SoundSection />);
+    const auto = screen.getByRole('checkbox', { name: 'Read each new reply aloud' });
+    expect(auto).not.toBeChecked();
+    await userEvent.click(auto);
+    expect(useReadAloud.getState().autoRead).toBe(true);
+    expect(JSON.parse(localStorage.getItem('dtl.readAloud') ?? '{}').autoRead).toBe(true);
+    await userEvent.click(auto);
+    expect(useReadAloud.getState().autoRead).toBe(false);
+  });
 });
 
 describe('Voice packs', () => {
