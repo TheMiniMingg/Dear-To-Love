@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Shuffle } from 'lucide-react';
+import { Play, Shuffle } from 'lucide-react';
 import { commands, errorMessage } from '../../api/commands';
 import { useUiStore } from '../../app/store';
 import { ArrowPicker } from '../../components/ArrowPicker';
@@ -9,6 +9,7 @@ import { charactersFor, fittingScenarios, suits } from './WizardSteps';
 import { t, tOptions } from '../../i18n';
 import { DETAILS, PERSPECTIVES, appStoryLanguage, storyLanguageLabel } from './StyleFields';
 import { trackingSummary } from './TrackingFields';
+import { StoryCover } from './StoryCover';
 
 /** Preset Story: pick a ready-made story with arrows or menus. No typing required. */
 export function QuickStartScreen() {
@@ -194,26 +195,35 @@ export function QuickStartScreen() {
               onChange={setDetail}
             />
           </div>
-          <aside className="preview preset-preview" aria-label={t('Story preview')}>
-            {genres.length > 0 && (
-              <ul className="genre-tags" aria-label={t('Genre')}>
-                {genres.map((g) => (
-                  <li key={g}>{t(g)}</li>
-                ))}
-              </ul>
-            )}
-            <h2>{scenario?.title}</h2>
-            <p>{scenario?.description}</p>
-            <dl>
+          <StoryCover
+            label={t('Story preview')}
+            title={scenario?.title ?? ''}
+            genres={genres}
+            premise={scenario?.description}
+            cast={[
+              ...(character
+                ? [
+                    {
+                      id: '@player',
+                      name: character.character.name,
+                      role: character.character.role,
+                      you: true,
+                    },
+                  ]
+                : []),
+              ...(scenario?.npcs ?? []).map((c) => ({
+                id: c.id,
+                name: c.name,
+                role: c.role,
+                color: c.color,
+              })),
+            ]}
+            chapterTitle={scenario?.firstChapterTitle}
+            opening={scenario?.scene.summary}
+          >
+            <dl className="cover-facts">
               <dt>{t('Setting')}</dt>
               <dd>{world?.world.setting}</dd>
-              <dt>{t('You play')}</dt>
-              <dd>
-                {character?.character.name}
-                {character?.character.role ? `, ${character.character.role}` : ''}
-              </dd>
-              <dt>{t('First chapter')}</dt>
-              <dd>{scenario?.firstChapterTitle}</dd>
               {scenario?.tracking && (
                 <>
                   <dt>{t('Tracking')}</dt>
@@ -231,13 +241,14 @@ export function QuickStartScreen() {
             </dl>
             <button
               type="button"
-              className="primary"
+              className="primary cover-start"
               disabled={busy || !worldId || !scenarioId || !characterId}
               onClick={() => void start()}
             >
+              <Play className="btn-icon" aria-hidden={true} />
               {busy ? t('Creating…') : t('Start story')}
             </button>
-          </aside>
+          </StoryCover>
         </div>
       )}
     </section>

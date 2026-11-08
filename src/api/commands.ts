@@ -3,54 +3,61 @@ import { Channel, invoke } from '@tauri-apps/api/core';
 import type {
   ApiRequestRow,
   AppError,
+  AppInfo,
   AssetDto,
   AssetUsage,
   BackupExport,
   BackupInfo,
+  BookExport,
+  BookLabels,
   BookmarkDto,
-  AppInfo,
-  ChapterRecapDraft,
   BudgetPolicy,
   BudgetStatus,
-  CreateStoryDraft,
-  DraftProblem,
+  ChapterRecapDraft,
   ConnectionCheck,
   ContextPreview,
+  CreateStoryDraft,
   DiagnosticCheck,
+  DraftProblem,
+  DraftStep,
   ErrorCode,
+  FilledDraft,
   ImageImport,
   ImageScope,
-  PortraitInput,
   ItemPictureInput,
+  NotebookTidy,
   PictureDraft,
-  StorypackExport,
-  StorypackImport,
-  TextExport,
-  TextFormat,
+  PortraitInput,
   ProviderProfile,
   ProviderProfileInput,
+  QuickStartInput,
+  RateCardView,
+  ReplyOptions,
   RestorePlan,
   RestoreResult,
   RestoreSource,
-  QuickStartInput,
-  RateCardView,
+  RollRequest,
   RouteDto,
   RouteNode,
-  StoryMemory,
-  RollRequest,
   RouteView,
-  StateEdit,
   SaveDto,
   SaveView,
   SearchResults,
+  StateEdit,
   StoryCreated,
+  StoryMemory,
   StorySummary,
   StoryVisual,
-  StreamMessage,
+  StorypackExport,
+  StorypackImport,
   StorytellerChoice,
   StorytellerInfo,
+  StreamMessage,
   Submitted,
+  TakenBack,
   TemplateCatalog,
+  TextExport,
+  TextFormat,
   UpdateStatus,
   UsageScope,
   UsageSummary,
@@ -165,6 +172,12 @@ export const commands = {
     call<CreateStoryDraft>('compose_story_draft', { input }),
   checkStoryDraft: (draft: CreateStoryDraft) =>
     call<DraftProblem[]>('check_story_draft', { draft }),
+  /**
+   * Fills the empty fields of a step (every step without one) with the
+   * draft's storyteller, or offline from the presets. Nothing is saved.
+   */
+  fillStoryDraft: (draft: CreateStoryDraft, step: DraftStep | null, offline = false) =>
+    call<FilledDraft>('fill_story_draft', { draft, step, offline }),
   createStory: (draft: CreateStoryDraft) => call<StoryCreated>('create_story', { draft }),
   getWizardDraft: () => call<WizardDraft | null>('get_wizard_draft'),
   saveWizardDraft: (wizard: WizardDraft) => call<WizardDraft>('save_wizard_draft', { wizard }),
@@ -175,9 +188,19 @@ export const commands = {
   deleteStory: (storyId: string) => call<void>('delete_story', { storyId }),
 
   getRouteView: (routeId: string) => call<RouteView>('get_route_view', { routeId }),
-  /** With `roll`, the app rolls the dice and stores the result with the action. */
-  submitAction: (r: RouteRef & { expectedHeadId: string; text: string; roll?: RollRequest }) =>
-    call<Submitted>('submit_action', r),
+  /**
+   * With `roll`, the app rolls the dice and stores the result with the
+   * action. Empty `text` (and no roll) is Keep going. `options` ask the
+   * next reply only to be short or long.
+   */
+  submitAction: (
+    r: RouteRef & {
+      expectedHeadId: string;
+      text: string;
+      roll?: RollRequest;
+      options?: ReplyOptions;
+    },
+  ) => call<Submitted>('submit_action', r),
   /**
    * Streams drafts to `onMessage`; resolves once the reply is committed.
    * `budgetOverride` sends one reply the budget gate cannot price.
@@ -191,8 +214,14 @@ export const commands = {
   cancelReply: (runId: string) => call<void>('cancel_reply', { runId }),
   editAction: (r: RouteRef & { playerEventId: string; text: string }) =>
     call<Submitted>('edit_action', r),
-  regenerateReply: (r: RouteRef & { assistantEventId: string }) =>
+  /** Another reply on a new route, maybe with a length and a hint for it. */
+  regenerateReply: (r: RouteRef & { assistantEventId: string; options?: ReplyOptions }) =>
     call<Submitted>('regenerate_reply', r),
+  /** Back to just before the player's last action; that turn stays on a new branch. */
+  takeBackTurn: (r: RouteRef & { expectedHeadId: string }) => call<TakenBack>('take_back_turn', r),
+  /** New words for the latest reply, in place; its notes and ideas stay. */
+  editReply: (r: RouteRef & { expectedHeadId: string; assistantEventId: string; text: string }) =>
+    call<RouteView>('edit_reply', r),
   editStoryDetails: (
     r: RouteRef & { expectedHeadId: string; changes: StateEdit[]; note: string | null },
   ) => call<RouteView>('edit_story_details', r),
@@ -231,6 +260,9 @@ export const commands = {
   importStorypack: (path: string) => call<StorypackImport>('import_storypack', { path }),
   exportRouteText: (routeId: string, path: string, format: TextFormat, timestamps: boolean) =>
     call<TextExport>('export_route_text', { routeId, path, format, timestamps }),
+  /** This route as an EPUB book at `path` (from the save dialog). */
+  exportRouteBook: (routeId: string, path: string, labels: BookLabels) =>
+    call<BookExport>('export_route_book', { routeId, path, labels }),
   listBackups: () => call<BackupInfo[]>('list_backups'),
   /** Everything in one `.dtlbackup` file at `path` (from the save dialog). */
   exportBackup: (path: string) => call<BackupExport>('export_backup', { path }),
@@ -246,6 +278,8 @@ export const commands = {
   /** A recap of the chapter being played, for the player to edit. Nothing is stored. */
   draftChapterRecap: (routeId: string) =>
     call<ChapterRecapDraft>('draft_chapter_recap', { routeId }),
+  /** Suggested merges and shortenings of the notebook. Nothing is stored. */
+  draftNotebookTidy: (routeId: string) => call<NotebookTidy>('draft_notebook_tidy', { routeId }),
   /** Keeps `recap` on this route, saves, and starts the next chapter. */
   endChapter: (
     r: RouteRef & { expectedHeadId: string; recap: string; nextTitle?: string | null },
@@ -316,6 +350,8 @@ export const commands = {
   saveDiagnosticsReport: (path: string, report: string) =>
     call<string>('save_diagnostics_report', { path, report }),
   openSupportPage: () => call<void>('open_support_page'),
+  /** The repository's new-issue page, in the browser. Sends nothing. */
+  openIssuePage: () => call<void>('open_issue_page'),
   openRepositoryPage: () => call<void>('open_repository_page'),
   /** Opens a setup guide page (by its name in features/guide/links.json) in the browser. */
   openGuideLink: (id: string) => call<void>('open_guide_link', { id }),
@@ -328,6 +364,10 @@ export const commands = {
   setUpdateChecks: (enabled: boolean) => call<UpdateStatus>('set_update_checks', { enabled }),
   acknowledgeUpdate: (version: string) => call<UpdateStatus>('acknowledge_update', { version }),
   openReleasePage: () => call<void>('open_release_page'),
+  /** Whether this copy can install a new release itself (signed updates). */
+  canInstallUpdates: () => call<boolean>('can_install_updates'),
+  /** Downloads, checks and installs the newest release; its version, or null if none. */
+  installUpdate: () => call<string | null>('install_update'),
 };
 
 /** `$0.0123` for small amounts, `$12.34` from $100 up. Estimates only. */

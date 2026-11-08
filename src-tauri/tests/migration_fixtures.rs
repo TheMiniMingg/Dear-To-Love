@@ -158,6 +158,56 @@ async fn v7_fixture_upgrades_to_current() {
     );
 }
 
+#[tokio::test]
+async fn v8_fixture_upgrades_to_current() {
+    let (db, _dir) = upgrade_fixture(8, include_str!("fixtures/data_v8.sql")).await;
+    let options: Option<String> =
+        sqlx::query_scalar("SELECT options_json FROM generation_runs WHERE id = 'run8'")
+            .fetch_one(db.reader())
+            .await
+            .unwrap();
+    assert_eq!(
+        options.as_deref(),
+        Some(r#"{"length":"short","hint":"more fog"}"#)
+    );
+}
+
+#[tokio::test]
+async fn v9_fixture_upgrades_to_current() {
+    let (db, _dir) = upgrade_fixture(9, include_str!("fixtures/data_v9.sql")).await;
+    let rows: Vec<(String, Option<String>)> =
+        sqlx::query_as("SELECT label, made_from FROM assets ORDER BY created_at")
+            .fetch_all(db.reader())
+            .await
+            .unwrap();
+    assert_eq!(rows.len(), 2);
+    assert!(rows[0].1.as_deref().unwrap().contains("Looks: grey eyes."));
+    assert_eq!(rows[1], ("Pier".to_string(), None));
+}
+
+/// Pictures from before made pictures kept their description have none.
+#[tokio::test]
+async fn older_pictures_have_no_description() {
+    let (db, _dir) = upgrade_fixture(7, include_str!("fixtures/data_v7.sql")).await;
+    let made_from: Option<String> = sqlx::query_scalar("SELECT made_from FROM assets")
+        .fetch_one(db.reader())
+        .await
+        .unwrap();
+    assert_eq!(made_from, None);
+}
+
+/// Replies asked for before reply options existed are plain replies.
+#[tokio::test]
+async fn v1_runs_have_no_reply_options() {
+    let (db, _dir) = upgrade_fixture(1, include_str!("fixtures/data_v1.sql")).await;
+    let n: i64 =
+        sqlx::query_scalar("SELECT COUNT(*) FROM generation_runs WHERE options_json IS NOT NULL")
+            .fetch_one(db.reader())
+            .await
+            .unwrap();
+    assert_eq!(n, 0);
+}
+
 /// Pictures chosen before item pictures existed survive the rebuild of
 /// asset_links, and the rebuilt table still refuses unknown owners.
 #[tokio::test]

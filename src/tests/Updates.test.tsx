@@ -60,10 +60,12 @@ const available = (version: string, acknowledged: string | null = null): UpdateS
 
 let status: UpdateStatus;
 let appInfo: AppInfo;
+let canInstall = false;
 
 beforeEach(() => {
   status = off;
   appInfo = info;
+  canInstall = false;
   useUiStore.setState({ updates: null });
   invoke.mockReset();
   saveDialog.mockReset();
@@ -84,7 +86,13 @@ beforeEach(() => {
       case 'open_release_page':
       case 'open_support_page':
       case 'open_repository_page':
+      case 'open_issue_page':
+      case 'restart_app':
         return null;
+      case 'can_install_updates':
+        return canInstall;
+      case 'install_update':
+        return status.latest?.version ?? null;
       case 'run_diagnostics':
         return [];
       case 'diagnostics_report':
@@ -177,6 +185,25 @@ describe('Settings: updates and about', () => {
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 
+  it('installs a newer release and restarts, when this copy can (signed updates)', async () => {
+    canInstall = true;
+    status = available('1.10.0');
+    render(<UpdatesSection />);
+    const install = await screen.findByRole('button', { name: 'Install v1.10.0 and restart' });
+    expect(screen.getByRole('button', { name: 'View release v1.10.0' })).toBeInTheDocument();
+    await userEvent.click(install);
+    expect(invoke).toHaveBeenCalledWith('install_update', undefined);
+    await vi.waitFor(() => expect(invoke).toHaveBeenCalledWith('restart_app', undefined));
+    expect(screen.getByText('Installed v1.10.0. Restarting…')).toBeInTheDocument();
+  });
+
+  it('offers only the release page when this copy cannot install updates', async () => {
+    status = available('1.10.0');
+    render(<UpdatesSection />);
+    expect(await screen.findByRole('button', { name: 'View release v1.10.0' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Install v/ })).toBeNull();
+  });
+
   it('About shows the version and license and opens the repository', async () => {
     render(<AboutSection />);
     expect(await screen.findByText('v1.9.0')).toBeInTheDocument();
@@ -218,5 +245,41 @@ describe('Diagnostics report', () => {
     expect(await within(dialog).findByRole('status')).toHaveTextContent(
       'Saved Dear to Love diagnostics 2026-11-06.txt.',
     );
+  });
+});
+
+describe('Report a problem', () => {
+  it("adds the player's words under the report, copies it and can open a new issue", async () => {
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
+    render(<StatusFooter />);
+    await userEvent.click(screen.getByRole('button', { name: 'Report a problem' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Report a problem' });
+    await userEvent.type(
+      within(dialog).getByRole('textbox', { name: 'What happened?' }),
+      'The reply stopped halfway.',
+    );
+    const report =
+      'Dear to Love diagnostics report\nVersion: v1.9.0 (linux x86_64, Release build)\n\n' +
+      'What happened\n-------------\nThe reply stopped halfway.\n';
+    await vi.waitFor(() =>
+      expect(within(dialog).getByRole('button', { name: 'Copy' })).toBeEnabled(),
+    );
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Copy' }));
+    expect(writeText).toHaveBeenCalledWith(report);
+    expect(within(dialog).getByRole('status')).toHaveTextContent('Paste it into an email');
+
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Copy and open GitHub' }));
+    expect(invoke).toHaveBeenCalledWith('open_issue_page', undefined);
+    expect(await within(dialog).findByRole('status')).toHaveTextContent(
+      'Paste it into the issue that opened in your browser.',
+    );
+
+    saveDialog.mockResolvedValue('/home/me/report.txt');
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Save as file…' }));
+    expect(invoke).toHaveBeenCalledWith('save_diagnostics_report', {
+      path: '/home/me/report.txt',
+      report,
+    });
   });
 });

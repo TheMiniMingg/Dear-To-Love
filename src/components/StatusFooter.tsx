@@ -3,6 +3,8 @@ import { commands } from '../api/commands';
 import { ariaKeys, useShortcutHelp, withKeys } from '../app/shortcuts';
 import { useUiStore } from '../app/store';
 import type { AppInfo } from '../types';
+import { ProblemDialog, useProblemReport } from '../features/diagnostics/ProblemDialog';
+import { goToSettingsSection } from '../features/settings/SettingsScreen';
 import { t, tr } from '../i18n';
 
 /** How often an open app repeats the daily update check (it reuses a recent result). */
@@ -18,10 +20,19 @@ export function StatusFooter() {
   const updates = useUiStore((s) => s.updates);
   const setUpdates = useUiStore((s) => s.setUpdates);
   const setHelp = useShortcutHelp((s) => s.setOpen);
+  const reporting = useProblemReport((s) => s.open);
+  const setReporting = useProblemReport((s) => s.setOpen);
   const [info, setInfo] = useState<AppInfo | null>(null);
+  const [canInstall, setCanInstall] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
+    commands
+      .canInstallUpdates()
+      .then((can) => {
+        if (!cancelled) setCanInstall(can);
+      })
+      .catch(() => undefined);
     commands
       .getAppInfo()
       .then((i) => {
@@ -65,6 +76,10 @@ export function StatusFooter() {
       >
         {t('Diagnostics')}
       </button>
+      <button type="button" className="link-button" onClick={() => setReporting(true)}>
+        {t('Report a problem')}
+      </button>
+      {reporting && <ProblemDialog onClose={() => setReporting(false)} />}
       <button type="button" className="link-button" onClick={() => navigate({ name: 'guide' })}>
         {t('Setup guide')}
       </button>
@@ -94,14 +109,24 @@ export function StatusFooter() {
               version: <strong>v{latest.version}</strong>,
             })}
           </span>
-          <button
-            type="button"
-            className="link-button"
-            title={t('Opens the release page on GitHub in your browser')}
-            onClick={() => void commands.openReleasePage().catch(() => undefined)}
-          >
-            {t('View release')}
-          </button>
+          {canInstall ? (
+            <button
+              type="button"
+              className="link-button"
+              onClick={() => goToSettingsSection('settings-updates')}
+            >
+              {t('Update…')}
+            </button>
+          ) : (
+            <button
+              type="button"
+              className="link-button"
+              title={t('Opens the release page on GitHub in your browser')}
+              onClick={() => void commands.openReleasePage().catch(() => undefined)}
+            >
+              {t('View release')}
+            </button>
+          )}
           <button
             type="button"
             className="link-button"

@@ -18,10 +18,10 @@ import {
   fittingScenarios,
   NarrationStep,
   ReviewStep,
-  STEP_NAMES,
   StoryStep,
   WorldStep,
 } from './WizardSteps';
+import { DraftCover, FillRest, OFFLINE_FILL_BY, StepBar, type FillNote } from './WizardBar';
 import { PicturesStep } from './PicturesStep';
 import { appStoryLanguage } from './StyleFields';
 import { formatWhen, msg, t, tKnown } from '../../i18n';
@@ -88,6 +88,12 @@ export function CreateWizardScreen() {
   const [confirmReset, setConfirmReset] = useState(false);
   const [confirmClear, setConfirmClear] = useState(false);
   const [tellers, setTellers] = useState<Tellers>(null);
+  // Fill in the rest: busy while the storyteller writes, what it did, and
+  // the draft from before it, for Undo. A cancelled fill's answer is dropped.
+  const [filling, setFilling] = useState(false);
+  const [fillNote, setFillNote] = useState<FillNote | null>(null);
+  const beforeFill = useRef<CreateStoryDraft | null>(null);
+  const fillRun = useRef(0);
   // Review names the storyteller; fetched once it is shown.
   useEffect(() => {
     if (step !== 'review') return;
@@ -192,6 +198,7 @@ export function CreateWizardScreen() {
   const update = (patch: Partial<CreateStoryDraft>) => {
     touch();
     setUntouched(null);
+    setFillNote(null);
     setDraft((d) => (d ? { ...d, ...patch } : d));
   };
 
@@ -200,10 +207,57 @@ export function CreateWizardScreen() {
     focusHeading.current = true;
     setStep(s);
     setError(null);
+    setFillNote(null);
+  };
+
+  const fill = async (offline: boolean) => {
+    if (!draft) return;
+    const run = ++fillRun.current;
+    const before = draft;
+    setFilling(true);
+    setFillNote(null);
+    try {
+      const out = await commands.fillStoryDraft(before, step === 'review' ? null : step, offline);
+      if (run !== fillRun.current) return;
+      if (out.filled.length === 0) {
+        setFillNote({ kind: out.writtenBy === '' ? 'nothing-empty' : 'no-preset' });
+        return;
+      }
+      touch();
+      setUntouched(null);
+      beforeFill.current = before;
+      setDraft(out.draft);
+      setFillNote({
+        kind: 'filled',
+        fields: out.filled,
+        by: out.writtenBy,
+        offline: out.writtenBy === OFFLINE_FILL_BY,
+      });
+    } catch (e) {
+      if (run === fillRun.current)
+        setFillNote({ kind: 'error', message: errorMessage(e), offline });
+    } finally {
+      if (run === fillRun.current) setFilling(false);
+    }
+  };
+
+  const cancelFill = () => {
+    fillRun.current++;
+    setFilling(false);
+  };
+
+  const undoFill = () => {
+    const before = beforeFill.current;
+    beforeFill.current = null;
+    if (!before) return;
+    touch();
+    setDraft(before);
+    setFillNote(null);
   };
 
   const changeMode = (m: WizardMode) => {
     touch();
+    setFillNote(null);
     setMode(m);
     if (untouched) setDraft(m === 'custom' ? blankDraft(untouched) : untouched);
   };
@@ -211,6 +265,7 @@ export function CreateWizardScreen() {
   const clearAll = () => {
     setConfirmClear(false);
     touch();
+    setFillNote(null);
     setUntouched(null);
     setDraft((d) => (d ? blankDraft(d) : d));
     setProblems(null);
@@ -267,7 +322,7 @@ export function CreateWizardScreen() {
   const props = draft && catalog ? { draft, update, catalog, guided } : null;
 
   return (
-    <section className="screen wizard" aria-labelledby={`${id}-title`}>
+    <section className="screen wizard" aria-labelledby={`${id}-title`} aria-busy={filling}>
       <div className="screen-header">
         <button type="button" onClick={() => navigate({ name: 'library' })}>
           {t('Back')}
@@ -281,6 +336,7 @@ export function CreateWizardScreen() {
                 id={`${id}-mode-${m}`}
                 name={`${id}-mode`}
                 checked={mode === m}
+                disabled={filling}
                 onChange={() => changeMode(m)}
               />
               <span>{m === 'guided' ? t('Guided') : t('Custom')}</span>
@@ -324,67 +380,71 @@ export function CreateWizardScreen() {
 
       {props && (
         <>
-          <nav aria-label={t('Steps')}>
-            <ol className="wizard-steps">
-              {STEPS.map((s, i) => (
-                <li key={s}>
+          <StepBar steps={STEPS} step={step} onGoTo={goTo} disabled={filling} />
+
+          <div className="wizard-layout">
+            <div className="wizard-main">
+              <div className="wizard-body">
+                <h2 ref={heading} tabIndex={-1}>
+                  {t(STEP_TITLES[step])}
+                </h2>
+                {step !== 'pictures' && (
+                  <FillRest
+                    step={step}
+                    busy={filling}
+                    note={fillNote}
+                    onFill={(offline) => void fill(offline)}
+                    onUndo={undoFill}
+                    onCancel={cancelFill}
+                  />
+                )}
+                <fieldset className="wizard-fields" disabled={filling}>
+                  {step === 'world' && <WorldStep {...props} />}
+                  {step === 'character' && <CharacterStep {...props} />}
+                  {step === 'story' && <StoryStep {...props} />}
+                  {step === 'narration' && <NarrationStep {...props} />}
+                  {step === 'pictures' && <PicturesStep {...props} />}
+                  {step === 'review' && (
+                    <ReviewStep
+                      draft={props.draft}
+                      problems={problems}
+                      onGoTo={goTo}
+                      storytellerLabel={storytellerLabel(props.draft, tellers)}
+                    />
+                  )}
+                </fieldset>
+              </div>
+
+              <div className="button-row wizard-nav">
+                <button
+                  type="button"
+                  disabled={index === 0 || filling}
+                  onClick={() => goTo(STEPS[index - 1] ?? 'world')}
+                >
+                  {t('Previous')}
+                </button>
+                {step !== 'review' ? (
                   <button
                     type="button"
-                    aria-current={s === step ? 'step' : undefined}
-                    onClick={() => goTo(s)}
+                    className="primary"
+                    disabled={filling}
+                    onClick={() => goTo(STEPS[index + 1] ?? 'review')}
                   >
-                    {i + 1}. {t(STEP_NAMES[s])}
+                    {t('Next')}
                   </button>
-                </li>
-              ))}
-            </ol>
-          </nav>
-
-          <div className="wizard-body">
-            <h2 ref={heading} tabIndex={-1}>
-              {t(STEP_TITLES[step])}
-            </h2>
-            {step === 'world' && <WorldStep {...props} />}
-            {step === 'character' && <CharacterStep {...props} />}
-            {step === 'story' && <StoryStep {...props} />}
-            {step === 'narration' && <NarrationStep {...props} />}
-            {step === 'pictures' && <PicturesStep {...props} />}
-            {step === 'review' && (
-              <ReviewStep
-                draft={props.draft}
-                problems={problems}
-                onGoTo={goTo}
-                storytellerLabel={storytellerLabel(props.draft, tellers)}
-              />
-            )}
-          </div>
-
-          <div className="button-row wizard-nav">
-            <button
-              type="button"
-              disabled={index === 0}
-              onClick={() => goTo(STEPS[index - 1] ?? 'world')}
-            >
-              {t('Previous')}
-            </button>
-            {step !== 'review' ? (
-              <button
-                type="button"
-                className="primary"
-                onClick={() => goTo(STEPS[index + 1] ?? 'review')}
-              >
-                {t('Next')}
-              </button>
-            ) : (
-              <button
-                type="button"
-                className="primary"
-                disabled={busy || problems === null || problems.length > 0}
-                onClick={() => void create()}
-              >
-                {busy ? t('Creating…') : t('Create story')}
-              </button>
-            )}
+                ) : (
+                  <button
+                    type="button"
+                    className="primary"
+                    disabled={busy || filling || problems === null || problems.length > 0}
+                    onClick={() => void create()}
+                  >
+                    {busy ? t('Creating…') : t('Create story')}
+                  </button>
+                )}
+              </div>
+            </div>
+            <DraftCover draft={props.draft} />
           </div>
         </>
       )}

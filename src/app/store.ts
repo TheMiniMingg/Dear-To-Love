@@ -17,7 +17,7 @@ export type Screen =
 
 const HISTORY_LIMIT = 10;
 const TEXT_SIZE_KEY = 'dtl.textSize';
-const TEXT_SIZES = [0.9, 1, 1.15, 1.3, 1.5] as const;
+export const TEXT_SIZES = [0.9, 1, 1.15, 1.3, 1.5] as const;
 
 function loadTextSize(): number {
   try {
@@ -26,6 +26,15 @@ function loadTextSize(): number {
   } catch {
     return 1;
   }
+}
+
+function keepTextSize(size: number): number {
+  try {
+    localStorage.setItem(TEXT_SIZE_KEY, String(size));
+  } catch {
+    // Preference only; ignore storage failures.
+  }
+  return size;
 }
 
 type UiState = {
@@ -43,6 +52,7 @@ type UiState = {
   setDraft: (routeId: string, text: string) => void;
   clearDraft: (routeId: string) => void;
   stepTextSize: (delta: 1 | -1) => void;
+  setTextSize: (size: number) => void;
   /** A service the setup guide asked Settings to add (a connection preset id). */
   newConnection: string | null;
   /** Opens Settings with a new connection for this preset. */
@@ -85,12 +95,8 @@ export const useUiStore = create<UiState>((set) => ({
         0,
         Math.min(TEXT_SIZES.length - 1, TEXT_SIZES.indexOf(s.textSize as never) + delta),
       );
-      const textSize = TEXT_SIZES[i] ?? 1;
-      try {
-        localStorage.setItem(TEXT_SIZE_KEY, String(textSize));
-      } catch {
-        // Preference only; ignore storage failures.
-      }
-      return { textSize };
+      return { textSize: keepTextSize(TEXT_SIZES[i] ?? 1) };
     }),
+  setTextSize: (size) =>
+    set({ textSize: keepTextSize(TEXT_SIZES.includes(size as never) ? size : 1) }),
 }));

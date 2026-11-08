@@ -20,6 +20,8 @@ use crate::errors::{AppError, AppResult};
 pub const STORY_STATE_SCHEMA_VERSION: u32 = 1;
 const MAX_TEXT: usize = 20_000;
 const MAX_LIST: usize = 200;
+/// A note to the storyteller is a sentence or two, not a second story setup.
+pub const MAX_STORYTELLER_NOTE: usize = 500;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -291,6 +293,11 @@ pub struct Narration {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
     pub style_notes: Option<String>,
+    /// The player's note to the storyteller ("slow the romance down"). It
+    /// steers the replies from here on and is never part of the story.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub storyteller_note: Option<String>,
 }
 
 fn is_false(b: &bool) -> bool {
@@ -322,6 +329,7 @@ impl Default for Narration {
             manual_memory: false,
             no_suggestions: false,
             style_notes: None,
+            storyteller_note: None,
         }
     }
 }
@@ -411,7 +419,35 @@ pub struct Relationship {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
     pub source_event_id: Option<String>,
+    /// How warm or trusting `from` is towards `to`, as a bar the storyteller
+    /// moves with `<bond>` tags and the player can drag.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub bond: Option<Bond>,
 }
+
+/// What a relationship's bar measures.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub enum BondKind {
+    /// Affection: from cold to devoted.
+    Heart,
+    /// Trust: from suspicious to complete trust.
+    Trust,
+}
+
+/// A relationship's bar, from 0 to [`MAX_BOND`]; [`START_BOND`] is neutral.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[ts(export)]
+pub struct Bond {
+    pub kind: BondKind,
+    pub value: u8,
+}
+
+pub const MAX_BOND: u8 = 100;
+pub const START_BOND: u8 = 50;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -515,6 +551,9 @@ impl StoryStateV1 {
                     r.from_id, r.to_id
                 ));
             }
+            if r.bond.is_some_and(|b| b.value > MAX_BOND) {
+                return bad(format!("a relationship's bar goes from 0 to {MAX_BOND}"));
+            }
         }
         let mut fact_ids = BTreeSet::new();
         for f in &self.known_facts {
@@ -545,6 +584,13 @@ impl StoryStateV1 {
         }
         if let Some(notes) = &self.narration.style_notes {
             check_text("style notes", notes)?;
+        }
+        if let Some(note) = &self.narration.storyteller_note {
+            if note.chars().count() > MAX_STORYTELLER_NOTE {
+                return Err(AppError::invalid_input(format!(
+                    "the note to the storyteller must be at most {MAX_STORYTELLER_NOTE} characters"
+                )));
+            }
         }
         check_list("world rules", &self.world.rules)?;
         check_list("open threads", &self.open_threads)?;
@@ -770,6 +816,7 @@ pub fn sample_lighthouse() -> StoryStateV1 {
             label: "old friends".into(),
             status: "friendly".into(),
             source_event_id: None,
+            bond: None,
         }],
         known_facts: vec![],
         scene: Scene {

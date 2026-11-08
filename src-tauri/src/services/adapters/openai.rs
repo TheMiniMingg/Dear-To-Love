@@ -79,12 +79,21 @@ impl OpenAiCompatible {
             "max_tokens"
         };
         body[limit_field] = json!(req.max_output_tokens);
-        if let Some(t) = req.temperature {
-            if !(self.uses_max_completion_tokens() && fixed_temperature(&req.model_id)) {
-                body["temperature"] = json!(t);
-            }
+        if self.thinks_first(&req.model_id) {
+            // Reasoning models reject a temperature of their own while they
+            // reason. A story reply needs little reasoning, and low effort
+            // leaves the token limit for the writing.
+            body["reasoning_effort"] = json!("low");
+        } else if let Some(t) = req.temperature {
+            body["temperature"] = json!(t);
         }
         body
+    }
+
+    /// An OpenAI reasoning model on OpenAI's own API: it reasons before it
+    /// writes, and the reasoning counts against the token limit.
+    pub fn thinks_first(&self, model_id: &str) -> bool {
+        self.uses_max_completion_tokens() && reasoning_model(model_id)
     }
 
     /// Stream one reply. `on_delta` receives display-only draft text.
@@ -226,16 +235,27 @@ impl OpenAiCompatible {
     }
 }
 
-/// OpenAI's reasoning models (o1, o3, o4-mini, gpt-5 and later) accept only
-/// their default temperature and reject any other value.
-fn fixed_temperature(model_id: &str) -> bool {
+/// OpenAI's reasoning models: the o-series (o1, o3, o4-mini…) and GPT-5,
+/// GPT-6 and later (gpt-5.6-sol, gpt-6.1-terra…). They take only their
+/// default temperature while they reason. The "-chat" models don't reason.
+fn reasoning_model(model_id: &str) -> bool {
     let m = model_id.trim().to_ascii_lowercase();
     let m = m.rsplit('/').next().unwrap_or(&m);
-    let reasoning = ["o1", "o3", "o4"]
-        .iter()
-        .any(|p| m == *p || m.starts_with(&format!("{p}-")))
-        || m.starts_with("gpt-5");
-    reasoning && !m.contains("-chat")
+    if m.contains("-chat") || m == "o1-mini" {
+        return false;
+    }
+    let version = |rest: &str| -> Option<u32> {
+        let digits: String = rest.chars().take_while(char::is_ascii_digit).collect();
+        let after = rest[digits.len()..].chars().next();
+        if digits.is_empty() || !matches!(after, None | Some('.' | '-')) {
+            return None;
+        }
+        digits.parse().ok()
+    };
+    if let Some(rest) = m.strip_prefix("gpt-") {
+        return version(rest).is_some_and(|v| v >= 5);
+    }
+    m.strip_prefix('o').and_then(version).is_some()
 }
 
 #[derive(Default)]

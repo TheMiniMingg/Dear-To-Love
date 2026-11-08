@@ -3,7 +3,8 @@ import type { DiceRoll } from "./DiceRoll";
 
 export type PlayerPayload = { 
 /**
- * What the player wrote. May be empty when the action is a roll.
+ * What the player wrote. Empty for a roll with no words, and for
+ * **Keep going** (no roll either), where the story goes on by itself.
  */
 text: string, 
 /**

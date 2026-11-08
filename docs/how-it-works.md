@@ -125,6 +125,12 @@ limit less the room kept for the reply). Beyond that, notes about the people, pl
 in the current scene and the latest turns come first, then the newest of the rest. Notes that
 do not fit are still named, so the storyteller knows they exist.
 
+The cast and the facts work the same way. Everyone is sent in full while the cast fits in a
+quarter of the request; beyond that, you, the people in the scene and those the latest turns
+name are sent in full, and the rest in brief (pronouns, species and role), with a line saying
+they are kept in full. Confirmed facts get a tenth, newest first, and the storyteller is told
+how many earlier ones were left out. Nothing is removed from the story itself.
+
 ### Threads, new characters, ideas and the scene
 
 The storyteller fills in a few more things as it writes, each one yours to change:
@@ -172,9 +178,13 @@ with a token estimate. Nothing is sent until you play.
 ### A story longer than the model can read
 
 This is the common "maxed out" case, and it is handled for you. Long stories never need to fit
-in one request: older turns are summarized and dropped first. If room is still short, the
-summary gives way to recent turns. Only when the story setup plus your action cannot fit at
-all does the app stop **before sending anything** (so nothing is charged) and say so.
+in one request: older turns are summarized and dropped first. When the story setup itself
+(cast, facts, notes, chapter recaps and threads) would take more than half the request, it
+is packed tighter: smaller shares for the cast, facts and notes, every earlier chapter in
+brief, and only the newest twelve open threads, so the summary and newest turns still fit. If
+room is still short, the summary gives way to recent turns. Only when the story setup plus
+your action cannot fit at all does the app stop **before sending anything** (so nothing is
+charged) and say so.
 
 When that happens, or replies start forgetting things:
 
@@ -187,8 +197,8 @@ When that happens, or replies start forgetting things:
 - **End the chapter.** **End chapter** keeps a short recap of what happened, which every
   later reply reads, and gives the storyteller the next chapter's plan and a clear new focus.
   Edit the recap to keep the names, promises and secrets that matter.
-- **Pin what matters as a note or a fact.** Facts are always sent, and notes are sent while
-  they fit, so a detail the summary might lose belongs in the notebook in **Story memory** or
+- **Pin what matters as a note or a fact.** The newest facts are always sent, and notes are
+  sent while they fit, so a detail the summary might lose belongs in the notebook in **Story memory** or
   in **Story details → Facts**.
 - **Lower the detail level or reply length** to leave more room for history.
 

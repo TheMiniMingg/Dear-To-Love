@@ -2,7 +2,7 @@
 //!
 //! Two kinds of service make pictures: OpenAI's images API (and servers
 //! that copy it) and Stable Diffusion WebUI. Each call is one ledger row
-//! (purpose `character_suggestion`, shown as "Character picture"); the
+//! (purpose `character_suggestion`, shown as "Story ideas and pictures"); the
 //! picture goes into the library like any added image, for the story it
 //! was made for. Portraits are always asked for as safe-for-work, fully
 //! clothed head-and-shoulders pictures, whatever the story's rating.
@@ -84,7 +84,7 @@ impl PictureMaker {
                 // GPT image models always send the bytes and refuse the field.
                 let mut body = json!({
                     "model": model,
-                    "prompt": format!("{} Avoid: {}.", prompt.text, prompt.avoid),
+                    "prompt": prompt.in_one(),
                     "n": 1,
                     "size": "1024x1024",
                 });
@@ -276,6 +276,14 @@ pub struct Prompt {
     pub avoid: String,
 }
 
+impl Prompt {
+    /// The description and what to avoid in one text: what OpenAI is sent,
+    /// and what a made picture keeps.
+    pub fn in_one(&self) -> String {
+        format!("{} Avoid: {}.", self.text, self.avoid)
+    }
+}
+
 /// Longest description sent for one character.
 const MAX_PROMPT_CHARS: usize = 1500;
 
@@ -295,6 +303,16 @@ fn person(c: &Character) -> &'static str {
         "a man"
     } else {
         "a person"
+    }
+}
+
+/// `s` ending in a full stop, unless it already ends a sentence.
+fn sentence(s: &str) -> String {
+    let s = s.trim_end();
+    if s.ends_with(['.', '!', '?', '…']) {
+        s.to_string()
+    } else {
+        format!("{s}.")
     }
 }
 
@@ -367,7 +385,7 @@ pub fn portrait_description(c: &Character, world: &World, style: PortraitStyle) 
         style.words()
     )];
     if let Some(look) = clean(&c.appearance) {
-        parts.push(format!("Looks: {look}."));
+        parts.push(format!("Looks: {}", sentence(&look)));
     }
     let traits: Vec<&str> = c
         .personality
@@ -705,8 +723,8 @@ async fn make_picture(
             )
         })?;
     if !imported.already_in_library {
-        let asset =
-            asset_rows::update_details(db, &imported.asset.id, &label, &[tag.into()]).await?;
+        asset_rows::update_details(db, &imported.asset.id, &label, &[tag.into()]).await?;
+        let asset = asset_rows::set_made_from(db, &imported.asset.id, &prompt.in_one()).await?;
         return Ok(Imported {
             asset,
             already_in_library: false,

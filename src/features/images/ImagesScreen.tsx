@@ -6,6 +6,7 @@ import { useUiStore } from '../../app/store';
 import { Dialog } from '../../components/Dialog';
 import type { AssetDto, AssetUsage, ImageImport, ImageScope, StorySummary } from '../../types';
 import { ImageGrid, Thumb } from './ImageGrid';
+import { MadeFrom } from './MadeFrom';
 import { joinList, msg, t } from '../../i18n';
 import { pictureName } from '../../i18n/names';
 
@@ -342,6 +343,7 @@ function ImageDetails({
         {image.width} × {image.height} · {formatBytes(image.byteSize)} ·{' '}
         {FORMAT[image.mime] ?? image.mime}
       </p>
+      <MadeFrom text={image.madeFrom} />
       <form
         className="image-form"
         onSubmit={(e) => {

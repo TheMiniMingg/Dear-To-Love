@@ -587,6 +587,10 @@ fn memory_notes_reach_the_storyteller_grouped_by_kind() {
     assert!(p.contains("- Write notes in Japanese.\n"));
     assert!(p.contains("\nOPEN THREADS\n") && p.contains("<thread done>"));
     assert!(p.contains("\nNEW CHARACTERS\n") && p.contains("<character name=\"Rowan Ellis\""));
+    assert!(
+        p.contains("skin tone or heritage, hair, eyes, clothes"),
+        "cards give a painter what they need"
+    );
     assert!(p.contains("Write threads and cards in Japanese.\n"));
 }
 
@@ -733,6 +737,7 @@ fn an_unnamed_chapter_and_a_bare_relationship_read_plainly() {
         label: "Rival".into(),
         status: " ".into(),
         source_event_id: None,
+        bond: None,
     }];
     let p = system_prompt(&s, &frame());
     assert!(p.contains("\nNOW\nChapter 1\n"), "{p}");
@@ -741,4 +746,178 @@ fn an_unnamed_chapter_and_a_bare_relationship_read_plainly() {
 
     s.active_chapter.as_mut().unwrap().title = "Low Tide".into();
     assert!(system_prompt(&s, &frame()).contains("\nNOW\nChapter 1: Low Tide\n"));
+}
+
+#[test]
+fn feelings_and_their_bars_reach_the_storyteller() {
+    use crate::domain::story_state::{Bond, BondKind, Relationship};
+    let mut s = state();
+    let player = s.state.player_character_id.clone();
+    s.state.relationships.push(Relationship {
+        from_id: "starter:npc-mara".into(),
+        to_id: player,
+        label: String::new(),
+        status: "Warmer since the lamp".into(),
+        source_event_id: None,
+        bond: Some(Bond {
+            kind: BondKind::Trust,
+            value: 35,
+        }),
+    });
+    let p = system_prompt(&s, &frame());
+    assert!(
+        p.contains(": Warmer since the lamp [trust 35/100]\n"),
+        "{p}"
+    );
+    assert!(p.contains("\nFEELINGS\n") && p.contains("<bond name=\"Mina\" heart=\"+10\">"));
+    // Kept by hand: the bars are read, but the storyteller doesn't move them.
+    s.state.narration.manual_memory = true;
+    let p = system_prompt(&s, &frame());
+    assert!(p.contains("[trust 35/100]") && !p.contains("FEELINGS"));
+}
+
+/// A story after a few hundred turns and twenty chapters, with a big cast,
+/// full notebook and long replies, still fits the default context: the
+/// storyteller gets the summary, the scene and the newest turns.
+#[test]
+fn a_long_story_still_fits_the_default_context() {
+    use crate::domain::provider::{DEFAULT_MAX_CONTEXT_TOKENS, DEFAULT_MAX_OUTPUT_TOKENS};
+    use crate::domain::story_state::{Character, KnownFact, Relationship};
+
+    let sentence = |n: usize, what: &str| -> String {
+        (0..n)
+            .map(|i| format!("{what} {i} goes on a while about small things."))
+            .collect::<Vec<_>>()
+            .join(" ")
+    };
+    let mut s = state();
+    for i in 0..30 {
+        let c: Character = serde_json::from_value(serde_json::json!({
+            "id": format!("custom:npc-{i:08x}"),
+            "name": format!("Person {i} Lastname"),
+            "control": "npc",
+            "pronouns": "she/her",
+            "age": "around thirty",
+            "role": "dockhand at the harbor",
+            "description": sentence(4, "About"),
+            "appearance": sentence(5, "Looks"),
+            "personality": ["wry", "patient", "stubborn", "kind"],
+            "goals": ["Pay off the boat", "Find out who wrote the letter"],
+        }))
+        .unwrap();
+        s.state.characters.insert(c.id.clone(), c);
+    }
+    let ids: Vec<String> = s.state.characters.keys().cloned().collect();
+    s.state.scene.participant_ids = vec!["custom:npc-00000007".into()];
+    s.state.relationships = ids
+        .iter()
+        .take(30)
+        .map(|id| Relationship {
+            from_id: id.clone(),
+            to_id: "@player".into(),
+            label: "old friend".into(),
+            status: "wary since the storm".into(),
+            source_event_id: None,
+            bond: None,
+        })
+        .collect();
+    s.state.known_facts = (0..25)
+        .map(|i| KnownFact {
+            id: format!("f{i}"),
+            text: sentence(2, "Fact"),
+            known_by: ids.iter().take(3).cloned().collect(),
+            source_event_id: None,
+            confirmed: true,
+        })
+        .collect();
+    s.state.notes = (0..crate::domain::notes::MAX_NOTES)
+        .map(|i| {
+            note(
+                NoteKind::Person,
+                &format!("Note {i}"),
+                &sentence(5, "Detail"),
+                Some(1),
+            )
+        })
+        .collect();
+    s.state.open_threads = (0..crate::domain::threads::MAX_OPEN)
+        .map(|i| format!("Thread {i}: find out what happened at the old pier"))
+        .collect();
+    let mut f = frame();
+    f.earlier_chapters = (1..=20)
+        .map(|i| ChapterRecap {
+            ordinal: i,
+            title: format!("Part {i}"),
+            recap: sentence(12, "Recap"),
+        })
+        .collect();
+
+    // 300 turns of long replies; the newest summary (offline, its longest)
+    // covers all but the last eight.
+    let history = history(300, 250);
+    let summary_text = (0..40)
+        .map(|i| {
+            format!(
+                "- Sam: {} → {}",
+                sentence(2, "Did"),
+                sentence(3, &format!("Then {i}"))
+            )
+        })
+        .collect::<Vec<_>>()
+        .join("\n");
+    let end = 2 * 292 - 1;
+    let a = assemble(
+        &s,
+        &f,
+        &history,
+        Some(&summary_at(end, 292, &summary_text)),
+        None,
+        Budget {
+            max_context_tokens: DEFAULT_MAX_CONTEXT_TOKENS,
+            max_output_tokens: DEFAULT_MAX_OUTPUT_TOKENS,
+        },
+    )
+    .unwrap();
+    assert!(a.estimated_input_tokens <= DEFAULT_MAX_CONTEXT_TOKENS - DEFAULT_MAX_OUTPUT_TOKENS);
+    assert!(a.summary.is_some(), "the summary should still fit");
+    assert!(a.verbatim_messages > MIN_RECENT_MESSAGES);
+
+    // The player and whoever is in the scene in full; others in brief.
+    let system = &a.messages[0].content;
+    let line = |name: &str| {
+        system
+            .lines()
+            .find(|l| l.starts_with(&format!("- {name} (")))
+            .unwrap_or_default()
+            .to_string()
+    };
+    assert!(line("Person 7 Lastname").contains("looks: Looks 0"));
+    let player = &s.state.characters[&s.state.player_character_id].name;
+    assert!(line(player).contains("(player character)"));
+    let brief = line("Person 29 Lastname");
+    assert!(
+        brief.contains("role: dockhand") && !brief.contains("looks:"),
+        "{brief}"
+    );
+    assert!(system.contains("Some are listed in brief for room"));
+    // The newest facts and threads, saying what was left out.
+    assert!(system.contains("earlier facts are left out here for room"));
+    assert!(system.contains("Thread 39:") && !system.contains("Thread 0:"));
+    assert!(system.contains(" (and 28 older ones)\n"));
+    // Older chapters in brief only.
+    assert!(system.contains("In brief:\nChapter 1, Part 1:") && !system.contains("In full:"));
+
+    // The same story with plenty of room is sent whole.
+    let roomy = assemble(
+        &s,
+        &f,
+        &history,
+        Some(&summary_at(end, 292, &summary_text)),
+        None,
+        roomy(),
+    )
+    .unwrap();
+    let whole = &roomy.messages[0].content;
+    assert!(!whole.contains("listed in brief") && !whole.contains("left out here"));
+    assert!(whole.contains("In full:") && !whole.contains("older ones)"));
 }

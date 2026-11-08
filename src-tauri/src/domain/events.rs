@@ -75,7 +75,8 @@ pub struct ChapterStartPayload {
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[ts(export)]
 pub struct PlayerPayload {
-    /// What the player wrote. May be empty when the action is a roll.
+    /// What the player wrote. Empty for a roll with no words, and for
+    /// **Keep going** (no roll either), where the story goes on by itself.
     pub text: String,
     /// A roll the app made for this action.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -107,7 +108,21 @@ impl PlayerPayload {
             Some(r) => Cow::Owned(format!("{}\n\n{}", r.tag(), words)),
         }
     }
+
+    /// The action as a reader sees it in exports, summaries and route maps:
+    /// its story text, or [`KEPT_GOING`] for Keep going.
+    pub fn shown_text(&self) -> Cow<'_, str> {
+        let text = self.story_text();
+        if text.trim().is_empty() {
+            Cow::Borrowed(KEPT_GOING)
+        } else {
+            text
+        }
+    }
 }
+
+/// An empty action (Keep going) as exports and summaries show it.
+pub const KEPT_GOING: &str = "(lets the story go on)";
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -289,7 +304,7 @@ impl EventBody {
     pub fn reader_text(&self) -> Cow<'_, str> {
         match self {
             Self::ChapterStart(p) => Cow::Owned(chapter_heading(p.ordinal, &p.title)),
-            Self::Player(p) => Cow::Owned(plain_message_tags(&p.story_text())),
+            Self::Player(p) => Cow::Owned(plain_message_tags(&p.shown_text())),
             Self::Assistant(p) => Cow::Owned(plain_message_tags(&p.text)),
             Self::Edit(p) => Cow::Borrowed(p.note.as_deref().unwrap_or_default()),
             Self::Checkpoint(p) => Cow::Borrowed(&p.label),
@@ -311,10 +326,9 @@ impl EventBody {
                 }
             }
             Self::Player(p) => {
+                // No words and no roll is Keep going: the story goes on.
                 if let Some(roll) = &p.roll {
                     roll.validate()?;
-                } else if p.text.trim().is_empty() {
-                    return bad("action text must not be empty");
                 }
                 if len(&p.text) > MAX_PLAYER_TEXT {
                     return bad("action text is too long");
@@ -384,9 +398,12 @@ mod tests {
     }
 
     #[test]
-    fn rejects_empty_text() {
-        assert!(EventBody::Player(PlayerPayload::new("  "))
-            .validate()
-            .is_err());
+    fn an_empty_action_is_keep_going() {
+        assert!(EventBody::Player(PlayerPayload::new("")).validate().is_ok());
+        assert!(
+            EventBody::Player(PlayerPayload::new("x".repeat(MAX_PLAYER_TEXT + 1)))
+                .validate()
+                .is_err()
+        );
     }
 }

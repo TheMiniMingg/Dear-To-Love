@@ -251,12 +251,12 @@ export const app: Messages = {
     '1 日 1 回、GitHub で新しいリリースを確認する',
     '하루 한 번 GitHub에서 새 릴리스 확인',
   ],
-  'Reads the public release list of the Dear to Love repository. Nothing about you or your stories is sent, and nothing is downloaded or installed: a newer release only shows a notice with a link to its page.':
+  'Reads the public release list of the Dear to Love repository. Nothing about you or your stories is sent, and nothing is downloaded or installed unless you ask: a newer release shows a notice with a link to its page.':
     [
-      '只读取 Dear to Love 仓库公开的发布列表。不会发送任何关于你或你的故事的信息，也不会下载或安装任何东西：有新版本时只会显示一条带页面链接的提示。',
-      '只讀取 Dear to Love 儲存庫公開的發布清單。不會傳送任何關於你或你的故事的資訊，也不會下載或安裝任何東西：有新版本時只會顯示一則附頁面連結的提示。',
-      'Dear to Love リポジトリの公開リリース一覧を読むだけです。あなたやストーリーについての情報は送られず、何もダウンロードやインストールはされません。新しいリリースがあると、そのページへのリンク付きの通知が出るだけです。',
-      'Dear to Love 저장소의 공개 릴리스 목록만 읽습니다. 나나 스토리에 관한 정보는 보내지 않고, 아무것도 내려받거나 설치하지 않습니다. 새 릴리스가 있으면 해당 페이지 링크가 담긴 알림만 표시합니다.',
+      '只读取 Dear to Love 仓库公开的发布列表。不会发送任何关于你或你的故事的信息，除非你要求，也不会下载或安装任何东西：有新版本时会显示一条带页面链接的提示。',
+      '只讀取 Dear to Love 儲存庫公開的發布清單。不會傳送任何關於你或你的故事的資訊，除非你要求，也不會下載或安裝任何東西：有新版本時會顯示一則附頁面連結的提示。',
+      'Dear to Love リポジトリの公開リリース一覧を読むだけです。あなたやストーリーについての情報は送られず、あなたが頼まない限り何もダウンロードやインストールはされません。新しいリリースがあると、そのページへのリンク付きの通知が出ます。',
+      'Dear to Love 저장소의 공개 릴리스 목록만 읽습니다. 나나 스토리에 관한 정보는 보내지 않고, 요청하지 않는 한 아무것도 내려받거나 설치하지 않습니다. 새 릴리스가 있으면 해당 페이지 링크가 담긴 알림을 표시합니다.',
     ],
   'Checking…': ['正在检查…', '正在檢查…', '確認中…', '확인 중…'],
   'Check now': ['立即检查', '立即檢查', '今すぐ確認', '지금 확인'],
@@ -447,7 +447,12 @@ export const app: Messages = {
   'Story reply': ['故事回复', '故事回覆', 'ストーリーの返信', '스토리 답장'],
   'Story summary': ['故事摘要', '故事摘要', 'ストーリーの要約', '스토리 요약'],
   'Test message': ['测试消息', '測試訊息', 'テストメッセージ', '테스트 메시지'],
-  'Character picture': ['角色图片', '角色圖片', 'キャラクター画像', '캐릭터 이미지'],
+  'Story ideas and pictures': [
+    '故事点子和图片',
+    '故事點子和圖片',
+    '物語のアイデアと画像',
+    '이야기 아이디어와 그림',
+  ],
   'Provider-reported': ['服务商报告', '服務商回報', 'プロバイダー報告', '제공자 보고'],
   Estimated: ['估算', '估算', '推定', '추정'],
   Unknown: ['未知', '未知', '不明', '알 수 없음'],
@@ -788,4 +793,61 @@ export const app: Messages = {
     '共有されたストーリーパックを読み込む',
     '누군가 공유한 스토리팩 가져오기',
   ],
+  'Go to anything: a story, chapter, window or setting': [
+    '前往任何地方：故事、章节、窗口或设置',
+    '前往任何地方：故事、章節、視窗或設定',
+    'どこへでも移動：ストーリー、章、ウィンドウ、設定',
+    '어디로든 이동: 스토리, 장, 창, 설정',
+  ],
+  'Find a story, chapter, window or setting': [
+    '查找故事、章节、窗口或设置',
+    '尋找故事、章節、視窗或設定',
+    'ストーリー、章、ウィンドウ、設定を探す',
+    '스토리, 장, 창, 설정 찾기',
+  ],
+  'Find a story, chapter, window or setting…': [
+    '查找故事、章节、窗口或设置…',
+    '尋找故事、章節、視窗或設定…',
+    'ストーリー、章、ウィンドウ、設定を探す…',
+    '스토리, 장, 창, 설정 찾기…',
+  ],
+  'Places to go': ['可前往的地方', '可前往的地方', '移動先', '갈 수 있는 곳'],
+  'Nothing matches “{query}”.': [
+    '没有与“{query}”相符的内容。',
+    '沒有與「{query}」相符的內容。',
+    '「{query}」に合うものはありません。',
+    '“{query}”에 맞는 것이 없습니다.',
+  ],
+  'Downloading and installing the update…': [
+    '正在下载并安装更新…',
+    '正在下載並安裝更新…',
+    'アップデートをダウンロードしてインストールしています…',
+    '업데이트를 내려받아 설치하는 중…',
+  ],
+  'This copy is already the newest version.': [
+    '这个副本已经是最新版本。',
+    '這個副本已經是最新版本。',
+    'このアプリはすでに最新バージョンです。',
+    '이 앱은 이미 최신 버전입니다.',
+  ],
+  'Installed v{version}. Restarting…': [
+    '已安装 v{version}。正在重新启动…',
+    '已安裝 v{version}。正在重新啟動…',
+    'v{version} をインストールしました。再起動しています…',
+    'v{version}을(를) 설치했습니다. 다시 시작하는 중…',
+  ],
+  'Install v{version} and restart': [
+    '安装 v{version} 并重新启动',
+    '安裝 v{version} 並重新啟動',
+    'v{version} をインストールして再起動',
+    'v{version} 설치 후 다시 시작',
+  ],
+  'Installing keeps your stories, settings and keys. The download is checked against the app’s own signature before anything is installed.':
+    [
+      '安装会保留你的故事、设置和密钥。下载的文件会先用应用自己的签名校验，然后才会安装。',
+      '安裝會保留你的故事、設定和金鑰。下載的檔案會先用應用程式自己的簽章驗證，然後才會安裝。',
+      'インストールしても物語、設定、キーはそのまま残ります。ダウンロードしたものは、インストールの前にアプリ自身の署名で確認されます。',
+      '설치해도 이야기, 설정, 키는 그대로 남습니다. 내려받은 파일은 설치하기 전에 앱 자체 서명으로 확인합니다.',
+    ],
+  'Update…': ['更新…', '更新…', 'アップデート…', '업데이트…'],
 };

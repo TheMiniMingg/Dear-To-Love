@@ -172,6 +172,9 @@ pub struct PackImage {
     pub byte_size: u64,
     pub label: String,
     pub tags: Vec<String>,
+    /// For a picture the app made: the description it was drawn from.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub made_from: Option<String>,
 }
 
 /// `images/<sha256>.<ext>` for an image, by its type.

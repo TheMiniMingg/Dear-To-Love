@@ -1,4 +1,5 @@
 pub mod app_info;
+pub mod bonds;
 pub mod diagnostics;
 pub mod dice;
 pub mod draft;
@@ -6,6 +7,7 @@ pub mod events;
 pub mod notes;
 pub mod provider;
 pub mod replay;
+pub mod reply_options;
 pub mod story;
 pub mod story_state;
 pub mod templates;

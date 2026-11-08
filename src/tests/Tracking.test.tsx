@@ -265,6 +265,7 @@ const keyPicture: AssetDto = {
   createdAt: '',
   shared: false,
   stories: [{ id: 'story-1', title: 'The Unsigned Letter' }],
+  madeFrom: null,
 };
 
 describe('Status and inventory', () => {

@@ -8,7 +8,12 @@
 //!    world, characters, relationships, confirmed facts, memory notes (all
 //!    of them, or as many as fit a fifth of the room with the ones the
 //!    scene names first), chapter recaps and the current scene with its
-//!    chapter goal (always sent).
+//!    chapter goal (always sent). A big cast and many facts get shares of
+//!    the room too: the player, the people in the scene and those it names
+//!    are sent in full, the rest in brief. When all that would still take
+//!    more than half the room, it is packed tighter (smaller shares, older
+//!    chapters in brief, the newest open threads) so a long story keeps
+//!    its summary and newest turns.
 //! 2. "Story so far": the newest eligible rolling summary.
 //! 3. Verbatim player and story turns after the summary, oldest first.
 //! 4. The latest player action, exactly once, always last.
@@ -18,6 +23,8 @@
 //! anything is sent. Then the newest few turns, then the summary, then
 //! older turns while they fit. Assembly is cheap and deterministic, so it
 //! is recomputed for each run rather than cached.
+
+use std::collections::HashSet;
 
 use serde::Serialize;
 use ts_rs::TS;
@@ -29,14 +36,17 @@ use crate::domain::notes::{MemoryNote, NoteKind};
 use crate::domain::provider::{ModelMessage, Role};
 use crate::domain::replay::EffectiveState;
 use crate::domain::story_state::{
-    ContentRating, Control, Detail, DiceRules, NarrationStyle, Pacing, Perspective, RollFrequency,
-    RollOdds, Surprises, Tense,
+    BondKind, Character, ContentRating, Control, Detail, DiceRules, KnownFact, NarrationStyle,
+    Pacing, Perspective, RollFrequency, RollOdds, StoryStateV1, Surprises, Tense,
 };
 use crate::domain::tracking::Tracking;
 use crate::errors::{AppError, AppResult, ErrorCode};
 use crate::services::tokens::{estimate_message, estimate_messages, estimate_text};
 
-pub const PROMPT_SCHEMA_VERSION: u32 = 10;
+pub const PROMPT_SCHEMA_VERSION: u32 = 14;
+/// What the storyteller reads for **Keep going**, an action with no words.
+pub const KEEP_GOING: &str = "(Out of character: I let the story go on without acting. \
+     Continue from where it left off, and don't decide anything for my character.)";
 /// Newest messages (excluding the latest action) placed before the summary
 /// competes for room.
 pub const MIN_RECENT_MESSAGES: usize = 4;
@@ -52,6 +62,12 @@ const BRIEF_RECAP_CHARS: usize = 220;
 /// Share of a request's room the memory notes may take when there are too
 /// many to send them all (1/5).
 const NOTES_SHARE: u32 = 5;
+/// Shares the cast (1/4) and the established facts (1/10) may take before
+/// the least relevant are sent in brief or left out.
+const CAST_SHARE: u32 = 4;
+const FACTS_SHARE: u32 = 10;
+/// Open threads sent when the setup is packed tightly, newest kept.
+const TIGHT_OPEN_THREADS: usize = 12;
 /// Names of notes left out that are still listed, so the storyteller knows
 /// they exist.
 const MAX_UNSHOWN_NAMES: usize = 60;
@@ -321,12 +337,34 @@ fn threads_contract(language: Option<&str>) -> String {
          matter for what comes next: at most one or two in a reply, often none.\n\
          \nNEW CHARACTERS\nWhen someone new with a name joins the story and is not among the \
          CHARACTERS above, end that reply with a card for them, once: <character \
-         name=\"Rowan Ellis\" role=\"barista\" pronouns=\"he/him\" age=\"30s\">How they look \
-         and come across, in one or two sentences.</character> The player chooses whether to \
-         add them to the cast.\n",
+         name=\"Rowan Ellis\" role=\"barista\" pronouns=\"he/him\" age=\"30s\">Tall and lean, \
+         light brown skin, short black curls, dark brown eyes, a small silver nose ring, a \
+         flour-dusted green apron over a band T-shirt. Easy grin, talks fast.</character> \
+         Give what a painter would need, as the story has shown it: apparent age, height and \
+         build, skin tone or heritage, hair, eyes, clothes and anything that stands out, then a \
+         few words on how they come across. The player chooses whether to add them to the \
+         cast, and the app can draw their portrait from the card. Once someone is in \
+         CHARACTERS, keep to the looks written there.\n",
     );
     if let Some(language) = language.map(str::trim).filter(|l| !l.is_empty()) {
         out.push_str(&format!("Write threads and cards in {language}.\n"));
+    }
+    out
+}
+
+/// Feelings towards the player, when the storyteller keeps the notes.
+fn bonds_contract(player_name: &str, language: Option<&str>) -> String {
+    let mut out = format!(
+        "\nFEELINGS\nWhen how someone feels about {player_name} changes in a way that lasts, end \
+         the reply with <bond name=\"Mina\" heart=\"+10\">how they feel about {player_name} now, \
+         in a few words</bond>. Use heart= for affection and trust= for trust: +5 to +15 (or \
+         -5 to -15) for most moments, up to 30 for a turning point. Leave the bar out to change \
+         only the words. Only when something really shifts, not in every reply. RELATIONSHIPS \
+         above shows each bar from 0 (cold, or no trust at all) to 100 (devoted, or complete \
+         trust); 50 is neutral.\n"
+    );
+    if let Some(language) = language.map(str::trim).filter(|l| !l.is_empty()) {
+        out.push_str(&format!("Write the words in {language}.\n"));
     }
     out
 }
@@ -366,7 +404,11 @@ fn note_line(n: &MemoryNote) -> String {
 /// Whether `focus` (lower case) mentions the note's name, or a word of it
 /// with four or more letters ("house" for "Z's house").
 fn named_in(n: &MemoryNote, focus: &str) -> bool {
-    let name = n.name.trim().to_lowercase();
+    name_in(&n.name, focus)
+}
+
+fn name_in(name: &str, focus: &str) -> bool {
+    let name = name.trim().to_lowercase();
     if name.is_empty() {
         return false;
     }
@@ -465,6 +507,161 @@ fn notes_section(pick: &NotesPick<'_>) -> String {
     out
 }
 
+/// One character's line in CHARACTERS: everything known, or in brief just
+/// their pronouns, species and role.
+fn character_entry(c: &Character, full: bool) -> String {
+    let who = if c.control == Control::Player {
+        "player character"
+    } else {
+        "played by you"
+    };
+    let mut out = format!("- {} ({who})", c.name);
+    let mut parts: Vec<String> = Vec::new();
+    let fields: &[(&str, &Option<String>)] = if full {
+        &[
+            ("pronouns", &c.pronouns),
+            ("age", &c.age),
+            ("species", &c.species),
+            ("role", &c.role),
+            ("about", &c.description),
+            ("looks", &c.appearance),
+        ]
+    } else {
+        &[
+            ("pronouns", &c.pronouns),
+            ("species", &c.species),
+            ("role", &c.role),
+        ]
+    };
+    for (label, v) in fields {
+        if let Some(v) = v.as_ref().filter(|v| !v.trim().is_empty()) {
+            parts.push(format!("{label}: {}", v.trim()));
+        }
+    }
+    if full {
+        if !c.personality.is_empty() {
+            parts.push(format!("personality: {}", c.personality.join(", ")));
+        }
+        if !c.goals.is_empty() {
+            parts.push(format!("goals: {}", c.goals.join("; ")));
+        }
+        if !c.abilities.is_empty() {
+            parts.push(format!("abilities: {}", c.abilities.join(", ")));
+        }
+        if !c.stats.is_empty() {
+            let stats: Vec<String> = c
+                .stats
+                .iter()
+                .map(|st| format!("{} {}", st.name.trim(), st.value))
+                .collect();
+            parts.push(format!("stats: {}", stats.join(", ")));
+        }
+    }
+    if !parts.is_empty() {
+        out.push_str(&format!(": {}", parts.join("; ")));
+    }
+    out.push('\n');
+    out
+}
+
+/// The characters sent in full: all of them when they fit in `budget`
+/// tokens (`None`). Otherwise the player and the people in the scene always,
+/// then those the scene names, then the rest in story order while they
+/// fit; everyone else is sent in brief.
+fn pick_cast<'a>(
+    s: &'a StoryStateV1,
+    focus: &str,
+    budget: Option<u32>,
+) -> Option<HashSet<&'a str>> {
+    let total: u32 = s
+        .characters
+        .values()
+        .map(|c| estimate_text(&character_entry(c, true)))
+        .sum();
+    let budget = budget.filter(|b| total > *b)?;
+    let focus = focus.to_lowercase();
+    let rank = |c: &Character| {
+        if c.id == s.player_character_id || s.scene.participant_ids.contains(&c.id) {
+            0
+        } else if name_in(&c.name, &focus) {
+            1
+        } else {
+            2
+        }
+    };
+    let mut order: Vec<&Character> = s.characters.values().collect();
+    order.sort_by_key(|c| rank(c));
+    // Everyone costs at least their brief line.
+    let mut used: u32 = order
+        .iter()
+        .map(|c| estimate_text(&character_entry(c, false)))
+        .sum();
+    let mut full = HashSet::new();
+    for c in order {
+        let extra = estimate_text(&character_entry(c, true))
+            .saturating_sub(estimate_text(&character_entry(c, false)));
+        if rank(c) == 0 || used + extra <= budget {
+            used += extra;
+            full.insert(c.id.as_str());
+        }
+    }
+    Some(full)
+}
+
+/// The confirmed facts sent, newest kept when they don't all fit in
+/// `budget` tokens, and how many were left out.
+fn pick_facts(s: &StoryStateV1, budget: Option<u32>) -> (Vec<&KnownFact>, usize) {
+    let facts: Vec<&KnownFact> = s.known_facts.iter().filter(|f| f.confirmed).collect();
+    let Some(budget) = budget else {
+        return (facts, 0);
+    };
+    let mut used = 0u32;
+    let mut from = facts.len();
+    while from > 0 {
+        let cost = estimate_text(&facts[from - 1].text) + 8;
+        if used + cost > budget {
+            break;
+        }
+        used += cost;
+        from -= 1;
+    }
+    (facts[from..].to_vec(), from)
+}
+
+/// What the story setup has room for in one request.
+struct Room<'a> {
+    notes: NotesPick<'a>,
+    /// Characters sent in full; `None` is everyone.
+    full_cast: Option<HashSet<&'a str>>,
+    facts: Vec<&'a KnownFact>,
+    facts_left_out: usize,
+    /// Newest earlier chapters sent in full; older ones go in brief.
+    recaps_in_full: usize,
+    /// Newest open threads sent; `None` is all of them.
+    open_threads: Option<usize>,
+}
+
+impl<'a> Room<'a> {
+    /// Everything, for showing the whole setup.
+    fn everything(s: &'a StoryStateV1) -> Self {
+        Self::within(s, "", None, false)
+    }
+
+    /// Shares of `available` tokens, halved when `tight`.
+    fn within(s: &'a StoryStateV1, focus: &str, available: Option<u32>, tight: bool) -> Self {
+        let m = if tight { 2 } else { 1 };
+        let (facts, facts_left_out) = pick_facts(s, available.map(|a| a / (FACTS_SHARE * m)));
+        Self {
+            notes: pick_notes(&s.notes, focus, available.map(|a| a / (NOTES_SHARE * m))),
+            full_cast: pick_cast(s, focus, available.map(|a| a / (CAST_SHARE * m))),
+            facts,
+            facts_left_out,
+            recaps_in_full: if tight { 0 } else { MAX_RECAPS_IN_PROMPT },
+            open_threads: tight.then_some(TIGHT_OPEN_THREADS),
+        }
+    }
+}
+
 /// The first sentence or two of a recap, cut to `BRIEF_RECAP_CHARS`.
 fn brief(recap: &str) -> String {
     let one_line = recap.split_whitespace().collect::<Vec<_>>().join(" ");
@@ -484,10 +681,10 @@ fn brief(recap: &str) -> String {
 }
 
 pub fn system_prompt(state: &EffectiveState, frame: &StoryFrame) -> String {
-    system_prompt_with(state, frame, &pick_notes(&state.state.notes, "", None))
+    system_prompt_with(state, frame, &Room::everything(&state.state))
 }
 
-fn system_prompt_with(state: &EffectiveState, frame: &StoryFrame, notes: &NotesPick<'_>) -> String {
+fn system_prompt_with(state: &EffectiveState, frame: &StoryFrame, room: &Room<'_>) -> String {
     let s = &state.state;
     let player = s.characters.get(&s.player_character_id);
     let player_name = player.map(|p| p.name.as_str()).unwrap_or("the player");
@@ -688,6 +885,10 @@ fn system_prompt_with(state: &EffectiveState, frame: &StoryFrame, notes: &NotesP
     if !s.narration.manual_memory {
         out.push_str(&notes_contract(s.narration.language.as_deref()));
         out.push_str(&threads_contract(s.narration.language.as_deref()));
+        out.push_str(&bonds_contract(
+            player_name,
+            s.narration.language.as_deref(),
+        ));
     }
     if !s.narration.no_suggestions {
         out.push_str(&next_moves_contract(
@@ -761,47 +962,20 @@ fn system_prompt_with(state: &EffectiveState, frame: &StoryFrame, notes: &NotesP
     }
 
     out.push_str("\nCHARACTERS\n");
+    let mut in_brief = false;
     for c in s.characters.values() {
-        let who = if c.control == Control::Player {
-            "player character"
-        } else {
-            "played by you"
-        };
-        out.push_str(&format!("- {} ({who})", c.name));
-        let mut parts: Vec<String> = Vec::new();
-        for (label, v) in [
-            ("pronouns", &c.pronouns),
-            ("age", &c.age),
-            ("species", &c.species),
-            ("role", &c.role),
-            ("about", &c.description),
-            ("looks", &c.appearance),
-        ] {
-            if let Some(v) = v.as_ref().filter(|v| !v.trim().is_empty()) {
-                parts.push(format!("{label}: {}", v.trim()));
-            }
-        }
-        if !c.personality.is_empty() {
-            parts.push(format!("personality: {}", c.personality.join(", ")));
-        }
-        if !c.goals.is_empty() {
-            parts.push(format!("goals: {}", c.goals.join("; ")));
-        }
-        if !c.abilities.is_empty() {
-            parts.push(format!("abilities: {}", c.abilities.join(", ")));
-        }
-        if !c.stats.is_empty() {
-            let stats: Vec<String> = c
-                .stats
-                .iter()
-                .map(|st| format!("{} {}", st.name.trim(), st.value))
-                .collect();
-            parts.push(format!("stats: {}", stats.join(", ")));
-        }
-        if !parts.is_empty() {
-            out.push_str(&format!(": {}", parts.join("; ")));
-        }
-        out.push('\n');
+        let full = room
+            .full_cast
+            .as_ref()
+            .is_none_or(|f| f.contains(c.id.as_str()));
+        in_brief |= !full;
+        out.push_str(&character_entry(c, full));
+    }
+    if in_brief {
+        out.push_str(
+            "Some are listed in brief for room: they are kept in full, so keep to what the \
+             story has already shown of them.\n",
+        );
     }
     out.push_str(
         "Anything not given here (looks, age, species and so on) is left open: don't bring it \
@@ -821,23 +995,39 @@ fn system_prompt_with(state: &EffectiveState, frame: &StoryFrame, notes: &NotesP
         out.push_str("\nRELATIONSHIPS\n");
         for r in &s.relationships {
             let status = r.status.trim();
+            let words = match (r.label.trim(), status) {
+                ("", "") => String::new(),
+                (label, "") => label.to_string(),
+                ("", status) => status.to_string(),
+                (label, status) => format!("{label} ({status})"),
+            };
+            let bar = match r.bond {
+                Some(b) => format!(
+                    " [{} {}/100]",
+                    match b.kind {
+                        BondKind::Heart => "heart",
+                        BondKind::Trust => "trust",
+                    },
+                    b.value
+                ),
+                None => String::new(),
+            };
             out.push_str(&format!(
-                "- {} → {}: {}{}\n",
+                "- {} → {}: {words}{bar}\n",
                 name_of(&r.from_id),
                 name_of(&r.to_id),
-                r.label,
-                if status.is_empty() {
-                    String::new()
-                } else {
-                    format!(" ({status})")
-                }
             ));
         }
     }
-    let facts: Vec<_> = s.known_facts.iter().filter(|f| f.confirmed).collect();
-    if !facts.is_empty() {
+    if !room.facts.is_empty() {
         out.push_str("\nESTABLISHED FACTS\n");
-        for f in facts {
+        if room.facts_left_out > 0 {
+            out.push_str(&format!(
+                "({} earlier facts are left out here for room; they still hold.)\n",
+                room.facts_left_out
+            ));
+        }
+        for f in &room.facts {
             if f.known_by.is_empty() {
                 out.push_str(&format!("- {}\n", f.text));
             } else {
@@ -847,12 +1037,12 @@ fn system_prompt_with(state: &EffectiveState, frame: &StoryFrame, notes: &NotesP
         }
     }
 
-    out.push_str(&notes_section(notes));
+    out.push_str(&notes_section(&room.notes));
 
     let recaps = &frame.earlier_chapters;
     if !recaps.is_empty() {
         out.push_str("\nEARLIER CHAPTERS\n");
-        let full_from = recaps.len().saturating_sub(MAX_RECAPS_IN_PROMPT);
+        let full_from = recaps.len().saturating_sub(room.recaps_in_full);
         let brief_from = full_from.saturating_sub(MAX_BRIEF_RECAPS);
         if brief_from > 0 {
             out.push_str(&format!(
@@ -870,7 +1060,9 @@ fn system_prompt_with(state: &EffectiveState, frame: &StoryFrame, notes: &NotesP
                     brief(&r.recap)
                 ));
             }
-            out.push_str("In full:\n");
+            if full_from < recaps.len() {
+                out.push_str("In full:\n");
+            }
         }
         for r in &recaps[full_from..] {
             out.push_str(&format!(
@@ -911,7 +1103,33 @@ fn system_prompt_with(state: &EffectiveState, frame: &StoryFrame, notes: &NotesP
         out.push_str(&format!("Present: {}\n", present.join(", ")));
     }
     if !s.open_threads.is_empty() {
-        out.push_str(&format!("Open threads: {}\n", s.open_threads.join("; ")));
+        let from = room
+            .open_threads
+            .map_or(0, |n| s.open_threads.len().saturating_sub(n));
+        out.push_str(&format!(
+            "Open threads: {}{}\n",
+            s.open_threads[from..].join("; "),
+            if from > 0 {
+                format!(" (and {from} older ones)")
+            } else {
+                String::new()
+            }
+        ));
+    }
+    if let Some(note) = s
+        .narration
+        .storyteller_note
+        .as_deref()
+        .map(str::trim)
+        .filter(|n| !n.is_empty())
+    {
+        out.push_str(
+            "\nTHE PLAYER'S NOTE TO YOU\n\
+             Follow it in your replies from now on, until the player changes it. It is \
+             about the story, not part of it: never quote it or mention it.\n",
+        );
+        out.push_str(note);
+        out.push('\n');
     }
     out
 }
@@ -960,7 +1178,10 @@ fn turn_message(e: &EventRow) -> AppResult<Option<ModelMessage>> {
         match (e.kind(), EventBody::from_parts(&e.kind, &e.payload_json)?) {
             (Some(EventKind::Player), EventBody::Player(p)) => Some(ModelMessage {
                 role: Role::User,
-                content: p.story_text().into_owned(),
+                content: match p.story_text() {
+                    t if t.trim().is_empty() => KEEP_GOING.to_string(),
+                    t => t.into_owned(),
+                },
             }),
             (Some(EventKind::Assistant), EventBody::Assistant(p)) => Some(ModelMessage {
                 role: Role::Assistant,
@@ -1049,8 +1270,19 @@ pub fn assemble(
         focus.push(' ');
         focus.push_str(&m.content);
     }
-    let notes = pick_notes(&s.notes, &focus, Some(available / NOTES_SHARE));
-    let system = system_prompt_with(state, frame, &notes);
+    let mut system = system_prompt_with(
+        state,
+        frame,
+        &Room::within(s, &focus, Some(available), false),
+    );
+    if estimate_text(&system) > available / 2 {
+        // Leave the summary and the newest turns room to come with it.
+        system = system_prompt_with(
+            state,
+            frame,
+            &Room::within(s, &focus, Some(available), true),
+        );
+    }
     let mut prompt = vec![
         ModelMessage {
             role: Role::System,

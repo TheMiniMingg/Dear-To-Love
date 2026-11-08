@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { CommandError, commands, errorMessage } from '../../api/commands';
 import type { ChapterRecapDraft, RouteView } from '../../types';
 import { intlLocale, joinSentences, t, tKnown } from '../../i18n';
+import { TidyReview, tidyEdits, type TidyDraft } from './TidyReview';
 
 /** Longest recap the app keeps (matches the backend limit). */
 const MAX_RECAP = 6000;
@@ -37,6 +38,11 @@ export function EndChapterPanel({ view, onCancel, onEnded }: Props) {
   const [nextTitle, setNextTitle] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [tidy, setTidy] = useState<TidyDraft>({ status: 'working' });
+  /** The changes the player undid. */
+  const [undone, setUndone] = useState<ReadonlySet<number>>(new Set());
+  /** The route head after the kept changes were saved, so a retry saves them once. */
+  const tidiedHead = useRef<string | null>(null);
   /** The player chose to write the recap; a late draft is ignored. */
   const manual = useRef(false);
   const recapBox = useRef<HTMLTextAreaElement>(null);
@@ -62,6 +68,21 @@ export function EndChapterPanel({ view, onCancel, onEnded }: Props) {
       cancelled = true;
     };
   }, [view.route.id, attempt]);
+
+  useEffect(() => {
+    let cancelled = false;
+    commands
+      .draftNotebookTidy(view.route.id)
+      .then((d) => {
+        if (!cancelled) setTidy({ status: 'ready', tidy: d });
+      })
+      .catch((e: unknown) => {
+        if (!cancelled) setTidy({ status: 'failed', message: errorMessage(e) });
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [view.route.id]);
 
   // The waiting message is replaced; keep focus inside the dialog.
   const editing = draft.status !== 'writing' && draft.status !== 'blocked';
@@ -125,10 +146,25 @@ export function EndChapterPanel({ view, onCancel, onEnded }: Props) {
     setSaving(true);
     setError(null);
     try {
+      // The kept notebook changes are saved in this chapter, just before it ends.
+      const edits =
+        tidy.status === 'ready' && !tidiedHead.current
+          ? tidyEdits(tidy.tidy.changes, (i) => !undone.has(i))
+          : [];
+      if (edits.length) {
+        const tidied = await commands.editStoryDetails({
+          storyId: view.story.id,
+          routeId: view.route.id,
+          expectedHeadId: view.route.headEventId ?? '',
+          changes: edits,
+          note: t('tidied the notebook'),
+        });
+        tidiedHead.current = tidied.route.headEventId ?? null;
+      }
       const v = await commands.endChapter({
         storyId: view.story.id,
         routeId: view.route.id,
-        expectedHeadId: view.route.headEventId ?? '',
+        expectedHeadId: tidiedHead.current ?? view.route.headEventId ?? '',
         recap,
         nextTitle: nextTitle.trim() || null,
       });
@@ -201,6 +237,19 @@ export function EndChapterPanel({ view, onCancel, onEnded }: Props) {
           </p>
         )}
       </div>
+      <TidyReview
+        draft={tidy}
+        storyteller={view.storyteller.label}
+        undone={undone}
+        onChoose={(i, keep) =>
+          setUndone((cur) => {
+            const next = new Set(cur);
+            if (keep) next.delete(i);
+            else next.add(i);
+            return next;
+          })
+        }
+      />
       <p className="muted small">
         {t('Ending the chapter saves your place as “{save}” in Save / Load.', {
           save: t('End of Chapter {n}: {title}', { n: ordinal, title }),

@@ -1360,6 +1360,10 @@ details.more-options > summary {
 .newcomer-form .field {
   margin-bottom: 0.5rem;
 }
+.newcomer-portrait {
+  display: block;
+  margin-top: 0.5rem;
+}
 .newcomer-actions {
   display: flex;
   flex-wrap: wrap;
@@ -1369,6 +1373,111 @@ details.more-options > summary {
 }
 .newcomer-body > .error {
   margin-top: 0.4rem;
+}
+
+/* ---------- storytelling tools (batch 4) ---------- */
+/* Length of the next reply, beside the kinds of action. */
+.reply-length {
+  border-radius: 999px;
+  font-size: 0.82rem;
+  background: var(--surface);
+}
+.reply-length span {
+  padding: 0.24rem 0.7rem;
+  color: var(--muted);
+}
+.reply-length input:checked + span {
+  color: var(--on-accent);
+}
+/* With nothing typed, the send button lets the story go on. */
+.composer .keep-going {
+  white-space: nowrap;
+}
+.kept-going {
+  margin: 0.15rem 0 0;
+  font-style: italic;
+  color: var(--muted);
+}
+/* The player's standing note to the storyteller, above the box. */
+.storyteller-note-chip {
+  flex-basis: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.3rem 0.45rem;
+  padding: 0.3rem 0.75rem;
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--border));
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--accent-soft) 60%, var(--surface));
+  font-size: 0.85rem;
+}
+.note-chip-icon {
+  flex: none;
+  color: var(--accent);
+}
+.note-chip-words {
+  flex: 1 1 12rem;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.storyteller-note-chip .link-button {
+  font-size: 0.82rem;
+  color: var(--accent);
+}
+/* The latest reply, open for new words. */
+.reply-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.reply-editor textarea {
+  width: 100%;
+  font-family: var(--font-story);
+  font-size: inherit;
+  line-height: 1.6;
+  resize: vertical;
+}
+.reply-editor p {
+  margin: 0;
+}
+/* Offered over words picked in the story. */
+.remember-this {
+  position: absolute;
+  z-index: 5;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.8rem;
+  transform: translateX(-50%);
+  border: 1px solid var(--accent);
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--on-accent);
+  font-size: 0.85rem;
+  box-shadow: var(--shadow-md);
+  animation: fade-in 0.15s var(--ease);
+}
+.remember-this:active:not(:disabled) {
+  transform: translateX(-50%) translateY(1px);
+}
+/* A choice of a few, in a form: as wide as its choices. */
+.field > .segmented {
+  align-self: flex-start;
+}
+/* Ready-made hints for Another reply. */
+.hint-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+.next-move[aria-pressed='true'],
+.next-move[aria-pressed='true']:hover {
+  border-style: solid;
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--on-accent);
 }
 
 /* ---------- ideas for the next move, above the composer ---------- */
@@ -1399,4 +1508,856 @@ details.more-options > summary {
   border-style: solid;
   border-color: var(--accent);
   background: var(--accent-soft);
+}
+
+/* ---------- a story as a book cover (Preset Story, Custom Story's preview) ---------- */
+.story-cover-card {
+  position: sticky;
+  top: 1rem;
+  align-self: start;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--fg);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  animation: rise-in 0.35s var(--ease) both;
+}
+.cover-art {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  background: var(--surface-2);
+}
+.cover-art .story-cover,
+.cover-art .thumb-missing {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 25%;
+  display: block;
+}
+.cover-art .story-letter {
+  font-size: 5rem;
+  padding-bottom: 22%;
+}
+.cover-heading {
+  position: absolute;
+  inset-inline: 1.1rem;
+  bottom: 0.9rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.cover-genres {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.cover-genres li {
+  padding: 0.08rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #fff;
+  background: rgb(255 255 255 / 0.18);
+  backdrop-filter: blur(6px);
+}
+.cover-title {
+  margin: 0;
+  font-family: var(--font-story);
+  font-size: 1.65rem;
+  font-weight: 600;
+  line-height: 1.15;
+  color: #fff;
+  text-shadow: 0 1px 12px rgb(0 0 0 / 0.45);
+  overflow-wrap: anywhere;
+}
+.cover-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  padding: 1rem 1.2rem 1.25rem;
+}
+.cover-premise {
+  margin: 0;
+  line-height: 1.55;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.cover-cast {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem 0.9rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.cover-cast li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  column-gap: 0.5rem;
+  align-items: center;
+  min-width: 0;
+  max-width: 100%;
+}
+.cover-face {
+  grid-row: 1 / span 2;
+  width: 2.3rem;
+  height: 2.3rem;
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow:
+    0 0 0 2px var(--surface),
+    0 0 0 3px var(--name, var(--accent));
+}
+.cover-initial {
+  display: grid;
+  place-items: center;
+  font-family: var(--font-story);
+  font-weight: 600;
+  color: #fff;
+  background: color-mix(in srgb, var(--name, var(--accent)) 85%, var(--fg));
+}
+/* The player keeps the theme's accent, light or dark. */
+.cover-cast [data-you] .cover-initial {
+  color: var(--on-accent);
+  background: var(--accent);
+}
+.cover-name {
+  font-weight: 600;
+  font-size: 0.9rem;
+  line-height: 1.2;
+  color: color-mix(in srgb, var(--name, var(--accent)) 75%, var(--fg));
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cover-role {
+  font-size: 0.78rem;
+  line-height: 1.2;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* The first page, set like the reader's. */
+.first-page {
+  padding: 0.9rem 1rem 1rem;
+  border-radius: var(--radius);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  text-align: center;
+}
+.first-page .chapter-number {
+  margin: 0;
+  font-family: var(--font-ui);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.first-page-title {
+  margin: 0.2rem 0 0.5rem;
+  font-family: var(--font-story);
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1.2;
+}
+.first-page-text {
+  margin: 0;
+  font-family: var(--font-story);
+  font-size: 0.95rem;
+  line-height: 1.65;
+  text-align: start;
+  display: -webkit-box;
+  -webkit-line-clamp: 6;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.first-page-text::first-letter {
+  float: left;
+  margin: 0.08em 0.4rem 0 0;
+  font-size: 2.6em;
+  line-height: 0.85;
+  font-weight: 600;
+  color: var(--accent);
+}
+.cover-facts {
+  margin: 0;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.35rem 0.8rem;
+  font-size: 0.9rem;
+}
+.cover-facts dt {
+  color: var(--muted);
+  font-weight: 600;
+}
+.cover-facts dd {
+  margin: 0;
+}
+.cover-start {
+  align-self: flex-start;
+}
+.cover-empty {
+  margin: 0;
+}
+
+/* ---------- Custom Story: step bar, live preview, Fill in the rest ---------- */
+.screen.wizard {
+  max-width: 1140px;
+}
+.step-bar-wrap {
+  margin: 1rem 0 0.5rem;
+}
+.step-bar {
+  display: flex;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.step-bar li {
+  position: relative;
+  flex: 1 1 0;
+  min-width: 0;
+}
+/* The line joining each step to the one before it. */
+.step-bar li + li::before {
+  content: '';
+  position: absolute;
+  top: 1.15rem;
+  inset-inline: calc(-50% + 1.4rem) calc(50% + 1.4rem);
+  height: 2px;
+  border-radius: 2px;
+  background: var(--border);
+}
+.step-bar li:is([data-state='done'], [data-state='current'])::before {
+  background: color-mix(in srgb, var(--accent) 55%, var(--border));
+}
+.step-bar button {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.2rem 0.2rem 0.35rem;
+  border: 0;
+  background: none;
+  box-shadow: none;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+.step-bar button:hover:not(:disabled) {
+  color: var(--fg);
+  background: none;
+  transform: none;
+}
+.step-dot {
+  display: grid;
+  place-items: center;
+  width: 2.1rem;
+  height: 2.1rem;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  background: var(--surface);
+  color: var(--muted);
+  transition:
+    background-color 0.2s var(--ease),
+    border-color 0.2s var(--ease),
+    color 0.2s var(--ease);
+}
+.step-bar [data-state='done'] .step-dot {
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--border));
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.step-bar [data-state='current'] .step-dot {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--on-accent);
+  box-shadow: 0 0 0 4px var(--accent-soft);
+}
+.step-bar [data-state='current'] button {
+  color: var(--fg);
+  font-weight: 600;
+}
+.step-bar button:hover:not(:disabled) .step-dot {
+  border-color: var(--accent);
+}
+.step-name {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* ---------- batch 6: chapter jump ---------- */
+.chapter-jump {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  min-width: 0;
+  padding: 0.05rem 0.4rem;
+  margin-inline-start: -0.4rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: none;
+  box-shadow: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+.chapter-jump:hover,
+.chapter-jump[aria-expanded='true'] {
+  background: var(--accent-soft);
+  border-color: var(--border);
+}
+.chapter-jump > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.step-count {
+  margin: 0.15rem 0 0;
+  text-align: center;
+}
+.wizard-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 2rem;
+  align-items: start;
+}
+/* Beside the steps, the preview is smaller and never taller than the window. */
+.wizard-layout > .story-cover-card {
+  max-height: calc(100vh - 7rem);
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+.wizard-layout .cover-art {
+  flex: none;
+  aspect-ratio: 2 / 1;
+}
+.wizard-layout .cover-art .story-letter {
+  font-size: 3.6rem;
+}
+.wizard-layout .first-page-text {
+  -webkit-line-clamp: 4;
+}
+@media (max-width: 920px) {
+  .wizard-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .wizard-layout > .story-cover-card {
+    position: static;
+    max-width: 30rem;
+    max-height: none;
+  }
+}
+.wizard-main {
+  min-width: 0;
+}
+.wizard-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.wizard-fields:disabled {
+  opacity: 0.6;
+}
+.fill-rest {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0.75rem 0.9rem;
+  border: 1px dashed color-mix(in srgb, var(--accent) 40%, var(--border));
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--accent-soft) 55%, var(--surface));
+}
+.fill-rest-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 0.8rem;
+}
+.fill-rest-row p {
+  flex: 1 1 16rem;
+  margin: 0;
+}
+.fill-rest-button {
+  flex: none;
+  font-weight: 600;
+  color: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
+}
+.fill-rest-button[disabled] .btn-icon {
+  animation: pulse 1.2s ease-in-out infinite;
+}
+.fill-rest-note:empty {
+  display: none;
+}
+.fill-rest-note p {
+  margin: 0;
+}
+
+/* ---------- Settings: section icons, reading, privacy ---------- */
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+.section-icon {
+  flex: none;
+  width: 1.9rem;
+  height: 1.9rem;
+  padding: 0.38rem;
+  border-radius: 10px;
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+.settings-subtitle {
+  margin: 1.25rem 0 0.6rem;
+  font-size: 1rem;
+}
+.reading-settings {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: 1.25rem;
+  align-items: start;
+}
+@media (max-width: 980px) {
+  .reading-settings {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.reading-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+.reading-choice .segmented {
+  align-self: flex-start;
+  max-width: 100%;
+  flex-wrap: wrap;
+}
+.field-label {
+  font-weight: 600;
+}
+.reading-sample {
+  margin: 0;
+  min-width: 0;
+  overflow: hidden;
+  padding: 0 0.75rem;
+  color: var(--fg);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+/* The sample's column is narrower or wider as the story's will be, at a smaller scale. */
+.reading-sample-column {
+  max-width: calc(var(--reading-width, 41rem) * 0.62);
+  padding: 1rem 1.25rem 1.1rem;
+  background: var(--bg);
+  border-inline: 1px dashed color-mix(in srgb, var(--accent) 25%, var(--border));
+  animation: none;
+  transition:
+    max-width 0.25s var(--ease),
+    line-height 0.25s var(--ease);
+}
+.reading-sample-column p {
+  margin: 0 0 0.6em;
+}
+.reading-sample-column .chapter-number {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.reading-sample-text::first-letter {
+  float: left;
+  margin: 0.06em 0.45rem 0 0;
+  font-size: 3em;
+  line-height: 0.85;
+  font-weight: 600;
+  color: var(--accent);
+}
+.speaker-name {
+  color: color-mix(in srgb, #43a047 75%, var(--fg));
+}
+.plain-facts {
+  margin: 0 0 1rem;
+  padding-inline-start: 1.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.chapter-jump-icon {
+  flex: none;
+  color: var(--muted);
+}
+.reader-heading .menu-popup {
+  right: auto;
+  left: 0;
+  max-height: min(60vh, 26rem);
+  overflow-y: auto;
+}
+.menu-icon-space {
+  display: inline-block;
+  width: 16px;
+}
+.reader-heading .menu-anchor {
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* ---------- batch 6: read aloud ---------- */
+.read-aloud-settings {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.45rem;
+  margin-top: 1rem;
+}
+.read-aloud-settings h3,
+.read-aloud-settings p {
+  margin: 0;
+}
+.read-aloud-settings select {
+  max-width: min(100%, 26rem);
+}
+.read-aloud-settings .inline-choices {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 1.25rem;
+}
+.read-aloud-settings .choices-label {
+  font-weight: 600;
+}
+.read-aloud-button[data-reading] {
+  color: var(--accent);
+}
+
+/* ---------- batch 6: command palette ---------- */
+/* The palette stays put near the top while its list grows and shrinks. */
+.dialog-backdrop:has(.palette) {
+  place-items: start center;
+  padding-top: max(1rem, 12vh);
+}
+.palette {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  min-width: min(34rem, 80vw);
+}
+.palette-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.palette-search-icon {
+  position: absolute;
+  inset-inline-start: 0.75rem;
+  color: var(--muted);
+  pointer-events: none;
+}
+.palette-search input {
+  width: 100%;
+  padding-inline-start: 2.4rem;
+  font-size: 1.02rem;
+}
+.palette-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: min(55vh, 28rem);
+  overflow-y: auto;
+}
+.palette-option {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 0.25rem 0.7rem;
+  padding: 0.5rem 0.65rem;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+.palette-option[data-group]:not(:first-child) {
+  margin-top: 0.35rem;
+  border-top: 1px solid var(--border);
+  border-start-start-radius: 0;
+  border-start-end-radius: 0;
+}
+.palette-option[aria-selected='true'] {
+  background: var(--accent-soft);
+}
+.palette-icon {
+  color: var(--muted);
+}
+.palette-option[aria-selected='true'] .palette-icon {
+  color: var(--accent);
+}
+.palette-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.palette-label,
+.palette-hint {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.palette-hint {
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+.palette-group {
+  font-size: 0.78rem;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.palette-keys {
+  font: inherit;
+  font-size: 0.75rem;
+  padding: 0.05rem 0.35rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--muted);
+  background: var(--surface-2);
+}
+.palette-empty {
+  margin: 0.25rem 0.5rem;
+}
+@media (max-width: 640px) {
+  .palette-group {
+    display: none;
+  }
+}
+
+/* ---------- batch 6: first-time tips ---------- */
+.tour {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.9rem;
+  margin: 0 0 0.6rem;
+  padding: 0.6rem 0.85rem;
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--border));
+  border-radius: var(--radius);
+  background: var(--accent-soft);
+  box-shadow: var(--shadow-sm);
+  animation: pop-in 0.2s var(--ease);
+}
+.tour-icon {
+  flex: none;
+  color: var(--accent);
+}
+.tour-text {
+  flex: 1 1 18rem;
+  margin: 0;
+  font-size: 0.92rem;
+}
+.tour-count {
+  font-weight: 600;
+  color: var(--accent);
+}
+.tour-buttons {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-inline-start: auto;
+}
+.tour-target {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: var(--radius-sm);
+  animation: tour-pulse 1.6s var(--ease) 2;
+}
+@keyframes tour-pulse {
+  50% {
+    outline-offset: 6px;
+    outline-color: color-mix(in srgb, var(--accent) 40%, transparent);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tour,
+  .tour-target {
+    animation: none;
+  }
+}
+
+/* ---------- batch 6: feelings ---------- */
+.bond-bar {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+.bond-icon {
+  flex: none;
+}
+.bond-bar.kind-heart .bond-icon {
+  color: #e0456f;
+}
+.bond-bar.kind-trust .bond-icon {
+  color: color-mix(in srgb, #3a8fd8 80%, var(--fg));
+}
+.bond-track {
+  position: relative;
+  width: 6.5rem;
+  height: 0.45rem;
+  border-radius: 999px;
+  background: var(--surface-2);
+  box-shadow: inset 0 0 0 1px var(--border);
+  overflow: hidden;
+}
+.bond-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: inherit;
+  background: linear-gradient(90deg, color-mix(in srgb, #e0456f 55%, transparent), #e0456f);
+  transition: width 0.3s var(--ease);
+}
+.bond-bar.kind-trust .bond-fill {
+  background: linear-gradient(90deg, color-mix(in srgb, #3a8fd8 55%, transparent), #3a8fd8);
+}
+.bond-value {
+  min-width: 1.6em;
+  font-variant-numeric: tabular-nums;
+}
+.relationship-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.25rem 1rem;
+}
+.memory-chip.kind-bond {
+  --kind: #e0456f;
+}
+.memory-chip.kind-bond.bond-trust {
+  --kind: #3a8fd8;
+}
+.bond-change {
+  margin-inline-start: 0.25rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--pass);
+}
+.memory-chip.down .bond-change {
+  color: var(--fail);
+}
+.feeling-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--accent-soft) 45%, var(--surface));
+}
+.feeling-fields > legend {
+  padding: 0 0.3rem;
+  font-weight: 600;
+}
+.feeling-fields p {
+  margin: 0;
+}
+.feeling-bar-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem 1.2rem;
+}
+.feeling-range {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1 1 16rem;
+}
+.feeling-range input[type='range'] {
+  flex: 1;
+  min-width: 6rem;
+  accent-color: var(--accent);
+}
+.feeling-value {
+  min-width: 2ch;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* End chapter: tidying the notebook, each change kept or undone. */
+.tidy-review {
+  border: 1px solid var(--border);
+  border-radius: var(--radius, 10px);
+  padding: 0.75rem 1rem;
+  display: grid;
+  gap: 0.5rem;
+}
+.tidy-review legend {
+  font-weight: 600;
+  padding: 0 0.25rem;
+}
+.tidy-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.5rem;
+  max-height: min(40vh, 22rem);
+  overflow-y: auto;
+}
+.tidy-change {
+  background: var(--surface-2);
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+  display: grid;
+  gap: 0.35rem;
+}
+.tidy-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+.tidy-title {
+  font-weight: 600;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.tidy-text {
+  margin: 0;
+  white-space: pre-wrap;
+}
+.tidy-change.undone .tidy-text {
+  color: var(--muted);
+  font-style: italic;
+}
+.tidy-before summary {
+  cursor: pointer;
+  color: var(--muted);
+  font-size: 0.875rem;
+}
+.tidy-before ul {
+  margin: 0.25rem 0 0;
+  padding-left: 1.1rem;
+  color: var(--muted);
+  font-size: 0.875rem;
 }

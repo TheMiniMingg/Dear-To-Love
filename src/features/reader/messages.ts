@@ -23,7 +23,8 @@ export type MessageTag =
   | 'forget'
   | 'thread'
   | 'character'
-  | 'next';
+  | 'next'
+  | 'bond';
 
 export type Block =
   | { kind: 'prose'; text: string }
@@ -50,14 +51,22 @@ const TAGS: MessageTag[] = [
   'thread',
   'character',
   'next',
+  'bond',
 ];
 
 /**
  * Tags written beside the story, not in it: memory notes, open threads, new
- * characters and ideas for the next move. The reader shows them under the
- * reply or by the composer.
+ * characters, feelings and ideas for the next move. The reader shows them
+ * under the reply or by the composer.
  */
-export const ASIDE_TAGS: MessageTag[] = ['remember', 'forget', 'thread', 'character', 'next'];
+export const ASIDE_TAGS: MessageTag[] = [
+  'remember',
+  'forget',
+  'thread',
+  'character',
+  'next',
+  'bond',
+];
 const isAside = (kind: Block['kind']) => (ASIDE_TAGS as string[]).includes(kind);
 
 /**
@@ -73,6 +82,7 @@ export const APP_TAGS: MessageTag[] = [
   'thread',
   'character',
   'next',
+  'bond',
 ];
 
 /** `key="value"` pairs; a bare word (`<thread done>`) counts as `word="yes"`. */
@@ -194,6 +204,7 @@ function plainLabel(kind: MessageTag, a: Record<string, string>): string {
     case 'thread':
     case 'character':
     case 'next':
+    case 'bond':
       label = '';
       break;
   }
@@ -231,6 +242,43 @@ export function plainText(text: string): string {
     afterNote = false;
   }
   return plainStoryText(words);
+}
+
+/**
+ * The words of a reply without its asides (memory notes, threads, new
+ * characters, ideas), each dropped with the line break after it. Mirrors
+ * `split_asides` in Rust, which keeps the old asides when a reply is edited.
+ */
+export function withoutAsides(text: string): string {
+  let shown = '';
+  let rest = text;
+  for (;;) {
+    const i = rest.indexOf('<');
+    if (i < 0) break;
+    const after = rest.slice(i + 1);
+    const name = ASIDE_TAGS.find(
+      (tag) => after.startsWith(tag) && /^[ /\n\t>]/.test(after.slice(tag.length)),
+    );
+    const end = after.indexOf('>');
+    let len = -1;
+    if (name && end >= 0) {
+      if (after.slice(name.length, end).trimEnd().endsWith('/')) len = end + 1;
+      else {
+        const close = `</${name}>`;
+        const j = after.indexOf(close, end + 1);
+        if (j >= 0) len = j + close.length;
+      }
+    }
+    if (len < 0) {
+      shown += rest.slice(0, i + 1);
+      rest = after;
+      continue;
+    }
+    shown = (shown + rest.slice(0, i)).replace(/[ \t]+$/, '');
+    const next = after.slice(len);
+    rest = next.startsWith('\n') ? next.slice(1) : next;
+  }
+  return (shown + rest).trimEnd();
 }
 
 /** Message cards whose words can stand for a reply on their own. */
@@ -330,6 +378,37 @@ export function threadChanges(text: string): ThreadChange[] {
     if (!words) continue;
     const settled = (v?: string) => !!v && SETTLED.includes(v.toLowerCase());
     out.push({ done: settled(b.attrs.done) || settled(b.attrs.status), text: words });
+  }
+  return out;
+}
+
+/**
+ * A change in how someone feels about the player (`<bond name="Mara"
+ * heart="+10">Warmer now</bond>`), as `bonds::scan` in Rust reads it.
+ */
+export type BondChange = {
+  name: string;
+  kind?: 'heart' | 'trust';
+  /** "+10", "-5" or a value ("70"), as written. */
+  change?: string;
+  line: string;
+};
+
+/** The bond tags of a finished reply. */
+export function bondChanges(text: string): BondChange[] {
+  const out: BondChange[] = [];
+  for (const b of parseBlocks(text)) {
+    if (b.kind !== 'bond' || b.open) continue;
+    const name = clip(b.attrs.name ?? b.attrs.who ?? '', 80);
+    if (!name) continue;
+    const kind = (['heart', 'trust'] as const).find((k) =>
+      /^[-+−]?\d+%?$|^[-+]$|^up$|^down$/.test(b.attrs[k]?.trim() ?? ''),
+    );
+    const line = clip(b.body, 160);
+    if (!kind && !line) continue;
+    const raw = kind ? b.attrs[kind]!.trim().replace('−', '-').replace(/%$/, '') : undefined;
+    const small = raw === '+' || raw === 'up' ? '+5' : raw === '-' || raw === 'down' ? '-5' : raw;
+    out.push({ name, kind, change: small, line });
   }
   return out;
 }

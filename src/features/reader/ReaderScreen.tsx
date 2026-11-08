@@ -3,13 +3,17 @@ import {
   ArchiveRestore,
   Backpack,
   BookMarked,
+  BookOpenText,
   Brain,
+  Check,
+  ChevronDown,
   Download,
   Feather,
   GitBranch,
   Images,
   Keyboard,
   LibraryBig,
+  Lightbulb,
   ListOrdered,
   MapPin,
   Menu,
@@ -19,8 +23,11 @@ import {
   Search,
   Settings,
   Stethoscope,
+  StickyNote,
   Type,
+  Undo2,
   UserRoundPen,
+  Volume2,
   type LucideIcon,
 } from 'lucide-react';
 import {
@@ -31,12 +38,15 @@ import {
   runErrorMessage,
 } from '../../api/commands';
 import { useUiStore } from '../../app/store';
-import { useStoryLook } from '../../app/look';
+import { readingStyle, useLook, useStoryLook } from '../../app/look';
 import { useReplyWatch } from '../../app/replyWatch';
+import { canReadAloud, speechLang, useReadAloud } from '../../app/readAloud';
+import { paletteSources, usePalette } from '../../app/palette';
 import { isComposing, isEditableTarget } from '../../app/keyboard';
 import { ariaKeys, isShortcut, useShortcutHelp, withKeys } from '../../app/shortcuts';
 import { Dialog } from '../../components/Dialog';
 import { KeyHint } from '../../components/KeyHint';
+import { MenuButton } from '../../components/MenuButton';
 import { ChaptersPanel } from '../routes/ChaptersPanel';
 import { RoutesPanel } from '../routes/RoutesPanel';
 import { SavesPanel } from '../saves/SavesPanel';
@@ -47,32 +57,42 @@ import type {
   DiceRules,
   ErrorCode,
   EventDto,
+  ReplyLength,
+  ReplyOptions,
   RollRequest,
   RouteView,
   SaveView,
   SearchResults,
 } from '../../types';
-import { Composer } from './Composer';
+import { Composer, LENGTHS, lengthOptions } from './Composer';
 import { ContextPreviewPanel } from './ContextPreviewPanel';
 import { EndChapterPanel } from './EndChapterPanel';
 import { ExportPanel } from './ExportPanel';
 import { InventoryPanel, TrackerHud } from './InventoryPanel';
 import { NarrativeView } from './NarrativeView';
-import { joinCast } from './NewCharacterCard';
+import { joinCast, newcomerId } from './NewCharacterCard';
+import { portraitSlot } from './pictures';
+import { usePictureMaker } from '../images/MakePortrait';
 import { PicturesPanel } from './PicturesPanel';
 import { ReaderRail } from './ReaderRail';
 import { ScenePictures } from './ScenePictures';
 import { usePictureView } from './stage';
 import { StoryDetailsPanel, type DetailsTab } from './StoryDetailsPanel';
 import { StoryMemoryPanel } from './StoryMemoryPanel';
+import { REMEMBER_NAME_ID } from './Notebook';
 import { StorytellerPanel } from './StorytellerPanel';
+import { Tour, useTour } from './Tour';
 import { standingNotes, standingThreads } from './notes';
+import { standingBonds } from './feelings';
 import { nextMoves, openingIdeas, parseBlocks, plainText, type NewCharacter } from './messages';
 import { NameColorsContext, nameColorFinder } from './nameColors';
 import { PortraitsContext, portraitFinder } from './portraits';
 import { DiceRulesContext } from './DiceCards';
 import { intlLocale, joinList, joinSentences, msg, t, tKnown, tr } from '../../i18n';
 import { chapterHasTitle, chapterHeading, routeName, saveName } from '../../i18n/names';
+
+/** A portrait made for someone who joined the cast, waiting to be shown. */
+type MadePortrait = { routeId: string; characterId: string; name: string; assetId: string };
 
 type Panel =
   | null
@@ -90,6 +110,7 @@ type Panel =
   | 'storyteller'
   | 'memory'
   | 'inventory'
+  | 'note'
   | 'end';
 
 const PANEL_TITLES: Record<Exclude<Panel, null>, string> = {
@@ -107,8 +128,27 @@ const PANEL_TITLES: Record<Exclude<Panel, null>, string> = {
   storyteller: msg('Storyteller'),
   memory: msg('Story memory'),
   inventory: msg('Status and inventory'),
+  note: msg('Note to the storyteller'),
   end: msg('End chapter'),
 };
+
+/** As `MAX_STORYTELLER_NOTE` and `MAX_HINT` in Rust. */
+const MAX_NOTE = 500;
+const MAX_HINT = 300;
+
+/** Ready-made hints for Another reply; the player can write their own. */
+const HINTS = [
+  msg('More dialogue'),
+  msg('More romantic'),
+  msg('More tension'),
+  msg('Funnier'),
+  msg('Calmer'),
+  msg('More about the place'),
+  msg('Slower, more detail'),
+];
+
+/** Events after a reply that still leave it the latest one. */
+const AFTER_REPLY: ReadonlySet<EventDto['kind']> = new Set(['edit', 'fact_confirm', 'checkpoint']);
 
 const MENU_ICON = { className: 'btn-icon', 'aria-hidden': true } as const;
 
@@ -205,6 +245,8 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
   const clearDraft = useUiStore((s) => s.clearDraft);
   const stepTextSize = useUiStore((s) => s.stepTextSize);
   const textSize = useUiStore((s) => s.textSize);
+  const readingWidth = useLook((s) => s.width);
+  const lineSpacing = useLook((s) => s.spacing);
 
   const [view, setView] = useState<RouteView | null>(null);
   const [viewing, setViewing] = useState<SaveView | null>(null);
@@ -229,6 +271,15 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
   );
   const [budget, setBudget] = useState<BudgetStatus | null>(null);
   const [editText, setEditText] = useState('');
+  /** The note to the storyteller being written in its window. */
+  const [noteText, setNoteText] = useState('');
+  /** What Another reply asks for: its length and a hint. */
+  const [regen, setRegen] = useState<{ length: ReplyLength | 'normal'; hint: string }>({
+    length: 'normal',
+    hint: '',
+  });
+  /** Words picked in the story for a new memory note. */
+  const [remember, setRemember] = useState<string | null>(null);
   /** The action being changed, or the reply being replaced. */
   const [target, setTarget] = useState<EventDto | null>(null);
   const [bookmarks, setBookmarks] = useState<BookmarkDto[]>([]);
@@ -245,6 +296,9 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
       mounted.current = false;
     };
   }, []);
+
+  // Reading aloud stops when you leave the story.
+  useEffect(() => () => useReadAloud.getState().stop(), []);
 
   // Leaving while a reply is being written: it keeps going, and the app
   // says so (with a chime) when it is ready.
@@ -412,6 +466,73 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
 
   const awaitingReply = !!view?.awaitingReply;
   const writing = stream !== null;
+
+  // Portraits made for people who just joined the cast. Each one becomes
+  // the route's picture for them, from then on, once the route is free to
+  // change (no reply being written or waited for).
+  const painter = usePictureMaker();
+  const [madePortraits, setMadePortraits] = useState<MadePortrait[]>([]);
+  const placing = useRef(false);
+  useEffect(() => {
+    const next = madePortraits.find((p) => p.routeId === view?.route.id);
+    if (!view || !next || placing.current || busy || writing || awaitingReply || viewing) return;
+    placing.current = true;
+    const done = () => setMadePortraits((all) => all.filter((p) => p !== next));
+    commands
+      .editStoryDetails({
+        storyId: view.story.id,
+        routeId: view.route.id,
+        expectedHeadId: view.state.headEventId,
+        changes: [
+          { op: 'setVisualRef', slot: portraitSlot(next.characterId), assetId: next.assetId },
+        ],
+        note: t('Portrait of {name}', { name: next.name }),
+      })
+      .then((v) => {
+        done();
+        setView(v);
+        setSaveStatus(t('{name}’s portrait is ready {time}', { name: next.name, time: timeNow() }));
+      })
+      .catch((e: unknown) => {
+        if (e instanceof CommandError && e.code === 'HEAD_CHANGED') {
+          setReload((n) => n + 1);
+        } else {
+          done();
+          setSaveStatus(
+            t('{name}’s portrait is in your images; choose it under Pictures.', {
+              name: next.name,
+            }),
+          );
+        }
+      })
+      .finally(() => {
+        placing.current = false;
+      });
+  }, [madePortraits, view, busy, writing, awaitingReply, viewing]);
+
+  /** Makes the portrait of someone who just joined the cast, in the background. */
+  const makeNewcomerPortrait = async (v: RouteView, characterId: string) => {
+    const character = v.state.state.characters[characterId];
+    if (!character) return;
+    const name = character.name;
+    setSaveStatus(t('Making {name}’s portrait…', { name }));
+    try {
+      const asset = await commands.makePortrait({
+        character,
+        world: v.state.state.world,
+        style: 'painted',
+        storyId: v.story.id,
+      });
+      setMadePortraits((all) => [
+        ...all,
+        { routeId: v.route.id, characterId, name, assetId: asset.id },
+      ]);
+    } catch (e) {
+      setSaveStatus(
+        t('{name}’s portrait wasn’t made: {reason}', { name, reason: errorMessage(e) }),
+      );
+    }
+  };
   const lastAction = view?.history[view.history.length - 1];
   // The storyteller's ideas for the next move, from the reply the story
   // stands at, or a few ways in when a chapter begins: none once the
@@ -428,8 +549,40 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
           ? openingIdeas(view.state.state)
           : [];
 
-  /** Send an action. A roll from a dice card leaves the typed draft alone. */
-  const send = (text: string = draft, roll?: RollRequest, fromComposer = true) =>
+  // Where this route began: what comes before it belongs to the route it
+  // branched from, and only there can it be changed or taken back.
+  const forkAt = view ? view.history.findIndex((e) => e.id === view.route.forkEventId) : -1;
+  const lastReplyAt = view ? view.history.findLastIndex((e) => e.kind === 'assistant') : -1;
+  /** The latest reply, which can change in place while only story details follow it. */
+  const editableReplyId =
+    view &&
+    lastReplyAt > 0 &&
+    lastReplyAt - 1 >= forkAt &&
+    view.history.slice(lastReplyAt + 1).every((e) => AFTER_REPLY.has(e.kind))
+      ? view.history[lastReplyAt]!.id
+      : undefined;
+  const lastActionAt = view ? view.history.findLastIndex((e) => e.kind === 'player') : -1;
+  /** The player's last action, which can be taken back while it is in this chapter. */
+  const takeBackId =
+    view &&
+    lastActionAt > 0 &&
+    lastActionAt > forkAt &&
+    !view.history.slice(lastActionAt).some((e) => e.kind === 'chapter_start')
+      ? view.history[lastActionAt]!.id
+      : undefined;
+  const canTakeBack =
+    !!takeBackId && !busy && !writing && !viewing && !view?.awaitingReply?.activeRun;
+
+  /**
+   * Send an action. A roll from a dice card leaves the typed draft alone.
+   * Empty text is Keep going; `options` are for the next reply only.
+   */
+  const send = (
+    text: string = draft,
+    roll?: RollRequest,
+    fromComposer = true,
+    options?: ReplyOptions,
+  ) =>
     view &&
     run(async () => {
       const sub = await commands.submitAction({
@@ -438,8 +591,10 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
         expectedHeadId: view.route.headEventId ?? '',
         text,
         roll,
+        options,
       });
       if (fromComposer) clearDraft(routeId);
+      useTour.getState().acted();
       setView(sub.view);
       void generate(sub.runId);
     });
@@ -479,6 +634,7 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
     const e = view?.history.find((x) => x.id === eventId);
     if (e?.kind !== 'assistant') return;
     setTarget(e);
+    setRegen({ length: 'normal', hint: '' });
     setPanel('regenerate');
   };
 
@@ -504,13 +660,104 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
     view &&
     target?.kind === 'assistant' &&
     run(async () => {
+      const hint = regen.hint.trim();
+      const options = { ...lengthOptions(regen.length), ...(hint ? { hint } : {}) };
       const sub = await commands.regenerateReply({
         storyId: view.story.id,
         routeId: view.route.id,
         assistantEventId: target.id,
+        options: Object.keys(options).length ? options : undefined,
       });
       goToRoute(sub.view);
     });
+
+  /**
+   * Take back the player's last turn: the story goes back to just before
+   * it, and the turn stays on a branch. Words typed for it come back to the
+   * box when it is empty, to change and send again.
+   */
+  const takeBack = () =>
+    view &&
+    run(async () => {
+      const action = view.history.findLast((e) => e.kind === 'player');
+      const back = await commands.takeBackTurn({
+        storyId: view.story.id,
+        routeId: view.route.id,
+        expectedHeadId: view.route.headEventId ?? '',
+      });
+      setPanel(null);
+      setView(back.view);
+      const words = action?.kind === 'player' && !action.payload.roll ? action.payload.text : '';
+      if (words.trim() && !draft.trim() && parseBlocks(words).every((b) => b.kind === 'prose')) {
+        setDraft(routeId, words);
+      }
+      const kept = back.view.routes.find((r) => r.id === back.keptRouteId);
+      setSaveStatus(
+        t('Turn taken back {time}. It is kept in Routes as “{route}”.', {
+          time: timeNow(),
+          route: routeName(kept?.label ?? ''),
+        }),
+      );
+    });
+
+  /** New words for the latest reply, in place. Throws so the editor can show it. */
+  const editReply = async (eventId: string, text: string) => {
+    if (!view) return;
+    setError(null);
+    try {
+      const v = await commands.editReply({
+        storyId: view.story.id,
+        routeId: view.route.id,
+        expectedHeadId: view.route.headEventId ?? '',
+        assistantEventId: eventId,
+        text,
+      });
+      setView(v);
+      setSaveStatus(t('Reply changed {time}', { time: timeNow() }));
+      setBookmarksReload((n) => n + 1);
+    } catch (e) {
+      if (e instanceof CommandError && e.code === 'HEAD_CHANGED') setReload((n) => n + 1);
+      throw e;
+    }
+  };
+
+  const openNote = () => {
+    setNoteText(view?.state.state.narration?.storytellerNote ?? '');
+    setPanel('note');
+  };
+
+  /** Keep a note to the storyteller from now on, or remove it (null). */
+  const saveNote = (text: string | null) =>
+    view &&
+    run(async () => {
+      const narration = view.state.state.narration;
+      const words = text?.trim() ?? '';
+      const v = await commands.editStoryDetails({
+        storyId: view.story.id,
+        routeId: view.route.id,
+        expectedHeadId: view.state.headEventId,
+        changes: [
+          {
+            op: 'setNarration',
+            narration: { ...narration, storytellerNote: words || undefined },
+          },
+        ],
+        note: words ? t('note to the storyteller') : t('note to the storyteller removed'),
+      });
+      setView(v);
+      setPanel(null);
+      setSaveStatus(
+        words
+          ? t('Note to the storyteller kept {time}', { time: timeNow() })
+          : t('Note to the storyteller removed {time}', { time: timeNow() }),
+      );
+    });
+
+  /** Open Story memory with a new note holding the words picked in the story. */
+  const rememberThis = (words: string) => {
+    setRemember(words);
+    setPanel('memory');
+  };
 
   const quickSave = useCallback(() => {
     if (!view) return;
@@ -534,6 +781,7 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
                 open: s.openThreads,
                 done: s.doneThreads ?? [],
               }).map((c) => c.text),
+              ...standingBonds(reply.payload.text, s).map((c) => c.name),
             ]
           : [];
       const v = await commands.undoReplyNotes({
@@ -548,18 +796,20 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
     });
 
   /** Adds someone a reply brought in to the cast; throws when that fails. */
-  const addToCast = async (c: NewCharacter) => {
+  const addToCast = async (c: NewCharacter, portrait: boolean) => {
     if (!view) return;
+    const characterId = newcomerId(view.state.state);
     try {
       const v = await commands.editStoryDetails({
         storyId: view.story.id,
         routeId: view.route.id,
         expectedHeadId: view.state.headEventId,
-        changes: joinCast(view.state.state, c),
+        changes: joinCast(view.state.state, c, characterId),
         note: t('added {name} to the cast', { name: c.name.trim() }),
       });
       setView(v);
       setSaveStatus(t('{name} joined the cast {time}', { name: c.name.trim(), time: timeNow() }));
+      if (portrait) void makeNewcomerPortrait(v, characterId);
     } catch (e) {
       if (e instanceof CommandError && e.code === 'HEAD_CHANGED') setReload((n) => n + 1);
       throw e;
@@ -614,8 +864,8 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
   useLayoutEffect(() => {
     onKey.current = (e: KeyboardEvent) => {
       if (isComposing(e) || e.defaultPrevented || !view) return;
-      // The Keyboard shortcuts window is on top: leave the story alone.
-      if (useShortcutHelp.getState().open) return;
+      // The Keyboard shortcuts window or the palette is on top: leave the story alone.
+      if (useShortcutHelp.getState().open || usePalette.getState().open) return;
       const did = (fn?: () => void) => {
         e.preventDefault();
         fn?.();
@@ -628,6 +878,7 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
       if (isShortcut(e, 'routes')) return did(() => setPanel('routes'));
       if (isShortcut(e, 'memory')) return did(() => setPanel('memory'));
       if (isShortcut(e, 'details')) return did(() => !awaitingReply && !writing && openDetails());
+      if (isShortcut(e, 'takeBack')) return did(() => canTakeBack && void takeBack());
       if (isShortcut(e, 'endChapter')) return did(() => !waiting && !viewing && setPanel('end'));
       if (isShortcut(e, 'pictures')) {
         const pictures = usePictureView.getState();
@@ -666,6 +917,152 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
     window.addEventListener('keydown', listener);
     return () => window.removeEventListener('keydown', listener);
   }, []);
+
+  // The command palette offers this story's chapters and windows; it reads
+  // them when it opens, so they follow the story as it changes.
+  useLayoutEffect(() => {
+    paletteSources.set('reader', () => {
+      if (!view) return [];
+      const group = t('In this story');
+      const waiting = busy || awaitingReply || writing;
+      const open = (p: Exclude<Panel, null>) => () => {
+        setViewing(null);
+        setPanel(p);
+      };
+      const latestReply = view.history.findLast((e) => e.kind === 'assistant');
+      return [
+        ...view.chapters.map((c) => ({
+          id: `chapter:${c.eventId}`,
+          group,
+          label: chapterHeading(c.ordinal, c.title),
+          keywords: t('Chapter {n}', { n: c.ordinal }),
+          icon: BookOpenText,
+          run: () => goTo(c.eventId),
+        })),
+        { id: 'p:menu', group, label: t('Pause menu'), icon: Menu, run: open('menu') },
+        {
+          id: 'p:saves',
+          group,
+          label: t('Save / Load'),
+          icon: ArchiveRestore,
+          keys: 'saves' as const,
+          run: open('saves'),
+        },
+        {
+          id: 'p:quick',
+          group,
+          label: t('Quick save'),
+          icon: Save,
+          keys: 'quickSave' as const,
+          run: quickSave,
+        },
+        {
+          id: 'p:routes',
+          group,
+          label: t('Routes'),
+          icon: GitBranch,
+          keys: 'routes' as const,
+          run: open('routes'),
+        },
+        {
+          id: 'p:chapters',
+          group,
+          label: t('Replay a chapter…'),
+          icon: ListOrdered,
+          run: open('chapters'),
+        },
+        {
+          id: 'p:search',
+          group,
+          label: t('Story search'),
+          icon: Search,
+          keys: 'search' as const,
+          run: open('search'),
+        },
+        ...(waiting
+          ? []
+          : [
+              {
+                id: 'p:details',
+                group,
+                label: t('Story details'),
+                icon: UserRoundPen,
+                keys: 'details' as const,
+                run: () => openDetails(),
+              },
+              {
+                id: 'p:end',
+                group,
+                label: t('End chapter'),
+                icon: BookMarked,
+                keys: 'endChapter' as const,
+                run: open('end'),
+              },
+            ]),
+        {
+          id: 'p:memory',
+          group,
+          label: t('Story memory'),
+          icon: Brain,
+          keys: 'memory' as const,
+          run: open('memory'),
+        },
+        ...(view.state.state.tracking
+          ? [
+              {
+                id: 'p:inventory',
+                group,
+                label: t('Status and inventory'),
+                icon: Backpack,
+                run: open('inventory'),
+              },
+            ]
+          : []),
+        { id: 'p:pictures', group, label: t('Pictures'), icon: Images, run: open('pictures') },
+        {
+          id: 'p:storyteller',
+          group,
+          label: t('Storyteller'),
+          icon: Feather,
+          run: open('storyteller'),
+        },
+        {
+          id: 'p:context',
+          group,
+          label: t('Preview context'),
+          icon: ScanText,
+          run: open('context'),
+        },
+        { id: 'p:export', group, label: t('Export…'), icon: Download, run: open('export') },
+        {
+          id: 'p:tips',
+          group,
+          label: t('Show the first-time tips again'),
+          icon: Lightbulb,
+          run: () => useTour.getState().start(),
+        },
+        ...(latestReply && canReadAloud()
+          ? [
+              {
+                id: 'p:read',
+                group,
+                label: t('Read the latest reply aloud'),
+                icon: Volume2,
+                run: () =>
+                  useReadAloud
+                    .getState()
+                    .read(
+                      latestReply.id,
+                      latestReply.kind === 'assistant' ? plainText(latestReply.payload.text) : '',
+                      speechLang(view.state.state.narration?.language),
+                    ),
+              },
+            ]
+          : []),
+      ];
+    });
+  });
+  useEffect(() => () => void paletteSources.delete('reader'), []);
 
   useStoryLook(view?.story.id ?? null, view?.state.state.narration?.genres);
 
@@ -712,23 +1109,49 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
         <section
           className="reader"
           aria-label={t('Reading {title}', { title: view.story.title })}
-          style={{ fontSize: `${textSize}rem` }}
+          style={{
+            fontSize: `${textSize}rem`,
+            ...readingStyle({ width: readingWidth, spacing: lineSpacing }),
+          }}
         >
           <header className="reader-status">
             <div className="reader-heading">
               <h1 className="reader-title">{view.story.title}</h1>
               <div className="reader-meta">
                 {chapter && (
-                  <span className="reader-chapter">
-                    {chapterHasTitle(chapter.ordinal, chapter.title) ? (
-                      tr('Chapter {n}: {title}', {
-                        n: chapter.ordinal,
-                        title: <strong>{chapter.title}</strong>,
-                      })
-                    ) : (
-                      <strong>{t('Chapter {n}', { n: chapter.ordinal })}</strong>
-                    )}
-                  </span>
+                  <MenuButton
+                    label={t('Go to a chapter')}
+                    className="reader-chapter chapter-jump"
+                    items={[
+                      ...view.chapters.map((c) => ({
+                        label: chapterHeading(c.ordinal, c.title),
+                        icon:
+                          c.eventId === chapter.eventId ? (
+                            <Check className="menu-icon" aria-hidden={true} size={16} />
+                          ) : (
+                            <span className="menu-icon menu-icon-space" aria-hidden="true" />
+                          ),
+                        onSelect: () => goTo(c.eventId),
+                      })),
+                      {
+                        label: t('Replay a chapter…'),
+                        icon: <ListOrdered className="menu-icon" aria-hidden={true} size={16} />,
+                        onSelect: () => setPanel('chapters'),
+                      },
+                    ]}
+                  >
+                    <span>
+                      {chapterHasTitle(chapter.ordinal, chapter.title) ? (
+                        tr('Chapter {n}: {title}', {
+                          n: chapter.ordinal,
+                          title: <strong>{chapter.title}</strong>,
+                        })
+                      ) : (
+                        <strong>{t('Chapter {n}', { n: chapter.ordinal })}</strong>
+                      )}
+                    </span>
+                    <ChevronDown className="chapter-jump-icon" aria-hidden={true} size={14} />
+                  </MenuButton>
                 )}
                 <span>
                   {tr('Route: {label}', {
@@ -865,6 +1288,11 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
                 playerName={player?.name ?? t('You')}
                 onBranch={viewing ? undefined : (id) => void branchFrom(id)}
                 onRegenerate={viewing || writing || busy ? undefined : openRegenerate}
+                editableReplyId={viewing || writing || busy ? undefined : editableReplyId}
+                onEditReply={editReply}
+                takeBackId={canTakeBack ? takeBackId : undefined}
+                onTakeBack={() => void takeBack()}
+                onRemember={viewing || writing || awaitingReply ? undefined : rememberThis}
                 onEditAction={
                   viewing || writing || busy
                     ? undefined
@@ -884,7 +1312,9 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
                   open: view.state.state.openThreads,
                   done: view.state.state.doneThreads ?? [],
                 }}
+                currentState={view.state.state}
                 sceneHeadings={!!view.state.state.narration?.sceneHeadings}
+                speechLang={speechLang(view.state.state.narration?.language)}
                 ideasShown={ideas.length > 0}
                 newcomers={
                   viewing || writing || busy || awaitingReply
@@ -893,6 +1323,7 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
                         storyId: view.story.id,
                         cast: Object.values(view.state.state.characters).map((c) => c.name),
                         adultsOnly: view.state.state.narration?.rating === 'explicit',
+                        painter,
                         onAdd: addToCast,
                       }
                 }
@@ -974,6 +1405,7 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
                   </div>
                 </div>
               )}
+              <Tour hidden={!!panel || writing || awaitingReply} />
               {view.state.state.tracking && (
                 <TrackerHud
                   tracking={view.state.state.tracking}
@@ -983,7 +1415,9 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
               <Composer
                 value={draft}
                 onChange={(text) => setDraft(routeId, text)}
-                onSubmit={(text, roll) => void send(text, roll)}
+                onSubmit={(text, roll, options) => void send(text, roll, true, options)}
+                note={view.state.state.narration?.storytellerNote}
+                onNote={awaitingReply || writing ? undefined : openNote}
                 disabled={busy || awaitingReply || writing}
                 ideas={ideas}
                 placeholder={t('What do you do? (Enter to send, Shift+Enter for a new line)')}
@@ -1031,6 +1465,14 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
                       badge={visibleRoutes}
                     />
                     <ToolButton
+                      icon={StickyNote}
+                      label={t('Note to the storyteller')}
+                      title={t('A note to the storyteller about the story, kept out of it')}
+                      keys={undefined}
+                      onClick={openNote}
+                      disabled={busy || awaitingReply || writing}
+                    />
+                    <ToolButton
                       icon={Search}
                       label={t('Search')}
                       title={withKeys(t('Search this route and its bookmarks'), 'search')}
@@ -1055,18 +1497,20 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
                 panel === 'memory' ||
                 panel === 'end'
               }
-              onClose={() =>
+              onClose={() => {
+                setRemember(null);
                 setPanel(
                   panel === 'menu' ||
                     panel === 'edit' ||
+                    panel === 'note' ||
                     panel === 'end' ||
                     panel === 'storyteller' ||
                     panel === 'inventory' ||
                     !fromMenu.current
                     ? null
                     : 'menu',
-                )
-              }
+                );
+              }}
               initialFocusId={
                 panel === 'menu'
                   ? 'pause-resume'
@@ -1076,7 +1520,11 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
                       ? 'regenerate-confirm'
                       : panel === 'search'
                         ? 'search-input'
-                        : undefined
+                        : panel === 'note'
+                          ? 'storyteller-note-input'
+                          : panel === 'memory' && remember
+                            ? REMEMBER_NAME_ID
+                            : undefined
               }
             >
               {panel === 'menu' && (
@@ -1090,6 +1538,35 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
                     <Play {...MENU_ICON} />
                     {t('Resume')}
                   </button>
+                  <button
+                    type="button"
+                    onClick={() => void takeBack()}
+                    disabled={!canTakeBack}
+                    aria-describedby={canTakeBack ? undefined : 'take-back-hint'}
+                    aria-keyshortcuts={ariaKeys('takeBack')}
+                  >
+                    <Undo2 {...MENU_ICON} />
+                    {t('Take back my last turn')}
+                    <KeyHint id="takeBack" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={openNote}
+                    disabled={awaitingReply || writing}
+                    aria-describedby={awaitingReply || writing ? 'details-hint' : undefined}
+                  >
+                    <StickyNote {...MENU_ICON} />
+                    {t('Note to the storyteller')}
+                  </button>
+                  {!canTakeBack && (
+                    <p id="take-back-hint" className="muted small" data-wide="">
+                      {writing || view.awaitingReply?.activeRun
+                        ? t('A turn can be taken back once its reply is written or stopped.')
+                        : t(
+                            'Nothing to take back in this chapter. Use Chapters or Routes to go further back.',
+                          )}
+                    </p>
+                  )}
                   <button
                     type="button"
                     onClick={() => setPanel('saves')}
@@ -1339,6 +1816,7 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
               {panel === 'memory' && (
                 <StoryMemoryPanel
                   view={view}
+                  startNote={remember}
                   playerName={player?.name ?? t('You')}
                   detailsDisabled={awaitingReply || writing}
                   onChanged={(v) => {
@@ -1363,15 +1841,17 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
                 />
               )}
               {panel === 'regenerate' && target?.kind === 'assistant' && (
-                <div className="panel">
+                <div className="panel form">
                   <p>
                     {tr(
                       'The storyteller writes a different reply to {action} on a {newRoute}. {route} keeps this reply and everything after it.',
                       {
                         action: (() => {
                           const a = answered(target);
-                          return a?.kind === 'player' ? (
+                          return a?.kind === 'player' && plainText(a.payload.text).trim() ? (
                             <q>{plainText(a.payload.text)}</q>
+                          ) : a?.kind === 'player' && !a.payload.roll ? (
+                            <q>{t('Keep going')}</q>
                           ) : (
                             t('your action')
                           );
@@ -1381,6 +1861,58 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
                       },
                     )}
                   </p>
+                  <fieldset className="field">
+                    <legend>{t('Length')}</legend>
+                    <div className="segmented">
+                      {LENGTHS.map((l) => (
+                        <label key={l.value}>
+                          <input
+                            type="radio"
+                            name="regenerate-length"
+                            checked={regen.length === l.value}
+                            onChange={() => setRegen({ ...regen, length: l.value })}
+                          />
+                          <span>{t(l.label)}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </fieldset>
+                  <div className="field">
+                    <label htmlFor="regenerate-hint">
+                      {t('What should be different? (optional)')}
+                    </label>
+                    <input
+                      id="regenerate-hint"
+                      value={regen.hint}
+                      maxLength={MAX_HINT}
+                      placeholder={t('For example: she says no, or more about the storm')}
+                      onChange={(e) => setRegen({ ...regen, hint: e.target.value })}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && !isComposing(e)) {
+                          e.preventDefault();
+                          if (!busy) void submitRegenerate();
+                        }
+                      }}
+                    />
+                    <div className="hint-chips" role="group" aria-label={t('Ready-made hints')}>
+                      {HINTS.map((h) => (
+                        <button
+                          key={h}
+                          type="button"
+                          className="next-move"
+                          aria-pressed={regen.hint === t(h)}
+                          onClick={() =>
+                            setRegen({ ...regen, hint: regen.hint === t(h) ? '' : t(h) })
+                          }
+                        >
+                          {t(h)}
+                        </button>
+                      ))}
+                    </div>
+                    <p className="muted small">
+                      {t('The hint is for this reply only; it never becomes part of the story.')}
+                    </p>
+                  </div>
                   <div className="button-row">
                     <button type="button" onClick={() => setPanel(null)}>
                       {t('Cancel')}
@@ -1396,6 +1928,55 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
                     </button>
                   </div>
                 </div>
+              )}
+              {panel === 'note' && (
+                <form
+                  className="form"
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    void saveNote(noteText);
+                  }}
+                >
+                  <label htmlFor="storyteller-note-input">
+                    {t(
+                      'Tell the storyteller what you want from the story, out of character. It steers every reply from now on until you change it, and is never part of the story.',
+                    )}
+                  </label>
+                  <textarea
+                    id="storyteller-note-input"
+                    value={noteText}
+                    rows={4}
+                    maxLength={MAX_NOTE}
+                    placeholder={t(
+                      'For example: let the romance build slowly, and give Mara more to say.',
+                    )}
+                    onChange={(e) => setNoteText(e.target.value)}
+                  />
+                  <p className="muted small">
+                    {t('{n} of {max} characters', { n: noteText.length, max: MAX_NOTE })}
+                  </p>
+                  <div className="button-row">
+                    <button type="button" onClick={() => setPanel(null)}>
+                      {t('Cancel')}
+                    </button>
+                    {view.state.state.narration?.storytellerNote && (
+                      <button type="button" disabled={busy} onClick={() => void saveNote(null)}>
+                        {t('Remove note')}
+                      </button>
+                    )}
+                    <button
+                      type="submit"
+                      className="primary"
+                      disabled={
+                        busy ||
+                        noteText.trim() === (view.state.state.narration?.storytellerNote ?? '') ||
+                        (!noteText.trim() && !view.state.state.narration?.storytellerNote)
+                      }
+                    >
+                      {t('Keep this note')}
+                    </button>
+                  </div>
+                </form>
               )}
               {panel === 'edit' && (
                 <form

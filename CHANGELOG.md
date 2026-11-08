@@ -2,17 +2,97 @@
 
 ## Unreleased
 
+- **Install updates from the app.** When a new release is out, **Settings → Updates** can
+  install it and restart (the footer notice leads there). The download is checked against the
+  app's own signature first, and nothing is downloaded until you ask. This needs a release
+  built with the update signing key.
+- **Report a problem.** The footer (and Ctrl/Cmd+K) has **Report a problem**: say what
+  happened, and the app adds the short diagnostics report, with no story text, keys or paths.
+  **Copy** it into a message, **Save as file…**, or **Copy and open GitHub** for a new issue.
+  Nothing is sent from the app.
+- **A portrait for someone new.** With a picture connection, the card for a new character
+  has **Make their portrait too** ticked: adding them to the cast draws their portrait from
+  the card's looks and shows it on that route once it's made. **Settings → Pictures** turns
+  the offer off.
+- **See how a picture was made.** A portrait or item picture the app makes keeps the
+  description the picture service was sent. Open it in the image library, or pick it under
+  **Pictures**, and choose **What was sent to make it**. Cards for new characters now give
+  what a painter needs (apparent age, build, skin tone or heritage, hair, eyes, clothes), so
+  their portraits match the story, and a description no longer ends in two full stops.
+- **Testing a connection explains more.** The result is in your language, a wrong Google
+  Gemini key is reported as a refused key, and a paid connection with no key saved says so.
+- Fixed: a long story with a big cast could outgrow the default context and stop with "the
+  story setup … needs about N tokens". The people not in the scene are now sent in brief, and
+  the oldest facts, chapters and threads more briefly, so the story keeps its summary and
+  newest turns. Nothing is removed from the story itself.
+- The first tip moves on once you send your first action, and **See notes** and **Undo**
+  stay together on the memory line.
+- Fixed: jumping to a reply (a bookmark, a search result or a chapter) could push the whole
+  reader up, hiding the story's title and the menu until the story was opened again.
+- Fixed: replies from OpenAI's GPT-6 models (the preset's default) failed or came back
+  empty. The app now treats every GPT-5, GPT-6 and o-series model as one that thinks first:
+  no temperature, low reasoning effort, and 2,000 more tokens for the thinking.
+
+- **Keep going.** With nothing typed, the send button is **Keep going**: the story goes on
+  without your character doing anything.
+- **How long the next reply is.** **Short**, **Normal** or **Long** beside the kinds of action
+  asks the next reply only to be short or long.
+- **Another reply with a hint.** **Another reply** can ask for a length and say what should be
+  different, in your own words or with a ready-made hint such as "More dialogue" or "More
+  romantic". The hint is for that reply only. The offline storyteller now writes a different
+  reply each time too.
+- **A note to the storyteller.** The note button beside the story, or the pause menu, keeps a
+  note to the storyteller ("let the romance build slowly"). It steers every reply from then
+  on, shows above the action box, and is never part of the story.
+- **Edit a reply.** The pencil under the latest reply changes its words in place. Its memory
+  notes and ideas stay, and the reply as it was is kept as a hidden route.
+- **Take back my last turn.** The pause menu, the arrow under your last action, or Ctrl+U
+  (Cmd+U on a Mac) goes back to just before your last action and puts its words back in the
+  box. The turn is kept in **Routes** as "Taken back: …".
+- **Remember this.** Pick words in the story and press **Remember this** to make them a memory
+  note: about the person they name, or a moment in the timeline.
+- **Find anything.** Ctrl+K (Cmd+K on a Mac) opens a box that finds any story, chapter,
+  window or setting as you type. Up and Down choose, Enter goes.
+- **Jump to a chapter.** The chapter name under the story's title lists every chapter so far;
+  pick one to jump there, or **Replay a chapter…**.
+- **Read aloud.** The speaker under a reply reads it with the computer's own voices, offline
+  and free. **Settings → Sound** chooses the voice and the speed, with **Try it**. The
+  speaker shows only where the computer has voices.
+- **Save a route as a book.** **Export → Book** saves the route as an e-book (`.epub`) for any
+  e-reader or book app: the story's cover (or a drawn one), a title page with who you played,
+  a page for each chapter, a table of contents and the Literata font. Only the story goes in,
+  never notes or settings.
+- **How they feel about you.** A character can have a **Heart** bar (cold to devoted) or a
+  **Trust** bar (suspicious to complete trust) beside how they know you and how they feel now.
+  The storyteller reads the bars before every reply and moves them as things happen; the
+  "Memory updated" line shows each change (Mara +10) with **Undo**. Set them yourself in
+  **Story details**.
+- **A tidier notebook.** When a chapter ends and the notebook has grown, the storyteller
+  offers to merge notes about the same person or thing and shorten long ones. Each change
+  shows what it would become, with **Keep** or **Undo**; nothing changes until the chapter
+  ends. The offline storyteller does a simpler version, and stories that keep their notes by
+  hand are left alone.
+- **Tips for your first story.** Four short tips point at the action box, the kinds of
+  action, the tools and the side bar. **Skip tips** hides them for good.
 - **A new look.** Stories are set in Literata, a book font, and the rest of the app in Inter;
   both come with the app, so they look the same on every computer. Chapters open like a
   book's, with the chapter number, a large title, an ornament and a large first letter.
   Buttons, cards, dialogs and settings have depth, on/off options are switches, lists to
   pick from are pills, and the main buttons have icons. Things fade in gently, and not at all
   when the computer asks for less motion.
-- **Themes.** **Settings → Look** chooses Rose (light or dark with your computer), Midnight
-  or Parchment. With **Give each story a look that fits its genre** on, each story takes the
-  look of its genre: Midnight for horror, mysteries and science fiction, Parchment for
-  fantasy and history, Rose for romance. **Look** beside the story chooses another for that
+- **Themes.** **Settings → Look** chooses Rose (light or dark with your computer), Midnight,
+  Parchment, Neon (near black with cyan and magenta), Café (latte browns and a soft green) or
+  Gothic (charcoal and deep red, with serif headings). With **Give each story a look that fits
+  its genre** on, each story takes the look of its genre: Gothic for horror and mysteries,
+  Neon for science fiction, Midnight for thrillers, Parchment for fantasy and history, Café
+  for cozy stories and Rose for romance. **Look** beside the story chooses another for that
   story. Looks are a setting of this computer.
+- **Reading the way you like.** **Settings → Look** and **Look** beside the story choose the
+  text size, the column width (Narrow, Medium or Wide) and the line spacing (Compact, Normal or
+  Roomy) for every story, shown on a sample of a story as you choose. They are remembered on
+  this computer.
+- **Settings at a glance.** Every section of Settings has an icon, and two new ones say what
+  stays on your computer (**Privacy and data**) and how to see every key (**Shortcuts**).
 - **Name colors.** Each character's name shows in their own color in the story, on script
   lines and on text, call and post cards, picked from the name so it never changes. Choose
   another under **Name color** in **Story details**; it is only for the screen and is never
@@ -88,6 +168,19 @@
   ready-made story; it was New story) and **Custom Story** (it was Create your own). Custom
   Story opens in Custom with every field empty. Guided is one click away, and **None (start
   blank)** takes back a preset world, character or opening.
+- **Fill in the rest.** Each step of Custom Story has **Fill in the rest**: the storyteller
+  fills that step's empty fields to fit what you wrote, in one request, and says which it
+  filled. A few words of setting become an era, a description and rules; a title and a premise
+  become an opening scene and two or three people to meet, each with a role and how they know
+  you. Your own words stay, everything can be changed, and **Undo** takes it all back. Review
+  has **Fill in everything left**. Without a connection, or when the call fails, the offline
+  storyteller fills in from the preset story closest to what you wrote. Everyone it invents is
+  an adult.
+- **A story you can see as you make it.** Preset Story shows the story as a cover in the look
+  it will be read in: its picture or a large letter, title, genres, premise, cast (you first)
+  and the first page in the story's font. Custom Story shows the same cover beside the steps
+  and fills it in as you type, and a step bar at the top ticks off the steps behind you and
+  goes to any step.
 - **Type your own or pick one.** The type of story, setting, era, name, pronouns, role,
   species and tone each take your own words or a pick from a list, and × clears them. Only
   your name is needed to begin: the title becomes _Untitled story_, the first chapter

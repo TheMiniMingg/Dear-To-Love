@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Info, RefreshCw } from 'lucide-react';
 import { commands, errorMessage } from '../../api/commands';
 import { formatWhen } from '../../api/backups';
 import { useUiStore } from '../../app/store';
@@ -39,16 +40,25 @@ export function describeUpdates(u: UpdateStatus): string {
 
 /**
  * Settings: opt-in update checks (off by default), Check now, and the page
- * of a newer release. Nothing is ever downloaded or installed.
+ * of a newer release. A copy built with an update signing key can also
+ * install the newer release, when the player asks.
  */
 export function UpdatesSection() {
   const updates = useUiStore((s) => s.updates);
   const setUpdates = useUiStore((s) => s.setUpdates);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [canInstall, setCanInstall] = useState(false);
+  const [installing, setInstalling] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
+    commands
+      .canInstallUpdates()
+      .then((can) => {
+        if (!cancelled) setCanInstall(can);
+      })
+      .catch(() => undefined);
     commands
       .getUpdateStatus()
       .then((u) => {
@@ -81,6 +91,24 @@ export function UpdatesSection() {
       return enabled ? commands.checkForUpdates(false) : st;
     });
 
+  const install = async () => {
+    setError(null);
+    setInstalling(t('Downloading and installing the update…'));
+    try {
+      const version = await commands.installUpdate();
+      if (!version) {
+        setInstalling(null);
+        setError(t('This copy is already the newest version.'));
+        return;
+      }
+      setInstalling(t('Installed v{version}. Restarting…', { version }));
+      await commands.restartApp();
+    } catch (e) {
+      setInstalling(null);
+      setError(errorMessage(e));
+    }
+  };
+
   const openRelease = async () => {
     setError(null);
     try {
@@ -97,7 +125,10 @@ export function UpdatesSection() {
       tabIndex={-1}
       aria-labelledby="updates-title"
     >
-      <h2 id="updates-title">{t('Updates')}</h2>
+      <h2 id="updates-title" className="section-title">
+        <RefreshCw className="section-icon" aria-hidden={true} />
+        {t('Updates')}
+      </h2>
       <label className="check">
         <input
           type="checkbox"
@@ -109,7 +140,7 @@ export function UpdatesSection() {
       </label>
       <p className="muted small">
         {t(
-          'Reads the public release list of the Dear to Love repository. Nothing about you or your stories is sent, and nothing is downloaded or installed: a newer release only shows a notice with a link to its page.',
+          'Reads the public release list of the Dear to Love repository. Nothing about you or your stories is sent, and nothing is downloaded or installed unless you ask: a newer release shows a notice with a link to its page.',
         )}
       </p>
       <div className="button-row">
@@ -120,6 +151,16 @@ export function UpdatesSection() {
         >
           {busy ? t('Checking…') : t('Check now')}
         </button>
+        {updates?.state === 'available' && updates.latest && canInstall && (
+          <button
+            type="button"
+            className="primary"
+            disabled={busy || !!installing}
+            onClick={() => void install()}
+          >
+            {t('Install v{version} and restart', { version: updates.latest.version })}
+          </button>
+        )}
         {updates?.state === 'available' && updates.latest && (
           <button
             type="button"
@@ -130,6 +171,18 @@ export function UpdatesSection() {
           </button>
         )}
       </div>
+      {installing && (
+        <p role="status" className="small">
+          {installing}
+        </p>
+      )}
+      {canInstall && (
+        <p className="muted small">
+          {t(
+            'Installing keeps your stories, settings and keys. The download is checked against the app’s own signature before anything is installed.',
+          )}
+        </p>
+      )}
       {updates && (
         <p
           role="status"
@@ -187,7 +240,10 @@ export function AboutSection() {
       tabIndex={-1}
       aria-labelledby="about-title"
     >
-      <h2 id="about-title">{t('About')}</h2>
+      <h2 id="about-title" className="section-title">
+        <Info className="section-icon" aria-hidden={true} />
+        {t('About')}
+      </h2>
       <p>
         {info ? (
           <>

@@ -6,6 +6,7 @@ import type { RouteView, StoryMemory, SummaryWriter } from '../../types';
 import { joinList, joinSentences, t, tKnown, tn, tr } from '../../i18n';
 import { chapterHeading } from '../../i18n/names';
 import { Notebook } from './Notebook';
+import { BondBar } from './feelings';
 import { ThreadLog } from './ThreadLog';
 
 /** Who wrote a summary: "Cloud model (story-model)", or the offline storyteller. */
@@ -22,6 +23,7 @@ function writerName(w: SummaryWriter | undefined): string {
  */
 export function StoryMemoryPanel({
   view,
+  startNote,
   playerName,
   detailsDisabled,
   onChanged,
@@ -29,6 +31,8 @@ export function StoryMemoryPanel({
   onOpenStoryteller,
 }: {
   view: RouteView;
+  /** Words picked in the story ("Remember this"): open a note holding them. */
+  startNote?: string | null;
   playerName: string;
   /** True while a reply is being written: details and notes wait. */
   detailsDisabled: boolean;
@@ -62,7 +66,7 @@ export function StoryMemoryPanel({
       ? playerName
       : s.characters[id]?.name || t('someone');
   const facts = s.knownFacts.filter((f) => f.confirmed && f.text.trim());
-  const relationships = s.relationships.filter((r) => r.label.trim() || r.status.trim());
+  const relationships = s.relationships.filter((r) => r.label.trim() || r.status.trim() || r.bond);
   const teller = view.storyteller;
 
   return (
@@ -82,7 +86,12 @@ export function StoryMemoryPanel({
         </button>
       </div>
 
-      <Notebook view={view} disabled={detailsDisabled} onChanged={onChanged} />
+      <Notebook
+        view={view}
+        disabled={detailsDisabled}
+        onChanged={onChanged}
+        startNote={startNote}
+      />
       <ThreadLog view={view} disabled={detailsDisabled} onChanged={onChanged} />
 
       <section aria-labelledby="memory-summary">
@@ -200,9 +209,14 @@ export function StoryMemoryPanel({
             <h4>{t('Relationships')}</h4>
             <ul aria-label={t('Relationships')} className="memory-list">
               {relationships.map((r, i) => (
-                <li key={`${r.fromId}-${r.toId}-${i}`}>
-                  {nameOf(r.fromId)} → {nameOf(r.toId)}: {r.label}
-                  {r.status ? ` (${r.status})` : ''}
+                <li key={`${r.fromId}-${r.toId}-${i}`} className="relationship-row">
+                  <span>
+                    {nameOf(r.fromId)} → {nameOf(r.toId)}
+                    {r.label || r.status ? ': ' : ''}
+                    {r.label}
+                    {r.label && r.status ? ` (${r.status})` : r.status}
+                  </span>
+                  {r.bond && <BondBar bond={r.bond} name={nameOf(r.fromId)} />}
                 </li>
               ))}
             </ul>

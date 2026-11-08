@@ -8,14 +8,16 @@ use crate::db::timeline::{self, RouteDto};
 use crate::domain::dice::RollRequest;
 use crate::domain::events::StateEdit;
 use crate::domain::provider::StreamMessage;
+use crate::domain::reply_options::ReplyOptions;
 use crate::errors::AppResult;
 use crate::services::chapters::{self, ChapterRecapDraft};
 use crate::services::context::{self, ContextPreview};
-use crate::services::generation::{self, Ctx, Submitted};
+use crate::services::generation::{self, Ctx, Submitted, TakenBack};
 use crate::services::memory::{self, SummaryEnv};
 use crate::services::reader::{self, RouteView};
 use crate::services::route_map::{self, RouteNode};
 use crate::services::story_memory::{self, StoryMemory};
+use crate::services::tidy::{self, NotebookTidy};
 use crate::state::AppState;
 
 #[tauri::command]
@@ -24,7 +26,8 @@ pub async fn get_route_view(state: State<'_, AppState>, route_id: String) -> App
 }
 
 /// Commit the player's action and create a pending reply. With `roll`,
-/// the app rolls the dice and stores the result with the action.
+/// the app rolls the dice and stores the result with the action. Empty
+/// `text` without a roll is Keep going. `options` are for this reply only.
 #[tauri::command]
 pub async fn submit_action(
     state: State<'_, AppState>,
@@ -33,6 +36,7 @@ pub async fn submit_action(
     expected_head_id: String,
     text: String,
     roll: Option<RollRequest>,
+    options: Option<ReplyOptions>,
 ) -> AppResult<Submitted> {
     generation::submit_action(
         state.db()?,
@@ -41,6 +45,7 @@ pub async fn submit_action(
         &expected_head_id,
         &text,
         roll.as_ref(),
+        &options.unwrap_or_default(),
     )
     .await
 }
@@ -129,15 +134,57 @@ pub async fn edit_action(
     generation::edit_action(state.db()?, &story_id, &route_id, &player_event_id, &text).await
 }
 
-/// Another reply to an earlier action, on a new branch.
+/// Take back my last turn: the route goes back to before the last action,
+/// which stays on a new branch.
+#[tauri::command]
+pub async fn take_back_turn(
+    state: State<'_, AppState>,
+    story_id: String,
+    route_id: String,
+    expected_head_id: String,
+) -> AppResult<TakenBack> {
+    generation::take_back_turn(state.db()?, &story_id, &route_id, &expected_head_id).await
+}
+
+/// Change the words of the latest reply, without branching.
+#[tauri::command]
+pub async fn edit_reply(
+    state: State<'_, AppState>,
+    story_id: String,
+    route_id: String,
+    expected_head_id: String,
+    assistant_event_id: String,
+    text: String,
+) -> AppResult<RouteView> {
+    generation::edit_reply(
+        state.db()?,
+        &story_id,
+        &route_id,
+        &expected_head_id,
+        &assistant_event_id,
+        &text,
+    )
+    .await
+}
+
+/// Another reply to an earlier action, on a new branch, with an optional
+/// hint and length for that reply.
 #[tauri::command]
 pub async fn regenerate_reply(
     state: State<'_, AppState>,
     story_id: String,
     route_id: String,
     assistant_event_id: String,
+    options: Option<ReplyOptions>,
 ) -> AppResult<Submitted> {
-    generation::regenerate_reply(state.db()?, &story_id, &route_id, &assistant_event_id).await
+    generation::regenerate_reply(
+        state.db()?,
+        &story_id,
+        &route_id,
+        &assistant_event_id,
+        &options.unwrap_or_default(),
+    )
+    .await
 }
 
 /// Change story details (characters, world, narration, scene, facts) from
@@ -194,6 +241,23 @@ pub async fn draft_chapter_recap(
         session_id: &state.session_id,
     };
     chapters::draft_recap(&env, &route_id).await
+}
+
+/// Suggested merges and shortenings for the notebook at chapter end, by the
+/// chosen storyteller (one possibly paid request) or offline. Nothing is
+/// stored; the kept changes are saved with `edit_story_details`.
+#[tauri::command]
+pub async fn draft_notebook_tidy(
+    state: State<'_, AppState>,
+    route_id: String,
+) -> AppResult<NotebookTidy> {
+    let env = SummaryEnv {
+        db: state.db()?,
+        secrets: state.secrets.as_ref(),
+        jobs: &state.memory,
+        session_id: &state.session_id,
+    };
+    tidy::draft_tidy(&env, &route_id).await
 }
 
 /// End the chapter: keep the recap on this route, save, and start the next

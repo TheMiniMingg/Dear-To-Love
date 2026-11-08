@@ -39,6 +39,10 @@ fn shipped_links_are_valid_and_have_no_donation_link_yet() {
     );
     // T47: no URL configured -> no link.
     assert_eq!(l.donation_url, None);
+    assert_eq!(
+        l.new_issue_url(),
+        "https://github.com/TheMiniMingg/Dear-To-Love/issues/new"
+    );
 }
 
 #[test]

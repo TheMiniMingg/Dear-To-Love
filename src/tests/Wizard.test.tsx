@@ -190,6 +190,7 @@ const picture = (id: string, label: string, shared: boolean): AssetDto => ({
   createdAt: '2026-11-06T00:00:00Z',
   shared,
   stories: [],
+  madeFrom: null,
 });
 let library: AssetDto[];
 

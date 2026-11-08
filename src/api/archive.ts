@@ -1,6 +1,12 @@
 // Storypack and text export: file dialogs and readable summaries of results.
 import { open, save } from '@tauri-apps/plugin-dialog';
-import type { StorypackExport, StorypackImport, TextExport, TextFormat } from '../types';
+import type {
+  BookExport,
+  StorypackExport,
+  StorypackImport,
+  TextExport,
+  TextFormat,
+} from '../types';
 import { formatBytes } from './images';
 import { joinList, joinSentences, msg, t, tn } from '../i18n';
 
@@ -56,6 +62,29 @@ export async function pickTextTarget(
     defaultPath: `${fileSafe(`${title} - ${routeLabel}`)}.${extension}`,
     filters: [{ name: label, extensions: [extension] }],
   });
+}
+
+/** Where to save a route as a book. `null` when the dialog is closed. */
+export async function pickBookTarget(title: string, routeLabel: string): Promise<string | null> {
+  return save({
+    title: t('Save as a book'),
+    defaultPath: `${fileSafe(`${title} - ${routeLabel}`)}.epub`,
+    filters: [{ name: t('E-book (.epub)'), extensions: ['epub'] }],
+  });
+}
+
+export function describeBook(r: BookExport): string {
+  return joinSentences([
+    t('Saved {file} ({size}): {chapters}, {turns}.', {
+      file: r.fileName,
+      size: formatBytes(r.bytes),
+      chapters: tn(r.chapters, '{n} chapter', '{n} chapters'),
+      turns: tn(r.turns, '{n} turn', '{n} turns'),
+    }),
+    r.coverPicture
+      ? t('The story’s cover is on the front.')
+      : t('The story has no cover picture, so the front shows its title.'),
+  ]);
 }
 
 export function describeExport(r: StorypackExport): string {

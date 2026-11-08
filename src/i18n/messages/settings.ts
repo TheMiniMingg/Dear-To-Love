@@ -963,12 +963,6 @@ export const settings: Messages = {
     '따뜻한 종이와 짙은 잉크, 오래된 책처럼.',
   ],
   Look: ['外观', '外觀', '見た目', '디자인'],
-  'How the app looks on this computer.': [
-    '应用在这台电脑上的外观。',
-    '應用程式在這台電腦上的外觀。',
-    'このパソコンでのアプリの見た目。',
-    '이 컴퓨터에서 앱이 보이는 모습.',
-  ],
   Theme: ['主题', '主題', 'テーマ', '테마'],
   'Give each story a look that fits its genre': [
     '让每个故事使用符合其类型的外观',
@@ -976,13 +970,6 @@ export const settings: Messages = {
     '物語ごとにジャンルに合った見た目にする',
     '이야기마다 장르에 맞는 디자인 쓰기',
   ],
-  'Horror, mysteries and science fiction read in Midnight, fantasy and history on Parchment, romance in Rose. Change any story with Look beside it while reading.':
-    [
-      '恐怖、悬疑和科幻用“午夜”，奇幻和历史用“羊皮纸”，爱情用“玫瑰”。阅读时可用旁边的“外观”更改任何故事。',
-      '恐怖、懸疑和科幻用「午夜」，奇幻和歷史用「羊皮紙」，愛情用「玫瑰」。閱讀時可用旁邊的「外觀」變更任何故事。',
-      'ホラー、ミステリー、SFは「ミッドナイト」、ファンタジーと歴史ものは「パーチメント」、恋愛は「ローズ」で読みます。読んでいるときに横の「見た目」からどの物語でも変えられます。',
-      '공포, 미스터리, SF는 미드나잇, 판타지와 역사물은 양피지, 로맨스는 로즈로 읽습니다. 읽는 중에 옆의 디자인 버튼으로 어떤 이야기든 바꿀 수 있습니다.',
-    ],
   Sound: ['声音', '聲音', 'サウンド', '소리'],
   'Chime when a reply is ready in another story': [
     '其他故事的回复写好时响铃',
@@ -1004,4 +991,161 @@ export const settings: Messages = {
     '이 컴퓨터에서 앱이 내는 소리.',
   ],
   'Settings sections': ['设置分区', '設定分區', '設定のセクション', '설정 섹션'],
+  Narrow: ['窄', '窄', '狭い', '좁게'],
+  Medium: ['中', '中', '中くらい', '중간'],
+  Wide: ['宽', '寬', '広い', '넓게'],
+  Compact: ['紧凑', '緊湊', '詰める', '촘촘하게'],
+  Roomy: ['宽松', '寬鬆', 'ゆったり', '여유 있게'],
+  Small: ['小', '小', '小', '작게'],
+  Large: ['大', '大', '大', '크게'],
+  Larger: ['更大', '更大', '特大', '더 크게'],
+  Largest: ['最大', '最大', '最大', '가장 크게'],
+  'Column width': ['栏宽', '欄寬', '行の幅', '단 너비'],
+  'Line spacing': ['行距', '行距', '行間', '줄 간격'],
+  'Sample of how stories look': [
+    '故事显示效果示例',
+    '故事顯示效果範例',
+    '物語の見え方の見本',
+    '이야기가 보이는 모습 예시',
+  ],
+  'The bell over the door rings. Mina looks up from the espresso machine, and for a moment she forgets the cup in her hand.':
+    [
+      '门上的铃铛响了。米娜从咖啡机前抬起头，一时忘了手里的杯子。',
+      '門上的鈴鐺響了。米娜從咖啡機前抬起頭，一時忘了手裡的杯子。',
+      'ドアの上のベルが鳴る。ミナはエスプレッソマシンから顔を上げ、一瞬、手にしたカップのことを忘れる。',
+      '문 위의 종이 울린다. 미나는 에스프레소 머신에서 고개를 들고, 잠시 손에 든 컵을 잊는다.',
+    ],
+  'Mina:': ['米娜：', '米娜：', 'ミナ：', '미나:'],
+  '“You came back. I was starting to think the scone scared you off.”': [
+    '“你回来了。我还以为那个司康把你吓跑了呢。”',
+    '「你回來了。我還以為那個司康把你嚇跑了呢。」',
+    '「戻ってきたのね。スコーンに怖気づいたのかと思い始めてた」',
+    '“돌아왔네요. 스콘 때문에 겁먹고 도망간 줄 알았어요.”',
+  ],
+  'How the app and your stories look on this computer.': [
+    '应用和你的故事在这台电脑上的样子。',
+    '應用程式和你的故事在這台電腦上的樣子。',
+    'このコンピューターでのアプリと物語の見た目です。',
+    '이 컴퓨터에서 앱과 이야기가 보이는 모습입니다.',
+  ],
+  Reading: ['阅读', '閱讀', '読みやすさ', '읽기'],
+  'Privacy and data': ['隐私与数据', '隱私與資料', 'プライバシーとデータ', '개인정보와 데이터'],
+  'Your stories, pictures and settings stay on this computer. The app sends nothing anywhere except the requests to the AI connections you add, and the once-a-day check for a new version if it is on.':
+    [
+      '你的故事、图片和设置都留在这台电脑上。除了发给你添加的 AI 连接的请求，以及（如果开启）每天一次检查新版本，应用不会向任何地方发送内容。',
+      '你的故事、圖片和設定都留在這台電腦上。除了發給你新增的 AI 連線的請求，以及（如果開啟）每天一次檢查新版本，應用程式不會向任何地方傳送內容。',
+      '物語、画像、設定はこのコンピューターに保存されます。アプリが外に送るのは、追加した AI 接続へのリクエストと、オンにしている場合の 1 日 1 回の新バージョン確認だけです。',
+      '이야기, 그림, 설정은 이 컴퓨터에 남습니다. 앱은 당신이 추가한 AI 연결로 보내는 요청과, 켜 두었다면 하루 한 번 새 버전 확인 외에는 아무 데도 보내지 않습니다.',
+    ],
+  "API keys are kept in your computer's own password store, never in the stories, backups, exports or reports.":
+    [
+      'API 密钥保存在电脑自带的密码库里，绝不会出现在故事、备份、导出文件或报告中。',
+      'API 金鑰保存在電腦內建的密碼庫裡，絕不會出現在故事、備份、匯出檔案或報告中。',
+      'API キーはコンピューター自身のパスワード保管庫に保存され、物語、バックアップ、書き出し、レポートには決して入りません。',
+      'API 키는 컴퓨터 자체의 암호 저장소에 보관되며, 이야기, 백업, 내보내기, 보고서에는 절대 들어가지 않습니다.',
+    ],
+  'Backups and exports are yours to keep or share. A support report from Diagnostics holds counts and check results only: no story text and no keys.':
+    [
+      '备份和导出文件归你保管或分享。诊断里的支持报告只包含数量和检查结果：没有故事文字，也没有密钥。',
+      '備份和匯出檔案歸你保管或分享。診斷裡的支援報告只包含數量和檢查結果：沒有故事文字，也沒有金鑰。',
+      'バックアップと書き出したファイルは、保管も共有もあなた次第です。診断のサポートレポートには件数とチェック結果だけが入り、物語の本文やキーは含まれません。',
+      '백업과 내보낸 파일은 보관하든 공유하든 당신의 것입니다. 진단의 지원 보고서에는 개수와 점검 결과만 담기며, 이야기 본문이나 키는 들어가지 않습니다.',
+    ],
+  'Most things in a story have a key: save, search, the menu, larger or smaller text and more. Press F1 anywhere to see them all.':
+    [
+      '故事里的大多数操作都有快捷键：保存、搜索、菜单、放大或缩小文字等等。在任何地方按 F1 即可查看全部。',
+      '故事裡的大多數操作都有快捷鍵：儲存、搜尋、選單、放大或縮小文字等等。在任何地方按 F1 即可查看全部。',
+      '物語のほとんどの操作にはキーがあります。保存、検索、メニュー、文字の拡大・縮小などです。どこでも F1 を押すと一覧が見られます。',
+      '이야기 속 대부분의 기능에는 단축키가 있습니다. 저장, 검색, 메뉴, 글자 크게·작게 등. 어디서든 F1을 누르면 모두 볼 수 있습니다.',
+    ],
+  'Show keyboard shortcuts': [
+    '显示键盘快捷键',
+    '顯示鍵盤快捷鍵',
+    'キーボードショートカットを表示',
+    '키보드 단축키 보기',
+  ],
+  Neon: ['霓虹', '霓虹', 'ネオン', '네온'],
+  Café: ['咖啡馆', '咖啡館', 'カフェ', '카페'],
+  Gothic: ['哥特', '哥德', 'ゴシック', '고딕'],
+  'Near black with cyan and magenta, for science fiction.': [
+    '近乎全黑，配青色和洋红，适合科幻。',
+    '近乎全黑，配青色和洋紅，適合科幻。',
+    'ほぼ黒にシアンとマゼンタ。SF向けです。',
+    '검정에 가까운 바탕에 청록과 자홍. SF에 어울립니다.',
+  ],
+  'Latte browns and a soft green, for cozy stories.': [
+    '拿铁般的棕色和柔和的绿色，适合温馨的故事。',
+    '拿鐵般的棕色和柔和的綠色，適合溫馨的故事。',
+    'ラテのような茶色とやわらかな緑。心温まるストーリー向けです。',
+    '라테 같은 갈색과 부드러운 초록. 포근한 스토리에 어울립니다.',
+  ],
+  'Charcoal and deep red, with serif headings, for horror.': [
+    '炭灰和深红，标题用衬线字体，适合恐怖故事。',
+    '炭灰和深紅，標題用襯線字體，適合恐怖故事。',
+    'チャコールと深紅、見出しは明朝系。ホラー向けです。',
+    '숯빛 회색과 짙은 빨강, 제목은 명조체. 공포물에 어울립니다.',
+  ],
+  'Horror and mysteries read in Gothic, science fiction in Neon, thrillers in Midnight, fantasy and history on Parchment, cozy stories in Café and romance in Rose. Change any story with Look beside it while reading.':
+    [
+      '恐怖和悬疑用“哥特”，科幻用“霓虹”，惊悚用“午夜”，奇幻和历史用“羊皮纸”，温馨故事用“咖啡馆”，爱情用“玫瑰”。阅读时可用旁边的“外观”更改任何故事。',
+      '恐怖和懸疑用「哥德」，科幻用「霓虹」，驚悚用「午夜」，奇幻和歷史用「羊皮紙」，溫馨故事用「咖啡館」，愛情用「玫瑰」。閱讀時可用旁邊的「外觀」變更任何故事。',
+      'ホラーとミステリーは「ゴシック」、SFは「ネオン」、スリラーは「ミッドナイト」、ファンタジーと歴史ものは「パーチメント」、心温まるストーリーは「カフェ」、恋愛は「ローズ」で読みます。読んでいるときに横の「見た目」からどのストーリーでも変えられます。',
+      '공포와 미스터리는 고딕, SF는 네온, 스릴러는 미드나잇, 판타지와 역사물은 양피지, 포근한 스토리는 카페, 로맨스는 로즈로 읽습니다. 읽는 중에 옆의 디자인 버튼으로 어떤 스토리든 바꿀 수 있습니다.',
+    ],
+  Slower: ['较慢', '較慢', 'ゆっくり', '느리게'],
+  Faster: ['较快', '較快', '速く', '빠르게'],
+  'This computer has no voices the app can use, so replies cannot be read aloud.': [
+    '这台电脑没有应用可用的语音，因此无法朗读回复。',
+    '這台電腦沒有應用程式可用的語音，因此無法朗讀回覆。',
+    'このコンピューターにはアプリが使える音声がないため、返信を読み上げられません。',
+    '이 컴퓨터에는 앱이 쓸 수 있는 음성이 없어서 답장을 소리 내어 읽을 수 없습니다.',
+  ],
+  'The speaker under a reply reads it aloud with this computer’s own voices, so it works offline and costs nothing.':
+    [
+      '回复下方的扬声器按钮会用这台电脑自带的语音朗读，所以离线也能用，而且不花钱。',
+      '回覆下方的喇叭按鈕會用這台電腦內建的語音朗讀，所以離線也能用，而且不花錢。',
+      '返信の下のスピーカーを押すと、このコンピューターの音声で読み上げます。オフラインでも使え、費用はかかりません。',
+      '답장 아래의 스피커 버튼은 이 컴퓨터의 음성으로 읽어 줍니다. 오프라인에서도 되고 비용도 들지 않습니다.',
+    ],
+  Voice: ['语音', '語音', '音声', '음성'],
+  'The computer’s usual voice': [
+    '电脑的默认语音',
+    '電腦的預設語音',
+    'コンピューターの標準の音声',
+    '컴퓨터의 기본 음성',
+  ],
+  Speed: ['语速', '語速', '速さ', '속도'],
+  'Try it': ['试听', '試聽', '試しに聞く', '들어 보기'],
+  'The bell over the door rings, and for a moment the whole café goes quiet.': [
+    '门上的铃铛响了，整个咖啡馆一时安静下来。',
+    '門上的鈴鐺響了，整間咖啡館一時安靜下來。',
+    'ドアの上のベルが鳴り、一瞬、カフェ全体が静まりかえる。',
+    '문 위의 종이 울리고, 잠시 카페 전체가 조용해진다.',
+  ],
+  "OpenAI's GPT-5, GPT-6 and o-series models think before they write. For them the app sends no temperature, asks for low reasoning effort and allows 2,000 more tokens for the thinking, which usage and the budget count.":
+    [
+      'OpenAI 的 GPT-5、GPT-6 和 o 系列模型会先思考再写作。对这些模型，应用不发送温度，请求低推理强度，并为思考额外预留 2,000 个 token，用量和预算都会计入。',
+      'OpenAI 的 GPT-5、GPT-6 和 o 系列模型會先思考再寫作。對這些模型，應用程式不傳送溫度，要求低推理強度，並為思考額外預留 2,000 個 token，用量和預算都會計入。',
+      'OpenAI の GPT-5、GPT-6、o シリーズのモデルは、書く前に考えます。これらのモデルには温度を送らず、推論の強さを「低」にし、考えるための 2,000 トークンを追加で確保します。この分も使用量と予算に含まれます。',
+      'OpenAI의 GPT-5, GPT-6, o 시리즈 모델은 쓰기 전에 먼저 생각합니다. 이 모델들에는 온도를 보내지 않고, 추론 강도를 낮게 요청하며, 생각할 토큰 2,000개를 더 허용합니다. 이 부분도 사용량과 예산에 포함됩니다.',
+    ],
+  'Connected, but “{model}” is not in the server’s model list. Check the model name.': [
+    '已连接，但服务器的模型列表中没有“{model}”。请检查模型名称。',
+    '已連線，但伺服器的模型清單中沒有「{model}」。請檢查模型名稱。',
+    '接続できましたが、「{model}」はサーバーのモデル一覧にありません。モデル名を確認してください。',
+    '연결되었지만 서버의 모델 목록에 “{model}”이(가) 없습니다. 모델 이름을 확인하세요.',
+  ],
+  'Connected. “{model}” is available.': [
+    '已连接。“{model}”可用。',
+    '已連線。「{model}」可以使用。',
+    '接続できました。「{model}」を使えます。',
+    '연결되었습니다. “{model}”을(를) 사용할 수 있습니다.',
+  ],
+  'No API key is saved for this connection, and most online services need one. Choose Edit to add it.':
+    [
+      '这个连接没有保存 API 密钥，而大多数在线服务都需要密钥。选择“编辑”来添加。',
+      '這個連線沒有儲存 API 金鑰，而大多數線上服務都需要金鑰。選擇「編輯」來新增。',
+      'この接続には API キーが保存されていません。ほとんどのオンラインサービスでは必要です。「編集」から追加してください。',
+      '이 연결에는 API 키가 저장되어 있지 않으며, 대부분의 온라인 서비스는 키가 필요합니다. 편집을 눌러 추가하세요.',
+    ],
 };

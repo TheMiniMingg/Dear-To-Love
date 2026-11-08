@@ -164,6 +164,7 @@ fn sample() -> PackStory {
             byte_size: 100,
             label: "Harbor".into(),
             tags: vec![],
+            made_from: None,
         }],
     }
 }

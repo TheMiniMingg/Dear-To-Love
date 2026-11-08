@@ -14,6 +14,8 @@ import { plainText } from './messages';
 import { castColors, NAME_COLORS, nameStyle } from './nameColors';
 import { Thumb } from '../images/ImageGrid';
 import { picture, portraitSlot } from './pictures';
+import { FeelingFields, towardsPlayer, withFeeling } from './feelings';
+import { newcomerId } from './NewCharacterCard';
 
 export type DetailsTab = 'characters' | 'world' | 'narration' | 'scene' | 'facts';
 type Tab = DetailsTab;
@@ -286,7 +288,7 @@ export function StoryDetailsPanel({
     });
 
   const addCharacter = () => {
-    const cid = unusedId('custom:npc-', (x) => x in edited.characters || x in original.characters);
+    const cid = newcomerId(edited, (x) => x in edited.characters || x in original.characters);
     set({
       characters: {
         ...edited.characters,
@@ -432,6 +434,13 @@ export function StoryDetailsPanel({
               }
               portrait={picture(view, portraitSlot(current.id)).assetId}
             />
+            {current.id !== edited.playerCharacterId && (
+              <FeelingFields
+                name={current.name.trim()}
+                relationship={towardsPlayer(edited, current.id)}
+                onChange={(patch) => setEdited((st) => withFeeling(st, current.id, patch))}
+              />
+            )}
             <CharacterFields
               c={current}
               autoColor={

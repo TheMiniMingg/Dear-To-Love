@@ -39,22 +39,76 @@ function ordered(notes: MemoryNote[], kind: NoteKind): MemoryNote[] {
   return [...mine].sort((a, b) => a.name.localeCompare(b.name));
 }
 
+const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+/** The id of the name box of a note opened by "Remember this", to focus it. */
+export const REMEMBER_NAME_ID = 'remember-note-name';
+
+/**
+ * A note holding words picked in the story: the note of the person they
+ * name, with the words added, or a new moment in the timeline.
+ */
+function pickedNote(
+  words: string,
+  view: RouteView,
+): { adding: Draft } | { editing: { key: string; draft: Draft } } {
+  const s = view.state.state;
+  const notes = s.notes ?? [];
+  const chapter = view.state.activeChapter?.ordinal;
+  const lower = words.toLowerCase();
+  // A name as a whole word; names in scripts without spaces, anywhere.
+  const named = (name: string) =>
+    [name, name.split(/\s+/)[0] ?? ''].some((n) =>
+      n.length < 2
+        ? false
+        : /^[\w' -]+$/.test(n)
+          ? new RegExp(`\\b${escapeRe(n)}\\b`).test(lower)
+          : lower.includes(n),
+    );
+  const who = Object.values(s.characters).find(
+    (c) => c.id !== s.playerCharacterId && c.name.trim() && named(c.name.trim().toLowerCase()),
+  );
+  const kept = who && notes.find((n) => sameNote(n, 'person', who.name.trim()));
+  if (kept) {
+    const text = `${kept.text.trim()} ${words}`.slice(0, MAX_TEXT);
+    return {
+      editing: {
+        key: keyOf(kept),
+        draft: { kind: 'person', name: kept.name, text, chapter: '' },
+      },
+    };
+  }
+  return {
+    adding: who
+      ? { kind: 'person', name: who.name.trim(), text: words, chapter: '' }
+      : { kind: 'event', name: '', text: words, chapter: chapter ? String(chapter) : '' },
+  };
+}
+
 export function Notebook({
   view,
   disabled,
   onChanged,
+  startNote,
 }: {
   view: RouteView;
   /** True while a reply is being written. */
   disabled: boolean;
   onChanged: (v: RouteView) => void;
+  /** Words picked in the story: open a note holding them. */
+  startNote?: string | null;
 }) {
   const notes = view.state.state.notes ?? [];
   const manual = !!view.state.state.narration?.manualMemory;
   const chapter = view.state.activeChapter?.ordinal;
   const [filter, setFilter] = useState('');
-  const [adding, setAdding] = useState<Draft | null>(null);
-  const [editing, setEditing] = useState<{ key: string; draft: Draft } | null>(null);
+  const [picked] = useState(() => (startNote?.trim() ? pickedNote(startNote.trim(), view) : null));
+  const [adding, setAdding] = useState<Draft | null>(
+    picked && 'adding' in picked ? picked.adding : null,
+  );
+  const [editing, setEditing] = useState<{ key: string; draft: Draft } | null>(
+    picked && 'editing' in picked ? picked.editing : null,
+  );
   const [removing, setRemoving] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -221,6 +275,7 @@ export function Notebook({
                     <li key={key}>
                       <NoteForm
                         draft={editing.draft}
+                        nameId={picked && 'editing' in picked ? REMEMBER_NAME_ID : undefined}
                         busy={locked}
                         onChange={(draft) => setEditing({ key, draft })}
                         onCancel={() => {
@@ -342,6 +397,7 @@ export function Notebook({
           onSave={() => submit(adding)}
           label={t('New note')}
           chooseKind
+          nameId={picked && 'adding' in picked ? REMEMBER_NAME_ID : undefined}
         />
       ) : (
         <div className="button-row">
@@ -396,6 +452,7 @@ function NoteForm({
   onSave,
   label,
   chooseKind,
+  nameId,
 }: {
   draft: Draft;
   busy: boolean;
@@ -405,6 +462,8 @@ function NoteForm({
   label: string;
   /** A new note picks its kind; a kept one can move to another kind too. */
   chooseKind?: boolean;
+  /** An id for the name box, so a window can put the focus there. */
+  nameId?: string;
 }) {
   const id = useId();
   const kind = NOTE_KINDS.find((k) => k.kind === draft.kind)!;
@@ -439,9 +498,9 @@ function NoteForm({
       </div>
       <div className="field-row">
         <div className="field">
-          <label htmlFor={`${id}-name`}>{t('Name')}</label>
+          <label htmlFor={nameId ?? `${id}-name`}>{t('Name')}</label>
           <input
-            id={`${id}-name`}
+            id={nameId ?? `${id}-name`}
             value={draft.name}
             maxLength={MAX_NAME}
             placeholder={draft.kind === 'event' ? t('What happened, in a few words') : undefined}

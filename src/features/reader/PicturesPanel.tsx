@@ -3,6 +3,7 @@ import { useEffect, useId, useRef, useState } from 'react';
 import { commands, errorMessage } from '../../api/commands';
 import { Thumb } from '../images/ImageGrid';
 import { ImportResult, useAddImages } from '../images/ImagesScreen';
+import { MadeFrom } from '../images/MadeFrom';
 import { MakePortrait } from '../images/MakePortrait';
 import type { AssetDto, RouteView } from '../../types';
 import { BACKGROUND, COVER, picture, portraitSlot, slotName, type Picture } from './pictures';
@@ -176,6 +177,7 @@ export function PicturesPanel({ view, awaitingReply, onChanged }: Props) {
           onPick={(a) => setPick(a.id)}
           empty={t('No images yet. Add some from this computer first.')}
         />
+        <MadeFrom text={images?.find((a) => a.id === pick)?.madeFrom} />
         {routeScoped && (
           <fieldset className="choice-list">
             <legend>{t('Use it')}</legend>

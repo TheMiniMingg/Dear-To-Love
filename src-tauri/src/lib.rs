@@ -85,6 +85,7 @@ pub fn run() {
         .manage(commands::app::Smoke(std::sync::Mutex::new(smoke)))
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .register_asynchronous_uri_scheme_protocol("dtlimg", |ctx, request, responder| {
             let app = ctx.app_handle().clone();
             let path = request.uri().path().to_string();
@@ -165,6 +166,7 @@ pub fn run() {
             commands::stories::quick_start,
             commands::stories::compose_story_draft,
             commands::stories::check_story_draft,
+            commands::stories::fill_story_draft,
             commands::stories::create_story,
             commands::stories::get_wizard_draft,
             commands::stories::save_wizard_draft,
@@ -180,8 +182,11 @@ pub fn run() {
             commands::reader::edit_action,
             commands::reader::preview_context,
             commands::reader::draft_chapter_recap,
+            commands::reader::draft_notebook_tidy,
             commands::reader::end_chapter,
             commands::reader::regenerate_reply,
+            commands::reader::take_back_turn,
+            commands::reader::edit_reply,
             commands::reader::edit_story_details,
             commands::reader::undo_reply_notes,
             commands::reader::fork_route,
@@ -228,6 +233,7 @@ pub fn run() {
             commands::archive::duplicate_story,
             commands::archive::import_storypack,
             commands::archive::export_route_text,
+            commands::archive::export_route_book,
             commands::backups::list_backups,
             commands::backups::export_backup,
             commands::backups::prepare_restore,
@@ -243,6 +249,7 @@ pub fn run() {
             commands::app::diagnostics_report,
             commands::app::save_diagnostics_report,
             commands::app::open_support_page,
+            commands::app::open_issue_page,
             commands::app::open_repository_page,
             commands::app::open_guide_link,
             commands::app::frontend_ready,
@@ -251,6 +258,8 @@ pub fn run() {
             commands::updates::set_update_checks,
             commands::updates::acknowledge_update,
             commands::updates::open_release_page,
+            commands::updates::can_install_updates,
+            commands::updates::install_update,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Dear to Love");

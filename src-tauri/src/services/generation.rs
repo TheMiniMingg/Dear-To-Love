@@ -24,8 +24,8 @@ use crate::db::runs::{self, RunDto, RunStatus};
 use crate::db::state::{state_with_snapshots, store_snapshots};
 use crate::db::stories::story_frame;
 use crate::db::timeline::{
-    ancestors, append_event_tx, edit_prior_player_turn_tx, get_event, get_route, get_story_route,
-    regenerate_fork_tx, AppendEvent,
+    ancestors, append_event_tx, edit_prior_player_turn_tx, edit_reply_tx, get_event, get_route,
+    get_story_route, regenerate_fork_tx, take_back_turn_tx, AppendEvent,
 };
 use crate::db::usage::{self, NewRequest, RequestOutcome, RequestPurpose, RequestStatus};
 use crate::db::Database;
@@ -34,6 +34,7 @@ use crate::domain::events::{AssistantPayload, EventBody, EventKind, PlayerPayloa
 use crate::domain::provider::{
     Billing, GenerateRequest, GenerationSettings, ModelMessage, Role, StreamMessage,
 };
+use crate::domain::reply_options::ReplyOptions;
 use crate::domain::text::strip_app_tags;
 use crate::errors::{AppError, AppResult, ErrorCode};
 use crate::services::adapters::{offline::Offline, Adapter, Charge, Completion};
@@ -100,14 +101,17 @@ async fn create_run_for_head(
     route_id: &str,
     input_event_id: &str,
     profile_id: Option<&str>,
+    options: &ReplyOptions,
 ) -> AppResult<String> {
-    runs::create_pending_tx(conn, route_id, input_event_id, profile_id).await
+    runs::create_pending_tx(conn, route_id, input_event_id, profile_id, options).await
 }
 
 /// Commit the player's action and a pending run for the chosen storyteller.
 /// With `roll`, the app rolls the dice now (adding the player character's
 /// stat as it is at this point of the route) and stores the result with
-/// the action.
+/// the action. An empty action without a roll is **Keep going**: the
+/// storyteller goes on without the player doing anything. `options` are
+/// for this reply only.
 pub async fn submit_action(
     db: &Database,
     story_id: &str,
@@ -115,7 +119,9 @@ pub async fn submit_action(
     expected_head_id: &str,
     text: &str,
     roll: Option<&RollRequest>,
+    options: &ReplyOptions,
 ) -> AppResult<Submitted> {
+    let options = options.cleaned()?;
     let roll = match roll {
         None => None,
         Some(req) => {
@@ -167,8 +173,14 @@ pub async fn submit_action(
         },
     )
     .await?;
-    let run_id =
-        create_run_for_head(&mut tx, route_id, &player.event_id, profile.as_deref()).await?;
+    let run_id = create_run_for_head(
+        &mut tx,
+        route_id,
+        &player.event_id,
+        profile.as_deref(),
+        &options,
+    )
+    .await?;
     tx.commit().await?;
     Ok(Submitted {
         run_id,
@@ -177,7 +189,8 @@ pub async fn submit_action(
 }
 
 /// New run for the unanswered action at the route head (same player event).
-/// Uses the storyteller chosen now, which may differ from the failed run's.
+/// Uses the storyteller chosen now, which may differ from the failed run's,
+/// and asks for the same length and hint as the run before.
 pub async fn retry_reply(
     db: &Database,
     story_id: &str,
@@ -199,7 +212,9 @@ pub async fn retry_reply(
             "the last action already has a reply",
         ));
     }
-    let run_id = create_run_for_head(&mut tx, route_id, &head, profile.as_deref()).await?;
+    let options = runs::latest_options_tx(&mut tx, route_id, &head).await?;
+    let run_id =
+        create_run_for_head(&mut tx, route_id, &head, profile.as_deref(), &options).await?;
     tx.commit().await?;
     Ok(Submitted {
         run_id,
@@ -226,8 +241,14 @@ pub async fn edit_action(
         text.to_string(),
     )
     .await?;
-    let run_id =
-        create_run_for_head(&mut tx, &fork.id, &appended.event_id, profile.as_deref()).await?;
+    let run_id = create_run_for_head(
+        &mut tx,
+        &fork.id,
+        &appended.event_id,
+        profile.as_deref(),
+        &ReplyOptions::default(),
+    )
+    .await?;
     tx.commit().await?;
     Ok(Submitted {
         run_id,
@@ -235,14 +256,67 @@ pub async fn edit_action(
     })
 }
 
+/// What **Take back my last turn** leaves: the route as it is now, and the
+/// branch that keeps the turn in case the player wants it back.
+#[derive(Debug, Clone, Serialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct TakenBack {
+    pub view: RouteView,
+    pub kept_route_id: String,
+}
+
+/// The route goes back to just before the player's last action; the action
+/// and its reply stay on a new branch.
+pub async fn take_back_turn(
+    db: &Database,
+    story_id: &str,
+    route_id: &str,
+    expected_head_id: &str,
+) -> AppResult<TakenBack> {
+    let mut tx = db.write_txn().await?;
+    let kept = take_back_turn_tx(&mut tx, story_id, route_id, expected_head_id).await?;
+    tx.commit().await?;
+    Ok(TakenBack {
+        view: route_view(db, route_id).await?,
+        kept_route_id: kept.id,
+    })
+}
+
+/// Change the words of the latest reply, on the same route.
+pub async fn edit_reply(
+    db: &Database,
+    story_id: &str,
+    route_id: &str,
+    expected_head_id: &str,
+    assistant_event_id: &str,
+    text: &str,
+) -> AppResult<RouteView> {
+    let mut tx = db.write_txn().await?;
+    edit_reply_tx(
+        &mut tx,
+        story_id,
+        route_id,
+        expected_head_id,
+        assistant_event_id,
+        text,
+    )
+    .await?;
+    tx.commit().await?;
+    route_view(db, route_id).await
+}
+
 /// Another reply to an answered action: a new branch at that action with a
-/// pending run. The original reply and its route stay as they were.
+/// pending run. The original reply and its route stay as they were. A hint
+/// ("shorter", "more romantic") and a length go with the new reply only.
 pub async fn regenerate_reply(
     db: &Database,
     story_id: &str,
     route_id: &str,
     assistant_event_id: &str,
+    options: &ReplyOptions,
 ) -> AppResult<Submitted> {
+    let options = options.cleaned()?;
     let profile = providers::story_storyteller(db, story_id).await?;
     let mut tx = db.write_txn().await?;
     let fork = regenerate_fork_tx(&mut tx, story_id, route_id, assistant_event_id).await?;
@@ -250,7 +324,8 @@ pub async fn regenerate_reply(
         .head_event_id
         .clone()
         .ok_or_else(|| AppError::internal("new branch without a head"))?;
-    let run_id = create_run_for_head(&mut tx, &fork.id, &head, profile.as_deref()).await?;
+    let run_id =
+        create_run_for_head(&mut tx, &fork.id, &head, profile.as_deref(), &options).await?;
     tx.commit().await?;
     Ok(Submitted {
         run_id,
@@ -396,7 +471,7 @@ pub async fn generate(
         } else {
             Vec::new()
         };
-        Ok((r, messages))
+        Ok((r, with_direction(messages, &run.options)))
     });
     let (resolved, messages) = match prepared {
         Ok(p) => p,
@@ -417,14 +492,14 @@ pub async fn generate(
             return Err(e);
         }
     };
-    let request = GenerateRequest {
+    let request = resolved.adapter.fit_request(GenerateRequest {
         model_id: resolved.model_id.clone(),
         messages,
         max_output_tokens: resolved.settings.max_output_tokens,
         temperature: resolved.settings.temperature,
         timeout_ms: resolved.settings.timeout_ms,
         context_tokens: Some(resolved.settings.max_context_tokens),
-    };
+    });
 
     // Register the cancel handle before going live so a cancel can't slip
     // between the status change and registration.
@@ -596,6 +671,14 @@ pub async fn generate(
     }
 }
 
+/// The player's choices for this reply only go after their action.
+fn with_direction(mut messages: Vec<ModelMessage>, options: &ReplyOptions) -> Vec<ModelMessage> {
+    if let (Some(d), Some(last)) = (options.direction(), messages.last_mut()) {
+        last.content = format!("{}\n\n{d}", last.content);
+    }
+    messages
+}
+
 async fn resolve(
     ctx: &Ctx<'_>,
     run: &RunDto,
@@ -604,6 +687,13 @@ async fn resolve(
 ) -> AppResult<Resolved> {
     match &run.provider_profile_id {
         None => {
+            // Another reply to the same action reads differently.
+            let attempt: i64 = sqlx::query_scalar(
+                "SELECT COUNT(*) FROM events WHERE parent_event_id = ? AND kind = 'assistant'",
+            )
+            .bind(&run.input_event_id)
+            .fetch_one(ctx.db.reader())
+            .await?;
             let action = history
                 .last()
                 .and_then(|e| match EventBody::from_parts(&e.kind, &e.payload_json) {
@@ -625,7 +715,16 @@ async fn resolve(
                 == 1;
             Ok(Resolved {
                 adapter: Adapter::Offline(Offline {
-                    text: mock_storyteller::reply(state, &action, turn, opens_chapter),
+                    text: mock_storyteller::reply_with(
+                        state,
+                        &action,
+                        turn,
+                        opens_chapter,
+                        &mock_storyteller::Asked {
+                            attempt: usize::try_from(attempt).unwrap_or(0),
+                            options: run.options.clone(),
+                        },
+                    ),
                     delay: ctx.offline_delay,
                 }),
                 label: MOCK_PROVIDER_LABEL.into(),
@@ -719,6 +818,7 @@ pub(crate) async fn call_once(
     why: CallPurpose<'_>,
 ) -> AppResult<(Completion, String)> {
     let adapter = live_adapter(row, secrets)?;
+    let req = &adapter.fit_request(req.clone());
     let ledger = usage::open_request(
         db,
         NewRequest {

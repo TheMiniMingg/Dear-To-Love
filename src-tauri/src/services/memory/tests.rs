@@ -7,6 +7,7 @@ use crate::db::test_support::{test_db, TestDb};
 use crate::db::timeline::{append_event, fork_route, AppendEvent};
 use crate::domain::events::{AssistantPayload, PlayerPayload};
 use crate::domain::provider::{AdapterKind, Billing, GenerationSettings, ProviderProfileInput};
+use crate::domain::reply_options::ReplyOptions;
 use crate::domain::story::StoryCreated;
 use crate::domain::templates::{QuickStartInput, TemplateCatalog};
 use crate::services::adapters::test_server::{serve, Reply, TestServer};
@@ -286,9 +287,17 @@ async fn branches_only_see_summaries_of_their_own_past() {
     };
     for branch in [&before.id, &after.id] {
         let head = env.head(branch).await;
-        let sub = submit_action(env.db(), &sid, branch, &head, "Open the door", None)
-            .await
-            .unwrap();
+        let sub = submit_action(
+            env.db(),
+            &sid,
+            branch,
+            &head,
+            "Open the door",
+            None,
+            &ReplyOptions::default(),
+        )
+        .await
+        .unwrap();
         generate(&ctx, &sub.run_id, &mut |_| {}).await.unwrap();
     }
     let reqs = server.requests();
@@ -370,4 +379,98 @@ async fn live_summary_is_ledgered_and_failures_do_not_repeat() {
     assert!(preview.messages[0]
         .content
         .contains("Mara read the letter and kept the ticket."));
+}
+
+/// A long route, summarized after each reply as the app does: the summary
+/// keeps its size, the next prompt fits the default context, the route
+/// opens quickly, and all of it is still there after the app restarts.
+#[tokio::test]
+async fn a_long_route_stays_bounded_fast_and_saved() {
+    use crate::db::DB_FILE_NAME;
+    use crate::services::reader::route_view;
+    use std::time::Instant;
+
+    const TURNS: u32 = 240;
+    let env = Env::new().await;
+    let route = main_route(&env);
+    let filler = " The tide turns and the lamps along the quay come on one by one.".repeat(20);
+    for k in 1..=TURNS {
+        let head = env.head(&route).await;
+        let p = append_event(
+            env.db(),
+            AppendEvent {
+                story_id: env.story.story_id.clone(),
+                route_id: route.clone(),
+                expected_head_id: head,
+                body: EventBody::Player(PlayerPayload::new(format!(
+                    "action {k}. I walk on and look around."
+                ))),
+                generation_run_id: None,
+            },
+        )
+        .await
+        .unwrap();
+        append_event(
+            env.db(),
+            AppendEvent {
+                story_id: env.story.story_id.clone(),
+                route_id: route.clone(),
+                expected_head_id: p.event_id,
+                body: EventBody::Assistant(AssistantPayload {
+                    text: format!("reply {k}.{filler}"),
+                    finish_reason: None,
+                    provider_label: None,
+                    model_id: None,
+                }),
+                generation_run_id: None,
+            },
+        )
+        .await
+        .unwrap();
+        maybe_summarize(&env.env(), &route, None).await.unwrap();
+    }
+
+    // One summary every eight turns, leaving the newest eight out.
+    let rows = env.summaries().await;
+    assert_eq!(rows.len(), usize::try_from((TURNS - 8) / 8).unwrap());
+    assert_eq!(rows.last().unwrap().0, i64::from(TURNS - 8));
+    let newest: String = sqlx::query_scalar(
+        "SELECT summary_text FROM memory_caches ORDER BY covered_turns DESC LIMIT 1",
+    )
+    .fetch_one(env.db().reader())
+    .await
+    .unwrap();
+    assert!(newest.lines().count() <= 40, "the summary keeps its size");
+    assert!(newest.contains(&format!("action {}.", TURNS - 8)));
+
+    let preview = preview_context(env.db(), &route).await.unwrap();
+    assert!(preview.summary.is_some());
+    assert!(preview.estimated_input_tokens <= preview.max_context_tokens);
+
+    let started = Instant::now();
+    let view = route_view(env.db(), &route).await.unwrap();
+    let took = started.elapsed();
+    assert_eq!(view.history.len(), 1 + 2 * usize::try_from(TURNS).unwrap());
+    assert!(took < Duration::from_secs(5), "opening took {took:?}");
+
+    // Close and open again, as when the app restarts.
+    let head = env.head(&route).await;
+    env.db().close().await;
+    let dir = env.t.dir.path();
+    let (db, _) = Database::open(&dir.join(DB_FILE_NAME), &dir.join("backups"))
+        .await
+        .unwrap();
+    let again = route_view(&db, &route).await.unwrap();
+    assert_eq!(again.route.head_event_id.as_deref(), Some(head.as_str()));
+    assert_eq!(again.history.len(), view.history.len());
+    assert_eq!(
+        serde_json::to_value(&again.state).unwrap(),
+        serde_json::to_value(&view.state).unwrap()
+    );
+    let kept: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM memory_caches")
+        .fetch_one(db.reader())
+        .await
+        .unwrap();
+    assert_eq!(kept, i64::try_from(rows.len()).unwrap());
+    db.close().await;
 }

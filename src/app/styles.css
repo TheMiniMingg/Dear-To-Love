@@ -545,6 +545,11 @@ textarea:focus-visible {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  /* Not a scroll container either: jumping to a reply must never shift the
+     whole reader up under its header. Clipping alone would let it grow to
+     its content, so it keeps to the window. */
+  overflow: clip;
+  min-height: 0;
 }
 .reader-status {
   display: flex;
@@ -588,17 +593,20 @@ textarea:focus-visible {
   display: flex;
 }
 .narrative {
+  /* Holds its own positioned bits (screen-reader labels, tooltips), so they
+     scroll with the story instead of sticking out below the reader. */
+  position: relative;
   flex: 1;
   overflow-y: auto;
   scroll-behavior: auto;
 }
 .narrative-column {
-  max-width: 41rem;
+  max-width: var(--reading-width, 41rem);
   margin: 0 auto;
   padding: 1.75rem 1.5rem 2.5rem;
   font-family: var(--font-story);
   font-size: 1.07em;
-  line-height: 1.75;
+  line-height: var(--reading-leading, 1.75);
   animation: fade-in 0.35s var(--ease);
 }
 /* Cards, notes and buttons inside the story keep the interface font. */
@@ -1295,22 +1303,6 @@ button.jump-link:hover {
 /* ---------- creation wizard ---------- */
 .wizard .screen-header .segmented {
   margin-left: auto;
-}
-.wizard-steps {
-  list-style: none;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.25rem;
-  padding: 0;
-  margin: 0.75rem 0;
-}
-.wizard-steps button {
-  border-radius: 999px;
-}
-.wizard-steps button[aria-current='step'] {
-  border-color: var(--accent);
-  color: var(--accent);
-  font-weight: 600;
 }
 .wizard-body {
   display: flex;
@@ -2280,6 +2272,21 @@ img.msg-avatar {
 .make-portrait .field {
   max-width: 14rem;
 }
+/* What a made picture was drawn from, folded away under it. */
+.made-from {
+  margin: 0.25rem 0;
+  font-size: 0.9rem;
+}
+.made-from > summary {
+  color: var(--muted);
+}
+.made-from-text {
+  margin: 0.4rem 0;
+  padding: 0.4rem 0.6rem;
+  border-left: 3px solid var(--border);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
 /* What a portrait or item picture is made from, changeable before it is made. */
 .picture-description {
   display: flex;
@@ -2604,6 +2611,11 @@ img.msg-avatar {
 .memory-chip.forgot {
   border-style: dashed;
   color: var(--muted);
+}
+.memory-actions {
+  display: inline-flex;
+  gap: 0.45rem;
+  white-space: nowrap;
 }
 .memory-action {
   border: none;

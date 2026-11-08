@@ -231,6 +231,22 @@ describe('Settings: AI connections', () => {
     expect(await screen.findByText('The AI service refused the API key.')).toBeInTheDocument();
   });
 
+  it('says when a paid connection has no key saved, and names the model when it works', async () => {
+    connections = [{ ...saved, hasKey: false }];
+    render(<SettingsScreen />);
+    await userEvent.click(await screen.findByRole('button', { name: 'Test connection' }));
+    expect(await screen.findByText(/No API key is saved for this connection/)).toBeInTheDocument();
+
+    const base = invoke.getMockImplementation()!;
+    invoke.mockImplementation(async (cmd: string, args: Record<string, unknown>) =>
+      cmd === 'test_connection'
+        ? { ok: true, code: null, message: 'ignored', modelListed: true, models: ['story-model'] }
+        : base(cmd, args),
+    );
+    await userEvent.click(screen.getByRole('button', { name: 'Test connection' }));
+    expect(await screen.findByText('Connected. “story-model” is available.')).toBeInTheDocument();
+  });
+
   it('adds a picture connection for portraits, never as a storyteller', async () => {
     connections = [saved];
     render(<SettingsScreen />);

@@ -20,8 +20,9 @@ and the roadmap differ, this file wins.
   values (no typing); Custom shows a text field for every value. Both edit the
   same draft, and a typed value shows in Guided as "Your own: ...". One
   unfinished wizard draft is kept at a time.
-- **Route switching:** a minimal route switcher ships with the reader; the full
-  Chapter & Route Picker comes later.
+- **Route switching:** **Routes** shows every route as a list, a map or a
+  timeline (ADR 0019), and the chapter name under the story's title jumps to
+  any chapter so far (ADR 0026).
 - **Regenerate:** each regenerate creates a route; the route list groups routes
   by fork point and can hide abandoned ones.
 - **Images** are app-wide (one library for every story); stories link to
@@ -49,14 +50,17 @@ and the roadmap differ, this file wins.
 - **Updates** are off until turned on; Check now always works. The newest of
   the first 100 releases wins by SemVer; drafts, prereleases and pages off the
   repository are ignored. The notice lives in the footer, and Got it stores the
-  highest acknowledged version. There is no auto-update. The **diagnostics
+  highest acknowledged version. Nothing installs by itself: a build made with
+  the update signing key offers **Install … and restart**, which downloads the
+  release's signed file for this system and checks it before installing
+  (ADR 0027). The **diagnostics
   report** is built and sanitized in Rust and shown in full before it is copied
   or saved.
 - **In-story edits** use one `edit` event per Apply, with a short note listing
   what changed (shown in the story). Facts added in Story details are
   confirmed facts; the `fact_confirm` event is kept for the later suggestion
-  queue. Relationships are not edited directly yet; removing a character
-  removes theirs.
+  queue. Relationships, with their feelings bars, are edited in Story details
+  (`setRelationships`); removing a character removes theirs.
 - **Preview context** lives in the reader's pause menu, because it needs a
   route; it previews the next reply on the current route.
 - **Budget:** the pause gate reserves each paid call's ceiling inside the
@@ -83,8 +87,12 @@ and the roadmap differ, this file wins.
   API-charge estimate is $0 regardless of adapter.
 - `api_rate_cards.provider_profile_id` is NOT NULL.
 - `memory_caches` has no `route_id`; eligibility is by ancestry and source hash.
-- Fact-extraction suggestions and AI character suggestions are deferred
-  (the `character_suggestion` ledger purpose stays reserved).
+- Fact-extraction suggestions are deferred. The storyteller suggests new
+  characters with `<character>` cards under a reply, and the
+  `character_suggestion` ledger purpose records **Fill in the rest** (ADR 0025)
+  and every picture the app makes.
+- People added during a story get a random id (`custom:npc-<8 hex>`), so a
+  story-wide portrait never lands on someone else on another route (ADR 0027).
 - `saves.save_type` is one of `manual`, `quick`, `auto`; five rotating auto slots.
 - `provider_profiles` is part of the first migration because the ledger
   references it.

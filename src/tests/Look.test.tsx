@@ -62,16 +62,20 @@ beforeEach(() => {
 
 describe('themes', () => {
   it('suggests a theme from the first genre that has one', () => {
-    expect(themeForGenres(['Horror', 'Romance'])).toBe('midnight');
+    expect(themeForGenres(['Horror', 'Romance'])).toBe('gothic');
+    expect(themeForGenres(['Mystery'])).toBe('gothic');
     expect(themeForGenres(['Action', 'Fantasy'])).toBe('parchment');
-    expect(themeForGenres(['slice of life'])).toBe('rose');
+    expect(themeForGenres(['Science fiction'])).toBe('neon');
+    expect(themeForGenres(['Thriller'])).toBe('midnight');
+    expect(themeForGenres(['slice of life'])).toBe('cafe');
+    expect(themeForGenres(['Romance'])).toBe('rose');
     expect(themeForGenres(['Superhero', 'Action'])).toBeNull();
     expect(themeForGenres(undefined)).toBeNull();
   });
 
   it('gives a story its own look, else one that fits, else the app theme', () => {
     const look = { theme: 'parchment' as const, fitGenre: true, stories: {} };
-    expect(storyTheme(look, 's1', ['Cyberpunk'])).toBe('midnight');
+    expect(storyTheme(look, 's1', ['Cyberpunk'])).toBe('neon');
     expect(storyTheme(look, 's1', ['Superhero'])).toBe('parchment');
     expect(storyTheme({ ...look, fitGenre: false }, 's1', ['Cyberpunk'])).toBe('parchment');
     expect(storyTheme({ ...look, stories: { s1: 'rose' } }, 's1', ['Cyberpunk'])).toBe('rose');
@@ -82,7 +86,7 @@ describe('themes', () => {
     render(<ThemeProbe />);
     expect(document.documentElement.dataset.theme).toBe('rose');
     act(() => useLook.getState().setOpen({ storyId: 's1', genres: ['Horror'] }));
-    expect(document.documentElement.dataset.theme).toBe('midnight');
+    expect(document.documentElement.dataset.theme).toBe('gothic');
     act(() => useLook.getState().setOpen(null));
     expect(document.documentElement.dataset.theme).toBe('rose');
   });
@@ -96,6 +100,9 @@ describe('themes', () => {
     );
     const group = screen.getByRole('group', { name: 'Theme' });
     expect(within(group).getByRole('radio', { name: /Rose/ })).toBeChecked();
+    for (const name of [/Midnight/, /Parchment/, /Neon/, /Café/, /Gothic/]) {
+      expect(within(group).getByRole('radio', { name })).toBeInTheDocument();
+    }
     await userEvent.click(within(group).getByRole('radio', { name: /Midnight/ }));
     expect(document.documentElement.dataset.theme).toBe('midnight');
     expect(JSON.parse(localStorage.getItem('dtl.look') ?? '{}')).toMatchObject({
@@ -129,7 +136,7 @@ describe('themes', () => {
   it('ignores a damaged saved look', async () => {
     localStorage.setItem(
       'dtl.look',
-      JSON.stringify({ theme: 'neon', stories: { a: 'x', b: 'app' } }),
+      JSON.stringify({ theme: 'vapor', stories: { a: 'x', b: 'app' } }),
     );
     vi.resetModules();
     const fresh = await import('../app/look');

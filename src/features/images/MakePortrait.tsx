@@ -48,24 +48,11 @@ function portraitInput(
 }
 
 /**
- * "Make one from the description": asks the picture connection (Settings ->
- * Pictures) for a portrait of the character. The picture is kept for this
- * story only. Shows what is sent on request, and the player can change
- * the description first.
+ * The picture connection chosen in Settings -> Pictures: `undefined` while
+ * loading, `null` when none is chosen.
  */
-export function MakePortrait({ character, world, storyId, onMade }: Props) {
-  const id = useId();
-  /** `undefined` while loading; `null` when no picture connection is chosen. */
+export function usePictureMaker(): ProviderProfile | null | undefined {
   const [maker, setMaker] = useState<ProviderProfile | null | undefined>(undefined);
-  const [style, setStyle] = useState<PortraitStyle>('painted');
-  const [showPrompt, setShowPrompt] = useState(false);
-  const [prompt, setPrompt] = useState<PictureDraft | null>(null);
-  const [own, setOwn] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [needsOverride, setNeedsOverride] = useState(false);
-  const [made, setMade] = useState<string | null>(null);
-
   useEffect(() => {
     let live = true;
     Promise.all([commands.getPictureMaker(), commands.listConnections()])
@@ -79,6 +66,26 @@ export function MakePortrait({ character, world, storyId, onMade }: Props) {
       live = false;
     };
   }, []);
+  return maker;
+}
+
+/**
+ * "Make one from the description": asks the picture connection (Settings ->
+ * Pictures) for a portrait of the character. The picture is kept for this
+ * story only. Shows what is sent on request, and the player can change
+ * the description first.
+ */
+export function MakePortrait({ character, world, storyId, onMade }: Props) {
+  const id = useId();
+  const maker = usePictureMaker();
+  const [style, setStyle] = useState<PortraitStyle>('painted');
+  const [showPrompt, setShowPrompt] = useState(false);
+  const [prompt, setPrompt] = useState<PictureDraft | null>(null);
+  const [own, setOwn] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [needsOverride, setNeedsOverride] = useState(false);
+  const [made, setMade] = useState<string | null>(null);
 
   useEffect(() => {
     if (!showPrompt) return;

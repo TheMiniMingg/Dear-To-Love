@@ -33,5 +33,13 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ]
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "",
+      "endpoints": [
+        "https://github.com/TheMiniMingg/Dear-To-Love/releases/latest/download/latest.json"
+      ]
+    }
   }
 }
