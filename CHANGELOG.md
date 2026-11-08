@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- **A portrait for someone new.** With a picture connection, the card for a new character
+  has **Make their portrait too** ticked: adding them to the cast draws their portrait from
+  the card's looks and shows it on that route once it's made. **Settings → Pictures** turns
+  the offer off.
 - **See how a picture was made.** A portrait or item picture the app makes keeps the
   description the picture service was sent. Open it in the image library, or pick it under
   **Pictures**, and choose **What was sent to make it**. Cards for new characters now give

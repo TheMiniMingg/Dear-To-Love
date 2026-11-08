@@ -416,8 +416,12 @@ connection** draw them. **Add for this story only** keeps a picture with one sto
 your library (any story)** shares it with every story, so you can use it again anywhere.
 Picture connections: **OpenAI images** (an API key, paid per picture) or **Stable Diffusion
 WebUI** on your computer (free). Choose it under **Settings → Pictures**, then **Make
-portrait** or **Make a picture** asks for one in the style you pick. **Show what is sent** shows the description first: it uses looks, role and the
-world's setting, never names or story text. Pictures are always asked for as safe for work.
+portrait** or **Make a picture** asks for one in the style you pick. **See or change what is
+sent** shows the description first: it uses looks, role and the world's setting, never names
+or story text. Each picture keeps it, under **What was sent to make it** in **Images**. When
+the storyteller brings someone new into the story, their card offers **Make their portrait
+too** as they join the cast (turn the offer off under **Settings → Pictures**). Pictures are
+always asked for as safe for work.
 **Settings → Background picture** can also put a picture of your own behind every screen.
 
 ![Choosing a portrait: add a picture for this story only or to your library, or pick one from either](docs/screenshots/picture-buttons.webp)

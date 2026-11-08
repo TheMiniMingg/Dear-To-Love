@@ -70,7 +70,9 @@ import { EndChapterPanel } from './EndChapterPanel';
 import { ExportPanel } from './ExportPanel';
 import { InventoryPanel, TrackerHud } from './InventoryPanel';
 import { NarrativeView } from './NarrativeView';
-import { joinCast } from './NewCharacterCard';
+import { joinCast, newcomerId } from './NewCharacterCard';
+import { portraitSlot } from './pictures';
+import { usePictureMaker } from '../images/MakePortrait';
 import { PicturesPanel } from './PicturesPanel';
 import { ReaderRail } from './ReaderRail';
 import { ScenePictures } from './ScenePictures';
@@ -88,6 +90,9 @@ import { PortraitsContext, portraitFinder } from './portraits';
 import { DiceRulesContext } from './DiceCards';
 import { intlLocale, joinList, joinSentences, msg, t, tKnown, tr } from '../../i18n';
 import { chapterHasTitle, chapterHeading, routeName, saveName } from '../../i18n/names';
+
+/** A portrait made for someone who joined the cast, waiting to be shown. */
+type MadePortrait = { routeId: string; characterId: string; name: string; assetId: string };
 
 type Panel =
   | null
@@ -461,6 +466,73 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
 
   const awaitingReply = !!view?.awaitingReply;
   const writing = stream !== null;
+
+  // Portraits made for people who just joined the cast. Each one becomes
+  // the route's picture for them, from then on, once the route is free to
+  // change (no reply being written or waited for).
+  const painter = usePictureMaker();
+  const [madePortraits, setMadePortraits] = useState<MadePortrait[]>([]);
+  const placing = useRef(false);
+  useEffect(() => {
+    const next = madePortraits.find((p) => p.routeId === view?.route.id);
+    if (!view || !next || placing.current || busy || writing || awaitingReply || viewing) return;
+    placing.current = true;
+    const done = () => setMadePortraits((all) => all.filter((p) => p !== next));
+    commands
+      .editStoryDetails({
+        storyId: view.story.id,
+        routeId: view.route.id,
+        expectedHeadId: view.state.headEventId,
+        changes: [
+          { op: 'setVisualRef', slot: portraitSlot(next.characterId), assetId: next.assetId },
+        ],
+        note: t('Portrait of {name}', { name: next.name }),
+      })
+      .then((v) => {
+        done();
+        setView(v);
+        setSaveStatus(t('{name}’s portrait is ready {time}', { name: next.name, time: timeNow() }));
+      })
+      .catch((e: unknown) => {
+        if (e instanceof CommandError && e.code === 'HEAD_CHANGED') {
+          setReload((n) => n + 1);
+        } else {
+          done();
+          setSaveStatus(
+            t('{name}’s portrait is in your images; choose it under Pictures.', {
+              name: next.name,
+            }),
+          );
+        }
+      })
+      .finally(() => {
+        placing.current = false;
+      });
+  }, [madePortraits, view, busy, writing, awaitingReply, viewing]);
+
+  /** Makes the portrait of someone who just joined the cast, in the background. */
+  const makeNewcomerPortrait = async (v: RouteView, characterId: string) => {
+    const character = v.state.state.characters[characterId];
+    if (!character) return;
+    const name = character.name;
+    setSaveStatus(t('Making {name}’s portrait…', { name }));
+    try {
+      const asset = await commands.makePortrait({
+        character,
+        world: v.state.state.world,
+        style: 'painted',
+        storyId: v.story.id,
+      });
+      setMadePortraits((all) => [
+        ...all,
+        { routeId: v.route.id, characterId, name, assetId: asset.id },
+      ]);
+    } catch (e) {
+      setSaveStatus(
+        t('{name}’s portrait wasn’t made: {reason}', { name, reason: errorMessage(e) }),
+      );
+    }
+  };
   const lastAction = view?.history[view.history.length - 1];
   // The storyteller's ideas for the next move, from the reply the story
   // stands at, or a few ways in when a chapter begins: none once the
@@ -723,8 +795,9 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
     });
 
   /** Adds someone a reply brought in to the cast; throws when that fails. */
-  const addToCast = async (c: NewCharacter) => {
+  const addToCast = async (c: NewCharacter, portrait: boolean) => {
     if (!view) return;
+    const characterId = newcomerId(view.state.state);
     try {
       const v = await commands.editStoryDetails({
         storyId: view.story.id,
@@ -735,6 +808,7 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
       });
       setView(v);
       setSaveStatus(t('{name} joined the cast {time}', { name: c.name.trim(), time: timeNow() }));
+      if (portrait) void makeNewcomerPortrait(v, characterId);
     } catch (e) {
       if (e instanceof CommandError && e.code === 'HEAD_CHANGED') setReload((n) => n + 1);
       throw e;
@@ -1248,6 +1322,7 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
                         storyId: view.story.id,
                         cast: Object.values(view.state.state.characters).map((c) => c.name),
                         adultsOnly: view.state.state.narration?.rating === 'explicit',
+                        painter,
                         onAdd: addToCast,
                       }
                 }

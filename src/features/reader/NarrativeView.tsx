@@ -24,7 +24,7 @@ import {
 import { errorMessage } from '../../api/commands';
 import { isComposing } from '../../app/keyboard';
 import { canReadAloud, useReadAloud } from '../../app/readAloud';
-import type { EventDto, MemoryNote, RollRequest, StoryStateV1 } from '../../types';
+import type { EventDto, MemoryNote, ProviderProfile, RollRequest, StoryStateV1 } from '../../types';
 import { RollResult } from './DiceCards';
 import { NameColorsContext, nameStyle } from './nameColors';
 import { MemoryLine, notesOnly, type ThreadLists } from './notes';
@@ -90,7 +90,9 @@ export type Newcomers = {
   /** Everyone in the story now, the player too. */
   cast: string[];
   adultsOnly: boolean;
-  onAdd: (c: NewCharacter) => Promise<void>;
+  /** The picture connection, when one is chosen. */
+  painter?: ProviderProfile | null;
+  onAdd: (c: NewCharacter, portrait: boolean) => Promise<void>;
 };
 
 export type StoryIntro = { premise: string; location: string; scene: string };
@@ -417,6 +419,7 @@ function EventBlock({
               storyId={newcomers.storyId}
               cast={newcomers.cast}
               adultsOnly={newcomers.adultsOnly}
+              painter={newcomers.painter}
               onAdd={newcomers.onAdd}
             />
           )}

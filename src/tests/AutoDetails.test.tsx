@@ -19,7 +19,11 @@ vi.mock('@tauri-apps/api/core', () => ({
 import { ReaderScreen } from '../features/reader/ReaderScreen';
 import { RichText } from '../features/reader/RichText';
 import { newCharacters, nextMoves, threadChanges } from '../features/reader/messages';
-import { joinCast, useSkippedCharacters } from '../features/reader/NewCharacterCard';
+import {
+  joinCast,
+  useNewcomerPortraits,
+  useSkippedCharacters,
+} from '../features/reader/NewCharacterCard';
 import { diffState } from '../features/reader/stateDiff';
 import { useUiStore } from '../app/store';
 
@@ -90,9 +94,12 @@ function viewWith(
 
 let edits: { changes: StateEdit[]; note: string | null; expectedHeadId: string }[] = [];
 
-function setup(view: RouteView) {
+type Answers = Record<string, (args: Record<string, unknown>) => unknown>;
+
+function setup(view: RouteView, more: Answers = {}) {
   edits = [];
   invoke.mockImplementation(async (cmd: string, args: Record<string, unknown>) => {
+    if (more[cmd]) return more[cmd](args);
     switch (cmd) {
       case 'get_route_view':
         return view;
@@ -114,7 +121,10 @@ function setup(view: RouteView) {
         for (const c of edit.changes) {
           if (c.op === 'setOpenThreads') next.state.state.openThreads = c.openThreads;
           if (c.op === 'setDoneThreads') next.state.state.doneThreads = c.doneThreads;
+          if (c.op === 'upsertCharacter') next.state.state.characters[c.character.id] = c.character;
+          if (c.op === 'setVisualRef' && c.assetId) next.state.state.visualRefs[c.slot] = c.assetId;
         }
+        view = next;
         return next;
       }
       default:
@@ -128,6 +138,7 @@ beforeEach(() => {
   invoke.mockReset();
   localStorage.clear();
   useSkippedCharacters.setState({ skipped: {} });
+  useNewcomerPortraits.setState({ on: true });
   useUiStore.setState({ screen: { name: 'reader', routeId: 'route-1' }, history: [], drafts: {} });
 });
 
@@ -343,6 +354,60 @@ describe('Someone new', () => {
     setup(viewWith());
     expect(await screen.findByText('Memory updated')).toBeInTheDocument();
     expect(screen.queryByRole('region', { name: 'Someone new: Rowan Ellis' })).toBeNull();
+  });
+
+  it('can make their portrait too, shown on this route once it is made', async () => {
+    const painter = { id: 'p2', label: 'OpenAI pictures', modelId: 'gpt-image-2.6-flare' };
+    const asked: unknown[] = [];
+    setup(viewWith(), {
+      get_picture_maker: () => 'p2',
+      list_connections: () => [{ ...painter, billing: 'paid', adapter: 'openai_images' }],
+      make_portrait: (args) => {
+        asked.push(args.input);
+        return { id: 'img-rowan', label: 'Portrait of Rowan Ellis' };
+      },
+    });
+    const card = await screen.findByRole('region', { name: 'Someone new: Rowan Ellis' });
+    const portrait = await within(card).findByRole('checkbox', { name: /Make their portrait too/ });
+    expect(portrait).toBeChecked();
+    expect(card).toHaveTextContent('(with OpenAI pictures, one paid picture)');
+
+    await userEvent.click(within(card).getByRole('button', { name: 'Add to the cast' }));
+    await waitFor(() => expect(edits).toHaveLength(2));
+    expect(asked).toEqual([
+      expect.objectContaining({
+        character: expect.objectContaining({
+          name: 'Rowan Ellis',
+          appearance: 'Weathered, quick to laugh, a yellow coat.',
+        }),
+        storyId: 'story-1',
+        style: 'painted',
+      }),
+    ]);
+    expect(edits[1]).toMatchObject({
+      expectedHeadId: 'ev-3',
+      note: 'Portrait of Rowan Ellis',
+      changes: [{ op: 'setVisualRef', slot: 'portrait:custom:npc-1', assetId: 'img-rowan' }],
+    });
+    expect(await screen.findByText(/Rowan Ellis’s portrait is ready/)).toBeInTheDocument();
+  });
+
+  it('adds without a portrait when unticked, or when the setting is off', async () => {
+    useNewcomerPortraits.setState({ on: false });
+    const made: unknown[] = [];
+    setup(viewWith(), {
+      get_picture_maker: () => 'p2',
+      list_connections: () => [{ id: 'p2', label: 'SD WebUI', billing: 'local' }],
+      make_portrait: (args) => made.push(args),
+    });
+    const card = await screen.findByRole('region', { name: 'Someone new: Rowan Ellis' });
+    const portrait = await within(card).findByRole('checkbox', { name: /Make their portrait too/ });
+    expect(portrait).not.toBeChecked();
+    expect(card).toHaveTextContent('on this computer');
+    await userEvent.click(within(card).getByRole('button', { name: 'Add to the cast' }));
+    expect(await screen.findByText(/Rowan Ellis joined the cast/)).toBeInTheDocument();
+    expect(made).toEqual([]);
+    expect(edits).toHaveLength(1);
   });
 
   it('will not add someone under 18 to an adults-only story', async () => {

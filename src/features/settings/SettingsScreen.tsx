@@ -7,6 +7,7 @@ import { Dialog } from '../../components/Dialog';
 import type { ConnectionCheck, ProviderProfile, StorytellerInfo } from '../../types';
 import { AboutSection, UpdatesSection } from '../updates/UpdatesSection';
 import { ConnectionForm } from './ConnectionForm';
+import { useNewcomerPortraits } from '../reader/NewCharacterCard';
 import { BackdropSection } from './BackdropSection';
 import { LanguageSection } from './LanguageSection';
 import { LookSection } from './LookSection';
@@ -100,6 +101,8 @@ export function SettingsScreen() {
   const [connections, setConnections] = useState<ProviderProfile[] | null>(null);
   const [storyteller, setStoryteller] = useState<StorytellerInfo | null>(null);
   const [pictureMaker, setPictureMaker] = useState<string | null>(null);
+  const newcomerPortraits = useNewcomerPortraits((s) => s.on);
+  const setNewcomerPortraits = useNewcomerPortraits((s) => s.setOn);
   const [editing, setEditingState] = useState<ProviderProfile | 'new' | null>(() =>
     useUiStore.getState().newConnection ? 'new' : null,
   );
@@ -321,6 +324,24 @@ export function SettingsScreen() {
             </label>
           ))}
         </div>
+        {pictureMaker !== null && (
+          <label className="check">
+            <input
+              type="checkbox"
+              checked={newcomerPortraits}
+              onChange={(e) => setNewcomerPortraits(e.target.checked)}
+            />
+            <span>
+              {t('Offer a portrait for each new character')}
+              <span className="muted small">
+                {' '}
+                {t(
+                  'When the storyteller brings someone new into the story, their card has Make their portrait too ticked. Untick it there to skip one.',
+                )}
+              </span>
+            </span>
+          </label>
+        )}
         {painters && painters.length === 0 && (
           <p className="muted small">
             {t(

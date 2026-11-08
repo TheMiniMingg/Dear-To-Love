@@ -2,19 +2,21 @@
  * Someone new under a reply: when the storyteller brings in a named
  * character who is not in the cast, it adds a card for them, and the player
  * can add them as they are, change the details first, or say not now (kept
- * on this computer, so the card stays away).
+ * on this computer, so the card stays away). With a picture connection,
+ * adding them can make their portrait too.
  */
 import { useState } from 'react';
 import { UserPlus } from 'lucide-react';
 import { create } from 'zustand';
 import { errorMessage } from '../../api/commands';
-import type { Character, StateEdit, StoryStateV1 } from '../../types';
+import type { Character, ProviderProfile, StateEdit, StoryStateV1 } from '../../types';
 import { joinList, t } from '../../i18n';
 import { namesAMinor } from '../create/ContentFields';
 import { TextArea, TextField } from '../create/fields';
 import { newCharacters, samePerson, type NewCharacter } from './messages';
 
 const STORAGE_KEY = 'dtl.skippedCharacters';
+const PORTRAIT_KEY = 'dtl.newcomerPortraits';
 /** Names kept per story, and stories kept, so the list stays small. */
 const MAX_NAMES = 60;
 const MAX_STORIES = 40;
@@ -55,6 +57,32 @@ export const useSkippedCharacters = create<{
   },
 }));
 
+function loadPortraitsOn(): boolean {
+  try {
+    return localStorage.getItem(PORTRAIT_KEY) !== 'off';
+  } catch {
+    return true;
+  }
+}
+
+/**
+ * Whether a new character's card offers their portrait ticked (Settings ->
+ * Pictures). Kept on this computer.
+ */
+export const useNewcomerPortraits = create<{ on: boolean; setOn: (on: boolean) => void }>(
+  (set) => ({
+    on: loadPortraitsOn(),
+    setOn: (on) => {
+      try {
+        localStorage.setItem(PORTRAIT_KEY, on ? 'on' : 'off');
+      } catch {
+        // A convenience only: the switch is back on next time.
+      }
+      set({ on });
+    },
+  }),
+);
+
 /** The people a reply brings in who are not in the cast and were not put off. */
 export function newcomersIn(text: string, cast: string[], skipped: string[]): NewCharacter[] {
   return newCharacters(text).filter(
@@ -69,9 +97,7 @@ export function newcomersIn(text: string, cast: string[], skipped: string[]): Ne
  * scene now, under an id no one in the story has.
  */
 export function joinCast(s: StoryStateV1, c: NewCharacter): StateEdit[] {
-  let n = 1;
-  while (`custom:npc-${n}` in s.characters) n++;
-  const id = `custom:npc-${n}`;
+  const id = newcomerId(s);
   const text = (v: string) => v.trim() || undefined;
   const character: Character = {
     id,
@@ -91,11 +117,19 @@ export function joinCast(s: StoryStateV1, c: NewCharacter): StateEdit[] {
   ];
 }
 
+/** The id the next person to join the cast gets. */
+export function newcomerId(s: StoryStateV1): string {
+  let n = 1;
+  while (`custom:npc-${n}` in s.characters) n++;
+  return `custom:npc-${n}`;
+}
+
 export function NewCharacterCards({
   text,
   storyId,
   cast,
   adultsOnly,
+  painter,
   onAdd,
 }: {
   text: string;
@@ -104,8 +138,10 @@ export function NewCharacterCards({
   cast: string[];
   /** The story is adults-only: someone under 18 can't be added. */
   adultsOnly: boolean;
-  /** Saves them to the cast; throws when that fails. */
-  onAdd?: (c: NewCharacter) => Promise<void>;
+  /** The picture connection, when one is chosen: adding can make a portrait. */
+  painter?: ProviderProfile | null;
+  /** Saves them to the cast, and asks for their portrait; throws when that fails. */
+  onAdd?: (c: NewCharacter, portrait: boolean) => Promise<void>;
 }) {
   const skippedNames = useSkippedCharacters((s) => s.skipped[storyId]);
   const skip = useSkippedCharacters((s) => s.skip);
@@ -118,6 +154,7 @@ export function NewCharacterCards({
           key={c.name}
           suggested={c}
           adultsOnly={adultsOnly}
+          painter={painter ?? null}
           onAdd={onAdd}
           onSkip={() => skip(storyId, c.name)}
         />
@@ -129,14 +166,18 @@ export function NewCharacterCards({
 function NewCharacterCard({
   suggested,
   adultsOnly,
+  painter,
   onAdd,
   onSkip,
 }: {
   suggested: NewCharacter;
   adultsOnly: boolean;
-  onAdd: (c: NewCharacter) => Promise<void>;
+  painter: ProviderProfile | null;
+  onAdd: (c: NewCharacter, portrait: boolean) => Promise<void>;
   onSkip: () => void;
 }) {
+  const portraitsOn = useNewcomerPortraits((s) => s.on);
+  const [portrait, setPortrait] = useState(portraitsOn);
   const [form, setForm] = useState<NewCharacter | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -150,7 +191,7 @@ function NewCharacterCard({
     setBusy(true);
     setError(null);
     try {
-      await onAdd({ ...c, name });
+      await onAdd({ ...c, name }, !!painter && portrait);
     } catch (e) {
       setError(errorMessage(e));
     } finally {
@@ -209,6 +250,23 @@ function NewCharacterCard({
           <p role="alert" className="error small">
             {error}
           </p>
+        )}
+        {painter && (
+          <label className="newcomer-portrait small">
+            <input
+              type="checkbox"
+              checked={portrait}
+              disabled={busy}
+              onChange={(e) => setPortrait(e.target.checked)}
+            />{' '}
+            {t('Make their portrait too')}
+            <span className="muted">
+              {' '}
+              {painter.billing === 'local'
+                ? t('(with {name}, on this computer)', { name: painter.label })
+                : t('(with {name}, one paid picture)', { name: painter.label })}
+            </span>
+          </label>
         )}
         <div className="newcomer-actions">
           <button

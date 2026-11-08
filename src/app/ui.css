@@ -1360,6 +1360,10 @@ details.more-options > summary {
 .newcomer-form .field {
   margin-bottom: 0.5rem;
 }
+.newcomer-portrait {
+  display: block;
+  margin-top: 0.5rem;
+}
 .newcomer-actions {
   display: flex;
   flex-wrap: wrap;

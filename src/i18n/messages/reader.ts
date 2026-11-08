@@ -2092,4 +2092,54 @@ export const reader: Messages = {
       'これはアプリが物語の詳細から書いたものです。名前は入れません。画像サービスは言葉が表す姿を描くもので、その人が誰かは分からないからです。',
       '앱이 이야기의 세부 정보로 쓴 내용입니다. 이름은 넣지 않습니다. 그림 서비스는 누구인지가 아니라 글이 묘사하는 모습을 그리기 때문입니다.',
     ],
+  'Make their portrait too': ['同时生成肖像', '同時產生肖像', '肖像画も作る', '초상화도 만들기'],
+  '(with {name}, on this computer)': [
+    '（使用 {name}，在这台电脑上）',
+    '（使用 {name}，在這台電腦上）',
+    '（{name} で、このコンピューター上で）',
+    '({name}, 이 컴퓨터에서)',
+  ],
+  '(with {name}, one paid picture)': [
+    '（使用 {name}，一张付费图片）',
+    '（使用 {name}，一張付費圖片）',
+    '（{name} で、有料の画像 1 枚）',
+    '({name}, 유료 그림 1장)',
+  ],
+  'Making {name}’s portrait…': [
+    '正在生成{name}的肖像…',
+    '正在產生{name}的肖像…',
+    '{name}の肖像画を作っています…',
+    '{name}의 초상화를 만드는 중…',
+  ],
+  '{name}’s portrait is ready {time}': [
+    '{name}的肖像已完成 {time}',
+    '{name}的肖像已完成 {time}',
+    '{name}の肖像画ができました {time}',
+    '{name}의 초상화가 완성됨 {time}',
+  ],
+  '{name}’s portrait is in your images; choose it under Pictures.': [
+    '{name}的肖像已在你的图片中；请在“图片”中选择它。',
+    '{name}的肖像已在你的圖片中；請在「圖片」中選擇它。',
+    '{name}の肖像画は画像ライブラリにあります。「画像」で選んでください。',
+    '{name}의 초상화는 이미지 보관함에 있습니다. 이미지 창에서 선택하세요.',
+  ],
+  '{name}’s portrait wasn’t made: {reason}': [
+    '未能生成{name}的肖像：{reason}',
+    '未能產生{name}的肖像：{reason}',
+    '{name}の肖像画は作れませんでした：{reason}',
+    '{name}의 초상화를 만들지 못했습니다: {reason}',
+  ],
+  'Offer a portrait for each new character': [
+    '为每个新角色提供肖像',
+    '為每個新角色提供肖像',
+    '新しい登場人物ごとに肖像画を勧める',
+    '새 등장인물마다 초상화 제안',
+  ],
+  'When the storyteller brings someone new into the story, their card has Make their portrait too ticked. Untick it there to skip one.':
+    [
+      '当讲述者让新人物进入故事时，他们的卡片上会勾选“同时生成肖像”。在卡片上取消勾选即可跳过。',
+      '當講述者讓新人物進入故事時，他們的卡片上會勾選「同時產生肖像」。在卡片上取消勾選即可略過。',
+      'ストーリーテラーが新しい人物を登場させると、そのカードの「肖像画も作る」にチェックが入ります。不要なときはカードでチェックを外してください。',
+      '이야기꾼이 새 인물을 이야기에 등장시키면 그 카드에 초상화도 만들기가 체크되어 있습니다. 건너뛰려면 카드에서 체크를 해제하세요.',
+    ],
 };
