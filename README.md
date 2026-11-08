@@ -138,8 +138,9 @@ the turn back.
 _Another reply, with a hint for this reply only._
 
 **5. End the chapter.** When a chapter feels finished, **End chapter** has the storyteller
-write a recap you can edit and suggest the next chapter's title. Later chapters remember the
-recap, and when the notebook has grown it offers to tidy it: keep or undo each change.
+write a recap you can edit and suggest the next chapter's title. Later chapters read the
+recap in place of the chapter's turns, which frees the storyteller's memory for what comes
+next, and when the notebook has grown it offers to tidy it: keep or undo each change.
 
 ![Ending a chapter: the recap, the next chapter's title and Tidy the notebook, which merges two notes about Mara and shortens the letter's](docs/screenshots/notebook-tidy.webp)
 

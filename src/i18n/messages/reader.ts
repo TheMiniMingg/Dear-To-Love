@@ -2218,13 +2218,6 @@ export const reader: Messages = {
       '語り手の記憶がいっぱいです。以前のターンの一部が入りきりません。章を終えるか、ストーリーの設定を短くするか、接続のコンテキスト上限を上げてください。',
       '이야기꾼의 기억이 가득 찼습니다. 이전 턴 일부가 더는 들어가지 않습니다. 챕터를 끝내거나, 스토리 설정을 줄이거나, 연결의 컨텍스트 한도를 올리세요.',
     ],
-  'The storyteller’s memory is full: some earlier turns no longer fit in a request. End the chapter so a recap takes their place, or shorten Story details.':
-    [
-      '讲述者的记忆已满：一部分较早的回合已无法放进请求。请结束本章让回顾取代它们，或缩短故事设定。',
-      '講述者的記憶已滿：一部分較早的回合已無法放進請求。請結束本章讓回顧取代它們，或縮短故事設定。',
-      '語り手の記憶がいっぱいです。以前のターンの一部がリクエストに入りきりません。章を終えてあらすじに置き換えるか、ストーリーの設定を短くしてください。',
-      '이야기꾼의 기억이 가득 찼습니다. 이전 턴 일부가 요청에 더는 들어가지 않습니다. 챕터를 끝내서 요약이 대신하게 하거나 스토리 설정을 줄이세요.',
-    ],
   'The storyteller’s memory is nearly full. Ending the chapter keeps a recap and frees room for what comes next.':
     [
       '讲述者的记忆快满了。结束本章会保留一份回顾，为后面的内容腾出空间。',
@@ -2304,5 +2297,32 @@ export const reader: Messages = {
       '每條路線都是獨立的時間線，有自己的記憶、存檔和圖片。路線在分岔點之前的一切都是共享的。',
       'ルートはそれぞれ独立した時間軸で、記憶・セーブ・画像を別々に持ちます。分かれる前の部分はすべてのルートで共通です。',
       '루트는 저마다 독립된 시간선으로, 기억, 저장, 이미지를 따로 가집니다. 갈라지기 전의 내용은 모든 루트가 공유합니다.',
+    ],
+  'The storyteller’s memory is full: some earlier turns no longer fit in a request. End the chapter so a recap takes their place, shorten Story details, or raise the connection’s context limit in Settings → AI connections.':
+    [
+      '讲述者的记忆已满：一部分较早的回合已无法放进请求。请结束本章让回顾取代它们、缩短故事设定，或在“设置 → AI 连接”中提高该连接的上下文上限。',
+      '講述者的記憶已滿：一部分較早的回合已無法放進請求。請結束本章讓回顧取代它們、縮短故事設定，或在「設定 → AI 連線」中提高該連線的上下文上限。',
+      '語り手の記憶がいっぱいです。以前のターンの一部がリクエストに入りきりません。章を終えてあらすじに置き換えるか、ストーリーの設定を短くするか、「設定 → AI 接続」で接続のコンテキスト上限を上げてください。',
+      "이야기꾼의 기억이 가득 찼습니다. 이전 턴 일부가 요청에 더는 들어가지 않습니다. 챕터를 끝내서 요약이 대신하게 하거나, 스토리 설정을 줄이거나, '설정 → AI 연결'에서 연결의 컨텍스트 한도를 올리세요.",
+    ],
+  'The story setup alone no longer fits what this storyteller can read at once, so no reply can be written. Raise the connection’s context limit in Settings → AI connections, lower the reply length, or shorten Story details.':
+    [
+      '仅故事设定就已超出这位讲述者一次能读取的量，因此无法写出回复。请在“设置 → AI 连接”中提高该连接的上下文上限、调低回复长度，或缩短故事设定。',
+      '僅故事設定就已超出這位講述者一次能讀取的量，因此無法寫出回覆。請在「設定 → AI 連線」中提高該連線的上下文上限、調低回覆長度，或縮短故事設定。',
+      'ストーリーの設定だけで、この語り手が一度に読める量を超えているため、返信を書けません。「設定 → AI 接続」で接続のコンテキスト上限を上げるか、返信の長さを短くするか、ストーリーの設定を短くしてください。',
+      "스토리 설정만으로도 이 이야기꾼이 한 번에 읽을 수 있는 양을 넘어서 응답을 쓸 수 없습니다. '설정 → AI 연결'에서 연결의 컨텍스트 한도를 올리거나, 응답 길이를 줄이거나, 스토리 설정을 줄이세요.",
+    ],
+  'The chapters you ended are read from their recaps instead.': [
+    '你结束的章节则通过它们的回顾来读取。',
+    '你結束的章節則透過它們的回顧來讀取。',
+    '終えた章は、ターンの代わりにあらすじで読まれます。',
+    '끝낸 챕터는 턴 대신 요약으로 읽습니다.',
+  ],
+  'The storyteller reads the chapters you ended from their recaps, and the {n} newer turns word for word.':
+    [
+      '讲述者通过回顾读取你结束的章节，并逐字读取之后的 {n} 个回合。',
+      '講述者透過回顧讀取你結束的章節，並逐字讀取之後的 {n} 個回合。',
+      '語り手は、終えた章をあらすじで読み、その後の {n} ターンをそのまま読みます。',
+      '이야기꾼은 끝낸 챕터를 요약으로 읽고, 그 뒤의 {n}개 턴을 그대로 읽습니다.',
     ],
 };

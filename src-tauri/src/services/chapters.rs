@@ -18,6 +18,7 @@ use crate::db::usage::RequestPurpose;
 use crate::db::Database;
 use crate::domain::events::{EventBody, EventKind};
 use crate::domain::provider::{GenerateRequest, ModelMessage, Role};
+use crate::domain::text::plain_message_tags;
 use crate::errors::{AppError, AppResult, ErrorCode};
 use crate::services::generation::{call_once, CallPurpose};
 use crate::services::memory::{
@@ -131,8 +132,11 @@ pub fn recap_messages(
 }
 
 /// The recap and the next chapter's suggested title from a reply that may
-/// end with a `Next chapter: …` line.
+/// end with a `Next chapter: …` line. A storyteller that slips into its
+/// reply format gets its notes, threads and ideas dropped and its message
+/// cards written as plain words, so none of it is kept in the recap.
 pub fn split_next_title(reply: &str) -> (String, Option<String>) {
+    let reply = plain_message_tags(reply);
     let reply = reply.trim();
     let (body, last) = match reply.rfind('\n') {
         Some(i) => (&reply[..i], reply[i + 1..].trim()),

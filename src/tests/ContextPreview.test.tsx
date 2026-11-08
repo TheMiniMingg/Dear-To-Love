@@ -97,8 +97,16 @@ describe('Preview context', () => {
     });
     render(<ReaderScreen routeId="route-1" />);
     await screen.findByLabelText('What do you do?');
+    // Nothing fits, so the memory gauge is red and says what helps: not a
+    // recap, which only adds to the setup, but more room or a shorter setup.
+    const banner = await screen.findByTestId('context-banner');
+    expect(banner).toHaveTextContent(/setup alone no longer fits/);
+    expect(within(banner).queryByRole('button', { name: 'End chapter' })).toBeNull();
+    expect(within(banner).getByRole('button', { name: 'Story details' })).toBeInTheDocument();
+    expect(screen.getByTestId('context-gauge')).toHaveTextContent('Memory 100%');
     await userEvent.keyboard('{Escape}');
-    await userEvent.click(await screen.findByRole('button', { name: 'Preview context' }));
+    const buttons = await screen.findAllByRole('button', { name: 'Preview context' });
+    await userEvent.click(buttons.find((b) => !b.closest('[data-testid="context-banner"]'))!);
     expect(await screen.findByRole('alert')).toHaveTextContent(/need about 9000 tokens/);
   });
 

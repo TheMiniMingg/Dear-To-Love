@@ -29,6 +29,7 @@ const remembered: StoryMemory = {
   recapsRead: 10,
   recapsBriefed: 40,
   firstSummaryAfter: 16,
+  wordForWordTurns: 12,
 };
 
 function withState(view: RouteView): RouteView {
@@ -109,10 +110,32 @@ describe('Story memory', () => {
     expect(within(again).getByRole('button', { name: 'Edit in Story details' })).toBeEnabled();
   });
 
+  it('says the chapters you ended are read from their recaps', async () => {
+    // Turns 9 to 17 were in Chapter 1, ended with a recap.
+    const dialog = await openMemory({ ...remembered, wordForWordTurns: 3 });
+    expect(await within(dialog).findByText(/Covers turns 1 to 8 of 20/)).toHaveTextContent(
+      'reads the 3 newer turns word for word. The chapters you ended are read from their recaps instead.',
+    );
+  });
+
+  it('says so before the first summary too', async () => {
+    const dialog = await openMemory({
+      ...remembered,
+      turns: 6,
+      wordForWordTurns: 2,
+      summary: undefined,
+    });
+    expect(
+      await within(dialog).findByText(
+        'The storyteller reads the chapters you ended from their recaps, and the 2 newer turns word for word.',
+      ),
+    ).toBeInTheDocument();
+  });
+
   it('explains when no summary is needed yet', async () => {
     const view = fakeRouteView();
     const dialog = await openMemory(
-      { ...remembered, turns: 3, summary: undefined, recaps: [] },
+      { ...remembered, turns: 3, wordForWordTurns: 3, summary: undefined, recaps: [] },
       view,
     );
     expect(

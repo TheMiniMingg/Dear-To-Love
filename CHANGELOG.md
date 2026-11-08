@@ -20,8 +20,13 @@
   preset file holds the story setup only: never a key, a picture or a setting.
 - **The memory gauge.** The reader's status line shows how much of the next request the
   story already fills (**Memory 42%**). It turns amber at 80% and red when turns are being
-  left out, with a line of advice and **End chapter** and **Preview context** at hand. Only
+  left out, with a line of advice and **End chapter** and **Preview context** at hand. When
+  the story setup alone no longer fits, it says so and offers **Story details** instead. Only
   live storytellers show it; the offline one reads no request.
+- **End chapter frees memory at once.** A chapter ended with a recap no longer sends its
+  turns word for word: the recap stands in for them, with only the last exchange kept so the
+  next chapter picks up from the same moment. Before, the room came back only when the
+  rolling summary caught up.
 - **Story typeface.** **Settings → Look → Story typeface** picks **Book** (Literata),
   **Plain** (the interface's Inter) or **Easy to read** (Atkinson Hyperlegible, made for low
   vision and dyslexia); **Theme's choice** lets a look such as Terminal keep its own.
@@ -48,7 +53,9 @@
   The speaker under a reply still reads it again or stops it.
 - **Cleaner memory.** The story summaries and chapter recaps the storyteller is asked for
   now see texts, calls and other message cards as plain words, and never the notes, threads
-  and ideas the app keeps beside a reply: shorter requests, and nothing to confuse them.
+  and ideas the app keeps beside a reply: shorter requests, and nothing to confuse them. If
+  a storyteller writes such tags into a summary or recap anyway, they are dropped (or turned
+  into plain words) before it is kept.
 - **Voice packs.** **Settings → Sound → Voices** can read each character in a voice of their
   own, with a narrator for the rest. Voices come from your computer, from ElevenLabs (its
   voices, or ones you designed or cloned there) or from a voice server of your own such as

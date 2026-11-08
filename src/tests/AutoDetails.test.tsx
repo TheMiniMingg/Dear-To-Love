@@ -56,6 +56,7 @@ const memory: StoryMemory = {
   recapsRead: 10,
   recapsBriefed: 40,
   firstSummaryAfter: 16,
+  wordForWordTurns: 2,
 };
 
 function viewWith(

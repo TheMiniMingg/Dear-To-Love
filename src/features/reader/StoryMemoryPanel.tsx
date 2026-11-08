@@ -68,6 +68,9 @@ export function StoryMemoryPanel({
   const facts = s.knownFacts.filter((f) => f.confirmed && f.text.trim());
   const relationships = s.relationships.filter((r) => r.label.trim() || r.status.trim() || r.bond);
   const teller = view.storyteller;
+  // Some newer turns are read from the recaps of the chapters ended since.
+  const recapped =
+    !!memory && memory.wordForWordTurns < memory.turns - (memory.summary?.coveredTurns ?? 0);
 
   return (
     <div className="panel story-memory">
@@ -114,10 +117,11 @@ export function StoryMemoryPanel({
                   total: memory.turns,
                 }),
                 tn(
-                  memory.turns - memory.summary.coveredTurns,
+                  memory.wordForWordTurns,
                   'The storyteller reads this instead of those turns, and reads the {n} newer turn word for word.',
                   'The storyteller reads this instead of those turns, and reads the {n} newer turns word for word.',
                 ),
+                recapped ? t('The chapters you ended are read from their recaps instead.') : '',
                 t('Written by {by}, {when}.', {
                   by: writerName(memory.summary.writtenBy),
                   when: formatWhen(memory.summary.createdAt),
@@ -128,16 +132,22 @@ export function StoryMemoryPanel({
         )}
         {memory && !memory.summary && (
           <p className="muted">
-            {memory.turns < memory.firstSummaryAfter
+            {recapped
               ? tn(
-                  memory.turns,
-                  'Not needed yet: the story has {n} turn so far, and the storyteller reads it word for word. After {after} turns, the earlier ones are summarized here.',
-                  'Not needed yet: the storyteller still reads all {n} turns word for word. After {after} turns, the earlier ones are summarized here.',
-                  { after: memory.firstSummaryAfter },
+                  memory.wordForWordTurns,
+                  'The storyteller reads the chapters you ended from their recaps, and the {n} newer turn word for word.',
+                  'The storyteller reads the chapters you ended from their recaps, and the {n} newer turns word for word.',
                 )
-              : t(
-                  'No summary yet. One is written after a reply; until then the storyteller reads the newest turns word for word.',
-                )}
+              : memory.turns < memory.firstSummaryAfter
+                ? tn(
+                    memory.turns,
+                    'Not needed yet: the story has {n} turn so far, and the storyteller reads it word for word. After {after} turns, the earlier ones are summarized here.',
+                    'Not needed yet: the storyteller still reads all {n} turns word for word. After {after} turns, the earlier ones are summarized here.',
+                    { after: memory.firstSummaryAfter },
+                  )
+                : t(
+                    'No summary yet. One is written after a reply; until then the storyteller reads the newest turns word for word.',
+                  )}
           </p>
         )}
       </section>

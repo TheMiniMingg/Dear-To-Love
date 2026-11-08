@@ -208,7 +208,7 @@ export function HelpScreen() {
           </Term>
           <Term name={t('Raise the context limit')}>
             {t(
-              'for the connection (Settings → AI connections → Edit) if the model reads more than the default 16,000 tokens.',
+              'for the connection (Settings → AI connections → Edit) when the model can read more than the limit set there. Many hosted models read 128,000 tokens or more; a bigger limit also costs more per reply.',
             )}
           </Term>
           <Term name={t('Pin what matters')}>

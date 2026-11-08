@@ -362,7 +362,8 @@ async fn write_summary(
                 },
             )
             .await?;
-            let text = c.text.trim().to_string();
+            // Never keep the reply format's notes or ideas in the summary.
+            let text = plain_message_tags(&c.text).trim().to_string();
             if text.is_empty() {
                 return Err(AppError::new(
                     ErrorCode::ProviderError,

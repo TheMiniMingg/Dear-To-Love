@@ -65,6 +65,7 @@ const memory: StoryMemory = {
   recapsRead: 1,
   recapsBriefed: 0,
   firstSummaryAfter: 16,
+  wordForWordTurns: 0,
 };
 
 describe('when the card is shown', () => {

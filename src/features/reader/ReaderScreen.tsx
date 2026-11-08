@@ -252,6 +252,8 @@ const NO_RULES: DiceRules = {};
 export function contextGauge(p: ContextPreview | 'too-long' | null): {
   percent: number;
   level: 'ok' | 'high' | 'full';
+  /** The setup and the action alone do not fit: no reply can be written. */
+  tooLong: boolean;
   title: string;
   advice: string;
 } | null {
@@ -285,12 +287,19 @@ export function contextGauge(p: ContextPreview | 'too-long' | null): {
   const advice =
     level === 'full'
       ? t(
-          'The storyteller’s memory is full: some earlier turns no longer fit in a request. End the chapter so a recap takes their place, or shorten Story details.',
+          'The storyteller’s memory is full: some earlier turns no longer fit in a request. End the chapter so a recap takes their place, shorten Story details, or raise the connection’s context limit in Settings → AI connections.',
         )
       : t(
           'The storyteller’s memory is nearly full. Ending the chapter keeps a recap and frees room for what comes next.',
         );
-  return { percent, level, title, advice };
+  if (p === 'too-long') {
+    // Ending the chapter adds a recap; only more room or a shorter setup helps.
+    const tooLong = t(
+      'The story setup alone no longer fits what this storyteller can read at once, so no reply can be written. Raise the connection’s context limit in Settings → AI connections, lower the reply length, or shorten Story details.',
+    );
+    return { percent, level, tooLong: true, title: tooLong, advice: tooLong };
+  }
+  return { percent, level, tooLong: false, title, advice };
 }
 
 function timeNow(): string {
@@ -509,6 +518,10 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
   // How full the next request is, for the memory gauge; local, nothing sent.
   const headId = view?.state.headEventId ?? null;
   const replyPending = !!view?.awaitingReply?.activeRun;
+  // Another storyteller reads a different amount at once.
+  const storytellerKey = view
+    ? `${view.storyteller.profileId ?? 'offline'}|${view.storyteller.modelId ?? ''}`
+    : '';
   useEffect(() => {
     if (!headId || replyPending) return;
     let cancelled = false;
@@ -525,7 +538,7 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
     return () => {
       cancelled = true;
     };
-  }, [routeId, headId, replyPending]);
+  }, [routeId, headId, replyPending, storytellerKey]);
   const gauge = useMemo(() => contextGauge(context), [context]);
   const replyVersions = view?.replyVersions;
   const versions = useMemo(
@@ -1347,9 +1360,15 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
               data-testid="context-banner"
             >
               <span>{gauge.advice}</span>
-              <button type="button" onClick={() => setPanel('end')}>
-                {t('End chapter')}
-              </button>
+              {gauge.tooLong ? (
+                <button type="button" onClick={() => openDetails()}>
+                  {t('Story details')}
+                </button>
+              ) : (
+                <button type="button" onClick={() => setPanel('end')}>
+                  {t('End chapter')}
+                </button>
+              )}
               <button type="button" onClick={() => setPanel('context')}>
                 {t('Preview context')}
               </button>

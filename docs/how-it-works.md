@@ -91,7 +91,10 @@ again, in this order:
 
 Every 8 replies, the older part of the story is summarized (by the same AI connection, or by
 the offline storyteller without any API call), and at least the 8 most recent turns are always
-sent word for word. Summaries are a cache: branches that share history share summaries, and a
+sent word for word. Once a chapter is ended with a recap, the recap stands in for that
+chapter's turns at once: only its last exchange is sent again word for word, so the next
+chapter picks up from the same moment, and a long chapter's room is freed without waiting for
+the summary to catch up. A chapter ended with an empty recap keeps its turns. Summaries are a cache: branches that share history share summaries, and a
 summary that no longer matches the story is ignored and redone.
 
 ### Memory notes
@@ -191,8 +194,11 @@ The reader shows how close a story is to this. The **memory gauge** in the statu
 kept for the reply) that the story setup, memory and turns already fill, read from the same
 preview as **Preview context**. At 80% it turns amber with advice to end the chapter soon;
 when the summary has been dropped or turns are being left out, it reads 100% and turns red,
-with **End chapter** and **Preview context** beside it. The offline storyteller reads no
-request, so it shows no gauge.
+with **End chapter** and **Preview context** beside it. When the story setup and your action
+alone no longer fit, no reply can be written: the warning says so and offers **Story details**
+instead of **End chapter**, since a recap would only add to the setup. The offline storyteller
+reads no request, so it shows no gauge. **Story memory** says how many of the newest turns
+are read word for word and that ended chapters are read from their recaps.
 
 When that happens, or replies start forgetting things:
 
@@ -203,7 +209,8 @@ When that happens, or replies start forgetting things:
   reply. In **Story details**, shorten long descriptions and remove facts that no longer
   matter.
 - **End the chapter.** **End chapter** keeps a short recap of what happened, which every
-  later reply reads, and gives the storyteller the next chapter's plan and a clear new focus.
+  later reply reads in place of the chapter's turns, so the room they took is free at once,
+  and gives the storyteller the next chapter's plan and a clear new focus.
   Edit the recap to keep the names, promises and secrets that matter.
 - **Pin what matters as a note or a fact.** The newest facts are always sent, and notes are
   sent while they fit, so a detail the summary might lose belongs in the notebook in **Story memory** or

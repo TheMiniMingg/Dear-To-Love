@@ -847,6 +847,10 @@ img.line-avatar {
   display: flex;
   flex-direction: column;
 }
+/* A form's usual minimum width is wider than a sheet; inside one it fits. */
+.dialog.sheet .form {
+  min-width: 0;
+}
 .dialog.sheet .story-details {
   flex: 1;
   min-height: 0;
@@ -1984,7 +1988,8 @@ details.more-options > summary {
 }
 .reading-settings {
   display: grid;
-  grid-template-columns: max-content minmax(0, 1fr);
+  /* As wide as the choices, but a long hint wraps rather than pushing the sample away. */
+  grid-template-columns: fit-content(32rem) minmax(0, 1fr);
   gap: 1.25rem;
   align-items: start;
 }

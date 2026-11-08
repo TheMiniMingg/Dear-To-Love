@@ -40,8 +40,16 @@ to its reading limit; and the story typeface had no easy-to-read option.
   context window shows, refreshed when the route's head changes and no reply is in flight:
   the estimated input over the room (context limit less the reply's reserve), amber at 80%,
   red (and 100%) once the summary is dropped or turns are left out, with a line of advice and
-  the two buttons that fix it. The offline storyteller reports no live preview and shows no
+  the two buttons that fix it. When `preview_context` answers CONTEXT_TOO_LONG the advice
+  is different (more room, a shorter reply or a shorter setup) and **Story details** takes
+  the place of **End chapter**. The offline storyteller reports no live preview and shows no
   gauge.
+- **An ended chapter's recap stands in for its turns.** `prompt::assemble` starts the
+  verbatim turns at the newest chapter start that carries a non-empty recap (keeping the last
+  exchange before it, so the seam reads on), unless a newer summary already starts them later.
+  The gauge's advice to end a long chapter is then true at once, rather than once the rolling
+  summary reaches the chapter's end. Prompt schema 15. `StoryMemory.wordForWordTurns`
+  reports the same start, so Story memory can say how many turns are read word for word.
 - **Story typeface** is one more `Look` preference (`font`), applied as the `--font-story`
   variable on the reader, so a theme that sets its own face (Terminal) keeps it under
   **Theme's choice**. Atkinson Hyperlegible is bundled with the other two faces.
@@ -62,3 +70,6 @@ to its reading limit; and the story typeface had no easy-to-read option.
   sending it; it is skipped while a reply is streaming.
 - The Previously card is off in every UI test by default (fixtures are dated days ago) and
   turned on only by its own tests.
+- A player who ends a chapter with a thin recap loses that chapter's detail sooner than
+  before; the recap field already says to keep the names, promises and secrets that matter,
+  and an empty recap keeps every turn.
