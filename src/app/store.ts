@@ -13,7 +13,8 @@ export type Screen =
   | { name: 'usage' }
   | { name: 'images' }
   | { name: 'backups' }
-  | { name: 'guide' };
+  | { name: 'guide' }
+  | { name: 'help' };
 
 const HISTORY_LIMIT = 10;
 const TEXT_SIZE_KEY = 'dtl.textSize';

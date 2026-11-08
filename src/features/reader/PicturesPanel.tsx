@@ -353,7 +353,7 @@ export function PicturesPanel({ view, awaitingReply, places = [], onChanged }: P
         </h3>
         <p className="muted small">
           {t(
-            'While the story is at a place with a picture of its own, the stage shows it instead of the background. The storyteller marks each change of scene with its place.',
+            'While the story is at a place with a picture of its own, the stage shows it instead of the background. The storyteller marks each change of scene with its place, so a picture appears when the story goes there; the names here are spelled as the storyteller wrote them.',
           )}
         </p>
         {placeRows.length > 0 && (

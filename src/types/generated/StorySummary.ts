@@ -30,4 +30,17 @@ turns: number,
  * The newest reply on the last played route (its story text), for a
  * line of it in the library.
  */
-lastReply: string | null, };
+lastReply: string | null, 
+/**
+ * Where the last played route is now: the newest scene heading in a
+ * reply, else the scene the story opened in.
+ */
+place: string, 
+/**
+ * The world's setting, as the story was made.
+ */
+setting: string, 
+/**
+ * The names of the cast as the story was made, for the library search.
+ */
+cast: Array<string>, };

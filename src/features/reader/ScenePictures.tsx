@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Thumb } from '../images/ImageGrid';
 import type { EventDto, RouteView } from '../../types';
-import { picture, portraitSlot, sceneBackground } from './pictures';
+import { picture, placeSlot, portraitSlot, sceneBackground } from './pictures';
 import { replyTexts, stageCast, stageFocus, usePictureView } from './stage';
 import { t } from '../../i18n';
 
@@ -27,6 +27,10 @@ export function ScenePictures({
   if (!shown) return null;
   const s = view.state.state;
   const bg = sceneBackground(view).assetId;
+  const place = s.scene?.location?.trim() ?? '';
+  // A generic background says nothing about where we are: caption it.
+  const captioned = !!bg && !!place && !picture(view, placeSlot(place)).assetId;
+  const when = s.scene?.time?.trim() ?? '';
   const cast = stageCast(view);
   const replies = replyTexts(events, draft);
   const auto =
@@ -61,6 +65,12 @@ export function ScenePictures({
           }
           className="scene-bg"
         />
+      )}
+      {captioned && (
+        <p className="stage-caption" data-testid="stage-caption">
+          <span>{place}</span>
+          {when && <span className="muted"> · {when}</span>}
+        </p>
       )}
       {focus && focusAsset && (
         <figure className="stage-focus" key={focus.id}>

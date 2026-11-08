@@ -75,7 +75,9 @@ export const useLibraryPrefs = create<PrefsState>((set, get) => {
 
 /** Words of a story the library search looks in. */
 function haystack(s: StorySummary): string {
-  return [s.title, s.description, ...s.genres].join('\n').toLowerCase();
+  return [s.title, s.description, s.place, s.setting, ...s.cast, ...s.genres]
+    .join('\n')
+    .toLowerCase();
 }
 
 /**

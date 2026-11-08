@@ -2,10 +2,13 @@ import { useId, useState } from 'react';
 import { BookOpenText, Globe, ListChecks, MapPin, Users, type LucideIcon } from 'lucide-react';
 import { commands, errorMessage } from '../../api/commands';
 import { ArrowPicker } from '../../components/ArrowPicker';
-import type { Character, EventDto, RouteView, StoryStateV1 } from '../../types';
+import type { Character, EventDto, RouteView, StoryStateV1, VoiceChoice } from '../../types';
 import { ContentFields } from '../create/ContentFields';
 import { LinesField, StatsField, TextArea, TextField } from '../create/fields';
 import { FeatureFields, StyleFields } from '../create/StyleFields';
+import { VoicePicker } from '../settings/VoicePackEditor';
+import { useVoicePacks } from '../../app/voicePacks';
+import { useReadAloud } from '../../app/readAloud';
 import { TrackingFields } from '../create/TrackingFields';
 import { RULES } from '../create/presets';
 import { RulesField } from '../create/RulesField';
@@ -475,6 +478,7 @@ export function StoryDetailsPanel({
               }
               onChange={(p) => setChar(current.id, p)}
             />
+            <CharacterVoiceRow name={current.name.trim()} />
             <div className="button-row">
               <button type="button" onClick={addCharacter}>
                 {t('Add a character')}
@@ -511,6 +515,11 @@ export function StoryDetailsPanel({
               value={edited.world.description}
               onChange={(description) => set({ world: { ...edited.world, description } })}
             />
+            <p className="muted small">
+              {t(
+                'Rules are what is always true here and what the storyteller must always do; they go into every reply. A note to the storyteller is for how the story is told; Remember this keeps a single fact.',
+              )}
+            </p>
             <RulesField
               label={t('Rules the storyteller follows')}
               presets={RULES}
@@ -699,3 +708,60 @@ export function StoryDetailsPanel({
 }
 
 export type { ChangeLine };
+
+/**
+ * How this character sounds when replies are read aloud: their voice in the
+ * active voice pack (kept with the pack, on this computer), and whether
+ * their lines are skipped. Nothing here is part of the story.
+ */
+function CharacterVoiceRow({ name }: { name: string }) {
+  const id = useId();
+  const packs = useVoicePacks((s) => s.packs);
+  const active = useVoicePacks((s) => s.active);
+  const savePack = useVoicePacks((s) => s.savePack);
+  const muted = useReadAloud((s) => s.muted);
+  const setMuted = useReadAloud((s) => s.setMuted);
+  const pack = packs.find((p) => p.id === active) ?? null;
+  if (!name) return null;
+  const lower = name.toLowerCase();
+  const entry = pack?.characters.find((c) => c.name.trim().toLowerCase() === lower) ?? null;
+  const isMutedNow = muted.some((m) => m.trim().toLowerCase() === lower);
+  const setVoice = (v: VoiceChoice) => {
+    if (!pack) return;
+    const others = pack.characters.filter((c) => c.name.trim().toLowerCase() !== lower);
+    savePack({
+      ...pack,
+      characters: v.voice ? [...others, { name, voice: v.voice, label: v.label }] : others,
+    });
+  };
+  return (
+    <div className="field character-voice">
+      <span className="field-label">{t('Read aloud')}</span>
+      {pack ? (
+        <div className="field-row">
+          <VoicePicker
+            id={`${id}-voice`}
+            label={t('Voice of {name} in the voice pack {pack}', { name, pack: pack.name })}
+            source={pack.source}
+            connectionId={pack.connectionId}
+            value={entry ? { voice: entry.voice, label: entry.label } : { voice: '', label: '' }}
+            onChange={setVoice}
+            character
+          />
+        </div>
+      ) : (
+        <p className="muted small">
+          {t('With a voice pack (Settings → Sound), each character can have a voice of their own.')}
+        </p>
+      )}
+      <label className="check">
+        <input
+          type="checkbox"
+          checked={isMutedNow}
+          onChange={(e) => setMuted(name, e.target.checked)}
+        />
+        {t('Skip this character’s lines when reading aloud')}
+      </label>
+    </div>
+  );
+}

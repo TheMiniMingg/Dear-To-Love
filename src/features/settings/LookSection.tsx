@@ -3,7 +3,22 @@ import { Palette } from 'lucide-react';
 import { THEMES, useLook, type ThemeId } from '../../app/look';
 import { ReadingControls, ReadingSample } from '../../components/ReadingControls';
 import { ThemePicker } from '../../components/ThemePicker';
-import { t } from '../../i18n';
+import { msg, t } from '../../i18n';
+
+/** Which look a story gets from its genre, as `themeForGenres` decides. */
+const GENRE_LOOKS: [string, ThemeId][] = [
+  [msg('Horror and mysteries'), 'gothic'],
+  [msg('Science fiction'), 'neon'],
+  [msg('Thrillers'), 'midnight'],
+  [msg('Fantasy and history'), 'parchment'],
+  [msg('Action and war'), 'ember'],
+  [msg('Text adventures'), 'terminal'],
+  [msg('Nature'), 'forest'],
+  [msg('The sea'), 'ocean'],
+  [msg('Whimsical stories'), 'lavender'],
+  [msg('Cozy stories'), 'cafe'],
+  [msg('Romance'), 'rose'],
+];
 
 /**
  * Settings: the app's colours, whether stories take a look of their own,
@@ -43,11 +58,17 @@ export function LookSection() {
           />
           {t('Give each story a look that fits its genre')}
         </label>
-        <p id={`${id}-fit`} className="muted small check-hint">
-          {t(
-            'Horror and mysteries read in Gothic, science fiction in Neon, thrillers in Midnight, fantasy and history on Parchment, action and war in Ember, text adventures in Terminal, nature in Forest, the sea in Ocean, whimsical stories in Lavender, cozy stories in Café and romance in Rose. Change any story with Look beside it while reading.',
-          )}
-        </p>
+        <div id={`${id}-fit`} className="muted small check-hint">
+          <dl className="genre-looks" aria-label={t('Which look each genre gets')}>
+            {GENRE_LOOKS.map(([genres, theme]) => (
+              <div key={theme}>
+                <dt>{t(genres)}</dt>
+                <dd>{t(THEMES.find((x) => x.id === theme)?.label ?? theme)}</dd>
+              </div>
+            ))}
+          </dl>
+          <p>{t('Change any story with Look beside it while reading.')}</p>
+        </div>
       </div>
       <h3 className="settings-subtitle">{t('Reading')}</h3>
       <div className="reading-settings">

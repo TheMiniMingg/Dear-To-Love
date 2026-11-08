@@ -34,6 +34,9 @@ const story = (id: string, title: string, more: Partial<StorySummary> = {}): Sto
   chapter: 1,
   turns: 0,
   lastReply: null,
+  place: '',
+  setting: '',
+  cast: [],
   ...more,
 });
 
@@ -60,15 +63,21 @@ describe('Finding a story', () => {
     genres: ['romance'],
     updatedAt: '2026-11-06T02:00:00Z',
     createdAt: '2026-11-02T00:00:00Z',
+    place: 'The café kitchen',
+    setting: 'A seaside town',
+    cast: ['Noor', 'Teodor'],
   });
   const all = [deep, air, cafe];
   const titles = (list: StorySummary[]) => list.map((s) => s.title);
 
-  it('searches every word in the title, premise and genres', () => {
+  it('searches every word in the title, premise, genres, cast, place and setting', () => {
     expect(titles(arrange(all, 'horror', 'played', []))).toEqual(['Dead Air']);
     expect(titles(arrange(all, 'radio NIGHT', 'played', []))).toEqual(['Dead Air']);
     expect(titles(arrange(all, 'week café', 'played', []))).toEqual(['First Week at the Café']);
     expect(arrange(all, 'radio café', 'played', [])).toEqual([]);
+    expect(titles(arrange(all, 'teodor', 'played', []))).toEqual(['First Week at the Café']);
+    expect(titles(arrange(all, 'kitchen', 'played', []))).toEqual(['First Week at the Café']);
+    expect(titles(arrange(all, 'seaside', 'played', []))).toEqual(['First Week at the Café']);
   });
 
   it('sorts by last played, title or newest, with pinned stories first', () => {
@@ -101,6 +110,8 @@ describe('Story cards', () => {
     turns: 5,
     routeCount: 3,
     lastReply: 'The door groans.\n\n*Dorn raises his lantern toward the **stairs**.*',
+    place: 'The lighthouse stairs',
+    cast: ['Dorn', 'Mira'],
   });
   const fresh = story('s2', 'Dead Air', { description: 'The snow has closed the road.' });
 
@@ -121,7 +132,9 @@ describe('Story cards', () => {
       within(card).getByText('Dorn raises his lantern toward the stairs.'),
     ).toBeInTheDocument();
     expect(within(card).getByRole('button', { name: 'Continue The Shifting Deep' })).toBeVisible();
+    expect(within(card).getByTestId('story-place')).toHaveTextContent('The lighthouse stairs');
     const other = screen.getByText('Dead Air').closest('li')!;
+    expect(within(other).queryByTestId('story-place')).toBeNull();
     expect(within(other).getByText(/Not started/)).toBeInTheDocument();
     expect(within(other).getByText('The snow has closed the road.')).toBeInTheDocument();
     expect(within(other).getByRole('button', { name: 'Begin Dead Air' })).toBeVisible();

@@ -13,7 +13,7 @@ vi.mock('@tauri-apps/api/core', () => ({
   },
 }));
 
-import { ReaderScreen } from '../features/reader/ReaderScreen';
+import { contextGauge, ReaderScreen } from '../features/reader/ReaderScreen';
 
 const preview: ContextPreview = {
   routeId: 'route-1',
@@ -66,7 +66,9 @@ describe('Preview context', () => {
     render(<ReaderScreen routeId="route-1" />);
     await screen.findByLabelText('What do you do?');
     await userEvent.keyboard('{Escape}');
-    await userEvent.click(await screen.findByRole('button', { name: 'Preview context' }));
+    // The memory banner offers the same window; take the pause menu's button.
+    const buttons = await screen.findAllByRole('button', { name: 'Preview context' });
+    await userEvent.click(buttons.find((b) => !b.closest('[role="status"]'))!);
 
     const dialog = await screen.findByRole('dialog', { name: 'Preview context' });
     expect(invoke).toHaveBeenCalledWith('preview_context', { routeId: 'route-1' });
@@ -98,5 +100,37 @@ describe('Preview context', () => {
     await userEvent.keyboard('{Escape}');
     await userEvent.click(await screen.findByRole('button', { name: 'Preview context' }));
     expect(await screen.findByRole('alert')).toHaveTextContent(/need about 9000 tokens/);
+  });
+
+  it('shows the memory gauge and warns when turns are being left out', async () => {
+    render(<ReaderScreen routeId="route-1" />);
+    const chip = await screen.findByTestId('context-gauge');
+    // Two turns no longer fit, so the request is as full as it gets.
+    expect(chip).toHaveTextContent('Memory 100%');
+    expect(chip).toHaveClass('context-full');
+    const banner = screen.getByTestId('context-banner');
+    expect(banner).toHaveTextContent(/memory is full/);
+    await userEvent.click(within(banner).getByRole('button', { name: 'End chapter' }));
+    expect(await screen.findByRole('dialog', { name: 'End chapter' })).toBeVisible();
+  });
+
+  it('keeps quiet while the request has room, and says nothing for the offline storyteller', async () => {
+    invoke.mockImplementation(async (cmd: string) => {
+      if (cmd === 'get_route_view') return fakeRouteView();
+      if (cmd === 'preview_context') return { ...preview, omittedMessages: 0 };
+      throw { code: 'NOT_FOUND', message: `unknown ${cmd}` };
+    });
+    render(<ReaderScreen routeId="route-1" />);
+    const chip = await screen.findByTestId('context-gauge');
+    expect(chip).toHaveTextContent('Memory 3%');
+    expect(chip).toHaveClass('context-ok');
+    expect(screen.queryByTestId('context-banner')).toBeNull();
+    expect(contextGauge({ ...preview, live: false })).toBeNull();
+    expect(
+      contextGauge({ ...preview, omittedMessages: 0, estimatedInputTokens: 13000 })?.level,
+    ).toBe('high');
+    expect(contextGauge({ ...preview, omittedMessages: 0, summaryDropped: true })?.level).toBe(
+      'full',
+    );
   });
 });

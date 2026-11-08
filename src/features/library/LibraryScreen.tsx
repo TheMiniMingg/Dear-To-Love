@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
 import {
   BookOpen,
+  CircleHelp,
   Copy,
   Download,
   Ellipsis,
   ImageIcon,
   Images,
+  MapPin,
   PenLine,
   Pencil,
   Pin,
@@ -48,6 +50,7 @@ export function LibraryScreen() {
   const [error, setError] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<StorySummary | null>(null);
   const [renaming, setRenaming] = useState<StorySummary | null>(null);
+  const [presetting, setPresetting] = useState<StorySummary | null>(null);
   const [cover, setCover] = useState<StorySummary | null>(null);
   const [reload, setReload] = useState(0);
   const [working, setWorking] = useState<string | null>(null);
@@ -213,6 +216,10 @@ export function LibraryScreen() {
           <Images {...ICON} />
           {t('Images')}
         </button>
+        <button type="button" onClick={() => navigate({ name: 'help' })}>
+          <CircleHelp {...ICON} />
+          {t('How to play')}
+        </button>
         <button type="button" onClick={() => navigate({ name: 'guide' })}>
           <BookOpen {...ICON} />
           {t('Setup guide')}
@@ -276,6 +283,18 @@ export function LibraryScreen() {
             >
               {t('Open the setup guide')}
             </button>
+            <button
+              type="button"
+              className="link-button"
+              onClick={() => navigate({ name: 'help' })}
+            >
+              {t('How to play')}
+            </button>
+          </p>
+          <p className="welcome-more muted small">
+            {t(
+              'No AI connection yet? Begin anyway: the built-in offline storyteller writes simple replies, enough to learn the controls. Add a connection in the Setup guide when you want a real story.',
+            )}
           </p>
         </section>
       )}
@@ -319,11 +338,22 @@ export function LibraryScreen() {
             onRename={() => setRenaming(s)}
             onCover={() => setCover(s)}
             onDuplicate={() => void duplicate(s)}
+            onPreset={() => setPresetting(s)}
             onExport={() => void exportPack(s)}
             onDelete={() => setConfirmDelete(s)}
           />
         ))}
       </ul>
+      {presetting && (
+        <PresetDialog
+          story={presetting}
+          onClose={() => setPresetting(null)}
+          onSaved={(name) => {
+            setPresetting(null);
+            setStatus(t('Saved as a preset: {name}. Find it under Preset Story.', { name }));
+          }}
+        />
+      )}
       {renaming && (
         <RenameDialog
           story={renaming}
@@ -391,6 +421,7 @@ function StoryCard({
   onRename,
   onCover,
   onDuplicate,
+  onPreset,
   onExport,
   onDelete,
 }: {
@@ -403,6 +434,7 @@ function StoryCard({
   onRename: () => void;
   onCover: () => void;
   onDuplicate: () => void;
+  onPreset: () => void;
   onExport: () => void;
   onDelete: () => void;
 }) {
@@ -445,6 +477,12 @@ function StoryCard({
           </span>
         </p>
         {line && <p className="story-teaser">{line}</p>}
+        {s.place && (
+          <p className="story-place small muted" data-testid="story-place">
+            <MapPin aria-hidden={true} size={12} />
+            {s.place}
+          </p>
+        )}
         <div className="story-actions">
           <button
             type="button"
@@ -483,6 +521,12 @@ function StoryCard({
                 disabled: busy,
               },
               {
+                label: t('Save as a preset…'),
+                icon: <Sparkles {...MENU_ICON} />,
+                onSelect: onPreset,
+                disabled: busy,
+              },
+              {
                 label: t('Delete'),
                 icon: <Trash2 {...MENU_ICON} />,
                 onSelect: onDelete,
@@ -495,6 +539,74 @@ function StoryCard({
         </div>
       </div>
     </li>
+  );
+}
+
+/**
+ * Keep this story's world, cast, rules and style as a preset, without its
+ * turns, under Preset Story → Your presets.
+ */
+function PresetDialog({
+  story,
+  onClose,
+  onSaved,
+}: {
+  story: StorySummary;
+  onClose: () => void;
+  onSaved: (name: string) => void;
+}) {
+  const [name, setName] = useState(story.title);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const save = async () => {
+    setBusy(true);
+    setError(null);
+    try {
+      const draft = await commands.presetFromRoute(story.lastRouteId);
+      const saved = await commands.saveUserPreset(name, draft, story.title);
+      onSaved(saved.name);
+    } catch (e) {
+      setError(errorMessage(e));
+      setBusy(false);
+    }
+  };
+  return (
+    <Dialog title={t('Save as a preset')} onClose={onClose} initialFocusId="preset-name">
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          void save();
+        }}
+      >
+        <p className="muted small">
+          {t(
+            'The world, characters, relationships, rules, style and scene of this story as they are now, without its turns, memory or pictures. Start new stories from it under Preset Story, or share it as a file.',
+          )}
+        </p>
+        <div className="field">
+          <label htmlFor="preset-name">{t('Preset name')}</label>
+          <input
+            id="preset-name"
+            value={name}
+            maxLength={80}
+            onChange={(e) => setName(e.target.value)}
+          />
+        </div>
+        {error && (
+          <p role="alert" className="error">
+            {error}
+          </p>
+        )}
+        <div className="button-row dialog-actions">
+          <button type="button" onClick={onClose}>
+            {t('Cancel')}
+          </button>
+          <button type="submit" className="primary" disabled={busy || !name.trim()}>
+            {busy ? t('Saving…') : t('Save preset')}
+          </button>
+        </div>
+      </form>
+    </Dialog>
   );
 }
 

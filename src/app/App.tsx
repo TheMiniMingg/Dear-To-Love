@@ -3,6 +3,7 @@ import { commands } from '../api/commands';
 import { DiagnosticsScreen } from '../features/diagnostics/DiagnosticsScreen';
 import { BackupsScreen } from '../features/backups/BackupsScreen';
 import { GuideScreen } from '../features/guide/GuideScreen';
+import { HelpScreen } from '../features/help/HelpScreen';
 import { ImagesScreen } from '../features/images/ImagesScreen';
 import { LibraryScreen } from '../features/library/LibraryScreen';
 import { CreateWizardScreen } from '../features/create/CreateWizardScreen';
@@ -57,6 +58,7 @@ export function App() {
         {screen.name === 'images' && <ImagesScreen />}
         {screen.name === 'backups' && <BackupsScreen />}
         {screen.name === 'guide' && <GuideScreen />}
+        {screen.name === 'help' && <HelpScreen />}
       </main>
       <StatusFooter />
       <ShortcutsDialog />

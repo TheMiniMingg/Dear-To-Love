@@ -2,6 +2,42 @@
 
 ## Unreleased
 
+- **How to play.** A page with the whole game: playing a turn, the three ways to steer the
+  storyteller (a note, the rules, Remember this), changing your mind, chapters and memory,
+  what to do when a story gets long, pictures, reading aloud, dice, saving and sharing, cost
+  and privacy. It is in the footer, the library, the pause menu and the Ctrl+K box, and the
+  first-run tips end by pointing to it.
+- **Tune the telling.** A tool bar button changes **Detail**, **Pacing**, **Twists** and
+  **Point of view** for the open story from the next reply on, without opening Story
+  details. Everything else is a click away under **More in Story details…**.
+- **Previously…** A story opened again after a while greets you with where it stands: the
+  chapter and place, the story so far (or the last chapter's recap), the last reply and the
+  open threads, with **Keep reading** and **Story memory**. A checkbox turns it off.
+- **Your presets.** **Save as a preset…** (More, on a story card) keeps the world, cast,
+  relationships, rules, style and scene of a story without its turns, memory or pictures.
+  **Preset Story → Your presets** begins a new story from one, opens it in Custom Story to
+  change first, saves it as a `.dtlpreset` file to share, imports one and deletes one. A
+  preset file holds the story setup only: never a key, a picture or a setting.
+- **The memory gauge.** The reader's status line shows how much of the next request the
+  story already fills (**Memory 42%**). It turns amber at 80% and red when turns are being
+  left out, with a line of advice and **End chapter** and **Preview context** at hand. Only
+  live storytellers show it; the offline one reads no request.
+- **Story typeface.** **Settings → Look → Story typeface** picks **Book** (Literata),
+  **Plain** (the interface's Inter) or **Easy to read** (Atkinson Hyperlegible, made for low
+  vision and dyslexia); **Theme's choice** lets a look such as Terminal keep its own.
+- **A voice for each character.** In **Story details → Characters**, each character shows
+  their voice in the active voice pack and can be given another, and **Skip this character's
+  lines when reading aloud** leaves them out.
+- **Bookmarks in the chapter menu.** The chapter name under the story's title now lists your
+  bookmarks after the chapters, so a marked place is one click away.
+- **The library knows where each story is.** Cards show the story's current place under its
+  last line, and the search also looks in the cast, the place and the setting.
+- **The stage names the place.** When a place has no picture of its own, the background
+  carries the place and time as a caption.
+- **Clearer words** throughout: what a note, a rule and a memory note are each for, what a
+  recap does to a long story, what the offline storyteller is good for, which look each genre
+  gets, how routes relate, that AI voices are billed by their service, and a kinder message
+  when the version check cannot reach GitHub.
 - **A picture for each place.** **Pictures → Places** gives any place in the story a picture
   of its own: where the story is now, the places it has been, the places in its memory, or
   one you name ahead of time. While the story is at a place with a picture, the stage shows

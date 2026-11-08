@@ -5,6 +5,7 @@ pub mod dice;
 pub mod draft;
 pub mod events;
 pub mod notes;
+pub mod presets;
 pub mod provider;
 pub mod replay;
 pub mod reply_options;

@@ -186,6 +186,14 @@ room is still short, the summary gives way to recent turns. Only when the story 
 your action cannot fit at all does the app stop **before sending anything** (so nothing is
 charged) and say so.
 
+The reader shows how close a story is to this. The **memory gauge** in the status line
+(**Memory 42%**) is the share of the next request's room (the context limit less what is
+kept for the reply) that the story setup, memory and turns already fill, read from the same
+preview as **Preview context**. At 80% it turns amber with advice to end the chapter soon;
+when the summary has been dropped or turns are being left out, it reads 100% and turns red,
+with **End chapter** and **Preview context** beside it. The offline storyteller reads no
+request, so it shows no gauge.
+
 When that happens, or replies start forgetting things:
 
 - **Raise the context limit** if your model supports more: **Settings → AI connections →
@@ -341,6 +349,20 @@ left open: don't bring it up unless the story needs it or the player does, and o
 said, keep to it.` A story without a title is called _Untitled story_, and an unnamed first
 chapter _Chapter 1_. Everything a template sets can also be changed later, per route, in
 **Story details**.
+
+#### Presets of your own
+
+A story you made can be kept as a **preset**: the creation wizard's draft, rebuilt from the
+route as it stands now (**Save as a preset…** under More on a story card). It takes the
+title and premise, the world and its rules, the narration without the note to the
+storyteller, the cast with the player marked as yours, the relationships, the scene, the open
+threads, the first chapter's title and the tracking, with bars set back to full. Turns, memory
+notes, established facts and pictures stay with the story. Presets live in the `user_presets`
+table and are listed under **Preset Story → Your presets**; beginning one is exactly
+finishing the wizard with that draft, and **Change first** opens the wizard on Review with
+it. A preset saved as a file is JSON with a format name and version (`.dtlpreset`); the app
+refuses a file that is not one, or one from a newer version, and the file never holds a key,
+a picture or a setting.
 
 ## How the AI knows what kind of story it is
 

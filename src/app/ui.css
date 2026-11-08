@@ -350,6 +350,18 @@
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+.story-place {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.story-place svg {
+  flex: none;
+}
 .story-actions {
   display: flex;
   align-items: center;

@@ -114,5 +114,9 @@ test('back up everything, restore after a restart, keep the old data', async () 
     timeout: 5000,
     timeoutMsg: 'the dialog did not close',
   });
-  assert.ok(!existsSync(path.join(app, 'restore')), 'the cancelled restore is cleared');
+  // The dialog closes at once; the staged files go a moment later.
+  await b.waitUntil(async () => !existsSync(path.join(app, 'restore')), {
+    timeout: 5000,
+    timeoutMsg: 'the cancelled restore is cleared',
+  });
 });

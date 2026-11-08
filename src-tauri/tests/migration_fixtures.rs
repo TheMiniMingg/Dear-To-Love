@@ -263,6 +263,17 @@ async fn v10_fixture_upgrades_to_current() {
     assert_eq!(mimes, ["image/gif", "image/png"]);
 }
 
+#[tokio::test]
+async fn v11_fixture_upgrades_to_current() {
+    let (db, _dir) = upgrade_fixture(11, include_str!("fixtures/data_v11.sql")).await;
+    let presets = dear_to_love_lib::db::presets::list(&db).await.unwrap();
+    assert_eq!(presets.len(), 1);
+    assert_eq!(presets[0].name, "Harbor Town");
+    assert_eq!(presets[0].from_story_title, "The Lamp at Harbor Town");
+    assert_eq!(presets[0].draft.player.name, "Ada");
+    assert_eq!(presets[0].draft.npcs[0].name, "Tomas");
+}
+
 /// Rebuilding the image library for GIFs keeps every picture, every story
 /// link and every story-only picture's stories.
 #[tokio::test]

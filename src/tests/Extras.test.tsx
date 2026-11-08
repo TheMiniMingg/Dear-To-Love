@@ -221,19 +221,19 @@ describe('Read aloud', () => {
 });
 
 describe('First-time tips', () => {
-  it('shows four tips once, and Skip ends them for good', async () => {
+  it('shows five tips once, and Skip ends them for good', async () => {
     localStorage.removeItem('dtl.tourDone');
     useTour.setState({ step: 0 });
     backend();
     render(<ReaderScreen routeId="route-1" />);
     const tips = await screen.findByRole('region', { name: 'Tips for your first story' });
-    expect(tips).toHaveTextContent('Tip 1 of 4');
+    expect(tips).toHaveTextContent('Tip 1 of 5');
     // The box can be drawn just after the tips; they look again shortly.
     await waitFor(() =>
       expect(document.querySelector('#composer-input')).toHaveClass('tour-target'),
     );
     await userEvent.click(within(tips).getByRole('button', { name: 'Next tip' }));
-    expect(tips).toHaveTextContent('Tip 2 of 4');
+    expect(tips).toHaveTextContent('Tip 2 of 5');
     await userEvent.click(within(tips).getByRole('button', { name: 'Skip tips' }));
     expect(screen.queryByRole('region', { name: 'Tips for your first story' })).toBeNull();
     expect(localStorage.getItem('dtl.tourDone')).toBe('1');

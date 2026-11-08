@@ -226,7 +226,19 @@ type Look = {
   width: ReadingWidth;
   /** The room between the story's lines, in every story. */
   spacing: LineSpacing;
+  /** The typeface stories are read in; `theme` leaves it to the look. */
+  font: ReadingFont;
 };
+
+export type ReadingFont = 'theme' | 'serif' | 'sans' | 'easy';
+/** The story typefaces to choose from; `css` is what `--font-story` becomes. */
+export const READING_FONTS: { id: ReadingFont; label: string; css: string | null }[] = [
+  { id: 'theme', label: msg('Theme’s choice'), css: null },
+  { id: 'serif', label: msg('Book (serif)'), css: 'var(--font-story-serif)' },
+  { id: 'sans', label: msg('Plain (sans)'), css: 'var(--font-ui)' },
+  { id: 'easy', label: msg('Easy to read'), css: "'Atkinson Hyperlegible', var(--font-ui)" },
+];
+const isFont = (v: unknown): v is ReadingFont => READING_FONTS.some((f) => f.id === v);
 
 type LookState = Look & {
   /** The story open in the reader, whose look covers the whole window. */
@@ -244,6 +256,7 @@ const DEFAULTS: Look = {
   stories: {},
   width: 'medium',
   spacing: 'normal',
+  font: 'theme',
 };
 
 function load(): Look {
@@ -260,6 +273,7 @@ function load(): Look {
       stories,
       width: READING_WIDTHS.some((x) => x.id === raw.width) ? raw.width! : DEFAULTS.width,
       spacing: LINE_SPACINGS.some((x) => x.id === raw.spacing) ? raw.spacing! : DEFAULTS.spacing,
+      font: isFont(raw.font) ? raw.font : DEFAULTS.font,
     };
   } catch {
     return DEFAULTS;
@@ -282,9 +296,9 @@ export const useLook = create<LookState>((set, get) => ({
   ...load(),
   open: null,
   update: (next) => {
-    const { theme, fitGenre, stories, width, spacing } = { ...get(), ...next };
-    save({ theme, fitGenre, stories, width, spacing });
-    set({ theme, fitGenre, stories, width, spacing });
+    const { theme, fitGenre, stories, width, spacing, font } = { ...get(), ...next };
+    save({ theme, fitGenre, stories, width, spacing, font });
+    set({ theme, fitGenre, stories, width, spacing, font });
   },
   setStoryLook: (storyId, look) => {
     const stories = { ...get().stories };
@@ -296,12 +310,16 @@ export const useLook = create<LookState>((set, get) => ({
 }));
 
 /** The story column's width and line spacing, as stylesheet variables. */
-export function readingStyle(look: Pick<Look, 'width' | 'spacing'>): Record<string, string> {
+export function readingStyle(
+  look: Pick<Look, 'width' | 'spacing'> & { font?: ReadingFont },
+): Record<string, string> {
   const width = READING_WIDTHS.find((x) => x.id === look.width) ?? READING_WIDTHS[1]!;
   const spacing = LINE_SPACINGS.find((x) => x.id === look.spacing) ?? LINE_SPACINGS[1]!;
+  const font = READING_FONTS.find((x) => x.id === look.font)?.css;
   return {
     '--reading-width': `${width.rem}rem`,
     '--reading-leading': String(spacing.lineHeight),
+    ...(font ? { '--font-story': font } : {}),
   };
 }
 

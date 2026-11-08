@@ -916,4 +916,349 @@ export const app: Messages = {
     'すべてのキーを元に戻す',
     '모든 키를 원래대로',
   ],
+  'No AI connection yet? Begin anyway: the built-in offline storyteller writes simple replies, enough to learn the controls. Add a connection in the Setup guide when you want a real story.':
+    [
+      '还没有 AI 连接？也可以先开始：内置的离线讲述者会写出简单的回复，足够熟悉操作。想要真正的故事时，再到设置指南里添加连接。',
+      '還沒有 AI 連線？也可以先開始：內建的離線講述者會寫出簡單的回覆，足夠熟悉操作。想要真正的故事時，再到設定指南裡新增連線。',
+      'AI 接続がまだなくても始められます。内蔵のオフラインの語り手が簡単な返信を書くので、操作に慣れるには十分です。本格的なストーリーが欲しくなったら、セットアップガイドで接続を追加してください。',
+      '아직 AI 연결이 없나요? 그래도 시작할 수 있습니다. 내장 오프라인 이야기꾼이 간단한 응답을 써 주어 조작을 익히기에 충분합니다. 진짜 스토리를 원하면 설정 가이드에서 연결을 추가하세요.',
+    ],
+  'Saved as a preset: {name}. Find it under Preset Story.': [
+    '已保存为预设：{name}。可在“预设故事”中找到。',
+    '已儲存為預設：{name}。可在「預設故事」中找到。',
+    'プリセット「{name}」として保存しました。プリセットストーリーにあります。',
+    '프리셋으로 저장했습니다: {name}. 프리셋 스토리에서 찾을 수 있습니다.',
+  ],
+  'Save as a preset…': ['保存为预设…', '儲存為預設…', 'プリセットとして保存…', '프리셋으로 저장…'],
+  'Save as a preset': ['保存为预设', '儲存為預設', 'プリセットとして保存', '프리셋으로 저장'],
+  'The world, characters, relationships, rules, style and scene of this story as they are now, without its turns, memory or pictures. Start new stories from it under Preset Story, or share it as a file.':
+    [
+      '这个故事当前的世界、角色、关系、规则、风格和场景，不含回合、记忆或图片。可在“预设故事”中以它开始新故事，或作为文件分享。',
+      '這個故事目前的世界、角色、關係、規則、風格和場景，不含回合、記憶或圖片。可在「預設故事」中以它開始新故事，或作為檔案分享。',
+      'このストーリーの今の世界・登場人物・関係・ルール・スタイル・シーンを、ターン・記憶・画像なしで保存します。プリセットストーリーから新しいストーリーを始めたり、ファイルとして共有したりできます。',
+      '이 스토리의 현재 세계, 등장인물, 관계, 규칙, 스타일, 장면을 턴, 기억, 이미지 없이 보관합니다. 프리셋 스토리에서 새 스토리를 시작하거나 파일로 공유할 수 있습니다.',
+    ],
+  'Preset name': ['预设名称', '預設名稱', 'プリセット名', '프리셋 이름'],
+  'could not reach GitHub; try again later or open the release page': [
+    '无法连接 GitHub；请稍后再试，或打开发布页面',
+    '無法連線 GitHub；請稍後再試，或開啟發布頁面',
+    'GitHub に接続できませんでした。あとで再試行するか、リリースページを開いてください',
+    'GitHub에 연결할 수 없습니다. 나중에 다시 시도하거나 릴리스 페이지를 여세요',
+  ],
+  'Playing a turn': ['进行一个回合', '進行一個回合', 'ターンの進め方', '턴 진행하기'],
+  'Three ways to steer the storyteller': [
+    '引导讲述者的三种方式',
+    '引導講述者的三種方式',
+    '語り手を導く 3 つの方法',
+    '이야기꾼을 이끄는 세 가지 방법',
+  ],
+  'Changing your mind': ['改变主意', '改變主意', 'やり直したいとき', '마음이 바뀌었을 때'],
+  'Chapters and memory': ['章节与记忆', '章節與記憶', '章と記憶', '챕터와 기억'],
+  'When a story gets long': [
+    '当故事变长',
+    '當故事變長',
+    'ストーリーが長くなったら',
+    '스토리가 길어지면',
+  ],
+  'Your story, your way': [
+    '你的故事，你的方式',
+    '你的故事，你的方式',
+    'あなたらしい物語に',
+    '내 스토리, 내 방식대로',
+  ],
+  'Reading aloud': ['朗读', '朗讀', '読み上げ', '소리 내어 읽기'],
+  'Dice and RPG mode': [
+    '骰子与 RPG 模式',
+    '骰子與 RPG 模式',
+    'サイコロと RPG モード',
+    '주사위와 RPG 모드',
+  ],
+  'Saving, sharing and presets': [
+    '存档、分享与预设',
+    '存檔、分享與預設',
+    'セーブ・共有・プリセット',
+    '저장, 공유, 프리셋',
+  ],
+  'Cost and privacy': ['费用与隐私', '費用與隱私', '費用とプライバシー', '비용과 개인정보'],
+  'You play one character. The storyteller plays everyone else, keeps the world turning, and never decides what you do, say, think or feel. Everything below can be found again from Menu (Esc) while you read.':
+    [
+      '你扮演一个角色。讲述者扮演其他所有人，让世界运转，并且永远不会替你决定做什么、说什么、想什么或感受什么。下面的一切在阅读时都能从菜单（Esc）再次找到。',
+      '你扮演一個角色。講述者扮演其他所有人，讓世界運轉，並且永遠不會替你決定做什麼、說什麼、想什麼或感受什麼。下面的一切在閱讀時都能從選單（Esc）再次找到。',
+      'あなたは一人の登場人物を演じます。語り手はほかの全員を演じ、世界を動かし続け、あなたが何をするか・言うか・考えるか・感じるかを決めることはありません。以下の内容はすべて、読んでいる最中にメニュー（Esc）から見つけられます。',
+      '당신은 한 인물을 연기합니다. 이야기꾼은 나머지 모두를 연기하고 세계를 움직이며, 당신이 무엇을 하고 말하고 생각하고 느끼는지는 절대 정하지 않습니다. 아래 내용은 모두 읽는 중에 메뉴(Esc)에서 다시 찾을 수 있습니다.',
+    ],
+  'Write what you do': ['写下你的行动', '寫下你的行動', '行動を書く', '행동 쓰기'],
+  'in the box at the bottom and press Enter (Shift+Enter for a new line). The pills above it change the kind of action: do or say, send a text, make a call, think to yourself, or roll the dice.':
+    [
+      '在底部的输入框里写，然后按 Enter（Shift+Enter 换行）。上方的标签切换行动类型：行动或说话、发短信、打电话、心里想，或掷骰子。',
+      '在底部的輸入框裡寫，然後按 Enter（Shift+Enter 換行）。上方的標籤切換行動類型：行動或說話、傳簡訊、打電話、心裡想，或擲骰子。',
+      '下の入力欄に書いて Enter を押します（改行は Shift+Enter）。その上のボタンで行動の種類を変えられます。行動・発言、メッセージを送る、電話する、心の中で思う、サイコロを振る。',
+      '아래 입력창에 쓰고 Enter를 누르세요(줄 바꿈은 Shift+Enter). 그 위의 버튼으로 행동 종류를 바꿉니다. 행동 또는 말, 문자 보내기, 전화, 생각, 주사위 굴리기.',
+    ],
+  'with the box empty lets the story move on without you doing anything.': [
+    '在输入框为空时使用，可以让故事在你不做任何事的情况下继续。',
+    '在輸入框為空時使用，可以讓故事在你不做任何事的情況下繼續。',
+    'を入力欄が空のまま押すと、あなたが何もしなくても物語が進みます。',
+    '을(를) 입력창이 빈 채로 누르면 당신이 아무것도 하지 않아도 이야기가 이어집니다.',
+  ],
+  'Short, Normal, Long': ['短、正常、长', '短、正常、長', '短め・普通・長め', '짧게, 보통, 길게'],
+  'beside the pills sets the length of the next reply only. The usual length is the Detail setting in Story details.':
+    [
+      '在标签旁边，只决定下一条回复的长度。平时的长度由故事设定里的“细节”决定。',
+      '在標籤旁邊，只決定下一則回覆的長度。平時的長度由故事設定裡的「細節」決定。',
+      'はボタンの横にあり、次の返信の長さだけを決めます。ふだんの長さはストーリーの設定の「描写の量」で決まります。',
+      "은(는) 버튼 옆에 있으며 다음 응답의 길이만 정합니다. 평소 길이는 스토리 설정의 '묘사 정도'가 정합니다.",
+    ],
+  'Ideas under a reply': [
+    '回复下方的灵感',
+    '回覆下方的靈感',
+    '返信の下のアイデア',
+    '응답 아래의 아이디어',
+  ],
+  'are suggestions you can click or ignore; the storyteller never takes them for you.': [
+    '是可以点击或忽略的建议；讲述者绝不会替你选择。',
+    '是可以點擊或忽略的建議；講述者絕不會替你選擇。',
+    'はクリックしても無視してもよい提案です。語り手が勝手に選ぶことはありません。',
+    '은(는) 클릭해도 되고 무시해도 되는 제안입니다. 이야기꾼이 대신 고르는 일은 없습니다.',
+  ],
+  'Each one works at a different distance from the story. Use the lightest one that does the job.':
+    [
+      '三者与故事的距离各不相同。用能达到目的的最轻的那一种。',
+      '三者與故事的距離各不相同。用能達到目的的最輕的那一種。',
+      'それぞれ物語との距離が違います。目的を果たせる中でいちばん軽いものを使ってください。',
+      '각각 스토리와의 거리가 다릅니다. 목적을 이루는 가장 가벼운 것을 쓰세요.',
+    ],
+  '(tool bar, or Menu) is about how the story is told from here on: “slow the romance down”, “more danger”, “let her say no”. It is never part of the story and you can change or remove it at any time.':
+    [
+      '（工具栏或菜单）关乎从现在起故事的讲述方式：“感情线慢一点”“更多危险”“让她拒绝”。它永远不会成为故事的一部分，随时可以修改或删除。',
+      '（工具列或選單）關乎從現在起故事的講述方式：「感情線慢一點」「更多危險」「讓她拒絕」。它永遠不會成為故事的一部分，隨時可以修改或刪除。',
+      '（ツールバーまたはメニュー）は、ここから先の語り方についてのものです。「恋愛をゆっくり進めて」「もっと危険を」「彼女に断らせて」など。物語の一部になることはなく、いつでも変更・削除できます。',
+      "(도구 모음 또는 메뉴)은(는) 지금부터 이야기를 어떻게 풀어 갈지에 관한 것입니다. '로맨스를 천천히', '더 위험하게', '그녀가 거절하게'. 스토리의 일부가 되지 않으며 언제든 바꾸거나 지울 수 있습니다.",
+    ],
+  '(Story details → World) are what is true in this world and what the storyteller must always do: “magic has a price”, “no one dies off-screen”. They go into every reply.':
+    [
+      '（故事设定 → 世界）是这个世界里成立的事，以及讲述者必须始终遵守的事：“魔法有代价”“没有人在幕后死去”。它们会进入每一条回复。',
+      '（故事設定 → 世界）是這個世界裡成立的事，以及講述者必須始終遵守的事：「魔法有代價」「沒有人在幕後死去」。它們會進入每一則回覆。',
+      '（ストーリーの設定 → 世界）は、この世界で成り立つことと、語り手が常に守ることです。「魔法には代償がある」「誰も画面外では死なない」など。すべての返信に含まれます。',
+      "(스토리 설정 → 세계)은(는) 이 세계에서 참인 것과 이야기꾼이 늘 지켜야 하는 것입니다. '마법에는 대가가 있다', '아무도 화면 밖에서 죽지 않는다'. 모든 응답에 들어갑니다.",
+    ],
+  '(point at a reply, or write a note in Story memory) keeps one fact whole: a promise, a secret, the name of the inn. Memory notes survive summaries; feelings and facts about people live in Story details.':
+    [
+      '（指向一条回复，或在故事记忆里写一条笔记）完整保留一件事实：一个承诺、一个秘密、客栈的名字。记忆笔记不会被摘要压缩；关于人物的感受和事实放在故事设定里。',
+      '（指向一則回覆，或在故事記憶裡寫一條筆記）完整保留一件事實：一個承諾、一個秘密、客棧的名字。記憶筆記不會被摘要壓縮；關於人物的感受和事實放在故事設定裡。',
+      '（返信にポインターを合わせるか、ストーリーの記憶にメモを書く）は、一つの事実をそのまま残します。約束、秘密、宿の名前など。記憶のメモは要約されても消えません。人物についての気持ちや事実はストーリーの設定にあります。',
+      '(응답을 가리키거나 스토리 기억에 메모를 쓰기)은(는) 사실 하나를 온전히 남깁니다. 약속, 비밀, 여관 이름 같은 것. 기억 메모는 요약을 거쳐도 남고, 인물에 대한 감정과 사실은 스토리 설정에 있습니다.',
+    ],
+  'Story details also hold everyone’s description, goals and relationships, the scene (where and when) and the established facts. Apply from now changes the story from the next reply without rewriting the past.':
+    [
+      '故事设定还包含每个人的描述、目标和关系，场景（何地何时）以及既定事实。“从现在开始应用”会从下一条回复起改变故事，而不改写过去。',
+      '故事設定還包含每個人的描述、目標和關係，場景（何地何時）以及既定事實。「從現在開始套用」會從下一則回覆起改變故事，而不改寫過去。',
+      'ストーリーの設定には、全員の説明・目標・関係、シーン（どこで、いつ）、確定した事実も入っています。「今から適用」は過去を書き換えずに、次の返信から物語を変えます。',
+      "스토리 설정에는 모든 인물의 설명, 목표, 관계와 장면(어디서, 언제), 확정된 사실도 들어 있습니다. '지금부터 적용'은 과거를 고치지 않고 다음 응답부터 이야기를 바꿉니다.",
+    ],
+  '(Menu) removes your last action and its reply; the turn stays in Routes.': [
+    '（菜单）撤销你的上一个行动及其回复；该回合仍保留在路线里。',
+    '（選單）撤銷你的上一個行動及其回覆；該回合仍保留在路線裡。',
+    '（メニュー）は直前の行動とその返信を取り消します。そのターンはルートに残ります。',
+    '(메뉴)은(는) 마지막 행동과 그 응답을 지웁니다. 그 턴은 루트에 남습니다.',
+  ],
+  '(point at a reply) asks the storyteller for a different reply to the same action, at a length you choose and with a hint such as “she says no”. Each take is kept; flip between versions with the arrows under the reply.':
+    [
+      '（指向一条回复）让讲述者对同一个行动给出不同的回复，长度由你选择，还可以加上“她拒绝了”这样的提示。每个版本都会保留；用回复下方的箭头在版本之间切换。',
+      '（指向一則回覆）讓講述者對同一個行動給出不同的回覆，長度由你選擇，還可以加上「她拒絕了」這樣的提示。每個版本都會保留；用回覆下方的箭頭在版本之間切換。',
+      '（返信にポインターを合わせる）は、同じ行動に対して別の返信を語り手に求めます。長さを選び、「彼女は断る」のようなヒントも添えられます。各テイクは残り、返信の下の矢印で切り替えられます。',
+      "(응답을 가리키기)은(는) 같은 행동에 대해 다른 응답을 이야기꾼에게 요청합니다. 길이를 고르고 '그녀가 거절한다' 같은 힌트를 줄 수 있습니다. 모든 버전이 남으며, 응답 아래 화살표로 오갈 수 있습니다.",
+    ],
+  'Change this action, Edit this reply': [
+    '修改这个行动、编辑这个回复',
+    '修改這個行動、編輯這個回覆',
+    'この行動を変える・この返信を編集',
+    '이 행동 바꾸기, 이 응답 편집',
+  ],
+  'rewrite your words or the storyteller’s. Edited replies are read as written from then on.': [
+    '改写你的话或讲述者的话。编辑过的回复从那以后都按改后的内容读取。',
+    '改寫你的話或講述者的話。編輯過的回覆從那以後都按改後的內容讀取。',
+    'はあなたの言葉や語り手の言葉を書き直します。編集した返信は、それ以降は書き直したとおりに読まれます。',
+    '은(는) 당신의 말이나 이야기꾼의 말을 고쳐 씁니다. 편집한 응답은 그 뒤로 고친 대로 읽힙니다.',
+  ],
+  'starts a new route from any point. Routes are separate timelines: each has its own memory, saves and pictures, and they share everything before the branch. Switch between them in Routes.':
+    [
+      '从任意一点开始新路线。路线是彼此独立的时间线：各有自己的记忆、存档和图片，分岔之前的一切则是共享的。在“路线”里切换。',
+      '從任意一點開始新路線。路線是彼此獨立的時間線：各有自己的記憶、存檔和圖片，分岔之前的一切則是共享的。在「路線」裡切換。',
+      'はどの地点からでも新しいルートを始めます。ルートは別々の時間軸で、記憶・セーブ・画像をそれぞれ持ち、分岐前の部分は共有します。「ルート」で切り替えられます。',
+      "은(는) 어느 지점에서든 새 루트를 시작합니다. 루트는 별개의 시간선으로, 기억, 저장, 이미지를 따로 가지며 갈라지기 전의 내용은 공유합니다. '루트'에서 오갈 수 있습니다.",
+    ],
+  'The storyteller reads the newest turns word for word, every detail in Story details and Story memory, and a summary of the older turns. The summary begins after 16 turns and is renewed every 8, so long stories stay affordable.':
+    [
+      '讲述者会逐字读取最新的回合、故事设定和故事记忆中的每个细节，以及较早回合的摘要。摘要在 16 回合后开始，每 8 回合更新一次，让长故事也不至于太贵。',
+      '講述者會逐字讀取最新的回合、故事設定和故事記憶中的每個細節，以及較早回合的摘要。摘要在 16 回合後開始，每 8 回合更新一次，讓長故事也不至於太貴。',
+      '語り手は、最新のターンを一字一句、ストーリーの設定とストーリーの記憶のすべて、そして古いターンの要約を読みます。要約は 16 ターン後に始まり、8 ターンごとに更新されるので、長いストーリーでも費用を抑えられます。',
+      '이야기꾼은 최신 턴을 한 글자도 빠짐없이, 스토리 설정과 스토리 기억의 모든 내용을, 그리고 오래된 턴의 요약을 읽습니다. 요약은 16턴 뒤에 시작되어 8턴마다 갱신되므로 긴 스토리도 비용이 감당할 만합니다.',
+    ],
+  '(tool bar) has the storyteller write a recap of the chapter, which you can edit. Every later reply reads the recap, so names, promises and secrets you keep in it are never forgotten, and the next chapter starts with a clear plan.':
+    [
+      '（工具栏）让讲述者写一份本章回顾，你可以编辑。之后的每条回复都会读取这份回顾，所以你保留在其中的名字、承诺和秘密不会被遗忘，下一章也能带着清晰的计划开始。',
+      '（工具列）讓講述者寫一份本章回顧，你可以編輯。之後的每則回覆都會讀取這份回顧，所以你保留在其中的名字、承諾和秘密不會被遺忘，下一章也能帶著清晰的計畫開始。',
+      '（ツールバー）は語り手に章のあらすじを書かせます。あなたが編集することもできます。以後のすべての返信がそのあらすじを読むので、そこに残した名前・約束・秘密は忘れられず、次の章ははっきりした計画で始まります。',
+      '(도구 모음)은(는) 이야기꾼에게 챕터 요약을 쓰게 하며, 당신이 편집할 수 있습니다. 이후 모든 응답이 그 요약을 읽으므로 거기에 남긴 이름, 약속, 비밀은 잊히지 않고, 다음 챕터는 분명한 계획으로 시작합니다.',
+    ],
+  '(Menu) shows exactly what the storyteller remembers: the summary, the chapter recaps, the notebook of people, places and things, and the facts and relationships. Fix anything that drifted.':
+    [
+      '（菜单）准确显示讲述者记住的内容：摘要、各章回顾、人物地点物品的笔记本，以及事实与关系。有偏差的地方可以在这里修正。',
+      '（選單）準確顯示講述者記住的內容：摘要、各章回顧、人物地點物品的筆記本，以及事實與關係。有偏差的地方可以在這裡修正。',
+      '（メニュー）は語り手が覚えていることをそのまま表示します。要約、各章のあらすじ、人物・場所・物のノート、事実と関係。ずれたところはここで直せます。',
+      '(메뉴)은(는) 이야기꾼이 기억하는 것을 그대로 보여 줍니다. 요약, 챕터 요약, 인물·장소·사물 노트, 사실과 관계. 어긋난 것은 여기서 고치세요.',
+    ],
+  '(Menu) shows the whole request the next reply would send, its size and its cost, before anything is sent.':
+    [
+      '（菜单）在发送任何内容之前，显示下一条回复将发送的完整请求、它的大小和费用。',
+      '（選單）在傳送任何內容之前，顯示下一則回覆將傳送的完整請求、它的大小和費用。',
+      '（メニュー）は、何も送る前に、次の返信で送られるリクエストの全体と、その大きさと費用を表示します。',
+      '(메뉴)은(는) 아무것도 보내기 전에 다음 응답이 보낼 요청 전체와 그 크기, 비용을 보여 줍니다.',
+    ],
+  'Every model can read only so much at once. The app handles this for you: older turns are summarized first, then the story setup is packed tighter. The memory gauge in the reader’s status line shows how full the request is; it turns amber when it is time to act.':
+    [
+      '每个模型一次能读取的内容都有限。应用会替你处理：先摘要较早的回合，再把故事设定压得更紧。阅读界面状态栏里的记忆指示显示请求有多满；该采取行动时它会变成琥珀色。',
+      '每個模型一次能讀取的內容都有限。應用程式會替你處理：先摘要較早的回合，再把故事設定壓得更緊。閱讀介面狀態列裡的記憶指示顯示請求有多滿；該採取行動時它會變成琥珀色。',
+      'どのモデルも一度に読める量には限りがあります。アプリが代わりに対処します。まず古いターンを要約し、次にストーリーの設定をより詰めて送ります。リーダーのステータス行にある記憶ゲージはリクエストの埋まり具合を示し、手を打つ時期になると琥珀色になります。',
+      '어떤 모델이든 한 번에 읽을 수 있는 양에는 한계가 있습니다. 앱이 대신 처리합니다. 먼저 오래된 턴을 요약하고, 다음으로 스토리 설정을 더 촘촘히 담습니다. 리더 상태 줄의 기억 게이지는 요청이 얼마나 찼는지 보여 주며, 손써야 할 때가 되면 호박색으로 변합니다.',
+    ],
+  'End the chapter.': ['结束本章。', '結束本章。', '章を終える。', '챕터를 끝내세요.'],
+  'A recap takes far less room than the turns it replaces.': [
+    '一份回顾占用的空间远少于它所取代的回合。',
+    '一份回顧佔用的空間遠少於它所取代的回合。',
+    'あらすじは、置き換えるターンよりはるかに少ない容量で済みます。',
+    '요약은 대신하는 턴보다 훨씬 적은 자리를 차지합니다.',
+  ],
+  'Trim the setup.': ['精简设定。', '精簡設定。', '設定を削る。', '설정을 줄이세요.'],
+  'Long descriptions, old facts and finished threads are sent with every reply. Shorten them in Story details.':
+    [
+      '冗长的描述、过时的事实和已完成的线索会随每条回复一起发送。在故事设定里把它们缩短。',
+      '冗長的描述、過時的事實和已完成的線索會隨每則回覆一起傳送。在故事設定裡把它們縮短。',
+      '長い説明、古い事実、終わった伏線は、返信のたびに送られます。ストーリーの設定で短くしてください。',
+      '긴 설명, 오래된 사실, 끝난 실마리는 응답마다 함께 보내집니다. 스토리 설정에서 줄이세요.',
+    ],
+  'Raise the context limit': [
+    '提高上下文上限',
+    '提高上下文上限',
+    'コンテキスト上限を上げる',
+    '컨텍스트 한도 올리기',
+  ],
+  'for the connection (Settings → AI connections → Edit) if the model reads more than the default 16,000 tokens.':
+    [
+      '如果模型能读取的内容超过默认的 16,000 token，可以为该连接调整（设置 → AI 连接 → 编辑）。',
+      '如果模型能讀取的內容超過預設的 16,000 token，可以為該連線調整（設定 → AI 連線 → 編輯）。',
+      'モデルが既定の 16,000 トークンより多く読めるなら、接続の設定で上げられます（設定 → AI 接続 → 編集）。',
+      '모델이 기본값인 16,000 토큰보다 많이 읽을 수 있다면 연결에서 올리세요(설정 → AI 연결 → 편집).',
+    ],
+  'Pin what matters': [
+    '固定重要的事',
+    '固定重要的事',
+    '大事なことを留めておく',
+    '중요한 것 고정하기',
+  ],
+  'as a memory note or a fact; they are kept whole where a summary would shorten them.': [
+    '作为记忆笔记或事实保存；摘要会压缩其他内容，它们则会被完整保留。',
+    '作為記憶筆記或事實保存；摘要會壓縮其他內容，它們則會被完整保留。',
+    'には記憶のメモか事実を使います。要約で短くなるところでも、そのまま保たれます。',
+    '은(는) 기억 메모나 사실로 남기는 것입니다. 요약이 줄이는 자리에서도 온전히 유지됩니다.',
+  ],
+  Tune: ['调整', '調整', '調整', '조정'],
+  '(tool bar) changes Detail, Pacing, twists and point of view for this story from the next reply on. The full set, including style, tense, inner thoughts and texts as cards, is in Story details → Narration.':
+    [
+      '（工具栏）从下一条回复起改变这个故事的细节、节奏、转折和视角。包括风格、时态、内心想法和短信卡片在内的全部选项在故事设定 → 叙述里。',
+      '（工具列）從下一則回覆起改變這個故事的細節、節奏、轉折和視角。包括風格、時態、內心想法和簡訊卡片在內的全部選項在故事設定 → 敘述裡。',
+      '（ツールバー）は、このストーリーの描写の量・テンポ・どんでん返し・視点を次の返信から変えます。スタイル、時制、心の声、メッセージのカード表示を含む全項目はストーリーの設定 → 語りにあります。',
+      '(도구 모음)은(는) 이 스토리의 묘사 정도, 전개 속도, 반전, 시점을 다음 응답부터 바꿉니다. 스타일, 시제, 속마음, 문자 카드 표시를 포함한 전체 항목은 스토리 설정 → 서술에 있습니다.',
+    ],
+  '(the rail beside the story) picks this story’s colors; Settings → Look sets the app’s theme, text size, column width, line spacing and the story typeface, with an easy-to-read option.':
+    [
+      '（故事旁的侧栏）选择这个故事的配色；设置 → 外观则设定应用的主题、文字大小、栏宽、行距和故事字体，并提供易读选项。',
+      '（故事旁的側欄）選擇這個故事的配色；設定 → 外觀則設定應用程式的主題、文字大小、欄寬、行距和故事字型，並提供易讀選項。',
+      '（ストーリー横のレール）はこのストーリーの配色を選びます。設定 → 見た目では、アプリのテーマ、文字サイズ、行の幅、行間、ストーリーの書体を決められ、読みやすさ重視の選択肢もあります。',
+      '(스토리 옆 레일)은(는) 이 스토리의 색을 고릅니다. 설정 → 디자인에서는 앱의 테마, 글자 크기, 단 너비, 줄 간격, 스토리 글꼴을 정하며 읽기 쉬운 선택지도 있습니다.',
+    ],
+  'are listed with {keys}; click any of them and press new keys to change it. Picture view, sound and reading aloud each have a switch.':
+    [
+      '按 {keys} 可以查看；点击任意一项并按下新的按键即可更改。图片视图、声音和朗读各有一个开关。',
+      '按 {keys} 可以查看；點擊任意一項並按下新的按鍵即可更改。圖片檢視、聲音和朗讀各有一個開關。',
+      'は {keys} で一覧できます。どれかをクリックして新しいキーを押せば変更できます。画像ビュー、サウンド、読み上げにはそれぞれスイッチがあります。',
+      '은(는) {keys}로 볼 수 있습니다. 하나를 클릭하고 새 키를 누르면 바뀝니다. 이미지 보기, 소리, 소리 내어 읽기에는 각각 스위치가 있습니다.',
+    ],
+  'is chosen when a story is made and can be changed in Story details; the app’s own language is in Settings.':
+    [
+      '在创建故事时选择，可在故事设定中更改；应用本身的语言在设置里。',
+      '在建立故事時選擇，可在故事設定中更改；應用程式本身的語言在設定裡。',
+      'はストーリーを作るときに選び、ストーリーの設定で変更できます。アプリ自体の言語は設定にあります。',
+      '은(는) 스토리를 만들 때 고르며 스토리 설정에서 바꿀 수 있습니다. 앱 자체의 언어는 설정에 있습니다.',
+    ],
+  'Pictures (Menu) gives the story a cover, a background, a portrait for each character, pictures of items and a picture for each place. Portraits can be made with a picture connection or chosen from the image library; anything you import works too.':
+    [
+      '图片（菜单）为故事提供封面、背景、每个角色的肖像、物品图片以及每个地点的图片。肖像可以用图片连接生成，或从图片库中选择；你导入的任何图片也都可以。',
+      '圖片（選單）為故事提供封面、背景、每個角色的肖像、物品圖片以及每個地點的圖片。肖像可以用圖片連線生成，或從圖片庫中選擇；你匯入的任何圖片也都可以。',
+      '画像（メニュー）では、ストーリーに表紙、背景、登場人物ごとの肖像画、持ち物の画像、場所ごとの画像を付けられます。肖像画は画像の接続で作るか、画像ライブラリから選べます。読み込んだ画像も使えます。',
+      '이미지(메뉴)는 스토리에 표지, 배경, 등장인물별 초상화, 아이템 이미지, 장소별 이미지를 줍니다. 초상화는 이미지 연결로 만들거나 이미지 라이브러리에서 고를 수 있고, 가져온 이미지도 쓸 수 있습니다.',
+    ],
+  'The stage above the story shows the current place and whoever the story is with. The storyteller marks each change of scene with its place, so a place picture appears when the story goes there. Picture view on the rail turns the stage off for text only.':
+    [
+      '故事上方的舞台显示当前地点和故事里在场的人。讲述者会在每次切换场景时标出地点，所以故事到了那里就会出现地点图片。侧栏上的图片视图可以关闭舞台，只看文字。',
+      '故事上方的舞台顯示目前地點和故事裡在場的人。講述者會在每次切換場景時標出地點，所以故事到了那裡就會出現地點圖片。側欄上的圖片檢視可以關閉舞台，只看文字。',
+      'ストーリーの上のステージには、今の場所と、物語がともにいる人物が表示されます。語り手は場面が変わるたびに場所を記すので、ストーリーがそこへ行くと場所の画像が現れます。レールの画像ビューでステージを消して、文字だけにもできます。',
+      '스토리 위의 무대에는 현재 장소와 이야기가 함께하는 인물이 보입니다. 이야기꾼이 장면이 바뀔 때마다 장소를 표시하므로, 스토리가 그곳에 가면 장소 이미지가 나타납니다. 레일의 이미지 보기로 무대를 끄고 글만 볼 수 있습니다.',
+    ],
+  'The speaker under a reply reads it with the computer’s own voices, free and offline. Settings → Sound can read every new reply as it arrives, set the speed, and build voice packs: a voice for the narrator and one for each character, from the computer or from a voice service. One switch turns all sound off.':
+    [
+      '回复下方的喇叭用电脑自带的语音朗读它，免费且离线。设置 → 声音可以在每条新回复到达时自动朗读、设定语速，并创建语音包：旁白一个声音，每个角色一个声音，来自电脑或语音服务。一个开关即可关闭所有声音。',
+      '回覆下方的喇叭用電腦內建的語音朗讀它，免費且離線。設定 → 聲音可以在每則新回覆到達時自動朗讀、設定語速，並建立語音包：旁白一個聲音，每個角色一個聲音，來自電腦或語音服務。一個開關即可關閉所有聲音。',
+      '返信の下のスピーカーは、コンピューター内蔵の音声で無料・オフラインで読み上げます。設定 → サウンドでは、新しい返信が届くたびに読み上げたり、速さを決めたり、ボイスパックを作ったりできます。ナレーターと登場人物ごとに、コンピューターか音声サービスの声を割り当てます。スイッチ一つで音をすべて消せます。',
+      '응답 아래 스피커는 컴퓨터 자체 음성으로 무료, 오프라인으로 읽어 줍니다. 설정 → 소리에서는 새 응답이 도착할 때마다 읽어 주고, 속도를 정하고, 보이스 팩을 만들 수 있습니다. 내레이터와 등장인물마다 컴퓨터나 음성 서비스의 목소리를 고릅니다. 스위치 하나로 모든 소리를 끌 수 있습니다.',
+    ],
+  'With dice on (Story details → Narration), uncertain moments are decided by a roll: the storyteller asks and sets the odds, you roll, and the result shapes the reply. RPG mode adds stats that count towards rolls, meters such as health, and an inventory, all shown beside the story and editable in Status and inventory.':
+    [
+      '开启骰子后（故事设定 → 叙述），不确定的时刻由掷骰决定：讲述者提出并设定几率，你来掷，结果会影响回复。RPG 模式增加计入掷骰的属性、生命值等数值条和物品栏，都显示在故事旁，并可在“状态和物品栏”中编辑。',
+      '開啟骰子後（故事設定 → 敘述），不確定的時刻由擲骰決定：講述者提出並設定機率，你來擲，結果會影響回覆。RPG 模式增加計入擲骰的屬性、生命值等數值條和物品欄，都顯示在故事旁，並可在「狀態和物品欄」中編輯。',
+      'サイコロをオンにすると（ストーリーの設定 → 語り）、不確かな場面はロールで決まります。語り手が問いかけて確率を決め、あなたが振り、結果が返信を形づくります。RPG モードでは、ロールに加算される能力値、体力などのゲージ、持ち物が加わり、ストーリーの横に表示され、「ステータスと持ち物」で編集できます。',
+      "주사위를 켜면(스토리 설정 → 서술) 불확실한 순간은 굴림으로 정해집니다. 이야기꾼이 묻고 확률을 정하면 당신이 굴리고, 결과가 응답을 빚습니다. RPG 모드는 굴림에 더해지는 능력치, 체력 같은 게이지, 인벤토리를 추가하며, 모두 스토리 옆에 표시되고 '상태와 인벤토리'에서 편집할 수 있습니다.",
+    ],
+  'keeps every turn as it happens. Quick save and Save / Load keep named points you can return to, on any route.':
+    [
+      '会在每个回合发生时保存。快速存档和“存档 / 读档”保留可以返回的命名存档点，任何路线都可以。',
+      '會在每個回合發生時儲存。快速存檔和「存檔 / 讀檔」保留可以返回的命名存檔點，任何路線都可以。',
+      'はターンごとにそのつど保存します。クイックセーブと「セーブ / ロード」では、どのルートでも、名前を付けて戻れる地点を残せます。',
+      "은(는) 턴마다 그때그때 저장합니다. 빠른 저장과 '저장 / 불러오기'는 어느 루트에서든 돌아갈 수 있는 이름 붙인 지점을 남깁니다.",
+    ],
+  '(Menu) saves a route as readable text or as a book, or the whole story as a storypack that another copy of the app can import. Storypacks never contain keys or settings.':
+    [
+      '（菜单）把一条路线保存为可读文本或一本书，或把整个故事保存为另一份应用可以导入的故事包。故事包绝不包含密钥或设置。',
+      '（選單）把一條路線儲存為可讀文字或一本書，或把整個故事儲存為另一份應用程式可以匯入的故事包。故事包絕不包含金鑰或設定。',
+      '（メニュー）は、ルートを読みやすいテキストや本として、またはストーリー全体を別のアプリで読み込めるストーリーパックとして保存します。ストーリーパックにキーや設定が入ることはありません。',
+      '(메뉴)은(는) 루트를 읽기용 텍스트나 책으로, 또는 스토리 전체를 다른 앱 사본이 가져올 수 있는 스토리팩으로 저장합니다. 스토리팩에는 키나 설정이 절대 들어가지 않습니다.',
+    ],
+  '(More, on a story card) keeps the world, cast, rules and style of a story without its turns, under Preset Story → Your presets, to start fresh from or to share as a file.':
+    [
+      '（故事卡片上的“更多”）把故事的世界、角色、规则和风格保存下来，不含回合，放在预设故事 → 你的预设里，可以从头开始新故事，或作为文件分享。',
+      '（故事卡片上的「更多」）把故事的世界、角色、規則和風格儲存下來，不含回合，放在預設故事 → 你的預設裡，可以從頭開始新故事，或作為檔案分享。',
+      '（ストーリーカードの「その他」）は、ストーリーの世界・登場人物・ルール・スタイルをターン抜きで、プリセットストーリー → あなたのプリセットに残します。そこから新しく始めたり、ファイルとして共有したりできます。',
+      "(스토리 카드의 '더 보기')은(는) 스토리의 세계, 등장인물, 규칙, 스타일을 턴 없이 프리셋 스토리 → 내 프리셋에 남깁니다. 거기서 새로 시작하거나 파일로 공유할 수 있습니다.",
+    ],
+  '(Settings) write everything to one file and restore it on this or another computer.': [
+    '（设置）把所有内容写入一个文件，并可在这台或另一台电脑上恢复。',
+    '（設定）把所有內容寫入一個檔案，並可在這台或另一台電腦上還原。',
+    '（設定）はすべてを一つのファイルに書き出し、このコンピューターでも別のコンピューターでも復元できます。',
+    '(설정)은(는) 모든 것을 파일 하나에 쓰고, 이 컴퓨터나 다른 컴퓨터에서 복원합니다.',
+  ],
+  'Your stories, pictures and settings stay on this computer. The only things that leave it are the requests to the AI connections you add, and the once-a-day version check if you turn it on. API keys live in the system’s credential store, never in the database, in exports or in backups.':
+    [
+      '你的故事、图片和设置都留在这台电脑上。唯一离开它的是发给你所添加的 AI 连接的请求，以及你开启后每天一次的版本检查。API 密钥保存在系统的凭据存储中，绝不会进入数据库、导出文件或备份。',
+      '你的故事、圖片和設定都留在這台電腦上。唯一離開它的是發給你所新增的 AI 連線的請求，以及你開啟後每天一次的版本檢查。API 金鑰保存在系統的憑證儲存區中，絕不會進入資料庫、匯出檔案或備份。',
+      'ストーリー、画像、設定はこのコンピューターに留まります。外に出るのは、追加した AI 接続へのリクエストと、オンにした場合の 1 日 1 回のバージョン確認だけです。API キーはシステムの資格情報ストアに保存され、データベース、エクスポート、バックアップには入りません。',
+      '스토리, 이미지, 설정은 이 컴퓨터에 남습니다. 밖으로 나가는 것은 추가한 AI 연결로 보내는 요청과, 켰을 경우 하루 한 번의 버전 확인뿐입니다. API 키는 시스템 자격 증명 저장소에 보관되며 데이터베이스, 내보내기, 백업에는 절대 들어가지 않습니다.',
+    ],
+  'Usage & budget shows what each connection has cost, request by request, and can pause paid replies at a monthly amount. The offline storyteller is good for learning the controls; for a real story, add an AI connection in the Setup guide.':
+    [
+      '用量与预算逐条请求显示每个连接的花费，并可在达到每月金额时暂停付费回复。离线讲述者适合熟悉操作；想要真正的故事，请在设置指南里添加 AI 连接。',
+      '用量與預算逐筆請求顯示每個連線的花費，並可在達到每月金額時暫停付費回覆。離線講述者適合熟悉操作；想要真正的故事，請在設定指南裡新增 AI 連線。',
+      '使用量と予算では、各接続にかかった費用をリクエストごとに確認でき、月の金額に達したら有料の返信を一時停止できます。オフラインの語り手は操作に慣れるのに向いています。本格的なストーリーには、セットアップガイドで AI 接続を追加してください。',
+      '사용량 및 예산은 각 연결에 든 비용을 요청별로 보여 주고, 월 금액에 이르면 유료 응답을 멈출 수 있습니다. 오프라인 이야기꾼은 조작을 익히기에 좋고, 진짜 스토리를 원하면 설정 가이드에서 AI 연결을 추가하세요.',
+    ],
 };

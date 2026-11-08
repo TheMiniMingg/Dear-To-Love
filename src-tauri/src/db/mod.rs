@@ -10,6 +10,7 @@ pub mod contract;
 pub mod drafts;
 pub mod memory;
 pub mod prefs;
+pub mod presets;
 pub mod providers;
 pub mod runs;
 pub mod saves;

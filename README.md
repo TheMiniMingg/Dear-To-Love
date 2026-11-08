@@ -184,7 +184,19 @@ story can also **Send a text**, **Call** someone, **Think** a thought of your ow
   remembers and lets you add, change or remove any note while the story goes on, and
   **Preview context** shows exactly what it will read next.
 - **Change the story as you go** in **Story details**: characters, the world, the narration,
-  the scene and the facts it must keep to.
+  the scene and the facts it must keep to. **Tune the telling** on the tool bar changes the
+  detail, pacing, twists and point of view in one step, from the next reply on.
+- **Three ways to steer the storyteller.** A **Note to the storyteller** is about how the
+  story is told from here on ("slow the romance down", "let her say no") and is never part of
+  the story. **Rules** (Story details → World) are what is always true in this world.
+  **Remember this** keeps a single fact whole. **How to play**, in the footer and the pause
+  menu, explains the whole game on one page.
+- **Know how full the storyteller's memory is.** The status line under the story shows how
+  much of the next request the story already fills. It turns amber when it is time to end the
+  chapter and red when older turns no longer fit, with advice and **End chapter** at hand.
+- **Come back to where you were.** A story opened again after a while shows **Previously…**:
+  the chapter and place, the story so far, the last reply and the open threads, with one
+  button back into it.
 - **How they feel about you.** Each character can have a **Heart** bar (cold to devoted) or a
   **Trust** bar (suspicious to complete trust) next to how they know you and how they feel
   now. The storyteller reads them before every reply and moves them as things happen; the
@@ -233,8 +245,10 @@ story can also **Send a text**, **Call** someone, **Think** a thought of your ow
   fiction in Neon, thrillers in Midnight, fantasy and history on Parchment, action and war in
   Ember, text adventures in Terminal, nature stories in Forest, beach and sea stories in
   Ocean, whimsical and fae stories in Lavender, cozy stories in Café and romance in Rose;
-  **Look** beside the story picks another for that story. Text size, column width and line
-  spacing are there too, and in **Settings → Look** beside a sample of a story.
+  **Look** beside the story picks another for that story. Text size, column width, line
+  spacing and the **story typeface** are there too, beside a sample of a story: **Book**
+  (Literata), **Plain** (the interface's Inter) or **Easy to read** (Atkinson Hyperlegible,
+  made for low vision and dyslexia).
 
 ![The same app in Rose, Midnight and Parchment: a café romance, a late-night radio story and a fantasy raid](docs/screenshots/themes.webp)
 
@@ -388,6 +402,14 @@ Scenarios marked ★ start with health, items and more already set up.
 | The Ashen Throne        | Fantasy, Drama, Action                      | The Regent's First Winter ★                             |
 
 </details>
+
+### Your own presets
+
+**Save as a preset…** (More, on a story card) keeps the world, cast, relationships, rules,
+style and scene of a story you made, without its turns, memory or pictures. **Preset Story →
+Your presets** begins a new story from it, opens it in Custom Story to change first, saves it
+as a `.dtlpreset` file to share, and imports one someone sent you. A preset file holds the
+story setup only: never a key, a picture or a setting.
 
 ## Make your own story
 
