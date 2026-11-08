@@ -123,11 +123,6 @@ function ShortcutRow({
 export function ShortcutsDialog() {
   const open = useShortcutHelp((s) => s.open);
   const setOpen = useShortcutHelp((s) => s.setOpen);
-  const custom = useShortcutKeys((s) => s.custom);
-  const id = useId();
-  const [capturing, setCapturing] = useState<ShortcutId | null>(null);
-  const [pending, setPending] = useState<Pending | null>(null);
-  const [done, setDone] = useState<string | null>(null);
 
   useEffect(() => {
     const onKey = (e: globalThis.KeyboardEvent) => {
@@ -149,13 +144,17 @@ export function ShortcutsDialog() {
     return () => window.removeEventListener('keydown', onKey);
   }, [setOpen]);
 
-  useEffect(() => {
-    if (!open) {
-      setCapturing(null);
-      setPending(null);
-      setDone(null);
-    }
-  }, [open]);
+  if (!open) return null;
+  return <ShortcutsWindow onClose={() => setOpen(false)} />;
+}
+
+/** The window itself; what it is asking starts afresh each time it opens. */
+function ShortcutsWindow({ onClose }: { onClose: () => void }) {
+  const custom = useShortcutKeys((s) => s.custom);
+  const id = useId();
+  const [capturing, setCapturing] = useState<ShortcutId | null>(null);
+  const [pending, setPending] = useState<Pending | null>(null);
+  const [done, setDone] = useState<string | null>(null);
 
   const give = (sid: ShortcutId, combo: string, from: ShortcutId | null) => {
     const { setKeys } = useShortcutKeys.getState();
@@ -197,10 +196,9 @@ export function ShortcutsDialog() {
     else give(sid, combo, null);
   };
 
-  if (!open) return null;
   const changed = Object.keys(custom).length > 0;
   return (
-    <Dialog title={t('Keyboard shortcuts')} onClose={() => setOpen(false)} wide>
+    <Dialog title={t('Keyboard shortcuts')} onClose={onClose} wide>
       {/* The long story list in one column; the short ones share the other. */}
       <div className="shortcut-groups">
         {[SHORTCUT_GROUPS.slice(0, 1), SHORTCUT_GROUPS.slice(1)].map((column, c) => (

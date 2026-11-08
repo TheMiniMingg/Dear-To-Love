@@ -1,4 +1,5 @@
 import { useEffect, useId, useState } from 'react';
+import { ListTools, matchesQuery } from '../../components/ListTools';
 import { commands, errorMessage } from '../../api/commands';
 import { describeImports, formatBytes, pickImageFiles } from '../../api/images';
 import { useBackdrop } from '../../app/backdropStore';
@@ -109,6 +110,42 @@ export function placeText(place: string): string {
   return what(place);
 }
 
+/** From this many images, the library gets search, kinds and an order. */
+const IMAGE_TOOLS_FROM = 6;
+const MOVING = 'moving';
+const UNTAGGED = 'untagged';
+
+const imageText = (a: AssetDto) =>
+  [a.label ?? '', ...a.tags, ...a.tags.map((x) => t(x)), ...a.stories.map((s) => s.title)].join(
+    ' ',
+  );
+
+function hasKind(a: AssetDto, kind: string): boolean {
+  if (kind === MOVING) return a.mime === 'image/gif';
+  if (kind === UNTAGGED) return !IMAGE_KINDS.some((k) => a.tags.includes(k));
+  return a.tags.includes(kind);
+}
+
+/** Images whose name, kinds or stories have every word of `query`, of one kind. */
+export function findImages(images: AssetDto[], query: string, kind: string): AssetDto[] {
+  return images.filter((a) => matchesQuery(imageText(a), query) && (!kind || hasKind(a, kind)));
+}
+
+function imageKindCounts(images: AssetDto[]): Map<string, number> {
+  const out = new Map<string, number>();
+  for (const k of [...IMAGE_KINDS, MOVING, UNTAGGED])
+    out.set(k, images.filter((a) => hasKind(a, k)).length);
+  return out;
+}
+
+function sortImages(images: AssetDto[], order: string): AssetDto[] {
+  const list = [...images];
+  if (order === 'newest') list.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  if (order === 'oldest') list.sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+  if (order === 'name') list.sort((a, b) => (a.label ?? '').localeCompare(b.label ?? ''));
+  return list;
+}
+
 /** Shared images first, then each story's own, then images in no story. */
 export function groupImages(images: AssetDto[]): Group[] {
   const shared = images.filter((a) => a.shared);
@@ -180,6 +217,11 @@ export function ImagesScreen() {
   });
 
   const selected = images?.find((i) => i.id === selectedId) ?? null;
+  const [query, setQuery] = useState('');
+  const [kind, setKind] = useState('');
+  const [order, setOrder] = useState<'groups' | 'newest' | 'oldest' | 'name'>('groups');
+  const shown = images ? findImages(images, query, kind) : [];
+  const filtered = query.trim() !== '' || kind !== '';
 
   return (
     <section className="screen images-screen" aria-labelledby="images-title">
@@ -214,10 +256,48 @@ export function ImagesScreen() {
           </p>
         </div>
       )}
-      {images && images.length > 0 && (
+      {images && images.length >= IMAGE_TOOLS_FROM && (
+        <ListTools
+          what={t('images')}
+          query={query}
+          onQuery={setQuery}
+          categories={[
+            ...IMAGE_KINDS.map((k) => ({ id: k, label: t(k) })),
+            { id: MOVING, label: t('Moving (GIF)') },
+            { id: UNTAGGED, label: t('No kind yet') },
+          ]}
+          counts={imageKindCounts(images)}
+          category={kind}
+          onCategory={setKind}
+          sorts={[
+            { id: 'groups', label: t('By where they are used') },
+            { id: 'newest', label: t('Newest first') },
+            { id: 'oldest', label: t('Oldest first') },
+            { id: 'name', label: t('By name') },
+          ]}
+          sort={order}
+          onSort={(o) => setOrder(o as typeof order)}
+          shown={shown.length}
+          total={images.length}
+        />
+      )}
+      {images && images.length > 0 && filtered && shown.length === 0 && (
+        <p className="muted">{t('No image matches.')}</p>
+      )}
+      {images && images.length > 0 && shown.length > 0 && (
         <div className="images-layout">
           <div className="image-groups">
-            {groupImages(images).map((g) => (
+            {(order === 'groups'
+              ? groupImages(shown)
+              : [
+                  {
+                    key: 'all',
+                    title: filtered ? t('Matching images') : t('All images'),
+                    hint: undefined,
+                    images: sortImages(shown, order),
+                  },
+                ]
+            ).map((g) => (
               <section key={g.key} className="image-group" aria-label={g.title}>
                 <h2 className="small-heading">{g.title}</h2>
                 {g.hint && <p className="muted small">{g.hint}</p>}
