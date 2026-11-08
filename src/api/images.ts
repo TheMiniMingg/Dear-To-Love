@@ -28,7 +28,12 @@ export async function pickImageFiles(): Promise<string[]> {
     title: t('Add images'),
     multiple: true,
     directory: false,
-    filters: [{ name: t('Images (PNG, JPEG, WebP)'), extensions: ['png', 'jpg', 'jpeg', 'webp'] }],
+    filters: [
+      {
+        name: t('Images (PNG, JPEG, WebP, GIF)'),
+        extensions: ['png', 'jpg', 'jpeg', 'webp', 'gif'],
+      },
+    ],
   });
   if (!picked) return [];
   return Array.isArray(picked) ? picked : [picked];

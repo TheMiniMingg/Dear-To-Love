@@ -13,11 +13,14 @@ import {
   Settings,
   Sparkles,
   Stethoscope,
+  Volume2,
+  VolumeX,
 } from 'lucide-react';
 import { commands } from '../api/commands';
 import { isComposing } from '../app/keyboard';
 import { paletteSources, searchPalette, usePalette, type PaletteEntry } from '../app/palette';
 import { isShortcut, shortcutKeys, useShortcutHelp } from '../app/shortcuts';
+import { useSound } from '../app/sound';
 import { useProblemReport } from '../features/diagnostics/ProblemDialog';
 import { useUiStore, type Screen } from '../app/store';
 import { goToSettingsSection, SETTINGS_SECTIONS } from '../features/settings/SettingsScreen';
@@ -49,6 +52,7 @@ function entries(stories: StorySummary[]): PaletteEntry[] {
   const recent = [...stories].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
   const goGroup = t('Go to');
   const settingsGroup = t('Settings');
+  const soundIsOn = useSound.getState().on;
   return [
     ...here,
     ...recent
@@ -85,6 +89,14 @@ function entries(stories: StorySummary[]): PaletteEntry[] {
       keywords: t('bug feedback'),
       icon: Bug,
       run: () => useProblemReport.getState().setOpen(true),
+    },
+    {
+      id: 'sound',
+      group: settingsGroup,
+      label: soundIsOn ? t('Turn sound off') : t('Turn sound on'),
+      keywords: t('mute silent chime read aloud voices'),
+      icon: soundIsOn ? VolumeX : Volume2,
+      run: () => useSound.getState().setOn(!soundIsOn),
     },
     ...SETTINGS_SECTIONS.map(([id, label]) => ({
       id: `settings:${id}`,
@@ -229,7 +241,9 @@ function PaletteDialog({ onClose }: { onClose: () => void }) {
                   {entry.hint && <span className="palette-hint">{entry.hint}</span>}
                 </span>
                 <span className="palette-group">{entry.group}</span>
-                {entry.keys && <kbd className="palette-keys">{shortcutKeys(entry.keys)}</kbd>}
+                {entry.keys && shortcutKeys(entry.keys) && (
+                  <kbd className="palette-keys">{shortcutKeys(entry.keys)}</kbd>
+                )}
               </li>
             );
           })}

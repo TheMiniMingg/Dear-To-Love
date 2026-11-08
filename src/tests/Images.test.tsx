@@ -74,7 +74,7 @@ describe('Images screen', () => {
             fileName: 'notes.txt',
             asset: null,
             alreadyInLibrary: false,
-            error: "this file isn't a PNG, JPEG or WebP image",
+            error: "this file isn't a PNG, JPEG, WebP or GIF image",
           },
         ];
       }
@@ -92,7 +92,9 @@ describe('Images screen', () => {
     });
     const status = await screen.findByText(/Added 1 image\./);
     expect(status).toHaveTextContent('1 was already in your library and is reused.');
-    expect(screen.getByText("notes.txt: This file isn't a PNG, JPEG or WebP image.")).toBeVisible();
+    expect(
+      screen.getByText("notes.txt: This file isn't a PNG, JPEG, WebP or GIF image."),
+    ).toBeVisible();
 
     // The first new image is selected and described.
     const details = await screen.findByRole('region', { name: 'Image: Harbor at dusk' });
@@ -159,6 +161,60 @@ describe('Images screen', () => {
     expect(invoke).toHaveBeenCalledWith('delete_image', { assetId: 'img-2' });
     expect(await screen.findByText('Choose an image to see where it is used.')).toBeVisible();
     expect(screen.queryByRole('button', { name: 'Mara' })).toBeNull();
+  });
+});
+
+describe('Finding images in a big library', () => {
+  it('searches names, kinds and stories, narrows to a kind, and sorts', async () => {
+    const pic = (id: string, label: string, tags: string[], createdAt: string, extra = {}) => ({
+      ...harbor,
+      id,
+      label,
+      tags,
+      createdAt,
+      ...extra,
+    });
+    const library: AssetDto[] = [
+      pic('a', 'Harbor at dusk', ['Background'], '2026-11-01T00:00:00Z'),
+      pic('b', 'Mara smiling', ['Portrait', 'Expression'], '2026-11-03T00:00:00Z'),
+      pic('c', 'Rain loop', [], '2026-11-02T00:00:00Z', { mime: 'image/gif' }),
+      pic('d', 'Cover art', ['Cover'], '2026-11-04T00:00:00Z', {
+        shared: false,
+        stories: [{ id: 's1', title: 'Glass Orchard' }],
+      }),
+      pic('e', 'Tom', ['Portrait'], '2026-11-05T00:00:00Z'),
+      pic('f', 'Lamp room', ['Background'], '2026-11-06T00:00:00Z'),
+    ];
+    invoke.mockImplementation(async (cmd: string) => {
+      if (cmd === 'list_images') return library;
+      if (cmd === 'list_stories') return [];
+      throw { code: 'NOT_FOUND', message: cmd };
+    });
+    render(<ImagesScreen />);
+    const search = await screen.findByRole('searchbox', { name: 'Search images' });
+    await userEvent.type(search, 'orchard');
+    expect(screen.getByRole('status')).toHaveTextContent('1 of 6');
+    expect(screen.getByRole('button', { name: /Cover art/ })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Harbor at dusk/ })).toBeNull();
+    await userEvent.clear(search);
+
+    const kind = screen.getByRole('combobox', { name: 'Category of images' });
+    expect(within(kind).getByRole('option', { name: 'Portrait (2)' })).toBeInTheDocument();
+    await userEvent.selectOptions(kind, 'moving');
+    expect(screen.getByRole('button', { name: /Rain loop/ })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Tom/ })).toBeNull();
+    await userEvent.selectOptions(kind, '');
+
+    await userEvent.selectOptions(
+      screen.getByRole('combobox', { name: 'Order of images' }),
+      'newest',
+    );
+    const all = screen.getByRole('region', { name: 'All images' });
+    const names = within(all)
+      .getAllByRole('button')
+      .map((b) => b.getAttribute('aria-label') ?? b.textContent);
+    expect(names[0]).toMatch(/Lamp room/);
+    expect(names[names.length - 1]).toMatch(/Harbor at dusk/);
   });
 });
 

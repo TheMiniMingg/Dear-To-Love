@@ -1,0 +1,71 @@
+{
+  "templateSchemaVersion": 1,
+  "type": "scenario",
+  "id": "starter:storm-season",
+  "label": "Storm Season",
+  "summary": "A storm cuts Wrenmouth off for three days, and it falls to you to keep the bakery open, the town fed and a stranded stranger out of trouble.",
+  "worlds": ["starter:harbor-town"],
+  "title": "Storm Season",
+  "description": "The worst storm in twenty years closes the ferry and the coast road. The power flickers, the bakery has the only working oven in town, and the stranger who washed up in a dinghy will not say where they came from.",
+  "firstChapterTitle": "The Last Ferry",
+  "chapterOutlines": [
+    {
+      "title": "The Last Ferry",
+      "outline": "The ferry turns back, the lights go out, and someone knocks on the bakery door at midnight."
+    },
+    {
+      "title": "Three Days of Rain",
+      "outline": "Keep the town fed and warm while the stranger’s story keeps changing."
+    },
+    {
+      "title": "Clear Skies",
+      "outline": "The storm breaks, the road opens, and the stranger has to decide whether to stay."
+    }
+  ],
+  "scene": {
+    "location": "The back kitchen of the Wrenmouth bakery",
+    "summary": "Ten at night. Rain hammers the windows, the power just died, and the oven is the warmest place in town."
+  },
+  "openThreads": [
+    "Who is the stranger from the dinghy?",
+    "Will the town’s supplies last until the road opens?"
+  ],
+  "npcs": [
+    {
+      "id": "starter:npc-ines",
+      "name": "Inès Corbel",
+      "control": "npc",
+      "pronouns": "she/her",
+      "role": "Baker",
+      "description": "Has run the bakery for thirty years and has never once closed for weather.",
+      "personality": ["brisk", "generous", "nosy"],
+      "goals": ["Keep the ovens going for the whole town"],
+      "abilities": ["Can bake bread from almost nothing"]
+    },
+    {
+      "id": "starter:npc-rook",
+      "name": "Rook Avery",
+      "control": "npc",
+      "pronouns": "they/them",
+      "role": "The stranger from the dinghy",
+      "description": "Soaked, polite and very careful about what they say. Their boat had no name on it.",
+      "personality": ["guarded", "funny when they forget to be careful", "kind to animals"],
+      "goals": ["Not to be found by whoever they left behind"],
+      "abilities": ["Can sail anything with a mast"]
+    }
+  ],
+  "relationships": [
+    {
+      "fromId": "starter:npc-ines",
+      "toId": "@player",
+      "label": "Neighbor",
+      "status": "Glad of the extra pair of hands"
+    },
+    {
+      "fromId": "starter:npc-rook",
+      "toId": "@player",
+      "label": "Stranger",
+      "status": "Grateful and wary"
+    }
+  ]
+}

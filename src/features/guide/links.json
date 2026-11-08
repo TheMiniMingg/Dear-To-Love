@@ -38,5 +38,8 @@
   "textgen-download": "https://github.com/oobabooga/text-generation-webui",
   "vllm-docs": "https://docs.vllm.ai/",
   "sd-webui-download": "https://github.com/AUTOMATIC1111/stable-diffusion-webui",
-  "sd-forge-download": "https://github.com/lllyasviel/stable-diffusion-webui-forge"
+  "sd-forge-download": "https://github.com/lllyasviel/stable-diffusion-webui-forge",
+  "elevenlabs-keys": "https://elevenlabs.io/app/settings/api-keys",
+  "elevenlabs-voices": "https://elevenlabs.io/app/voice-library",
+  "kokoro-download": "https://github.com/remsky/Kokoro-FastAPI"
 }

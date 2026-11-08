@@ -3,7 +3,19 @@ import { create } from 'zustand';
 import { msg } from '../i18n';
 
 /** The app's colour themes. Rose follows the computer's light or dark mode. */
-export type ThemeId = 'rose' | 'midnight' | 'parchment' | 'neon' | 'cafe' | 'gothic';
+export type ThemeId =
+  | 'rose'
+  | 'midnight'
+  | 'parchment'
+  | 'neon'
+  | 'cafe'
+  | 'gothic'
+  | 'forest'
+  | 'ocean'
+  | 'lavender'
+  | 'ember'
+  | 'terminal'
+  | 'ink';
 
 export type Theme = { id: ThemeId; label: string; hint: string };
 
@@ -37,6 +49,36 @@ export const THEMES: Theme[] = [
     id: 'gothic',
     label: msg('Gothic'),
     hint: msg('Charcoal and deep red, with serif headings, for horror.'),
+  },
+  {
+    id: 'forest',
+    label: msg('Forest'),
+    hint: msg('Pine green and gold, for woodland and nature stories.'),
+  },
+  {
+    id: 'ocean',
+    label: msg('Ocean'),
+    hint: msg('Sea glass and sand, for summers, islands and the sea.'),
+  },
+  {
+    id: 'lavender',
+    label: msg('Lavender'),
+    hint: msg('Soft lilac and violet, for dreamy and whimsical stories.'),
+  },
+  {
+    id: 'ember',
+    label: msg('Ember'),
+    hint: msg('Soot and firelight orange, for action, war and heroes.'),
+  },
+  {
+    id: 'terminal',
+    label: msg('Terminal'),
+    hint: msg('Green on black in a typewriter face, for text adventures.'),
+  },
+  {
+    id: 'ink',
+    label: msg('Ink'),
+    hint: msg('Black on white with the strongest contrast, for easy reading.'),
   },
 ];
 
@@ -105,6 +147,23 @@ const GENRE_THEMES: [ThemeId, string[]][] = [
       'dungeon crawl',
       'rpg',
     ],
+  ],
+  [
+    'ember',
+    ['action', 'superhero', 'war', 'military', 'martial arts', 'sports', 'disaster', 'battle'],
+  ],
+  [
+    'terminal',
+    ['text adventure', 'interactive fiction', 'hacker', 'retro', 'retro sci-fi', 'computer'],
+  ],
+  [
+    'forest',
+    ['nature', 'wilderness', 'woodland', 'cottagecore', 'druid', 'elves', 'animals', 'farming'],
+  ],
+  ['ocean', ['beach', 'summer', 'island', 'sailing', 'nautical', 'mermaid', 'seaside', 'vacation']],
+  [
+    'lavender',
+    ['magical girl', 'whimsical', 'fairy', 'fae', 'magical realism', 'romantasy', 'dreamy'],
   ],
   [
     'cafe',

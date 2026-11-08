@@ -609,6 +609,68 @@ async fn export_leaves_out_missing_image_files() {
     assert!(rows::dangling_refs(&fresh.db).await.unwrap().is_empty());
 }
 
+/// A moving GIF travels in a storypack as it is: every frame arrives.
+#[tokio::test]
+async fn a_moving_gif_cover_survives_a_storypack() {
+    use crate::services::assets::{load, Size};
+    use image::codecs::gif::{GifEncoder, Repeat};
+    use image::{Delay, Frame, Rgba, RgbaImage};
+    let mut bytes = Vec::new();
+    {
+        let mut enc = GifEncoder::new(&mut bytes);
+        enc.set_repeat(Repeat::Infinite).unwrap();
+        for i in 0..3u8 {
+            let img = RgbaImage::from_pixel(120, 80, Rgba([i * 70, 90, 160, 255]));
+            enc.encode_frame(Frame::from_parts(
+                img,
+                0,
+                0,
+                Delay::from_numer_denom_ms(100, 1),
+            ))
+            .unwrap();
+        }
+    }
+    let t = test_db().await;
+    let r = rich_story(&t).await;
+    let store = AssetStore::new(t.dir.path());
+    let gif = import_bytes(&t.db, &store, bytes.clone(), "Sparks", &ImportScope::Shared)
+        .await
+        .unwrap()
+        .asset
+        .id;
+    rows::set_story_visual(&t.db, &r.story.story_id, &VisualSlot::Cover, Some(&gif))
+        .await
+        .unwrap();
+    let (path, _) = export(&t, &r.story.story_id).await;
+    assert!(
+        zip_names(&path).iter().any(|n| n.ends_with(".gif")),
+        "{:?}",
+        zip_names(&path)
+    );
+
+    let fresh = test_db().await;
+    let got = import_storypack(&fresh.db, fresh.dir.path(), &path)
+        .await
+        .unwrap();
+    let cover = rows::story_visuals(&fresh.db, &got.story_id)
+        .await
+        .unwrap()
+        .into_iter()
+        .find(|v| v.slot == "cover")
+        .map(|v| v.asset_id)
+        .expect("the cover came along");
+    let (mime, full) = load(
+        &fresh.db,
+        &AssetStore::new(fresh.dir.path()),
+        &cover,
+        Size::Full,
+    )
+    .await
+    .unwrap()
+    .unwrap();
+    assert_eq!((mime.as_str(), full), ("image/gif", bytes));
+}
+
 // ------------------------------------------------------------- T33
 
 /// The entries of a real pack, to tamper with.

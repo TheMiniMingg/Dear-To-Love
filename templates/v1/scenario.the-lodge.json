@@ -1,0 +1,71 @@
+{
+  "templateSchemaVersion": 1,
+  "type": "scenario",
+  "id": "starter:the-lodge",
+  "label": "The Lodge on Cutter Ridge",
+  "summary": "Six strangers wait out a blizzard in an empty ski lodge above Hollow Pines. Every night, one of them sleepwalks to the same locked door.",
+  "worlds": ["starter:hollow-pines"],
+  "title": "The Lodge on Cutter Ridge",
+  "description": "The lodge closed years ago, but the blizzard leaves six travelers no choice. The fireplace still works. The guest book still has entries, and the newest one is dated tomorrow.",
+  "firstChapterTitle": "Snowbound",
+  "chapterOutlines": [
+    {
+      "title": "Snowbound",
+      "outline": "Settle everyone in, find the guest book, and notice the door no key fits."
+    },
+    {
+      "title": "Night Walkers",
+      "outline": "Watch the sleepwalkers, and learn what each traveler is running from."
+    },
+    {
+      "title": "The Locked Door",
+      "outline": "Open the door before the storm ends, or keep it shut for good."
+    }
+  ],
+  "scene": {
+    "location": "The great room of the abandoned Cutter Ridge lodge",
+    "summary": "Dusk, and the snow is already up to the windows. Someone has got the fire going. Five tired faces look at you as if you know what to do."
+  },
+  "openThreads": [
+    "What is behind the locked door?",
+    "Who wrote tomorrow’s entry in the guest book?"
+  ],
+  "npcs": [
+    {
+      "id": "starter:npc-june",
+      "name": "June Halloran",
+      "control": "npc",
+      "pronouns": "she/her",
+      "role": "Retired ski patrol",
+      "description": "Knows the ridge better than anyone and swore she would never come back up here.",
+      "personality": ["practical", "haunted", "protective"],
+      "goals": ["Get everyone down the mountain alive"],
+      "abilities": ["Mountain rescue", "Reads snow and weather"]
+    },
+    {
+      "id": "starter:npc-felix",
+      "name": "Felix Marr",
+      "control": "npc",
+      "pronouns": "he/him",
+      "role": "Traveling salesman",
+      "description": "Cheerful, talkative and carrying a suitcase he never lets out of his sight.",
+      "personality": ["charming", "nervous", "evasive"],
+      "goals": ["Get to the city before anyone opens the suitcase"],
+      "abilities": ["Can talk his way into or out of almost anything"]
+    }
+  ],
+  "relationships": [
+    {
+      "fromId": "starter:npc-june",
+      "toId": "@player",
+      "label": "Fellow traveler",
+      "status": "Sizing you up"
+    },
+    {
+      "fromId": "starter:npc-felix",
+      "toId": "@player",
+      "label": "Fellow traveler",
+      "status": "Too friendly, too fast"
+    }
+  ]
+}

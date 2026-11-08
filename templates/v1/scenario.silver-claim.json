@@ -1,0 +1,94 @@
+{
+  "templateSchemaVersion": 1,
+  "type": "scenario",
+  "id": "starter:silver-claim",
+  "label": "The Silver Claim",
+  "summary": "You inherit a silver claim in the hills above Dust Creek, and three different people say it was theirs first.",
+  "worlds": ["starter:dust-creek"],
+  "title": "The Silver Claim",
+  "description": "Your uncle’s will leaves you a mining claim, a mule and a map with one corner torn off. The bank wants the claim, a rancher swears it is on his land, and the mine itself has not been opened in a year.",
+  "firstChapterTitle": "The Reading of the Will",
+  "chapterOutlines": [
+    {
+      "title": "The Reading of the Will",
+      "outline": "Arrive in Dust Creek, meet the people who want your claim, and find the torn map."
+    },
+    {
+      "title": "Up in the Hills",
+      "outline": "Open the mine and learn why your uncle stopped working it."
+    },
+    {
+      "title": "Claim Day",
+      "outline": "The land office settles the claim, if everyone lives that long."
+    }
+  ],
+  "scene": {
+    "location": "The back room of the Dust Creek land office",
+    "summary": "Noon, heat like an oven. The clerk reads the will aloud while three people in the doorway watch you and not the paper."
+  },
+  "openThreads": ["What is on the torn corner of the map?", "Why did your uncle stop mining?"],
+  "npcs": [
+    {
+      "id": "starter:npc-ada",
+      "name": "Ada Pruitt",
+      "control": "npc",
+      "pronouns": "she/her",
+      "role": "Land office clerk",
+      "description": "Knows every claim filed in the territory and which of them are forged.",
+      "personality": ["precise", "brave in quiet ways", "dry"],
+      "goals": ["See the law followed for once"],
+      "abilities": ["Reads handwriting like a confession"]
+    },
+    {
+      "id": "starter:npc-cole",
+      "name": "Cole Bramwell",
+      "control": "npc",
+      "pronouns": "he/him",
+      "role": "Rancher",
+      "description": "Big, polite and absolutely sure the claim is on his grazing land.",
+      "personality": ["proud", "honest to a fault", "hot-tempered"],
+      "goals": ["Keep his ranch whole for his daughters"],
+      "abilities": ["Best rider in the county"]
+    }
+  ],
+  "relationships": [
+    {
+      "fromId": "starter:npc-ada",
+      "toId": "@player",
+      "label": "Ally",
+      "status": "Thinks you might be the honest one"
+    },
+    {
+      "fromId": "starter:npc-cole",
+      "toId": "@player",
+      "label": "Rival",
+      "status": "Wants your claim, not your blood"
+    }
+  ],
+  "tracking": {
+    "meters": [
+      {
+        "name": "Health",
+        "value": 100,
+        "max": 100
+      },
+      {
+        "name": "Dollars",
+        "value": 40
+      }
+    ],
+    "inventory": true,
+    "items": [
+      {
+        "name": "Torn map",
+        "qty": 1,
+        "description": "Your uncle’s map of the claim, one corner missing."
+      },
+      {
+        "name": "Mule",
+        "qty": 1,
+        "description": "Called Parson. Stubborn, sure-footed, and fond of apples."
+      }
+    ]
+  }
+}

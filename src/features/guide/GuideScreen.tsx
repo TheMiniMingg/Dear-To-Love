@@ -11,6 +11,7 @@ import {
   LOCAL,
   PICKS,
   PICTURES,
+  VOICES,
   PRICED,
   type ModelPick,
   type ServiceGuide,
@@ -24,6 +25,7 @@ const SECTIONS = [
   { id: 'guide-connect', title: msg('Connect a service') },
   { id: 'guide-test', title: msg('Test it and start playing') },
   { id: 'guide-pictures', title: msg('Pictures (optional)') },
+  { id: 'guide-voices', title: msg('Voices (optional)') },
   { id: 'guide-keys', title: msg('Your keys stay on this computer') },
   { id: 'guide-problems', title: msg('If something goes wrong') },
 ] as const;
@@ -129,7 +131,9 @@ function Service({
             ? t('free, on this computer')
             : preset.group === 'pictures'
               ? t('API key, paid per picture')
-              : t('API key, paid per use')}
+              : preset.group === 'voices'
+                ? t('API key, paid per character read')
+                : t('API key, paid per use')}
         </span>
         {recommended && <span className="badge">{t('Recommended')}</span>}
       </summary>
@@ -154,7 +158,7 @@ function Service({
   );
 }
 
-const GROUP_INTRO: Record<Exclude<PresetGroup, 'pictures' | 'other'>, string> = {
+const GROUP_INTRO: Record<Exclude<PresetGroup, 'pictures' | 'voices' | 'other'>, string> = {
   local: msg(
     'Nothing leaves your computer and nothing costs money. Small models run on most recent computers and write simpler stories; bigger ones write better but need a strong graphics card or a lot of memory.',
   ),
@@ -408,6 +412,20 @@ export function GuideScreen() {
         <p className="muted small">
           {t(
             'Your first picture connection is put to use; Settings → Pictures chooses another, or none.',
+          )}
+        </p>
+      </Section>
+
+      <Section id="guide-voices">
+        <p>
+          {t(
+            'Replies can be read aloud with the computer’s own voices, for free. For AI voices (a narrator and a voice for each character, including voices you clone), connect a voice service and make a voice pack in Settings → Sound. Sound can be turned off there too.',
+          )}
+        </p>
+        {services(VOICES)}
+        <p className="muted small">
+          {t(
+            'Only the text being read is sent to the voice service. A voice pack can be saved to a file and shared; it names the voices only, never your key.',
           )}
         </p>
       </Section>

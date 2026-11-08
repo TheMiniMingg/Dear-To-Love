@@ -390,6 +390,35 @@ export const PICTURES: ServiceGuide[] = [
   },
 ];
 
+export const VOICES: ServiceGuide[] = [
+  {
+    preset: 'elevenlabs',
+    site: 'elevenlabs.io',
+    steps: [
+      msg(
+        'ElevenLabs charges by the character read, with a small free allowance each month. Voices you design or clone there, and ones you add from its voice library, all appear in a voice pack.',
+      ),
+    ],
+    tip: msg(
+      'Settings → Sound → New voice pack: choose this connection, then a voice for the narrator and for each character.',
+    ),
+    links: [
+      { id: 'elevenlabs-keys', label: KEY },
+      { id: 'elevenlabs-voices', label: msg('Voice library') },
+    ],
+  },
+  {
+    preset: 'kokoro',
+    steps: [
+      msg('Install Docker, then start Kokoro-FastAPI with this command:'),
+      msg('Leave it running; its voices are free and stay on this computer.'),
+      msg('Choose Set it up here, then make a voice pack with it in Settings → Sound.'),
+    ],
+    command: 'docker run -p 8880:8880 ghcr.io/remsky/kokoro-fastapi-cpu:latest',
+    links: [{ id: 'kokoro-download', label: DOCS }],
+  },
+];
+
 /** A model the guide recommends, with a button that sets it up. */
 export type ModelPick = { title: string; preset: string; model: string; why: string };
 

@@ -9,6 +9,7 @@ import {
 import { isComposing } from '../../app/keyboard';
 import type { Stat } from '../../types';
 import { ArrowPicker, type PickerOption } from '../../components/ArrowPicker';
+import { matchesQuery } from '../../components/ListTools';
 import { msg, t } from '../../i18n';
 
 /** Unique non-empty values, first spelling wins. */
@@ -549,6 +550,9 @@ export function StatsField({
  * A compact multi-choice: chosen entries as removable chips, a menu of the
  * rest, and a box to add your own. Keeps long preset lists off the page.
  */
+/** Lists longer than this can be narrowed by typing. */
+const LONG_LIST = 12;
+
 export function MultiPicker({
   label,
   presets,
@@ -568,9 +572,13 @@ export function MultiPicker({
   const id = useId();
   const show = (v: string) => (translate ? t(v) : v);
   const [own, setOwn] = useState('');
+  const [find, setFind] = useState('');
   const chosen = uniq(value);
   const has = (v: string) => chosen.some((c) => c.toLowerCase() === v.trim().toLowerCase());
-  const rest = uniq(presets).filter((p) => !has(p));
+  const all = uniq(presets).filter((p) => !has(p));
+  // A long list can be narrowed by typing part of what you want.
+  const long = all.length > LONG_LIST;
+  const rest = long ? all.filter((p) => matchesQuery(`${p} ${show(p)}`, find)) : all;
   const add = (v: string) => {
     if (v.trim() && !has(v)) onChange([...chosen, v.trim()]);
   };
@@ -606,6 +614,19 @@ export function MultiPicker({
         <p className="muted small">{t('None chosen yet.')}</p>
       )}
       <div className="multi-add">
+        {long && (
+          <input
+            type="search"
+            className="multi-find"
+            value={find}
+            aria-label={t('Find in {what}', { what: label.toLowerCase() })}
+            placeholder={t('Find in the list ({count})', { count: String(all.length) })}
+            onChange={(e) => setFind(e.target.value)}
+          />
+        )}
+        {long && find.trim() !== '' && rest.length === 0 && (
+          <span className="muted small">{t('Nothing in the list matches.')}</span>
+        )}
         {rest.length > 0 && (
           <>
             <label htmlFor={`${id}-pick`} className="visually-hidden">
@@ -619,7 +640,11 @@ export function MultiPicker({
                 e.target.blur();
               }}
             >
-              <option value="">{t('Add from the list…')}</option>
+              <option value="">
+                {long && find.trim()
+                  ? t('Add from {count} matches…', { count: String(rest.length) })
+                  : t('Add from the list…')}
+              </option>
               {rest.map((p) => (
                 <option key={p} value={p}>
                   {show(p)}

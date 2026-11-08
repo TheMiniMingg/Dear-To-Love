@@ -40,7 +40,7 @@ import {
 import { useUiStore } from '../../app/store';
 import { readingStyle, useLook, useStoryLook } from '../../app/look';
 import { useReplyWatch } from '../../app/replyWatch';
-import { canReadAloud, speechLang, useReadAloud } from '../../app/readAloud';
+import { readAloudAvailable, speechLang, useReadAloud } from '../../app/readAloud';
 import { paletteSources, usePalette } from '../../app/palette';
 import { isComposing, isEditableTarget } from '../../app/keyboard';
 import { ariaKeys, isShortcut, useShortcutHelp, withKeys } from '../../app/shortcuts';
@@ -1046,7 +1046,7 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
           icon: Lightbulb,
           run: () => useTour.getState().start(),
         },
-        ...(latestReply && canReadAloud()
+        ...(latestReply && readAloudAvailable()
           ? [
               {
                 id: 'p:read',

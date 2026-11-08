@@ -3,6 +3,7 @@ import { create } from 'zustand';
 import { commands } from '../api/commands';
 import { useLibraryPrefs } from './library';
 import { useLook } from './look';
+import { soundOn } from './sound';
 
 type Ready = { storyId: string; title: string; routeId: string };
 
@@ -32,10 +33,11 @@ export const useReplyWatch = create<WatchState>((set, get) => ({
 const POLL_MS = 2000;
 
 /**
- * Two soft notes, made on the spot (no sound file). Does nothing where the
- * computer can't play sound.
+ * Two soft notes, made on the spot (no sound file). Does nothing when sound
+ * is off or where the computer can't play sound.
  */
 export function playChime() {
+  if (!soundOn()) return;
   try {
     const Ctx =
       window.AudioContext ??

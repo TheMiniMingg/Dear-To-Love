@@ -1,0 +1,81 @@
+{
+  "templateSchemaVersion": 1,
+  "type": "scenario",
+  "id": "starter:lantern-festival",
+  "label": "The Harvest Lantern",
+  "summary": "The Harvest Lantern festival is three days away, the festival lantern is cracked, and the only glassblower who can mend it has not spoken to you in years.",
+  "worlds": ["starter:tumbledown-isles"],
+  "title": "The Harvest Lantern",
+  "description": "Every year the great lantern is lit on the highest island and every small lantern on the Isles lights with it. This year it cracked. Three days, five islands, one stubborn glassblower and a ferry turtle with opinions.",
+  "firstChapterTitle": "The Crack",
+  "chapterOutlines": [
+    {
+      "title": "The Crack",
+      "outline": "Find the crack, calm the festival committee, and take the ferry turtle to Glassmere."
+    },
+    {
+      "title": "Glassmere",
+      "outline": "Make peace with the glassblower, and gather what the mending needs from all five islands."
+    },
+    {
+      "title": "Lantern Night",
+      "outline": "Light the lantern, and see who it glows for."
+    }
+  ],
+  "scene": {
+    "location": "The lantern loft on Highcrest Island",
+    "summary": "Morning, three days before the festival. Sunlight comes through the great lantern, and through the thin silver crack across its side."
+  },
+  "openThreads": [
+    "Can the lantern be mended in time?",
+    "Why did you and the glassblower stop speaking?"
+  ],
+  "npcs": [
+    {
+      "id": "starter:npc-marigold",
+      "name": "Marigold Teague",
+      "control": "npc",
+      "pronouns": "she/her",
+      "role": "Festival committee chair",
+      "description": "Has organized the festival for twenty years and is calm in the way a kettle is calm.",
+      "personality": ["organized", "dramatic", "loving"],
+      "goals": ["A perfect festival, just once"],
+      "abilities": ["Knows where everyone on the Isles is at any moment"]
+    },
+    {
+      "id": "starter:npc-hollis",
+      "name": "Hollis Wren",
+      "control": "npc",
+      "pronouns": "he/him",
+      "role": "Glassblower of Glassmere",
+      "description": "The best glassblower on the Isles. You used to be friends.",
+      "personality": ["proud", "gentle", "slow to forgive"],
+      "goals": ["Be asked, properly, for once"],
+      "abilities": ["Can mend glass with breath and a little magic"]
+    }
+  ],
+  "relationships": [
+    {
+      "fromId": "starter:npc-marigold",
+      "toId": "@player",
+      "label": "Neighbor",
+      "status": "Counting on you"
+    },
+    {
+      "fromId": "starter:npc-hollis",
+      "toId": "@player",
+      "label": "Old friend",
+      "status": "Hurt, and hoping you will come"
+    }
+  ],
+  "tracking": {
+    "items": [
+      {
+        "name": "Ferry turtle pass",
+        "qty": 1,
+        "description": "Good for any island, if the turtle agrees."
+      }
+    ],
+    "inventory": true
+  }
+}

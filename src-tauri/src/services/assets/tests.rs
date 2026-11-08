@@ -90,12 +90,67 @@ fn decode_reads_real_bytes_and_makes_small_thumbnails() {
     assert_eq!((d.mime, d.ext), ("image/jpeg", "jpg"));
 }
 
+/// A moving GIF of `frames` frames, each a different colour.
+fn gif(w: u32, h: u32, frames: u8) -> Vec<u8> {
+    use image::codecs::gif::{GifEncoder, Repeat};
+    use image::{Delay, Frame};
+    let mut out = Vec::new();
+    {
+        let mut enc = GifEncoder::new(&mut out);
+        enc.set_repeat(Repeat::Infinite).unwrap();
+        for i in 0..frames {
+            let img = RgbaImage::from_pixel(w, h, Rgba([i.wrapping_mul(60), 90, 160, 255]));
+            enc.encode_frame(Frame::from_parts(
+                img,
+                0,
+                0,
+                Delay::from_numer_denom_ms(100, 1),
+            ))
+            .unwrap();
+        }
+    }
+    out
+}
+
+#[tokio::test]
+async fn a_moving_gif_is_kept_whole_with_a_still_thumbnail() {
+    let t = test_db().await;
+    let s = store(&t);
+    let bytes = gif(400, 300, 3);
+    let d = decode(&bytes).unwrap();
+    assert_eq!(
+        (d.mime, d.ext, d.width, d.height),
+        ("image/gif", "gif", 400, 300)
+    );
+    assert!(d.thumb_ext == "png" || d.thumb_ext == "jpg");
+
+    let made = import_bytes(&t.db, &s, bytes.clone(), "Fireflies", &ImportScope::Shared)
+        .await
+        .unwrap();
+    assert_eq!(made.asset.mime, "image/gif");
+    // The original is the same bytes, so every frame is still there.
+    let (mime, full) = load(&t.db, &s, &made.asset.id, Size::Full)
+        .await
+        .unwrap()
+        .unwrap();
+    assert_eq!((mime.as_str(), full), ("image/gif", bytes));
+    let (thumb_mime, _) = load(&t.db, &s, &made.asset.id, Size::Thumb)
+        .await
+        .unwrap()
+        .unwrap();
+    assert_ne!(thumb_mime, "image/gif", "the thumbnail is a still picture");
+}
+
 #[test]
 fn decode_refuses_disguised_damaged_and_oversized_files() {
     let svg = br#"<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>"#;
     for bad in [&b"just some text"[..], &svg[..], &b""[..]] {
         let e = decode(bad).err().unwrap();
-        assert!(e.message.contains("PNG, JPEG or WebP"), "{}", e.message);
+        assert!(
+            e.message.contains("PNG, JPEG, WebP or GIF"),
+            "{}",
+            e.message
+        );
     }
     let mut truncated = png(200, 200, 3);
     truncated.truncate(truncated.len() / 2);

@@ -33,6 +33,7 @@ import {
   uniq,
 } from './fields';
 import { ERAS, PERSONALITIES, RACES, ROLES, RULES, SETTINGS } from './presets';
+import { RulesField } from './RulesField';
 import {
   DETAILS,
   DICE_STORY_TYPES,
@@ -407,9 +408,9 @@ export function WorldStep(props: StepProps) {
           )}
           onChange={(description) => set({ description })}
         />
-        <MultiPicker
+        <RulesField
           label={t('Rules the storyteller follows')}
-          presets={uniq([...catalog.worlds.flatMap((x) => x.world.rules), ...RULES])}
+          presets={uniq([...RULES, ...catalog.worlds.flatMap((x) => x.world.rules)])}
           value={w.rules}
           hint={t('Things that are always true here. Pick from the list or write your own.')}
           onChange={(rules) => set({ rules })}

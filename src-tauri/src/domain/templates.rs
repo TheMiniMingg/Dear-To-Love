@@ -23,7 +23,7 @@ macro_rules! bundled {
     };
 }
 
-/// 33 worlds, 35 scenarios and 27 characters, in picker order.
+/// 33 worlds, 47 scenarios and 27 characters, in picker order.
 const BUNDLED: &[&str] = bundled![
     "world.harbor-town.json",
     "world.glass-orchard.json",
@@ -93,6 +93,18 @@ const BUNDLED: &[&str] = bundled![
     "scenario.monarch-heist.json",
     "scenario.henchmen-union.json",
     "scenario.regent.json",
+    "scenario.storm-season.json",
+    "scenario.quiet-signal.json",
+    "scenario.the-lodge.json",
+    "scenario.silver-claim.json",
+    "scenario.glowing-ruins.json",
+    "scenario.mountain-tournament.json",
+    "scenario.rival-clubs.json",
+    "scenario.lantern-festival.json",
+    "scenario.book-club.json",
+    "scenario.rain-witness.json",
+    "scenario.wedding-speech.json",
+    "scenario.drowned-queen-map.json",
     "character.new-keeper.json",
     "character.curious-detective.json",
     "character.wandering-musician.json",
@@ -464,7 +476,7 @@ mod tests {
         let cat = TemplateCatalog::bundled();
         assert_eq!(
             (cat.worlds.len(), cat.scenarios.len(), cat.characters.len()),
-            (33, 35, 27)
+            (33, 47, 27)
         );
         let draft = cat.resolve_quick_start(&starter()).unwrap();
         draft.base_state.validate().unwrap();

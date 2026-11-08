@@ -1,0 +1,68 @@
+{
+  "templateSchemaVersion": 1,
+  "type": "scenario",
+  "id": "starter:wedding-speech",
+  "label": "The Wedding Speech",
+  "summary": "Your best friend’s wedding in Larkport is a week away. The speech is yours and still unwritten, and the maid of honor is the person you once left on a night train.",
+  "worlds": ["starter:larkport"],
+  "title": "The Wedding Speech",
+  "description": "A week of fittings, rehearsals and a wedding on a river boat. Your best friend needs you calm. The maid of honor needs you to explain why you never came back. The speech needs to be funny.",
+  "firstChapterTitle": "Seven Days",
+  "chapterOutlines": [
+    {
+      "title": "Seven Days",
+      "outline": "Arrive in Larkport, meet the wedding party, and see the maid of honor again."
+    },
+    {
+      "title": "The Rehearsal",
+      "outline": "Fittings, a disastrous rehearsal dinner and a long walk over eleven bridges."
+    },
+    {
+      "title": "The River Boat",
+      "outline": "Give the speech, and say what you came back to say."
+    }
+  ],
+  "scene": {
+    "location": "The arrivals hall of Larkport Central station",
+    "summary": "Evening, the 6:40 from the north. Your best friend waves from the barrier, and beside him is someone you did not expect to see."
+  },
+  "openThreads": ["What really happened on the night train?", "Will the speech be a disaster?"],
+  "npcs": [
+    {
+      "id": "starter:npc-sol",
+      "name": "Sol Mendes",
+      "control": "npc",
+      "pronouns": "he/him",
+      "role": "The groom, your best friend",
+      "description": "Sweet, anxious and convinced something will go wrong.",
+      "personality": ["loyal", "anxious", "romantic"],
+      "goals": ["A wedding with no disasters"],
+      "abilities": ["Can make anyone feel at home"]
+    },
+    {
+      "id": "starter:npc-harriet",
+      "name": "Harriet Vance",
+      "control": "npc",
+      "pronouns": "she/her",
+      "role": "Maid of honor",
+      "description": "Sharp-tongued, very organized, and not ready to forgive you.",
+      "personality": ["witty", "guarded", "kind underneath"],
+      "goals": ["Get through the week without caring"],
+      "abilities": ["Plans anything down to the minute"]
+    }
+  ],
+  "relationships": [
+    {
+      "fromId": "starter:npc-sol",
+      "toId": "@player",
+      "label": "Best friend",
+      "status": "So glad you came"
+    },
+    {
+      "fromId": "starter:npc-harriet",
+      "toId": "@player",
+      "label": "Old flame",
+      "status": "Hurt and curious"
+    }
+  ]
+}

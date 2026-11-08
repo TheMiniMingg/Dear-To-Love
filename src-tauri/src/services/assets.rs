@@ -101,7 +101,7 @@ pub struct Decoded {
 }
 
 fn not_an_image() -> AppError {
-    AppError::invalid_input("this file isn't a PNG, JPEG or WebP image")
+    AppError::invalid_input("this file isn't a PNG, JPEG, WebP or GIF image")
 }
 
 /// Decodes the whole image (so damaged or disguised files are refused),
@@ -114,6 +114,9 @@ pub fn decode(bytes: &[u8]) -> AppResult<Decoded> {
         Some(ImageFormat::Png) => ("image/png", "png"),
         Some(ImageFormat::Jpeg) => ("image/jpeg", "jpg"),
         Some(ImageFormat::WebP) => ("image/webp", "webp"),
+        // The original is kept as it is, so a moving GIF still moves; the
+        // thumbnail is its first frame.
+        Some(ImageFormat::Gif) => ("image/gif", "gif"),
         _ => return Err(not_an_image()),
     };
     let mut limits = Limits::default();

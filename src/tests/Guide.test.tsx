@@ -12,7 +12,7 @@ vi.mock('@tauri-apps/api/core', () => ({
 
 import { App } from '../app/App';
 import { useUiStore } from '../app/store';
-import { HOSTED, LABS, LOCAL, PICTURES } from '../features/guide/guide';
+import { HOSTED, LABS, LOCAL, PICTURES, VOICES } from '../features/guide/guide';
 import links from '../features/guide/links.json';
 import { PRESETS, retiredPictureModel } from '../features/settings/presets';
 
@@ -44,7 +44,7 @@ describe('the setup guide', () => {
   });
 
   it('covers every service with a preset, with pages that exist', () => {
-    const guides = [...LOCAL, ...LABS, ...HOSTED, ...PICTURES];
+    const guides = [...LOCAL, ...LABS, ...HOSTED, ...PICTURES, ...VOICES];
     const covered = new Set(guides.map((g) => g.preset));
     const missing = PRESETS.filter((p) => p.id !== 'custom' && !covered.has(p.id));
     expect(missing.map((p) => p.id)).toEqual([]);
@@ -100,7 +100,7 @@ describe('the setup guide', () => {
     render(<App />);
     await screen.findByText('No stories yet.');
     await userEvent.click(screen.getByRole('button', { name: 'Open the setup guide' }));
-    for (const g of [...LOCAL, ...LABS, ...HOSTED, ...PICTURES]) {
+    for (const g of [...LOCAL, ...LABS, ...HOSTED, ...PICTURES, ...VOICES]) {
       const box = screen.getByTestId(`guide-${g.preset}`);
       const steps = within(box).getByTestId(`steps-${g.preset}`);
       expect(steps.querySelectorAll('li').length).toBeGreaterThan(2);

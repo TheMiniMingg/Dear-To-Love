@@ -1,0 +1,309 @@
+/**
+ * Kinds of world rule, so a long list of rules can be narrowed to one
+ * kind: magic, technology, danger and so on. A rule's kind is guessed from
+ * its words; one that fits none is "Other". Only for finding rules: the
+ * storyteller gets every rule as written.
+ */
+import { msg } from '../../i18n';
+
+export type RuleCategory =
+  'content' | 'romance' | 'magic' | 'tech' | 'tone' | 'danger' | 'society' | 'life' | 'other';
+
+/** In the order a rule is tested: the first kind whose words it has wins. */
+const KINDS: { id: Exclude<RuleCategory, 'other'>; label: string; words: string[] }[] = [
+  {
+    id: 'content',
+    label: msg('Limits and content'),
+    words: ['adult', 'offscreen', 'off the page', 'innocent', '成人', '成年', '성인'],
+  },
+  {
+    id: 'romance',
+    label: msg('Romance'),
+    words: [
+      'romance',
+      'romantic',
+      'love',
+      'dating',
+      'date',
+      'kiss',
+      'flirt',
+      'marri*',
+      'crush',
+      'relationship',
+      'chemistry',
+      '恋',
+      '戀',
+      '愛',
+      '爱',
+      '사랑',
+      '연애',
+    ],
+  },
+  {
+    id: 'magic',
+    label: msg('Magic and the supernatural'),
+    words: [
+      'magic',
+      'magical',
+      'near-magical',
+      'supernatural',
+      'god',
+      'monster',
+      'dragon',
+      'vampire',
+      'spirit',
+      'ghost',
+      'curse',
+      'fae',
+      'qi',
+      'superpower*',
+      'superhero*',
+      'supervillain*',
+      'familiar',
+      'undead',
+      'demon',
+      'legend',
+      'spell',
+      'witch',
+      'wizard',
+      'prophec*',
+      'orc',
+      'goblin',
+      'the turned',
+      '魔法',
+      '魔術',
+      '神',
+      '怪物',
+      '妖',
+      '鬼',
+      '마법',
+      '괴물',
+    ],
+  },
+  {
+    id: 'tech',
+    label: msg('Technology and science'),
+    words: [
+      'technolog*',
+      'tech',
+      'implant*',
+      'drone',
+      'ai',
+      'ais',
+      'hack*',
+      'gadget',
+      'station',
+      'ship systems',
+      'science',
+      'faster-than-light',
+      'device',
+      'camera',
+      'computer',
+      'robot',
+      'cyber',
+      'space',
+      'steward',
+      '科技',
+      '机器',
+      '機器',
+      '機械',
+      '技術',
+      '技术',
+      '기술',
+    ],
+  },
+  {
+    id: 'tone',
+    label: msg('Tone and storytelling'),
+    words: [
+      'humor',
+      'humour',
+      'comedy',
+      'funny',
+      'cozy',
+      'cosy',
+      'gentle',
+      'low stakes',
+      'warm',
+      'horror',
+      'dread',
+      'myster*',
+      'clue',
+      'consequence*',
+      'choices',
+      'plot',
+      'novel',
+      'story',
+      'repeats',
+      'loop',
+      'nothing truly terrible',
+      '幽默',
+      '搞笑',
+      'ユーモア',
+      '코미디',
+    ],
+  },
+  {
+    id: 'danger',
+    label: msg('Danger, fights and death'),
+    words: [
+      'fight',
+      'gunfight',
+      'gun',
+      'combat',
+      'violen*',
+      'war',
+      'die',
+      'dies',
+      'death',
+      'deadly',
+      'dead',
+      'hurt',
+      'kill',
+      'battle',
+      'sword',
+      'danger',
+      'risk',
+      'weapon',
+      'heist',
+      'security',
+      'boarding',
+      'unforgiving',
+      '死',
+      '战',
+      '戰',
+      '戦',
+      '싸움',
+      '전투',
+      '죽',
+    ],
+  },
+  {
+    id: 'society',
+    label: msg('People, power and society'),
+    words: [
+      'faction',
+      'politic*',
+      'power',
+      'rank',
+      'etiquette',
+      'manner*',
+      'reputation*',
+      'court',
+      'corporation*',
+      'law',
+      'guild',
+      'hono*',
+      'loyal*',
+      'debt',
+      'favor*',
+      'favour*',
+      'secret',
+      'gossip',
+      'rumo*',
+      'crew',
+      'vote',
+      'police',
+      'trust',
+      'villagers',
+      'neighbo*',
+      'people',
+      'everyone',
+      'nobody',
+      'character',
+      'passenger',
+      'rivals',
+      'teachers',
+      'student',
+      'invitation',
+      'pirate',
+      '秘密',
+      '政治',
+      '비밀',
+    ],
+  },
+  {
+    id: 'life',
+    label: msg('Time, money and everyday life'),
+    words: [
+      'time',
+      'day',
+      'deadline',
+      'money',
+      'supplies',
+      'supply',
+      'scarc*',
+      'water',
+      'fuel',
+      'air',
+      'food',
+      'light',
+      'rest',
+      'resting',
+      'wreck',
+      'ammunition',
+      'season',
+      'crop',
+      'festival',
+      'travel',
+      'treasure',
+      'loot',
+      'salvage',
+      'grades',
+      'exam*',
+      'clubs',
+      'ranking*',
+      'contract',
+      'leave',
+      'teahouse',
+      'inn',
+      'office',
+      '時間',
+      '时间',
+      '钱',
+      '金',
+      '시간',
+      '돈',
+    ],
+  },
+];
+
+export const RULE_CATEGORIES: { id: RuleCategory; label: string }[] = [
+  ...KINDS.map(({ id, label }) => ({ id, label })),
+  { id: 'other', label: msg('Other') },
+];
+
+const LATIN = /^[\p{Script=Latin}\s'*-]+$/u;
+
+const esc = (w: string) => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+/**
+ * One pattern per kind. Latin words are whole words (or with an s), and a
+ * word ending in * is the start of words ("marri*": married, marriage);
+ * words in other scripts are found anywhere.
+ */
+const PATTERNS = KINDS.map((k) => {
+  const latin = k.words.filter((w) => LATIN.test(w));
+  const other = k.words.filter((w) => !LATIN.test(w));
+  const word = (w: string) =>
+    w.endsWith('*') ? `${esc(w.slice(0, -1))}\\p{L}*` : `${esc(w)}(?:e?s)?`;
+  const parts = [
+    latin.length ? `(?<![\\p{L}])(?:${latin.map(word).join('|')})(?![\\p{L}])` : null,
+    other.length ? `(?:${other.map(esc).join('|')})` : null,
+  ].filter(Boolean);
+  return { id: k.id, pattern: new RegExp(parts.join('|'), 'iu') };
+});
+
+/** Kinds already worked out, so long lists don't test every pattern on each render. */
+const known = new Map<string, RuleCategory>();
+const KNOWN_MAX = 2000;
+
+/** The kind of a rule, from its words. */
+export function ruleCategory(rule: string): RuleCategory {
+  const hit = known.get(rule);
+  if (hit) return hit;
+  const kind = PATTERNS.find((p) => p.pattern.test(rule))?.id ?? 'other';
+  if (known.size >= KNOWN_MAX) known.clear();
+  known.set(rule, kind);
+  return kind;
+}

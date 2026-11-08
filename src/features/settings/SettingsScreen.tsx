@@ -12,7 +12,13 @@ import { BackdropSection } from './BackdropSection';
 import { LanguageSection } from './LanguageSection';
 import { LookSection } from './LookSection';
 import { SoundSection } from './SoundSection';
-import { ADAPTER_LABELS, makesPictures, pictureConnections, storyConnections } from './kinds';
+import {
+  ADAPTER_LABELS,
+  makesPictures,
+  makesVoices,
+  pictureConnections,
+  storyConnections,
+} from './kinds';
 import { retiredPictureModel } from './presets';
 import { joinSentences, msg, t, tr } from '../../i18n';
 
@@ -421,7 +427,7 @@ export function SettingsScreen() {
                   >
                     {t('Test connection')}
                   </button>
-                  {!makesPictures(c) && (
+                  {!makesPictures(c) && !makesVoices(c) && (
                     <button
                       type="button"
                       onClick={() => void sendTest(c)}
@@ -535,8 +541,9 @@ export function SettingsScreen() {
               // The first connection of each kind is put to use (only once the
               // current choices are known), and the lists reload after that, so
               // a reload that started first can't bring back the old choice.
+              // A voice connection is chosen in a voice pack, under Sound.
               const first =
-                editing === 'new' && connections
+                editing === 'new' && connections && !makesVoices(p)
                   ? makesPictures(p)
                     ? pictureMaker === null && (() => choosePictures(p.id))
                     : active === null && (() => choose(p.id))

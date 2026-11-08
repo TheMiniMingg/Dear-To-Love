@@ -7,6 +7,8 @@ import { ContentFields } from '../create/ContentFields';
 import { LinesField, StatsField, TextArea, TextField } from '../create/fields';
 import { FeatureFields, StyleFields } from '../create/StyleFields';
 import { TrackingFields } from '../create/TrackingFields';
+import { RULES } from '../create/presets';
+import { RulesField } from '../create/RulesField';
 import { diffState, editProblems, summarize, type ChangeLine } from './stateDiff';
 import { msg, t, tr } from '../../i18n';
 import { chapterHasTitle, routeName } from '../../i18n/names';
@@ -414,6 +416,28 @@ export function StoryDetailsPanel({
       >
         {tab === 'characters' && current && (
           <>
+            {chars.length > 8 && (
+              <div className="list-tools">
+                <input
+                  type="search"
+                  list={`${id}-people`}
+                  aria-label={t('Find a character')}
+                  placeholder={t('Find a character ({count})', { count: String(chars.length) })}
+                  onChange={(e) => {
+                    const q = e.target.value.trim().toLowerCase();
+                    const hit =
+                      chars.find((c) => c.name.toLowerCase() === q) ??
+                      (q.length > 1 ? chars.find((c) => c.name.toLowerCase().startsWith(q)) : null);
+                    if (hit) setWho(hit.id);
+                  }}
+                />
+                <datalist id={`${id}-people`}>
+                  {chars.map((c) => (
+                    <option key={c.id} value={c.name} />
+                  ))}
+                </datalist>
+              </div>
+            )}
             <ArrowPicker
               label={t('Character')}
               options={chars.map((c) => ({
@@ -487,8 +511,9 @@ export function StoryDetailsPanel({
               value={edited.world.description}
               onChange={(description) => set({ world: { ...edited.world, description } })}
             />
-            <LinesField
+            <RulesField
               label={t('Rules the storyteller follows')}
+              presets={RULES}
               value={edited.world.rules}
               onChange={(rules) => set({ world: { ...edited.world, rules } })}
             />

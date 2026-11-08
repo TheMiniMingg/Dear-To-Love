@@ -1,0 +1,81 @@
+{
+  "templateSchemaVersion": 1,
+  "type": "scenario",
+  "id": "starter:rain-witness",
+  "label": "Witness in the Rain",
+  "summary": "A corporate accountant in Vesper City saw something she should not have. You have one night to get her across the city before three corporations find her.",
+  "worlds": ["starter:vesper-city"],
+  "title": "Witness in the Rain",
+  "description": "She walked into your office soaked through, with a data chip sewn into her coat. By midnight every corporate security team in Vesper wants her. By dawn she needs to be at the one court that still works.",
+  "firstChapterTitle": "Closing Time",
+  "chapterOutlines": [
+    {
+      "title": "Closing Time",
+      "outline": "Hear her story, and get out of your office before the security teams arrive."
+    },
+    {
+      "title": "The Long Way Down",
+      "outline": "Cross the street markets, the flooded underlevels and the people who owe you favors."
+    },
+    {
+      "title": "Dawn at the Courthouse",
+      "outline": "Get her to the courthouse, and decide who to trust with the chip."
+    }
+  ],
+  "scene": {
+    "location": "Your office above a noodle bar in the Low Market",
+    "summary": "Eleven at night, rain on the window, neon through the blinds. The woman at your desk keeps looking at the door."
+  },
+  "openThreads": ["What is on the chip?", "Who told the corporations where she went?"],
+  "npcs": [
+    {
+      "id": "starter:npc-mei",
+      "name": "Mei Sato",
+      "control": "npc",
+      "pronouns": "she/her",
+      "role": "Corporate accountant",
+      "description": "Found a second set of books, and the bodies they were hiding.",
+      "personality": ["precise", "frightened", "braver than she thinks"],
+      "goals": ["Testify", "Stay alive until she does"],
+      "abilities": ["Remembers numbers exactly", "Knows how the corporations move money"]
+    },
+    {
+      "id": "starter:npc-dex",
+      "name": "Dex Okonkwo",
+      "control": "npc",
+      "pronouns": "he/him",
+      "role": "Noodle bar owner",
+      "description": "Your landlord and the closest thing you have to a friend.",
+      "personality": ["laid-back", "loyal", "knows everyone"],
+      "goals": ["Keep his bar out of corporate trouble", "Keep you alive"],
+      "abilities": ["Can get anyone a ride, a meal or a fake ID by morning"]
+    }
+  ],
+  "relationships": [
+    {
+      "fromId": "starter:npc-mei",
+      "toId": "@player",
+      "label": "Client",
+      "status": "Has to trust you, and hates it"
+    },
+    {
+      "fromId": "starter:npc-dex",
+      "toId": "@player",
+      "label": "Friend",
+      "status": "Already regretting this"
+    }
+  ],
+  "tracking": {
+    "meters": [
+      {
+        "name": "Health",
+        "value": 100,
+        "max": 100
+      },
+      {
+        "name": "Credits",
+        "value": 200
+      }
+    ]
+  }
+}

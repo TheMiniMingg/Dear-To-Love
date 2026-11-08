@@ -855,9 +855,10 @@ pub async fn fill_draft(
         });
     };
     let row = providers::get_profile_row(env.db, &pid).await?;
-    if row.adapter()?.makes_pictures() {
+    if !row.adapter()?.writes_stories() {
         return Err(AppError::invalid_input(
-            "that connection makes pictures, not stories; choose a storyteller that writes",
+            "that connection makes pictures or reads aloud, not stories; choose a storyteller \
+             that writes",
         ));
     }
     let settings = row.settings();

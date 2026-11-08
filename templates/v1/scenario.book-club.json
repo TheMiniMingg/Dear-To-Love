@@ -1,0 +1,71 @@
+{
+  "templateSchemaVersion": 1,
+  "type": "scenario",
+  "id": "starter:book-club",
+  "label": "The Midnight Book Club",
+  "summary": "The bookshop above Maple & Fern starts a midnight book club, and every regular you have been getting to know turns up for a different reason.",
+  "worlds": ["starter:maple-fern"],
+  "title": "The Midnight Book Club",
+  "description": "The owner wants the bookshop to stay open late once a week. You are running the first meeting. The book is a mystery, the regulars are all suspiciously keen, and Biscuit the cat has chosen a lap.",
+  "firstChapterTitle": "Chapter One",
+  "chapterOutlines": [
+    {
+      "title": "Chapter One",
+      "outline": "Host the first meeting, and notice who came for the book and who came for you."
+    },
+    {
+      "title": "Spoilers",
+      "outline": "Late nights, honest talks, and a note left in a returned book."
+    },
+    {
+      "title": "The Last Page",
+      "outline": "The club’s final meeting before the festival, and a question someone has been waiting to ask."
+    }
+  ],
+  "scene": {
+    "location": "The bookshop upstairs at Maple & Fern",
+    "summary": "Five minutes to midnight. Fairy lights, mismatched chairs, a pot of tea, and the stairs creaking as the first member arrives."
+  },
+  "openThreads": [
+    "Who left the note in the returned book?",
+    "Who keeps coming to the club, and why?"
+  ],
+  "npcs": [
+    {
+      "id": "starter:npc-ezra",
+      "name": "Ezra Hale",
+      "control": "npc",
+      "pronouns": "he/him",
+      "role": "Night-shift nurse",
+      "description": "Comes in after his shift, always buys a book he has already read.",
+      "personality": ["gentle", "tired", "unexpectedly funny"],
+      "goals": ["Have one evening a week that is just for him"],
+      "abilities": ["Remembers every word you say"]
+    },
+    {
+      "id": "starter:npc-noor",
+      "name": "Noor Haddad",
+      "control": "npc",
+      "pronouns": "she/her",
+      "role": "Crossword setter",
+      "description": "Writes the local paper’s crossword and argues with every plot twist.",
+      "personality": ["sharp", "playful", "shy about feelings"],
+      "goals": ["Find someone who can keep up with her"],
+      "abilities": ["Solves any puzzle in minutes"]
+    }
+  ],
+  "relationships": [
+    {
+      "fromId": "starter:npc-ezra",
+      "toId": "@player",
+      "label": "Regular",
+      "status": "Glad you are hosting"
+    },
+    {
+      "fromId": "starter:npc-noor",
+      "toId": "@player",
+      "label": "Regular",
+      "status": "Wants to argue with you about the ending"
+    }
+  ]
+}

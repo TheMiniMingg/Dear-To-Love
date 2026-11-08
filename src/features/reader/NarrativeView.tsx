@@ -25,7 +25,7 @@ import {
 } from 'lucide-react';
 import { errorMessage } from '../../api/commands';
 import { isComposing } from '../../app/keyboard';
-import { canReadAloud, useReadAloud } from '../../app/readAloud';
+import { readAloudAvailable, useCanReadAloud, useReadAloud } from '../../app/readAloud';
 import type {
   EventDto,
   MemoryNote,
@@ -196,15 +196,18 @@ function ReplyEditor({
   );
 }
 
-/** Read a reply aloud with the computer's own voice, or stop it. */
+/** Read a reply aloud (in the voice pack's voices, if one is chosen), or stop it. */
 function ReadAloudButton({ id, text, lang }: { id: string; text: string; lang?: string }) {
   const reading = useReadAloud((s) => s.reading === id);
-  if (!canReadAloud()) return null;
+  const fetching = useReadAloud((s) => s.reading === id && s.fetching);
+  const can = useCanReadAloud();
+  if (!can) return null;
   return (
     <button
       type="button"
       className="turn-action read-aloud-button"
       aria-pressed={reading}
+      aria-busy={fetching || undefined}
       data-reading={reading || undefined}
       onClick={() =>
         reading
@@ -216,6 +219,27 @@ function ReadAloudButton({ id, text, lang }: { id: string; text: string; lang?: 
       {reading ? <Square {...ACTION_ICON} /> : <Volume2 {...ACTION_ICON} />}
       <span className="visually-hidden">{reading ? t('Stop reading') : t('Read aloud')}</span>
     </button>
+  );
+}
+
+/** Why reading this reply aloud stopped, with "Read aloud anyway" for the budget. */
+function ReadAloudProblem({ id }: { id: string }) {
+  const problem = useReadAloud((s) => (s.problem?.id === id ? s.problem : null));
+  if (!problem) return null;
+  return (
+    <div className="read-aloud-problem" role="alert">
+      <p className="error small">{problem.text}</p>
+      <div className="button-row">
+        {problem.override && (
+          <button type="button" onClick={() => useReadAloud.getState().readAnyway()}>
+            {t('Read aloud anyway')}
+          </button>
+        )}
+        <button type="button" onClick={() => useReadAloud.setState({ problem: null })}>
+          {t('Dismiss')}
+        </button>
+      </div>
+    </div>
   );
 }
 
@@ -479,16 +503,18 @@ function EventBlock({
               onAdd={newcomers.onAdd}
             />
           )}
-          {!editing && (canReadAloud() || branch || regenerate || edit || bookmark || flip) && (
-            <div className="turn-actions">
-              {flip}
-              <ReadAloudButton id={e.id} text={e.payload.text} lang={speechLang} />
-              {edit}
-              {regenerate}
-              {branch}
-              {bookmark}
-            </div>
-          )}
+          {!editing &&
+            (readAloudAvailable() || branch || regenerate || edit || bookmark || flip) && (
+              <div className="turn-actions">
+                {flip}
+                <ReadAloudButton id={e.id} text={e.payload.text} lang={speechLang} />
+                {edit}
+                {regenerate}
+                {branch}
+                {bookmark}
+              </div>
+            )}
+          {!editing && <ReadAloudProblem id={e.id} />}
         </div>
       );
     case 'edit':

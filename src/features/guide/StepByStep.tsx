@@ -8,6 +8,7 @@ import {
   LABS,
   LOCAL,
   PICTURES,
+  VOICES,
   detailSteps,
   type GuideLink,
   type ServiceGuide,
@@ -17,7 +18,7 @@ export const code = (name: string) => <code>{name}</code>;
 
 /** The guide for a connection preset, if it has one. */
 export function guideFor(preset: string | undefined): ServiceGuide | undefined {
-  return [...LOCAL, ...LABS, ...HOSTED, ...PICTURES].find((g) => g.preset === preset);
+  return [...LOCAL, ...LABS, ...HOSTED, ...PICTURES, ...VOICES].find((g) => g.preset === preset);
 }
 
 /** Buttons that open a service's pages in the browser. */

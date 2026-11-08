@@ -2,6 +2,32 @@
 
 ## Unreleased
 
+- **Voice packs.** **Settings → Sound → Voices** can read each character in a voice of their
+  own, with a narrator for the rest. Voices come from your computer, from ElevenLabs (its
+  voices, or ones you designed or cloned there) or from a voice server of your own such as
+  Kokoro; the setup guide has a **Voices (optional)** section. **Add the people from a
+  story** fills in the cast. A pack saves to a `.dtlvoices` file to share and imports back;
+  the file names voices only, never a key or a connection. AI readings show in **Usage &
+  budget**, and a reply read again is not paid for twice.
+- **Sound can be turned off.** One **Sound** switch in **Settings → Sound** (and in the
+  Ctrl+K box) silences the reply chime and reading aloud.
+- **Change any shortcut.** In the shortcuts window (F1), **Change** a shortcut and press the
+  keys you want. Keys typing needs and the system's own keys are kept, a key another
+  shortcut uses asks first, and **Put back all the usual keys** undoes it all.
+- **Find things in long lists.** The storyteller's rules have a search, a kind (magic,
+  danger, romance and more, worked out from the words) and an order, and each rule is
+  edited where it is. Suggested rules are browsed the same way. The image library, the long
+  pickers in Custom Story and the character list in Story details can be searched too.
+  **Show all** clears a search and a kind in one click, a long rule wraps so all of it
+  shows, and a list of a few hundred rules keeps up with typing.
+- **GIF pictures.** The image library takes GIFs, and moving ones keep moving, also as a
+  cover in a storypack.
+- **Six more looks:** Forest, Ocean, Lavender, Ember, Terminal and the high-contrast Ink.
+  Stories that take a look from their genre use them too.
+- **Twelve more preset storylines**, among them Storm Season, The Quiet Signal, The Lodge
+  on Cutter Ridge, The Harvest Lantern and The Drowned Queen’s Map, six of them with tracked
+  progress. There are now 47.
+
 - **Flip between versions of a reply.** When a reply has been written again (**Another
   reply**, or **Keep going** again after **Take back**), ‹ 1 / 2 › under it goes to each
   version. Every version stays on its own route, so nothing in the story changes until you

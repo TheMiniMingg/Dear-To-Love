@@ -41,7 +41,7 @@ foreign keys enabled on every connection. Migrations live in
 
 | Table         | Purpose                                                                                                                                    |
 | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| `assets`      | One row per image file (SHA-256 unique): relative original and thumbnail paths, type, size, name, tags. See ADR 0006                       |
+| `assets`      | One row per image file (SHA-256 unique): relative original and thumbnail paths, type (PNG, JPEG, WebP; GIF from 0010), size, name, tags    |
 | `asset_links` | Story-default pictures (`cover`, `background`, `portrait:<id>`, `item:<name>`). Route-specific choices are `setVisualRef` edits, not links |
 
 ## Tables (0004_archive_operations)

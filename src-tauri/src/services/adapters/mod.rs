@@ -183,6 +183,8 @@ pub enum Adapter {
     /// A picture connection: it can list its models (the free connection
     /// check) but never writes story replies.
     Pictures(super::pictures::PictureMaker),
+    /// A voice connection: the same free check, and never story replies.
+    Voices(super::voices::VoiceService),
 }
 
 /// Extra tokens a model that thinks first (OpenAI's reasoning models,
@@ -228,6 +230,9 @@ impl Adapter {
             AdapterKind::OpenaiImages | AdapterKind::StableDiffusion => {
                 Self::Pictures(super::pictures::PictureMaker::new(kind, base_url, api_key)?)
             }
+            AdapterKind::OpenaiSpeech | AdapterKind::Elevenlabs => {
+                Self::Voices(super::voices::VoiceService::new(kind, base_url, api_key)?)
+            }
         })
     }
 
@@ -239,6 +244,7 @@ impl Adapter {
             Self::Ollama(a) => a.list_models().await,
             Self::Offline(_) => Ok(vec!["offline".into()]),
             Self::Pictures(a) => a.list_models().await,
+            Self::Voices(a) => a.list_models().await,
         }
     }
 
@@ -265,6 +271,9 @@ impl Adapter {
                 Self::Offline(a) => a.generate(cancel, &mut shown).await,
                 Self::Pictures(_) => Err(GenerateError::not_sent(AppError::invalid_input(
                     "this connection makes pictures, not story replies; choose another storyteller",
+                ))),
+                Self::Voices(_) => Err(GenerateError::not_sent(AppError::invalid_input(
+                    "this connection reads aloud, not story replies; choose another storyteller",
                 ))),
             }
         };

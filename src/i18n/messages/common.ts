@@ -272,11 +272,11 @@ export const common: Messages = {
 
   // Image imports
   'Add images': ['添加图片', '加入圖片', '画像を追加', '이미지 추가'],
-  'Images (PNG, JPEG, WebP)': [
-    '图片（PNG、JPEG、WebP）',
-    '圖片（PNG、JPEG、WebP）',
-    '画像（PNG、JPEG、WebP）',
-    '이미지(PNG, JPEG, WebP)',
+  'Images (PNG, JPEG, WebP, GIF)': [
+    '图片（PNG、JPEG、WebP、GIF）',
+    '圖片（PNG、JPEG、WebP、GIF）',
+    '画像（PNG、JPEG、WebP、GIF）',
+    '이미지(PNG, JPEG, WebP, GIF)',
   ],
   '{file}: {problem}': [
     '{file}：{problem}',
