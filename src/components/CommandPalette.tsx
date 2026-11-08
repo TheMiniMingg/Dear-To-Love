@@ -2,6 +2,7 @@ import { useEffect, useId, useMemo, useRef, useState, type KeyboardEvent } from 
 import {
   BookOpen,
   Bug,
+  CircleHelp,
   Compass,
   DatabaseBackup,
   Gauge,
@@ -37,6 +38,7 @@ const SCREENS: [Screen, string, PaletteEntry['icon']][] = [
   [{ name: 'usage' }, 'Usage & budget', Gauge],
   [{ name: 'images' }, 'Image library', Images],
   [{ name: 'backups' }, 'Backups', DatabaseBackup],
+  [{ name: 'help' }, 'How to play', CircleHelp],
   [{ name: 'guide' }, 'Setup guide', Compass],
   [{ name: 'diagnostics' }, 'Diagnostics', Stethoscope],
 ];

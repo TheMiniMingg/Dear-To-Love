@@ -64,6 +64,7 @@ import type {
   UpdateStatus,
   UsageScope,
   UsageSummary,
+  UserPreset,
   VoiceInfo,
   VoicePackFile,
   WizardDraft,
@@ -193,6 +194,16 @@ export const commands = {
   saveWizardDraft: (wizard: WizardDraft) => call<WizardDraft>('save_wizard_draft', { wizard }),
   clearWizardDraft: () => call<void>('clear_wizard_draft'),
   listStories: () => call<StorySummary[]>('list_stories'),
+  listUserPresets: () => call<UserPreset[]>('list_user_presets'),
+  presetFromRoute: (routeId: string) => call<CreateStoryDraft>('preset_from_route', { routeId }),
+  saveUserPreset: (name: string, draft: CreateStoryDraft, fromStoryTitle?: string) =>
+    call<UserPreset>('save_user_preset', { name, draft, fromStoryTitle: fromStoryTitle ?? null }),
+  renameUserPreset: (presetId: string, name: string) =>
+    call<UserPreset>('rename_user_preset', { presetId, name }),
+  deleteUserPreset: (presetId: string) => call<void>('delete_user_preset', { presetId }),
+  exportUserPreset: (presetId: string, path: string) =>
+    call<string>('export_user_preset', { presetId, path }),
+  importUserPreset: (path: string) => call<UserPreset>('import_user_preset', { path }),
   /** Returns the title as kept (trimmed, one line). */
   renameStory: (storyId: string, title: string) => call<string>('rename_story', { storyId, title }),
   deleteStory: (storyId: string) => call<void>('delete_story', { storyId }),

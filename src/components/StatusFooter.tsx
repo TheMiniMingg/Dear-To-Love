@@ -80,6 +80,9 @@ export function StatusFooter() {
         {t('Report a problem')}
       </button>
       {reporting && <ProblemDialog onClose={() => setReporting(false)} />}
+      <button type="button" className="link-button" onClick={() => navigate({ name: 'help' })}>
+        {t('How to play')}
+      </button>
       <button type="button" className="link-button" onClick={() => navigate({ name: 'guide' })}>
         {t('Setup guide')}
       </button>

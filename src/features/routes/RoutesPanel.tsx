@@ -119,6 +119,11 @@ export function RoutesPanel({ storyId, currentRouteId, routes, onSwitch, onChang
 
   return (
     <div className="panel routes-panel">
+      <p className="muted small">
+        {t(
+          'Each route is its own timeline with its own memory, saves and pictures. Routes share everything before the point where they split.',
+        )}
+      </p>
       <div role="radiogroup" aria-label={t('Show routes as')} className="segmented">
         {VIEWS.map((v) => (
           <label key={v.id}>

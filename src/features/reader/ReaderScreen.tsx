@@ -7,8 +7,11 @@ import {
   Brain,
   Check,
   ChevronDown,
+  Bookmark as BookmarkIcon,
+  CircleHelp,
   Download,
   Feather,
+  Gauge,
   GitBranch,
   Images,
   Keyboard,
@@ -23,6 +26,7 @@ import {
   Search,
   Settings,
   Stethoscope,
+  SlidersHorizontal,
   StickyNote,
   Type,
   Undo2,
@@ -54,6 +58,7 @@ import { SearchPanel } from '../search/SearchPanel';
 import type {
   BookmarkDto,
   BudgetStatus,
+  ContextPreview,
   DiceRules,
   ErrorCode,
   EventDto,
@@ -82,6 +87,8 @@ import { StoryMemoryPanel } from './StoryMemoryPanel';
 import { REMEMBER_NAME_ID } from './Notebook';
 import { StorytellerPanel } from './StorytellerPanel';
 import { Tour, useTour } from './Tour';
+import { TunePanel } from './TunePanel';
+import { PreviouslyCard, shouldShowPreviously } from './PreviouslyCard';
 import { standingNotes, standingThreads } from './notes';
 import { standingBonds } from './feelings';
 import { nextMoves, openingIdeas, parseBlocks, plainText, type NewCharacter } from './messages';
@@ -111,6 +118,7 @@ type Panel =
   | 'memory'
   | 'inventory'
   | 'note'
+  | 'tune'
   | 'end';
 
 const PANEL_TITLES: Record<Exclude<Panel, null>, string> = {
@@ -129,6 +137,7 @@ const PANEL_TITLES: Record<Exclude<Panel, null>, string> = {
   memory: msg('Story memory'),
   inventory: msg('Status and inventory'),
   note: msg('Note to the storyteller'),
+  tune: msg('Tune the telling'),
   end: msg('End chapter'),
 };
 
@@ -165,6 +174,7 @@ const SHEETS: ReadonlySet<Panel> = new Set<Panel>([
   'storyteller',
   'memory',
   'inventory',
+  'tune',
 ]);
 
 type Stream = { runId: string; text: string };
@@ -234,6 +244,64 @@ function placeName(view: RouteView): string {
 /** Usual dice, kept as one object so the cards don't redraw for nothing. */
 const NO_RULES: DiceRules = {};
 
+/**
+ * The memory gauge: how much of the next request the story already fills,
+ * and what to do when it is nearly full. Null for the offline storyteller,
+ * which never reads the request.
+ */
+export function contextGauge(p: ContextPreview | 'too-long' | null): {
+  percent: number;
+  level: 'ok' | 'high' | 'full';
+  /** The setup and the action alone do not fit: no reply can be written. */
+  tooLong: boolean;
+  title: string;
+  advice: string;
+} | null {
+  if (!p) return null;
+  if (p !== 'too-long' && !p.live) return null;
+  // Once turns are being left out, or nothing fits at all, the request is as
+  // full as it can be.
+  const dropped = p === 'too-long' || p.summaryDropped || p.omittedMessages > 0;
+  const room = p === 'too-long' ? 1 : Math.max(1, p.maxContextTokens - p.reservedOutputTokens);
+  const used = p === 'too-long' ? 1 : p.estimatedInputTokens;
+  const percent = dropped ? 100 : Math.min(100, Math.round((used / room) * 100));
+  const level = dropped || percent >= 95 ? 'full' : percent >= 80 ? 'high' : 'ok';
+  const title =
+    level === 'ok'
+      ? t(
+          'About {percent}% of what the storyteller can read at once is in use. Click for the details.',
+          {
+            percent,
+          },
+        )
+      : level === 'high'
+        ? t(
+            'The storyteller’s memory is {percent}% full. End the chapter soon so a recap can take the place of the older turns.',
+            {
+              percent,
+            },
+          )
+        : t(
+            'The storyteller’s memory is full: some earlier turns no longer fit. End the chapter, trim Story details, or raise the context limit of the connection.',
+          );
+  const advice =
+    level === 'full'
+      ? t(
+          'The storyteller’s memory is full: some earlier turns no longer fit in a request. End the chapter so a recap takes their place, shorten Story details, or raise the connection’s context limit in Settings → AI connections.',
+        )
+      : t(
+          'The storyteller’s memory is nearly full. Ending the chapter keeps a recap and frees room for what comes next.',
+        );
+  if (p === 'too-long') {
+    // Ending the chapter adds a recap; only more room or a shorter setup helps.
+    const tooLong = t(
+      'The story setup alone no longer fits what this storyteller can read at once, so no reply can be written. Raise the connection’s context limit in Settings → AI connections, lower the reply length, or shorten Story details.',
+    );
+    return { percent, level, tooLong: true, title: tooLong, advice: tooLong };
+  }
+  return { percent, level, tooLong: false, title, advice };
+}
+
 function timeNow(): string {
   return new Date().toLocaleTimeString(intlLocale(), { hour: '2-digit', minute: '2-digit' });
 }
@@ -247,8 +315,11 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
   const textSize = useUiStore((s) => s.textSize);
   const readingWidth = useLook((s) => s.width);
   const lineSpacing = useLook((s) => s.spacing);
+  const readingFont = useLook((s) => s.font);
 
   const [view, setView] = useState<RouteView | null>(null);
+  const [previously, setPreviously] = useState(false);
+  const [context, setContext] = useState<ContextPreview | 'too-long' | null>(null);
   const [viewing, setViewing] = useState<SaveView | null>(null);
   const [panel, setPanel] = useState<Panel>(null);
   // A window opened from the pause menu goes back to it when closed; one
@@ -414,6 +485,7 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
       .then((v) => {
         if (cancelled) return;
         setView(v);
+        if (reload === 0 && shouldShowPreviously(v)) setPreviously(true);
         // Pick up a reply that is waiting to start or still being written.
         const active = v.awaitingReply?.activeRun;
         if (active && reload === 0) {
@@ -443,6 +515,31 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
   }, [routeId, bookmarksReload]);
 
   const bookmarked = useMemo(() => new Set(bookmarks.map((b) => b.eventId)), [bookmarks]);
+  // How full the next request is, for the memory gauge; local, nothing sent.
+  const headId = view?.state.headEventId ?? null;
+  const replyPending = !!view?.awaitingReply?.activeRun;
+  // Another storyteller reads a different amount at once.
+  const storytellerKey = view
+    ? `${view.storyteller.profileId ?? 'offline'}|${view.storyteller.modelId ?? ''}`
+    : '';
+  useEffect(() => {
+    if (!headId || replyPending) return;
+    let cancelled = false;
+    commands
+      .previewContext(routeId)
+      .then((p) => {
+        if (!cancelled) setContext(p);
+      })
+      .catch((e: unknown) => {
+        // The setup and the action alone do not fit: the gauge says so.
+        if (!cancelled && e instanceof CommandError && e.code === 'CONTEXT_TOO_LONG')
+          setContext('too-long');
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [routeId, headId, replyPending, storytellerKey]);
+  const gauge = useMemo(() => contextGauge(context), [context]);
   const replyVersions = view?.replyVersions;
   const versions = useMemo(
     () => new Map((replyVersions ?? []).map((v) => [v.eventId, v])),
@@ -1131,7 +1228,7 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
           aria-label={t('Reading {title}', { title: view.story.title })}
           style={{
             fontSize: `${textSize}rem`,
-            ...readingStyle({ width: readingWidth, spacing: lineSpacing }),
+            ...readingStyle({ width: readingWidth, spacing: lineSpacing, font: readingFont }),
           }}
         >
           <header className="reader-status">
@@ -1158,6 +1255,11 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
                         icon: <ListOrdered className="menu-icon" aria-hidden={true} size={16} />,
                         onSelect: () => setPanel('chapters'),
                       },
+                      ...bookmarks.slice(0, 12).map((b) => ({
+                        label: t('Bookmark: {label}', { label: b.label }),
+                        icon: <BookmarkIcon className="menu-icon" aria-hidden={true} size={16} />,
+                        onSelect: () => goTo(b.eventId),
+                      })),
                     ]}
                   >
                     <span>
@@ -1217,6 +1319,19 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
               >
                 {tKnown(view.storyteller.label)}
               </button>
+              {gauge && (
+                <button
+                  type="button"
+                  className={`chip context-chip context-${gauge.level}`}
+                  data-testid="context-gauge"
+                  title={gauge.title}
+                  aria-label={gauge.title}
+                  onClick={() => setPanel('context')}
+                >
+                  <Gauge className="btn-icon" aria-hidden={true} />
+                  {t('Memory {percent}%', { percent: gauge.percent })}
+                </button>
+              )}
               <span
                 className="chip save-chip"
                 role="status"
@@ -1227,6 +1342,7 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
               </span>
               <button
                 type="button"
+                data-tour="menu"
                 onClick={() => setPanel('menu')}
                 title={withKeys(t('Pause menu'), 'menu')}
                 aria-keyshortcuts={ariaKeys('menu')}
@@ -1237,6 +1353,27 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
             </div>
           </header>
 
+          {gauge && gauge.level !== 'ok' && !viewing && (
+            <div
+              className={`context-banner context-${gauge.level}`}
+              role="status"
+              data-testid="context-banner"
+            >
+              <span>{gauge.advice}</span>
+              {gauge.tooLong ? (
+                <button type="button" onClick={() => openDetails()}>
+                  {t('Story details')}
+                </button>
+              ) : (
+                <button type="button" onClick={() => setPanel('end')}>
+                  {t('End chapter')}
+                </button>
+              )}
+              <button type="button" onClick={() => setPanel('context')}>
+                {t('Preview context')}
+              </button>
+            </div>
+          )}
           {showBudget && (
             <div
               className={`budget-banner ${budget.level}`}
@@ -1427,7 +1564,14 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
                   </div>
                 </div>
               )}
-              <Tour hidden={!!panel || writing || awaitingReply} />
+              <Tour hidden={!!panel || writing || awaitingReply || previously} />
+              {previously && !viewing && (
+                <PreviouslyCard
+                  view={view}
+                  onClose={() => setPreviously(false)}
+                  onOpenMemory={() => setPanel('memory')}
+                />
+              )}
               {view.state.state.tracking && (
                 <TrackerHud
                   tracking={view.state.state.tracking}
@@ -1485,6 +1629,14 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
                       keys={ariaKeys('routes')}
                       onClick={() => setPanel('routes')}
                       badge={visibleRoutes}
+                    />
+                    <ToolButton
+                      icon={SlidersHorizontal}
+                      label={t('Tune the telling')}
+                      title={t('Detail, pacing, twists and point of view, from the next reply on')}
+                      keys={undefined}
+                      onClick={() => setPanel('tune')}
+                      disabled={busy || awaitingReply || writing}
                     />
                     <ToolButton
                       icon={StickyNote}
@@ -1676,6 +1828,10 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
                     {t('Settings')}
                     <KeyHint id="settings" />
                   </button>
+                  <button type="button" onClick={() => navigate({ name: 'help' })}>
+                    <CircleHelp {...MENU_ICON} />
+                    {t('How to play')}
+                  </button>
                   <button
                     type="button"
                     onClick={() => useShortcutHelp.getState().setOpen(true)}
@@ -1863,6 +2019,18 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
                   }}
                 />
               )}
+              {panel === 'tune' && (
+                <TunePanel
+                  view={view}
+                  onCancel={() => setPanel(null)}
+                  onMore={() => openDetails('narration')}
+                  onApplied={(v) => {
+                    setView(v);
+                    setPanel(null);
+                    setSaveStatus(t('Story details changed {time}', { time: timeNow() }));
+                  }}
+                />
+              )}
               {panel === 'regenerate' && target?.kind === 'assistant' && (
                 <div className="panel form">
                   <p>
@@ -1962,7 +2130,7 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
                 >
                   <label htmlFor="storyteller-note-input">
                     {t(
-                      'Tell the storyteller what you want from the story, out of character. It steers every reply from now on until you change it, and is never part of the story.',
+                      'Tell the storyteller what you want from the story, out of character. It steers every reply from now on until you change it, and is never part of the story. For what is true in the world, use Rules in Story details; for a fact to keep, use Remember this.',
                     )}
                   </label>
                   <textarea

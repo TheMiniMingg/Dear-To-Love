@@ -365,7 +365,9 @@ function ComputerVoice() {
   return (
     <>
       <p className="muted small">
-        {t('The computer’s own voices read replies aloud, so it works offline and costs nothing.')}
+        {t(
+          'The computer’s own voices read replies aloud, so it works offline and costs nothing. A voice pack with an AI voice service is billed by that service for each reply read.',
+        )}
       </p>
       <label htmlFor={`${id}-voice`}>{t('Voice')}</label>
       <select

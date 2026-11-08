@@ -26,4 +26,9 @@ recapsBriefed: number,
 /**
  * Replies a route needs before its first summary is written.
  */
-firstSummaryAfter: number, };
+firstSummaryAfter: number, 
+/**
+ * Replies the next request reads word for word, room permitting: those
+ * after the summary and after the chapters ended with a recap.
+ */
+wordForWordTurns: number, };

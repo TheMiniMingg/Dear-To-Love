@@ -3121,3 +3121,203 @@ img.msg-avatar {
   font-weight: normal;
   color: var(--muted);
 }
+
+/* ---------- How to play ---------- */
+
+.help-nav ol {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 0.9rem;
+  margin: 0.75rem 0 0.25rem;
+  padding: 0;
+  list-style: none;
+}
+.help-nav a {
+  font-size: 0.92rem;
+  text-decoration: none;
+  color: var(--accent);
+}
+.help-nav a:hover {
+  text-decoration: underline;
+}
+.help-section h2 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.2rem;
+}
+.help-section h2:focus {
+  outline: none;
+}
+.help-terms {
+  margin: 0.5rem 0 0;
+  padding-left: 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+.help-terms li {
+  line-height: 1.55;
+}
+.help-terms strong {
+  font-weight: 600;
+}
+
+/* ---------- Previously… ---------- */
+
+.previously {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+.previously section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+.previously section p {
+  margin: 0;
+  font-family: var(--font-story);
+  line-height: 1.6;
+}
+.previously-where {
+  margin: 0;
+}
+.previously-threads {
+  margin: 0;
+  padding-left: 1.1rem;
+}
+.previously .check.small {
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+/* ---------- Tune ---------- */
+
+.tune-panel .button-row {
+  margin-top: 0.5rem;
+  flex-wrap: wrap;
+}
+
+/* ---------- Your presets (Preset Story) ---------- */
+
+.your-presets {
+  margin-top: 2rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--border);
+}
+.your-presets .section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.your-presets .section-head h2 {
+  margin: 0;
+  font-size: 1.25rem;
+}
+.preset-list {
+  list-style: none;
+  margin: 0.75rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+.preset-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+}
+.preset-card-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 12rem;
+}
+.preset-card .button-row {
+  flex-wrap: wrap;
+}
+
+/* ---------- Which look each genre gets ---------- */
+
+.genre-looks {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr));
+  gap: 0.15rem 1.25rem;
+  margin: 0.25rem 0 0.5rem;
+}
+.genre-looks div {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  border-bottom: 1px dotted var(--border);
+  padding: 0.1rem 0;
+}
+.genre-looks dt,
+.genre-looks dd {
+  margin: 0;
+}
+.genre-looks dd {
+  color: var(--fg);
+}
+.check-hint p {
+  margin: 0;
+}
+
+/* ---------- stage caption, memory gauge, character voice ---------- */
+
+.stage-caption {
+  position: absolute;
+  left: 0.75rem;
+  bottom: 0.6rem;
+  margin: 0;
+  padding: 0.25rem 0.7rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--surface) 82%, transparent);
+  color: var(--fg);
+  font-size: 0.85rem;
+  box-shadow: var(--shadow-xs);
+  backdrop-filter: blur(6px);
+}
+.context-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  cursor: pointer;
+}
+.context-chip.context-high,
+.context-banner.context-high {
+  color: var(--warning, #9a6700);
+  border-color: color-mix(in srgb, var(--warning, #9a6700) 45%, var(--border));
+}
+.context-chip.context-full,
+.context-banner.context-full {
+  color: var(--danger, #b42318);
+  border-color: color-mix(in srgb, var(--danger, #b42318) 45%, var(--border));
+}
+.context-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin: 0.5rem 1rem 0;
+  padding: 0.5rem 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  font-size: 0.92rem;
+}
+.context-banner span {
+  flex: 1 1 18rem;
+}
+.character-voice .field-row {
+  margin-bottom: 0.35rem;
+}

@@ -59,7 +59,15 @@ type PickerProps = {
 };
 
 /** A voice from the computer or from the pack's voice connection. */
-function VoicePicker({ id, label, source, connectionId, value, onChange, character }: PickerProps) {
+export function VoicePicker({
+  id,
+  label,
+  source,
+  connectionId,
+  value,
+  onChange,
+  character,
+}: PickerProps) {
   const computer = useVoices();
   const ai = useConnectionVoices(usesAiVoices({ source }) ? connectionId : null);
   const empty = character

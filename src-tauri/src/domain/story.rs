@@ -77,4 +77,11 @@ pub struct StorySummary {
     /// The newest reply on the last played route (its story text), for a
     /// line of it in the library.
     pub last_reply: Option<String>,
+    /// Where the last played route is now: the newest scene heading in a
+    /// reply, else the scene the story opened in.
+    pub place: String,
+    /// The world's setting, as the story was made.
+    pub setting: String,
+    /// The names of the cast as the story was made, for the library search.
+    pub cast: Vec<String>,
 }

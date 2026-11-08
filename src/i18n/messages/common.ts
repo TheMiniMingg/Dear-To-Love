@@ -366,4 +366,13 @@ export const common: Messages = {
     'コピーしました。メールやメッセージに貼り付けてください。',
     '복사했습니다. 이메일이나 메시지에 붙여 넣으세요.',
   ],
+  'Dear to Love preset': [
+    'Dear to Love 预设',
+    'Dear to Love 預設',
+    'Dear to Love プリセット',
+    'Dear to Love 프리셋',
+  ],
+  'Save preset': ['保存预设', '儲存預設', 'プリセットを保存', '프리셋 저장'],
+  'Import preset': ['导入预设', '匯入預設', 'プリセットを読み込む', '프리셋 가져오기'],
+  'How to play': ['玩法说明', '玩法說明', '遊び方', '플레이 방법'],
 };

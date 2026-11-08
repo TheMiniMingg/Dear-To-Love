@@ -43,7 +43,7 @@ use crate::domain::tracking::Tracking;
 use crate::errors::{AppError, AppResult, ErrorCode};
 use crate::services::tokens::{estimate_message, estimate_messages, estimate_text};
 
-pub const PROMPT_SCHEMA_VERSION: u32 = 14;
+pub const PROMPT_SCHEMA_VERSION: u32 = 15;
 /// What the storyteller reads for **Keep going**, an action with no words.
 pub const KEEP_GOING: &str = "(Out of character: I let the story go on without acting. \
      Continue from where it left off, and don't decide anything for my character.)";
@@ -1200,11 +1200,60 @@ fn assistant_turns(events: &[EventRow]) -> u32 {
     u32::try_from(n).unwrap_or(u32::MAX)
 }
 
-fn summary_block(covered_turns: u32, text: &str) -> String {
+fn summary_block(covered_turns: u32, text: &str, recapped: bool) -> String {
+    let rest = if recapped {
+        "the chapter recaps above cover the rest of the chapters already ended, and later turns \
+         follow as messages"
+    } else {
+        "later turns follow as messages"
+    };
     format!(
-        "\nSTORY SO FAR\nSummary of turns 1-{covered_turns}; later turns follow as messages.\n{}\n",
+        "\nSTORY SO FAR\nSummary of turns 1-{covered_turns}; {rest}.\n{}\n",
         text.trim()
     )
+}
+
+/// Turns kept word for word from before the newest recapped chapter, so the
+/// new chapter picks up from the last moment of the one before.
+const SEAM_MESSAGES: usize = 2;
+
+/// Where the verbatim turns may start once a chapter has been ended with a
+/// recap: that chapter's turns are in the recap (EARLIER CHAPTERS), so only
+/// its last exchange is sent again. `None` when no chapter has a recap.
+pub(crate) fn after_recapped_chapter(history: &[EventRow]) -> AppResult<Option<usize>> {
+    // As in `chapter_recaps`: a recap counts only after an earlier chapter
+    // start, since only then is it sent.
+    let mut start = None;
+    let mut seen_chapter = false;
+    for (i, e) in history.iter().enumerate() {
+        if e.kind() != Some(EventKind::ChapterStart) {
+            continue;
+        }
+        if let EventBody::ChapterStart(c) = EventBody::from_parts(&e.kind, &e.payload_json)? {
+            if seen_chapter
+                && c.previous_chapter_recap
+                    .as_deref()
+                    .is_some_and(|r| !r.trim().is_empty())
+            {
+                start = Some(i);
+            }
+            seen_chapter = true;
+        }
+    }
+    let Some(mut at) = start else {
+        return Ok(None);
+    };
+    let mut seam = 0;
+    while at > 0 && seam < SEAM_MESSAGES {
+        at -= 1;
+        if matches!(
+            history[at].kind(),
+            Some(EventKind::Player | EventKind::Assistant)
+        ) {
+            seam += 1;
+        }
+    }
+    Ok(Some(at))
 }
 
 /// Assemble the prompt for a reply to the last event of `history` (oldest
@@ -1219,7 +1268,11 @@ pub fn assemble(
     next_action: Option<&str>,
     budget: Budget,
 ) -> AppResult<Assembled> {
-    let start = summary.map(|s| s.end_index + 1).unwrap_or(0);
+    let after_summary = summary.map(|s| s.end_index + 1).unwrap_or(0);
+    // An ended chapter's recap stands in for its turns, so ending a long
+    // chapter frees room at once instead of when the summary catches up.
+    let recap_cut = after_recapped_chapter(history)?.filter(|&i| i > after_summary);
+    let start = recap_cut.unwrap_or(after_summary);
     let mut turns: Vec<ModelMessage> = Vec::new();
     for e in history.get(start..).unwrap_or_default() {
         if let Some(m) = turn_message(e)? {
@@ -1321,7 +1374,11 @@ pub fn assemble(
 
     let block = summary.map(|s| {
         let covered = u32::try_from(s.row.covered_turns).unwrap_or(0);
-        (s, covered, summary_block(covered, &s.row.summary_text))
+        (
+            s,
+            covered,
+            summary_block(covered, &s.row.summary_text, recap_cut.is_some()),
+        )
     });
     let mut summary_use = None;
     let mut summary_dropped = false;

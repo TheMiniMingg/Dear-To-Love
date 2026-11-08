@@ -1848,13 +1848,6 @@ export const reader: Messages = {
     'ヒントはこの返信だけのもので、物語の一部にはなりません。',
     '힌트는 이 응답에만 쓰이며 이야기의 일부가 되지 않습니다.',
   ],
-  'Tell the storyteller what you want from the story, out of character. It steers every reply from now on until you change it, and is never part of the story.':
-    [
-      '以故事之外的身份，告诉讲述者你想要怎样的故事。从现在起它会引导每个回复，直到你修改它，而且不会成为故事的一部分。',
-      '以故事之外的身分，告訴講述者你想要怎樣的故事。從現在起它會引導每個回覆，直到你修改它，而且不會成為故事的一部分。',
-      '物語の外から、どんな物語にしたいかを語り手に伝えます。変えるまで、これからのすべての返信に効き、物語の一部にはなりません。',
-      '이야기 밖에서, 어떤 이야기를 원하는지 이야기꾼에게 알려 주세요. 바꿀 때까지 앞으로의 모든 응답에 적용되며, 이야기의 일부가 되지 않습니다.',
-    ],
   'For example: let the romance build slowly, and give Mara more to say.': [
     '例如：让感情慢慢发展，多给玛拉一些台词。',
     '例如：讓感情慢慢發展，多給瑪拉一些台詞。',
@@ -2162,13 +2155,6 @@ export const reader: Messages = {
   ],
   'Previous version': ['上一个版本', '上一個版本', '前のバージョン', '이전 버전'],
   'Next version': ['下一个版本', '下一個版本', '次のバージョン', '다음 버전'],
-  'While the story is at a place with a picture of its own, the stage shows it instead of the background. The storyteller marks each change of scene with its place.':
-    [
-      '故事来到有专属图片的地点时，舞台会显示该图片而不是背景。讲述者会在每次场景切换时标出地点。',
-      '故事來到有專屬圖片的地點時，舞台會顯示該圖片而不是背景。講述者會在每次場景切換時標出地點。',
-      '物語が専用の画像を持つ場所にいる間、ステージには背景の代わりにその画像が表示されます。語り手は場面が変わるたびにその場所を記します。',
-      '이야기가 전용 이미지가 있는 장소에 있는 동안 무대에는 배경 대신 그 이미지가 표시됩니다. 이야기꾼은 장면이 바뀔 때마다 그 장소를 표시합니다.',
-    ],
   'The story is here now.': [
     '故事现在就在这里。',
     '故事現在就在這裡。',
@@ -2182,4 +2168,161 @@ export const reader: Messages = {
     '別の場所、例：桟橋',
     '다른 장소, 예: 부두',
   ],
+  'The recap takes the place of this chapter’s turns in what the storyteller reads, so a long story keeps its shape and costs less per reply. Keep the names, promises and secrets that matter.':
+    [
+      '在讲述者读取的内容里，回顾会取代本章的回合，这样长故事既能保持脉络，每条回复也更省钱。请保留重要的名字、承诺和秘密。',
+      '在講述者讀取的內容裡，回顧會取代本章的回合，這樣長故事既能保持脈絡，每則回覆也更省錢。請保留重要的名字、承諾和秘密。',
+      '語り手が読む内容では、あらすじがこの章のターンの代わりになります。長いストーリーでも形が保たれ、返信ごとの費用も下がります。大事な名前・約束・秘密は残しておいてください。',
+      '이야기꾼이 읽는 내용에서 요약이 이 챕터의 턴을 대신하므로, 긴 스토리도 흐름을 유지하고 응답당 비용도 줄어듭니다. 중요한 이름, 약속, 비밀은 남겨 두세요.',
+    ],
+  'While the story is at a place with a picture of its own, the stage shows it instead of the background. The storyteller marks each change of scene with its place, so a picture appears when the story goes there; the names here are spelled as the storyteller wrote them.':
+    [
+      '当故事处在有专属图片的地点时，舞台会显示该图片而不是背景。讲述者会在每次切换场景时标出地点，所以故事到了那里就会出现对应图片；这里的名称按讲述者写下的拼法显示。',
+      '當故事處在有專屬圖片的地點時，舞台會顯示該圖片而不是背景。講述者會在每次切換場景時標出地點，所以故事到了那裡就會出現對應圖片；這裡的名稱按講述者寫下的拼法顯示。',
+      '専用の画像がある場所にストーリーがいる間、ステージには背景の代わりにその画像が表示されます。語り手は場面が変わるたびに場所を記すので、ストーリーがそこへ行くと画像が現れます。ここの名前は語り手が書いたとおりの表記です。',
+      '스토리가 전용 이미지가 있는 장소에 있는 동안 무대에는 배경 대신 그 이미지가 보입니다. 이야기꾼이 장면이 바뀔 때마다 장소를 표시하므로, 스토리가 그곳에 가면 이미지가 나타납니다. 여기의 이름은 이야기꾼이 쓴 표기 그대로입니다.',
+    ],
+  'Previously in {title}': [
+    '《{title}》前情提要',
+    '《{title}》前情提要',
+    '「{title}」のこれまで',
+    '《{title}》 지난 이야기',
+  ],
+  'Last chapter': ['上一章', '上一章', '前の章', '지난 챕터'],
+  'Where you left off': ['你上次读到的地方', '你上次讀到的地方', '前回の続き', '지난번에 멈춘 곳'],
+  'Show this when I come back to a story': [
+    '回到故事时显示这个',
+    '回到故事時顯示這個',
+    'ストーリーに戻ったときにこれを表示',
+    '스토리로 돌아올 때 이것 보여 주기',
+  ],
+  'Keep reading': ['继续阅读', '繼續閱讀', '続きを読む', '계속 읽기'],
+  'Tune the telling': ['调整讲述', '調整講述', '語り方を調整', '서술 조정'],
+  'About {percent}% of what the storyteller can read at once is in use. Click for the details.': [
+    '讲述者一次能读取的内容已使用约 {percent}%。点击查看详情。',
+    '講述者一次能讀取的內容已使用約 {percent}%。點擊查看詳情。',
+    '語り手が一度に読める量のうち約 {percent}% を使っています。クリックで詳細を表示します。',
+    '이야기꾼이 한 번에 읽을 수 있는 양의 약 {percent}%를 쓰고 있습니다. 클릭하면 자세히 볼 수 있습니다.',
+  ],
+  'The storyteller’s memory is {percent}% full. End the chapter soon so a recap can take the place of the older turns.':
+    [
+      '讲述者的记忆已满 {percent}%。请尽快结束本章，让回顾取代较早的回合。',
+      '講述者的記憶已滿 {percent}%。請儘快結束本章，讓回顧取代較早的回合。',
+      '語り手の記憶は {percent}% 埋まっています。早めに章を終えて、古いターンをあらすじに置き換えましょう。',
+      '이야기꾼의 기억이 {percent}% 찼습니다. 곧 챕터를 끝내서 요약이 오래된 턴을 대신하게 하세요.',
+    ],
+  'The storyteller’s memory is full: some earlier turns no longer fit. End the chapter, trim Story details, or raise the context limit of the connection.':
+    [
+      '讲述者的记忆已满：一部分较早的回合已放不下。请结束本章、精简故事设定，或提高该连接的上下文上限。',
+      '講述者的記憶已滿：一部分較早的回合已放不下。請結束本章、精簡故事設定，或提高該連線的上下文上限。',
+      '語り手の記憶がいっぱいです。以前のターンの一部が入りきりません。章を終えるか、ストーリーの設定を短くするか、接続のコンテキスト上限を上げてください。',
+      '이야기꾼의 기억이 가득 찼습니다. 이전 턴 일부가 더는 들어가지 않습니다. 챕터를 끝내거나, 스토리 설정을 줄이거나, 연결의 컨텍스트 한도를 올리세요.',
+    ],
+  'The storyteller’s memory is nearly full. Ending the chapter keeps a recap and frees room for what comes next.':
+    [
+      '讲述者的记忆快满了。结束本章会保留一份回顾，为后面的内容腾出空间。',
+      '講述者的記憶快滿了。結束本章會保留一份回顧，為後面的內容騰出空間。',
+      '語り手の記憶がもうすぐいっぱいです。章を終えるとあらすじが残り、この先のための余裕ができます。',
+      '이야기꾼의 기억이 거의 찼습니다. 챕터를 끝내면 요약이 남고 다음 이야기를 위한 공간이 생깁니다.',
+    ],
+  'Bookmark: {label}': [
+    '书签：{label}',
+    '書籤：{label}',
+    'ブックマーク：{label}',
+    '책갈피: {label}',
+  ],
+  'Memory {percent}%': ['记忆 {percent}%', '記憶 {percent}%', '記憶 {percent}%', '기억 {percent}%'],
+  'Detail, pacing, twists and point of view, from the next reply on': [
+    '细节、节奏、转折和视角，从下一条回复开始生效',
+    '細節、節奏、轉折和視角，從下一則回覆開始生效',
+    '描写の量・テンポ・どんでん返し・視点を、次の返信から変えます',
+    '묘사 정도, 전개 속도, 반전, 시점을 다음 응답부터 바꿉니다',
+  ],
+  'Tell the storyteller what you want from the story, out of character. It steers every reply from now on until you change it, and is never part of the story. For what is true in the world, use Rules in Story details; for a fact to keep, use Remember this.':
+    [
+      '以玩家身份告诉讲述者你想要怎样的故事。它会引导之后的每一条回复，直到你修改为止，而且永远不会成为故事的一部分。世界中成立的事实请用故事设定里的“规则”；要记住的某件事请用“记住这个”。',
+      '以玩家身分告訴講述者你想要怎樣的故事。它會引導之後的每一則回覆，直到你修改為止，而且永遠不會成為故事的一部分。世界中成立的事實請用故事設定裡的「規則」；要記住的某件事請用「記住這個」。',
+      'キャラクターではなくプレイヤーとして、ストーリーに望むことを語り手に伝えます。変更するまで以後のすべての返信を導き、ストーリーの一部になることはありません。世界の事実には「ストーリーの設定」の「ルール」を、覚えておきたい一つの事実には「これを覚えておく」を使ってください。',
+      "캐릭터가 아닌 플레이어로서 이야기꾼에게 스토리에서 바라는 것을 말하세요. 바꾸기 전까지 이후 모든 응답을 이끌며, 스토리의 일부가 되지는 않습니다. 세계에서 참인 것은 스토리 설정의 '규칙'으로, 기억할 사실 하나는 '이것 기억하기'로 두세요.",
+    ],
+  'Rules are what is always true here and what the storyteller must always do; they go into every reply. A note to the storyteller is for how the story is told; Remember this keeps a single fact.':
+    [
+      '规则是这个世界里始终成立的事，以及讲述者必须始终遵守的事；它们会进入每一条回复。给讲述者的留言用于讲述方式；“记住这个”用来保留单独一件事实。',
+      '規則是這個世界裡始終成立的事，以及講述者必須始終遵守的事；它們會進入每一則回覆。給講述者的留言用於講述方式；「記住這個」用來保留單獨一件事實。',
+      'ルールは、この世界で常に成り立つことと、語り手が常に守るべきことです。すべての返信に含まれます。語り手へのメモは語り方のため、「これを覚えておく」は一つの事実を残すためのものです。',
+      "규칙은 이 세계에서 언제나 참인 것과 이야기꾼이 늘 지켜야 하는 것으로, 모든 응답에 들어갑니다. 이야기꾼에게 메모는 서술 방식을 위한 것이고, '이것 기억하기'는 사실 하나를 남깁니다.",
+    ],
+  'Voice of {name} in the voice pack {pack}': [
+    '语音包 {pack} 中 {name} 的语音',
+    '語音包 {pack} 中 {name} 的語音',
+    'ボイスパック「{pack}」での {name} の音声',
+    '보이스 팩 {pack}에서 {name}의 음성',
+  ],
+  'With a voice pack (Settings → Sound), each character can have a voice of their own.': [
+    '有了语音包（设置 → 声音），每个角色都可以有自己的语音。',
+    '有了語音包（設定 → 聲音），每個角色都可以有自己的語音。',
+    'ボイスパック（設定 → サウンド）があれば、登場人物ごとに専用の音声を割り当てられます。',
+    '보이스 팩(설정 → 소리)이 있으면 등장인물마다 자기 음성을 가질 수 있습니다.',
+  ],
+  'Skip this character’s lines when reading aloud': [
+    '朗读时跳过这个角色的台词',
+    '朗讀時跳過這個角色的台詞',
+    '読み上げ時にこの登場人物のセリフを飛ばす',
+    '소리 내어 읽을 때 이 등장인물의 대사 건너뛰기',
+  ],
+  'Menu (Esc) holds the rest: Story details and Story memory, Pictures, Export, Routes, and How to play when you want the finer points.':
+    [
+      '其余都在菜单（Esc）里：故事设定和故事记忆、图片、导出、路线，以及想了解细节时的玩法说明。',
+      '其餘都在選單（Esc）裡：故事設定和故事記憶、圖片、匯出、路線，以及想了解細節時的玩法說明。',
+      '残りはメニュー（Esc）にあります。ストーリーの設定とストーリーの記憶、画像、書き出し、ルート、そして細かな点を知りたいときの遊び方です。',
+      '나머지는 메뉴(Esc)에 있습니다. 스토리 설정과 스토리 기억, 이미지, 내보내기, 루트, 그리고 자세한 내용이 궁금할 때 볼 플레이 방법입니다.',
+    ],
+  'How the story is told from the next reply on. Earlier replies stay as they are; other routes are not changed.':
+    [
+      '从下一条回复开始的讲述方式。之前的回复保持不变；其他路线不受影响。',
+      '從下一則回覆開始的講述方式。之前的回覆保持不變；其他路線不受影響。',
+      '次の返信からの語り方です。これまでの返信はそのまま、他のルートも変わりません。',
+      '다음 응답부터의 서술 방식입니다. 이전 응답은 그대로 두고, 다른 루트는 바뀌지 않습니다.',
+    ],
+  Twists: ['转折', '轉折', 'どんでん返し', '반전'],
+  'More in Story details…': [
+    '更多设置在故事设定里…',
+    '更多設定在故事設定裡…',
+    'その他はストーリーの設定で…',
+    '스토리 설정에서 더 보기…',
+  ],
+  'Each route is its own timeline with its own memory, saves and pictures. Routes share everything before the point where they split.':
+    [
+      '每条路线都是独立的时间线，有自己的记忆、存档和图片。路线在分岔点之前的一切都是共享的。',
+      '每條路線都是獨立的時間線，有自己的記憶、存檔和圖片。路線在分岔點之前的一切都是共享的。',
+      'ルートはそれぞれ独立した時間軸で、記憶・セーブ・画像を別々に持ちます。分かれる前の部分はすべてのルートで共通です。',
+      '루트는 저마다 독립된 시간선으로, 기억, 저장, 이미지를 따로 가집니다. 갈라지기 전의 내용은 모든 루트가 공유합니다.',
+    ],
+  'The storyteller’s memory is full: some earlier turns no longer fit in a request. End the chapter so a recap takes their place, shorten Story details, or raise the connection’s context limit in Settings → AI connections.':
+    [
+      '讲述者的记忆已满：一部分较早的回合已无法放进请求。请结束本章让回顾取代它们、缩短故事设定，或在“设置 → AI 连接”中提高该连接的上下文上限。',
+      '講述者的記憶已滿：一部分較早的回合已無法放進請求。請結束本章讓回顧取代它們、縮短故事設定，或在「設定 → AI 連線」中提高該連線的上下文上限。',
+      '語り手の記憶がいっぱいです。以前のターンの一部がリクエストに入りきりません。章を終えてあらすじに置き換えるか、ストーリーの設定を短くするか、「設定 → AI 接続」で接続のコンテキスト上限を上げてください。',
+      "이야기꾼의 기억이 가득 찼습니다. 이전 턴 일부가 요청에 더는 들어가지 않습니다. 챕터를 끝내서 요약이 대신하게 하거나, 스토리 설정을 줄이거나, '설정 → AI 연결'에서 연결의 컨텍스트 한도를 올리세요.",
+    ],
+  'The story setup alone no longer fits what this storyteller can read at once, so no reply can be written. Raise the connection’s context limit in Settings → AI connections, lower the reply length, or shorten Story details.':
+    [
+      '仅故事设定就已超出这位讲述者一次能读取的量，因此无法写出回复。请在“设置 → AI 连接”中提高该连接的上下文上限、调低回复长度，或缩短故事设定。',
+      '僅故事設定就已超出這位講述者一次能讀取的量，因此無法寫出回覆。請在「設定 → AI 連線」中提高該連線的上下文上限、調低回覆長度，或縮短故事設定。',
+      'ストーリーの設定だけで、この語り手が一度に読める量を超えているため、返信を書けません。「設定 → AI 接続」で接続のコンテキスト上限を上げるか、返信の長さを短くするか、ストーリーの設定を短くしてください。',
+      "스토리 설정만으로도 이 이야기꾼이 한 번에 읽을 수 있는 양을 넘어서 응답을 쓸 수 없습니다. '설정 → AI 연결'에서 연결의 컨텍스트 한도를 올리거나, 응답 길이를 줄이거나, 스토리 설정을 줄이세요.",
+    ],
+  'The chapters you ended are read from their recaps instead.': [
+    '你结束的章节则通过它们的回顾来读取。',
+    '你結束的章節則透過它們的回顧來讀取。',
+    '終えた章は、ターンの代わりにあらすじで読まれます。',
+    '끝낸 챕터는 턴 대신 요약으로 읽습니다.',
+  ],
+  'The storyteller reads the chapters you ended from their recaps, and the {n} newer turns word for word.':
+    [
+      '讲述者通过回顾读取你结束的章节，并逐字读取之后的 {n} 个回合。',
+      '講述者透過回顧讀取你結束的章節，並逐字讀取之後的 {n} 個回合。',
+      '語り手は、終えた章をあらすじで読み、その後の {n} ターンをそのまま読みます。',
+      '이야기꾼은 끝낸 챕터를 요약으로 읽고, 그 뒤의 {n}개 턴을 그대로 읽습니다.',
+    ],
 };

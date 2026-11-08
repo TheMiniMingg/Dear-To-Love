@@ -40,6 +40,9 @@ const story = (id: string, title: string): StorySummary => ({
   chapter: 1,
   turns: 0,
   lastReply: null,
+  place: '',
+  setting: '',
+  cast: [],
 });
 
 beforeEach(() => {

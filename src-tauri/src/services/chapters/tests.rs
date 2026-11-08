@@ -269,6 +269,17 @@ fn the_recap_can_end_with_a_title_for_the_next_chapter() {
         ("Sam left.".into(), Some("潮".into()))
     );
     // No title line, or an empty one: the recap stays whole.
+    // A storyteller that slips into its reply format: the notes and ideas go,
+    // the scene heading is plain words, and the title is still found.
+    assert_eq!(
+        split_next_title(
+            "<scene place=\"The pier\" time=\"Dusk\"/>\nSam left.\n<remember person=\"Mara\">Owes Sam a favor.</remember>\n<next>Wait for the ferry</next>\nNext chapter: Low Water"
+        ),
+        (
+            "[The pier, Dusk]\nSam left.".to_string(),
+            Some("Low Water".to_string())
+        )
+    );
     assert_eq!(
         split_next_title("Sam left.\nMara stayed."),
         ("Sam left.\nMara stayed.".into(), None)

@@ -189,6 +189,11 @@ export function EndChapterPanel({ view, onCancel, onEnded }: Props) {
           <p>{t('Write your own below, or try again.')}</p>
         </div>
       )}
+      <p className="muted small">
+        {t(
+          'The recap takes the place of this chapter’s turns in what the storyteller reads, so a long story keeps its shape and costs less per reply. Keep the names, promises and secrets that matter.',
+        )}
+      </p>
       <div className="field">
         <label htmlFor="end-chapter-recap">
           {t('What happened in Chapter {n}: {title}', { n: ordinal, title })}

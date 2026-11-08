@@ -955,13 +955,6 @@ export const settings: Messages = {
     'チャコールと深紅、見出しは明朝系。ホラー向けです。',
     '숯빛 회색과 짙은 빨강, 제목은 명조체. 공포물에 어울립니다.',
   ],
-  'Horror and mysteries read in Gothic, science fiction in Neon, thrillers in Midnight, fantasy and history on Parchment, action and war in Ember, text adventures in Terminal, nature in Forest, the sea in Ocean, whimsical stories in Lavender, cozy stories in Café and romance in Rose. Change any story with Look beside it while reading.':
-    [
-      '恐怖和悬疑用“哥特”，科幻用“霓虹”，惊悚用“午夜”，奇幻和历史用“羊皮纸”，动作和战争用“余烬”，文字冒险用“终端”，自然题材用“森林”，海洋题材用“海洋”，奇幻梦幻的故事用“薰衣草”，温馨故事用“咖啡馆”，爱情用“玫瑰”。阅读时可用旁边的“外观”更改任何故事。',
-      '恐怖和懸疑用「哥德」，科幻用「霓虹」，驚悚用「午夜」，奇幻和歷史用「羊皮紙」，動作和戰爭用「餘燼」，文字冒險用「終端機」，自然題材用「森林」，海洋題材用「海洋」，奇幻夢幻的故事用「薰衣草」，溫馨故事用「咖啡館」，愛情用「玫瑰」。閱讀時可用旁邊的「外觀」變更任何故事。',
-      'ホラーとミステリーは「ゴシック」、SFは「ネオン」、スリラーは「ミッドナイト」、ファンタジーと歴史ものは「パーチメント」、アクションと戦争ものは「エンバー」、テキストアドベンチャーは「ターミナル」、自然ものは「フォレスト」、海が舞台なら「オーシャン」、夢のようなストーリーは「ラベンダー」、心温まるストーリーは「カフェ」、恋愛は「ローズ」で読みます。読んでいるときに横の「見た目」からどのストーリーでも変えられます。',
-      '공포와 미스터리는 고딕, SF는 네온, 스릴러는 미드나잇, 판타지와 역사물은 양피지, 액션과 전쟁물은 엠버, 텍스트 어드벤처는 터미널, 자연을 다룬 이야기는 포레스트, 바다 이야기는 오션, 몽환적인 스토리는 라벤더, 포근한 스토리는 카페, 로맨스는 로즈로 읽습니다. 읽는 중에 옆의 디자인 버튼으로 어떤 스토리든 바꿀 수 있습니다.',
-    ],
   Slower: ['较慢', '較慢', 'ゆっくり', '느리게'],
   Faster: ['较快', '較快', '速く', '빠르게'],
   Voice: ['语音', '語音', '音声', '음성'],
@@ -1782,12 +1775,6 @@ export const settings: Messages = {
     'コンピューターの音声：無料でオフラインでも使えます。',
     '컴퓨터 목소리: 무료이고 오프라인에서도 됩니다.',
   ],
-  'The computer’s own voices read replies aloud, so it works offline and costs nothing.': [
-    '用电脑自带的语音朗读回复，所以离线也能用，而且不花钱。',
-    '用電腦內建的語音朗讀回覆，所以離線也能用，而且不花錢。',
-    'コンピューターの音声で返信を読み上げます。オフラインでも使え、費用はかかりません。',
-    '컴퓨터 목소리로 답장을 읽어서 오프라인에서도 되고 비용도 들지 않습니다.',
-  ],
   '{n} characters have voices of their own.': [
     '{n} 个角色有自己的声音。',
     '{n} 個角色有自己的聲音。',
@@ -1958,5 +1945,57 @@ export const settings: Messages = {
       '你正在閱讀的故事中，回覆一寫完就會朗讀。回覆下方的喇叭仍可再次朗讀或停止。',
       '読んでいる物語では、返答が書き終わるとすぐに読み上げられます。返答の下のスピーカーで、もう一度読んだり止めたりできます。',
       '읽고 있는 이야기에서 답장이 작성되는 즉시 읽어 줍니다. 답장 아래의 스피커로 다시 읽거나 멈출 수 있습니다.',
+    ],
+  'Theme’s choice': ['随主题', '隨主題', 'テーマにまかせる', '테마에 맡기기'],
+  'Book (serif)': ['书籍（衬线）', '書籍（襯線）', '本（セリフ体）', '책(세리프)'],
+  'Plain (sans)': [
+    '简洁（无衬线）',
+    '簡潔（無襯線）',
+    'シンプル（サンセリフ体）',
+    '기본(산세리프)',
+  ],
+  'Easy to read': ['易读', '易讀', '読みやすさ重視', '읽기 쉽게'],
+  'Story typeface': ['故事字体', '故事字型', 'ストーリーの書体', '스토리 글꼴'],
+  'Book is Literata, Plain is the interface’s Inter, and Easy to read is Atkinson Hyperlegible, a face made for low vision and dyslexia. Theme’s choice lets a look such as Terminal pick its own.':
+    [
+      '“书籍”是 Literata，“简洁”是界面所用的 Inter，“易读”是为低视力和阅读障碍设计的 Atkinson Hyperlegible。“随主题”让“终端”这类外观自己选择字体。',
+      '「書籍」是 Literata，「簡潔」是介面所用的 Inter，「易讀」是為低視力和閱讀障礙設計的 Atkinson Hyperlegible。「隨主題」讓「終端機」這類外觀自己選擇字型。',
+      '「本」は Literata、「シンプル」はインターフェースと同じ Inter、「読みやすさ重視」はロービジョンやディスレクシアのために作られた Atkinson Hyperlegible です。「テーマにまかせる」では、ターミナルのような見た目が自分で書体を選びます。',
+      "'책'은 Literata, '기본'은 인터페이스에 쓰는 Inter, '읽기 쉽게'는 저시력과 난독증을 위해 만든 Atkinson Hyperlegible입니다. '테마에 맡기기'는 터미널 같은 디자인이 직접 글꼴을 고르게 합니다.",
+    ],
+  'Horror and mysteries': ['恐怖与悬疑', '恐怖與懸疑', 'ホラーとミステリー', '호러와 미스터리'],
+  Thrillers: ['惊悚', '驚悚', 'スリラー', '스릴러'],
+  'Fantasy and history': ['奇幻与历史', '奇幻與歷史', 'ファンタジーと歴史', '판타지와 역사'],
+  'Action and war': ['动作与战争', '動作與戰爭', 'アクションと戦争', '액션과 전쟁'],
+  'Text adventures': ['文字冒险', '文字冒險', 'テキストアドベンチャー', '텍스트 어드벤처'],
+  Nature: ['自然', '自然', '自然', '자연'],
+  'The sea': ['大海', '大海', '海', '바다'],
+  'Whimsical stories': ['奇趣故事', '奇趣故事', '気まぐれな物語', '엉뚱하고 기발한 이야기'],
+  'Cozy stories': ['温馨故事', '溫馨故事', 'ほのぼのした物語', '포근한 이야기'],
+  'Which look each genre gets': [
+    '各类型对应的外观',
+    '各類型對應的外觀',
+    'ジャンルごとの見た目',
+    '장르별 디자인',
+  ],
+  'Change any story with Look beside it while reading.': [
+    '阅读时用故事旁的“外观”可以随时更改。',
+    '閱讀時用故事旁的「外觀」可以隨時更改。',
+    '読んでいる最中でも、ストーリーの横の「見た目」から変えられます。',
+    "읽는 동안 스토리 옆의 '디자인'에서 언제든 바꿀 수 있습니다.",
+  ],
+  'Built in. Simple replies in English, works without internet, never costs anything. Good for learning the controls; for a real story, add an AI connection below.':
+    [
+      '内置。只有简单的英文回复，无需联网，永远免费。适合熟悉操作；想要真正的故事，请在下方添加 AI 连接。',
+      '內建。只有簡單的英文回覆，無需網路，永遠免費。適合熟悉操作；想要真正的故事，請在下方新增 AI 連線。',
+      '内蔵。英語の簡単な返信のみ、インターネット不要、料金はかかりません。操作に慣れるのに向いています。本格的なストーリーには、下で AI 接続を追加してください。',
+      '내장. 간단한 영어 응답만, 인터넷 없이 작동하며 비용이 들지 않습니다. 조작을 익히기에 좋고, 진짜 스토리를 원하면 아래에서 AI 연결을 추가하세요.',
+    ],
+  'The computer’s own voices read replies aloud, so it works offline and costs nothing. A voice pack with an AI voice service is billed by that service for each reply read.':
+    [
+      '用电脑自带的语音朗读回复，离线可用且免费。使用 AI 语音服务的语音包，每朗读一条回复都由该服务计费。',
+      '用電腦內建的語音朗讀回覆，離線可用且免費。使用 AI 語音服務的語音包，每朗讀一則回覆都由該服務計費。',
+      'コンピューター内蔵の音声で返信を読み上げるので、オフラインで使え、料金もかかりません。AI 音声サービスを使うボイスパックでは、読み上げた返信ごとにそのサービスから課金されます。',
+      '컴퓨터 자체 음성으로 응답을 읽어 주므로 오프라인에서도 쓸 수 있고 비용이 없습니다. AI 음성 서비스를 쓰는 보이스 팩은 응답을 읽을 때마다 그 서비스에서 요금을 청구합니다.',
     ],
 };

@@ -85,9 +85,9 @@ describe("A story's own storyteller", () => {
     expect(screen.getByRole('button', { name: 'Offline storyteller' })).toBeTruthy();
 
     await userEvent.click(within(dialog).getByRole('radio', { name: /Same as the app/ }));
-    expect(invoke).toHaveBeenLastCalledWith('set_story_storyteller', {
-      storyId: 'story-1',
-      choice: null,
-    });
+    // The memory gauge reads the new storyteller's room afterwards, so look
+    // at the last choice rather than the last call.
+    const choices = invoke.mock.calls.filter((c) => c[0] === 'set_story_storyteller');
+    expect(choices.at(-1)?.[1]).toEqual({ storyId: 'story-1', choice: null });
   });
 });

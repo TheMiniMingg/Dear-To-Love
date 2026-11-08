@@ -144,6 +144,9 @@ struct SummaryRow {
     cover_asset_id: Option<String>,
     writing: bool,
     genres_json: Option<String>,
+    setting: Option<String>,
+    base_place: Option<String>,
+    characters_json: Option<String>,
     last_head_id: Option<String>,
 }
 
@@ -164,6 +167,9 @@ pub async fn list_stories(db: &Database) -> AppResult<Vec<StorySummary>> {
                 EXISTS (SELECT 1 FROM generation_runs g JOIN routes r ON r.id = g.route_id \
                    WHERE r.story_id = s.id AND g.status = 'streaming') AS writing, \
                 json_extract(s.base_state_json, '$.narration.genres') AS genres_json, \
+                json_extract(s.base_state_json, '$.world.setting') AS setting, \
+                json_extract(s.base_state_json, '$.scene.location') AS base_place, \
+                json_extract(s.base_state_json, '$.characters') AS characters_json, \
                 (SELECT r.head_event_id FROM routes r WHERE r.id = last.route_id) AS last_head_id \
          FROM stories s JOIN last ON last.story_id = s.id \
          WHERE NOT EXISTS (SELECT 1 FROM archive_operations a \
@@ -196,9 +202,32 @@ pub async fn list_stories(db: &Database) -> AppResult<Vec<StorySummary>> {
             chapter: progress.chapter,
             turns: progress.turns,
             last_reply: progress.last_reply,
+            place: progress
+                .place
+                .or(r.base_place)
+                .map(|p| p.trim().to_string())
+                .unwrap_or_default(),
+            setting: r.setting.map(|s| s.trim().to_string()).unwrap_or_default(),
+            cast: cast_names(r.characters_json.as_deref()),
         });
     }
     Ok(out)
+}
+
+/// The names of a story's cast from its characters as stored (`id` →
+/// character), in their stored order; nothing when the JSON is not that.
+fn cast_names(characters_json: Option<&str>) -> Vec<String> {
+    let Some(json) = characters_json else {
+        return Vec::new();
+    };
+    let Ok(map) = serde_json::from_str::<serde_json::Map<String, serde_json::Value>>(json) else {
+        return Vec::new();
+    };
+    map.values()
+        .filter_map(|c| c.get("name").and_then(|n| n.as_str()))
+        .map(|n| n.trim().to_string())
+        .filter(|n| !n.is_empty())
+        .collect()
 }
 
 /// How far a route has got, read along its events from `head` back.
@@ -207,10 +236,17 @@ struct Progress {
     chapter: Option<i32>,
     turns: i32,
     last_reply: Option<String>,
+    /// The newest `<scene place>` heading in a reply, when a reply has one.
+    place: Option<String>,
 }
 
 async fn route_progress(conn: &mut SqliteConnection, head: &str) -> AppResult<Progress> {
-    let (turns, chapter, last_reply): (i64, Option<i64>, Option<String>) = sqlx::query_as(
+    let (turns, chapter, last_reply, scene_reply): (
+        i64,
+        Option<i64>,
+        Option<String>,
+        Option<String>,
+    ) = sqlx::query_as(
         "WITH RECURSIVE chain(id, parent, depth) AS ( \
            SELECT id, parent_event_id, 0 FROM events WHERE id = ? \
            UNION ALL \
@@ -220,7 +256,10 @@ async fn route_progress(conn: &mut SqliteConnection, head: &str) -> AppResult<Pr
            (SELECT json_extract(e.payload_json, '$.ordinal') FROM chain c JOIN events e ON e.id = c.id \
               WHERE e.kind = 'chapter_start' ORDER BY c.depth LIMIT 1), \
            (SELECT json_extract(e.payload_json, '$.text') FROM chain c JOIN events e ON e.id = c.id \
-              WHERE e.kind = 'assistant' ORDER BY c.depth LIMIT 1)",
+              WHERE e.kind = 'assistant' ORDER BY c.depth LIMIT 1), \
+           (SELECT json_extract(e.payload_json, '$.text') FROM chain c JOIN events e ON e.id = c.id \
+              WHERE e.kind = 'assistant' AND instr(json_extract(e.payload_json, '$.text'), '<scene') > 0 \
+              ORDER BY c.depth LIMIT 1)",
     )
     .bind(head)
     .fetch_one(&mut *conn)
@@ -228,6 +267,10 @@ async fn route_progress(conn: &mut SqliteConnection, head: &str) -> AppResult<Pr
     Ok(Progress {
         chapter: chapter.and_then(|n| i32::try_from(n).ok()),
         turns: i32::try_from(turns).unwrap_or(i32::MAX),
+        place: scene_reply
+            .as_deref()
+            .and_then(crate::domain::text::latest_scene)
+            .and_then(|(place, _)| place),
         last_reply,
     })
 }
@@ -463,7 +506,10 @@ mod tests {
 
         let mut head = s.head_event_id.clone();
         for (act, reply) in [
-            ("I knock.", "Nobody."),
+            (
+                "I knock.",
+                "<scene place=\"The cellar\" time=\"Night\"/>\nNobody.",
+            ),
             ("I wait.", "The lamp <b>hums</b>."),
         ] {
             for body in [
@@ -495,6 +541,17 @@ mod tests {
             (played.chapter, played.turns, played.last_reply.as_deref()),
             (Some(1), 2, Some("The lamp <b>hums</b>."))
         );
+        assert_eq!(played.place, "The cellar", "the newest scene heading wins");
+        assert_eq!(played.cast, fresh.cast);
+        assert!(!played.cast.is_empty(), "the cast is read from the setup");
+    }
+
+    #[test]
+    fn cast_names_come_from_the_characters_map() {
+        let json = r#"{"a":{"name":" Ada "},"b":{"name":""},"c":{"id":"c"}}"#;
+        assert_eq!(cast_names(Some(json)), vec!["Ada"]);
+        assert!(cast_names(Some("[1,2]")).is_empty());
+        assert!(cast_names(None).is_empty());
     }
 
     #[tokio::test]

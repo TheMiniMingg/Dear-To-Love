@@ -14,6 +14,9 @@ importers:
       '@fontsource-variable/literata':
         specifier: 5.3.0
         version: 5.3.0
+      '@fontsource/atkinson-hyperlegible':
+        specifier: 5.2.5
+        version: 5.2.5
       '@tauri-apps/api':
         specifier: 2.12.4
         version: 2.12.4
@@ -229,6 +232,9 @@ packages:
 
   '@fontsource-variable/literata@5.3.0':
     resolution: {integrity: sha512-1Jw7xvOcoGyB83lxB2nG4bfNbqtX2/TTbdh9sHAOmU064SvmSdulDtA5RBu5JYWf64fdaKX7xU+z3GO1T2bCHA==}
+
+  '@fontsource/atkinson-hyperlegible@5.2.5':
+    resolution: {integrity: sha512-looo8B/DHWsKG439j4hHsr2Fq3/CRkM9gpwxUu35aID4q24tYgxLmQqHbwAKA8+uV7y/fHnPkqBNsM83g+cu2A==}
 
   '@humanfs/core@0.19.2':
     resolution: {integrity: sha512-UhXNm+CFMWcbChXywFwkmhqjs3PRCmcSa/hfBgLIb7oQ5HNb1wS0icWsGtSAUNgefHeI+eBrA8I1fxmbHsGdvA==}
@@ -2134,6 +2140,8 @@ snapshots:
   '@fontsource-variable/inter@5.3.0': {}
 
   '@fontsource-variable/literata@5.3.0': {}
+
+  '@fontsource/atkinson-hyperlegible@5.2.5': {}
 
   '@humanfs/core@0.19.2':
     dependencies:

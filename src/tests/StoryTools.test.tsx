@@ -63,6 +63,7 @@ const memory: StoryMemory = {
   recapsRead: 10,
   recapsBriefed: 40,
   firstSummaryAfter: 16,
+  wordForWordTurns: 1,
 };
 
 function backend(view: RouteView, more: Record<string, (args: never) => unknown> = {}) {

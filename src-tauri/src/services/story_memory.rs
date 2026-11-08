@@ -16,7 +16,9 @@ use crate::db::Database;
 use crate::domain::events::EventKind;
 use crate::errors::{AppError, AppResult};
 use crate::services::memory::{KEEP_RECENT_TURNS, OFFLINE_GENERATOR, SUMMARY_CHUNK_TURNS};
-use crate::services::prompt::{chapter_recaps, MAX_BRIEF_RECAPS, MAX_RECAPS_IN_PROMPT};
+use crate::services::prompt::{
+    after_recapped_chapter, chapter_recaps, MAX_BRIEF_RECAPS, MAX_RECAPS_IN_PROMPT,
+};
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, TS)]
 #[serde(rename_all = "camelCase")]
@@ -37,6 +39,9 @@ pub struct StoryMemory {
     pub recaps_briefed: u32,
     /// Replies a route needs before its first summary is written.
     pub first_summary_after: u32,
+    /// Replies the next request reads word for word, room permitting: those
+    /// after the summary and after the chapters ended with a recap.
+    pub word_for_word_turns: u32,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, TS)]
@@ -111,7 +116,19 @@ pub async fn story_memory(db: &Database, route_id: &str) -> AppResult<StoryMemor
         .iter()
         .filter(|e| e.kind() == Some(EventKind::Assistant))
         .count();
-    let summary = match latest_eligible_summary(&mut conn, &route.story_id, &chain).await? {
+    let eligible = latest_eligible_summary(&mut conn, &route.story_id, &chain).await?;
+    // Where the turns read word for word start, as `prompt::assemble` has it.
+    let after_summary = eligible.as_ref().map_or(0, |s| s.end_index + 1);
+    let from = after_recapped_chapter(&chain)?
+        .unwrap_or(0)
+        .max(after_summary);
+    let word_for_word = chain
+        .get(from..)
+        .unwrap_or_default()
+        .iter()
+        .filter(|e| e.kind() == Some(EventKind::Assistant))
+        .count();
+    let summary = match eligible {
         Some(s) => Some(MemorySummary {
             written_by: writer(&mut conn, &s.row.generator, s.row.api_request_id.as_deref())
                 .await?,
@@ -137,6 +154,7 @@ pub async fn story_memory(db: &Database, route_id: &str) -> AppResult<StoryMemor
         recaps_read: u32::try_from(MAX_RECAPS_IN_PROMPT).unwrap_or(u32::MAX),
         recaps_briefed: u32::try_from(MAX_BRIEF_RECAPS).unwrap_or(u32::MAX),
         first_summary_after: KEEP_RECENT_TURNS + SUMMARY_CHUNK_TURNS,
+        word_for_word_turns: u32::try_from(word_for_word).unwrap_or(u32::MAX),
     })
 }
 

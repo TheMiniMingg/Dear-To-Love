@@ -1,6 +1,6 @@
 use super::*;
 use crate::db::memory::MemoryRow;
-use crate::domain::events::{AssistantPayload, PlayerPayload};
+use crate::domain::events::{AssistantPayload, ChapterStartPayload, PlayerPayload};
 use crate::domain::notes::{MemoryNote, NoteKind};
 use crate::domain::templates::{QuickStartInput, TemplateCatalog};
 use crate::services::tokens::estimate_messages;
@@ -920,4 +920,90 @@ fn a_long_story_still_fits_the_default_context() {
     let whole = &roomy.messages[0].content;
     assert!(!whole.contains("listed in brief") && !whole.contains("left out here"));
     assert!(whole.contains("In full:") && !whole.contains("older ones)"));
+}
+
+/// Chapter 1 with `turns` exchanges, chapter 2's start (with `recap`, if
+/// any), then `after` more exchanges and one unanswered action.
+fn two_chapters(turns: usize, recap: Option<&str>, after: usize) -> Vec<EventRow> {
+    let chapter = |ordinal: u32, title: &str, recap: Option<&str>| {
+        EventBody::ChapterStart(ChapterStartPayload {
+            chapter_instance_id: format!("c{ordinal}"),
+            title: title.into(),
+            ordinal,
+            source_outline_id: None,
+            previous_chapter_recap: recap.map(Into::into),
+        })
+    };
+    let reply = |text: String| {
+        EventBody::Assistant(AssistantPayload {
+            text,
+            finish_reason: None,
+            provider_label: None,
+            model_id: None,
+        })
+    };
+    let mut bodies = vec![chapter(1, "The Lamp Room", None)];
+    for t in 0..turns {
+        bodies.push(EventBody::Player(PlayerPayload::new(format!("action {t}"))));
+        bodies.push(reply(format!("reply {t}")));
+    }
+    bodies.push(chapter(2, "The Pier", recap));
+    for t in 0..after {
+        bodies.push(EventBody::Player(PlayerPayload::new(format!("next {t}"))));
+        bodies.push(reply(format!("answer {t}")));
+    }
+    bodies.push(EventBody::Player(PlayerPayload::new("the latest action")));
+    bodies
+        .into_iter()
+        .enumerate()
+        .map(|(i, b)| event(i, b))
+        .collect()
+}
+
+/// Ending a chapter with a recap frees its room at once: the recap stands
+/// in for its turns, all but the last exchange, which keeps the seam.
+#[test]
+fn an_ended_chapters_recap_takes_the_place_of_its_turns() {
+    let h = two_chapters(12, Some("Sam found the letter and kept it."), 2);
+    let a = assemble(&state(), &frame(), &h, None, None, roomy()).unwrap();
+    let text = all_text(&a);
+    assert!(a.messages[0].content.contains("EARLIER CHAPTERS"));
+    assert!(text.contains("Sam found the letter and kept it."));
+    assert!(!text.contains("action 0") && !text.contains("reply 10"));
+    // The last exchange of chapter 1, then chapter 2 word for word.
+    assert!(text.contains("action 11") && text.contains("reply 11"));
+    assert!(text.contains("next 0") && text.contains("answer 1"));
+    assert_eq!(a.verbatim_messages, 2 + 4 + 1);
+    assert_eq!(a.omitted_messages, 0, "covered by the recap, not left out");
+
+    // A chapter ended without a recap keeps all its turns.
+    let bare = assemble(
+        &state(),
+        &frame(),
+        &two_chapters(12, Some("  "), 2),
+        None,
+        None,
+        roomy(),
+    )
+    .unwrap();
+    assert!(all_text(&bare).contains("action 0"));
+
+    // A summary newer than the chapter start still decides where turns start.
+    // e0 is chapter 1, e25 chapter 2, e29 its second answer.
+    let s = summary_at(29, 14, "The ferry left without them.");
+    let later = assemble(&state(), &frame(), &h, Some(&s), None, roomy()).unwrap();
+    let text = all_text(&later);
+    assert!(!text.contains("reply 11") && !text.contains("answer 1"));
+    assert!(later.messages[0]
+        .content
+        .contains("later turns follow as messages"));
+
+    // An older summary is kept, and says the recaps cover what came after it.
+    let s = summary_at(6, 3, "The bell rang.");
+    let older = assemble(&state(), &frame(), &h, Some(&s), None, roomy()).unwrap();
+    assert!(older.messages[0].content.contains("The bell rang."));
+    assert!(older.messages[0]
+        .content
+        .contains("the chapter recaps above cover"));
+    assert!(!all_text(&older).contains("action 3"));
 }

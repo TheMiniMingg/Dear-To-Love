@@ -260,7 +260,7 @@ export function SettingsScreen() {
               <strong>{t('Offline storyteller')}</strong>
               <span className="muted small">
                 {t(
-                  'Built in. Simple replies in English, works without internet, never costs anything.',
+                  'Built in. Simple replies in English, works without internet, never costs anything. Good for learning the controls; for a real story, add an AI connection below.',
                 )}
               </span>
             </span>

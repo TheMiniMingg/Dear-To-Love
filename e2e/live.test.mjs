@@ -124,16 +124,25 @@ test('live storyteller: stream a reply, retry a failure', async () => {
     ),
     system,
   );
+  // The recap stands in for Chapter 1's turns; only its last exchange is
+  // sent again, so the new chapter picks up from the same moment.
+  const turns = JSON.stringify(JSON.parse(all[4].body).messages.slice(1));
+  assert.ok(!turns.includes('Light the lamp'), turns);
+  assert.ok(turns.includes('Look outside') && turns.includes('Second time lucky.'), turns);
 
   // Story memory shows what any next storyteller reads: the recap, and no
-  // summary yet after three turns.
+  // summary yet after three turns, two of them read word for word.
   await b.keys(['Escape']);
   await waitForText(b, '[role="dialog"]', 'Paused');
   await (await b.$('button=Story memory')).click();
   await waitForText(b, '[role="dialog"]', 'Chapter 1: The Lamp Room');
   await waitForText(b, '[role="dialog"]', 'a boat moved with no lights.');
   await waitForText(b, '[role="dialog"]', 'Now writing: Fake cloud');
-  await waitForText(b, '[role="dialog"]', 'still reads all 3 turns word for word');
+  await waitForText(
+    b,
+    '[role="dialog"]',
+    'reads the chapters you ended from their recaps, and the 2 newer turns word for word',
+  );
 
   // Usage & budget counts every call, the failed one too, at $0 for a local model.
   await b.keys(['Escape']);

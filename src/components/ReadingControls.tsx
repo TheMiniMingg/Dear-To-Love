@@ -1,10 +1,12 @@
 import { useId } from 'react';
 import {
   LINE_SPACINGS,
+  READING_FONTS,
   READING_WIDTHS,
   readingStyle,
   useLook,
   type LineSpacing,
+  type ReadingFont,
   type ReadingWidth,
   type ThemeId,
 } from '../app/look';
@@ -72,6 +74,7 @@ export function ReadingControls() {
   const setTextSize = useUiStore((s) => s.setTextSize);
   const width = useLook((s) => s.width);
   const spacing = useLook((s) => s.spacing);
+  const font = useLook((s) => s.font);
   const update = useLook((s) => s.update);
   return (
     <div className="reading-controls">
@@ -93,6 +96,15 @@ export function ReadingControls() {
         options={LINE_SPACINGS}
         onChange={(s) => update({ spacing: s })}
       />
+      <Choices<ReadingFont>
+        legend={t('Story typeface')}
+        hint={t(
+          'Book is Literata, Plain is the interface’s Inter, and Easy to read is Atkinson Hyperlegible, a face made for low vision and dyslexia. Theme’s choice lets a look such as Terminal pick its own.',
+        )}
+        value={font}
+        options={READING_FONTS}
+        onChange={(f) => update({ font: f })}
+      />
     </div>
   );
 }
@@ -105,12 +117,13 @@ export function ReadingSample({ theme }: { theme: ThemeId }) {
   const textSize = useUiStore((s) => s.textSize);
   const width = useLook((s) => s.width);
   const spacing = useLook((s) => s.spacing);
+  const font = useLook((s) => s.font);
   return (
     <figure
       className="reading-sample"
       aria-label={t('Sample of how stories look')}
       data-theme-preview={theme}
-      style={{ fontSize: `${textSize}rem`, ...readingStyle({ width, spacing }) }}
+      style={{ fontSize: `${textSize}rem`, ...readingStyle({ width, spacing, font }) }}
     >
       <div className="narrative-column reading-sample-column" aria-hidden="true">
         <p className="chapter-number">{t('Chapter {n}', { n: 1 })}</p>

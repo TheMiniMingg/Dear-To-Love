@@ -6,7 +6,7 @@ import { msg, t } from '../../i18n';
 
 const DONE_KEY = 'dtl.tourDone';
 
-/** The four first-time tips, each pointing at a part of the reader. */
+/** The five first-time tips, each pointing at a part of the reader. */
 const STEPS: { target: string; text: string }[] = [
   {
     target: '#composer-input',
@@ -30,6 +30,12 @@ const STEPS: { target: string; text: string }[] = [
     target: '.reader-rail',
     text: msg(
       'Go back to your stories, change the look or see every key here. Menu (Esc) has Story memory and Story details, and {keys} finds anything.',
+    ),
+  },
+  {
+    target: '[data-tour="menu"]',
+    text: msg(
+      'Menu (Esc) holds the rest: Story details and Story memory, Pictures, Export, Routes, and How to play when you want the finer points.',
     ),
   },
 ];

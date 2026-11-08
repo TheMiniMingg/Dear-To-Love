@@ -119,6 +119,7 @@ async fn a_short_story_has_only_its_turns() {
     assert_eq!(m.recaps_read, 10);
     assert_eq!(m.recaps_briefed, 40);
     assert_eq!(m.first_summary_after, 16);
+    assert_eq!(m.word_for_word_turns, 3);
 }
 
 #[tokio::test]
@@ -130,6 +131,7 @@ async fn the_summary_says_who_wrote_it_and_outlives_a_new_storyteller() {
 
     let m = story_memory(&t.db, &s.main_route_id).await.unwrap();
     assert_eq!(m.turns, 17);
+    assert_eq!(m.word_for_word_turns, 9);
     let summary = m.summary.expect("summary");
     assert_eq!(summary.text, "Mara climbed the tower and lit the lamp.");
     assert_eq!(summary.covered_turns, 8);
@@ -241,6 +243,19 @@ async fn ended_chapters_keep_their_recaps() {
             text: "Mara lit the lamp and saw a ship.".into(),
         }]
     );
+    // The recap stands in for Chapter 1; its last exchange is kept.
+    assert_eq!(m.word_for_word_turns, 2);
+    let preview = preview_context(&t.db, &s.main_route_id).await.unwrap();
+    let sent: Vec<&str> = preview
+        .messages
+        .iter()
+        .map(|m| m.content.as_str())
+        .collect();
+    assert!(sent[0].contains("Mara lit the lamp and saw a ship."));
+    assert!(!sent.iter().any(|c| c.contains("reply 1.")));
+    assert!(sent.iter().any(|c| c.contains("reply 2.")));
+    assert!(sent.iter().any(|c| c.contains("reply 3.")));
+    assert_eq!(preview.omitted_messages, 0);
 }
 
 #[tokio::test]

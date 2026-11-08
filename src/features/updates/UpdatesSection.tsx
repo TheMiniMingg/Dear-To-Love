@@ -25,7 +25,8 @@ export function describeUpdates(u: UpdateStatus): string {
     case 'unavailable': {
       const parts = [
         t('The last check did not work: {problem}{when}. Nothing else is affected.', {
-          problem: u.message ?? t('unknown problem'),
+          problem:
+            u.message ?? t('could not reach GitHub; try again later or open the release page'),
           when,
         }),
       ];

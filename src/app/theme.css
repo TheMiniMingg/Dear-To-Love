@@ -348,14 +348,15 @@
 :root {
   --font-ui:
     'Inter Variable', system-ui, -apple-system, 'Segoe UI', Roboto, 'Noto Sans', sans-serif;
-  --font-story:
+  --font-story-serif:
     'Literata Variable', 'Iowan Old Style', 'Palatino Linotype', Georgia, 'Noto Serif', serif;
+  --font-story: var(--font-story-serif);
 }
 :root:lang(zh-Hans) {
   --font-ui:
     'Inter Variable', system-ui, -apple-system, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei',
     'Noto Sans CJK SC', 'Noto Sans SC', 'Source Han Sans SC', sans-serif;
-  --font-story:
+  --font-story-serif:
     'Literata Variable', 'Noto Serif CJK SC', 'Noto Serif SC', 'Source Han Serif SC', 'Songti SC',
     SimSun, serif;
 }
@@ -363,7 +364,7 @@
   --font-ui:
     'Inter Variable', system-ui, -apple-system, 'Segoe UI', 'PingFang TC', 'Microsoft JhengHei',
     'Noto Sans CJK TC', 'Noto Sans TC', 'Source Han Sans TC', sans-serif;
-  --font-story:
+  --font-story-serif:
     'Literata Variable', 'Noto Serif CJK TC', 'Noto Serif TC', 'Source Han Serif TC', 'Songti TC',
     MingLiU, serif;
 }
@@ -372,7 +373,7 @@
     'Inter Variable', system-ui, -apple-system, 'Segoe UI', 'Hiragino Sans',
     'Hiragino Kaku Gothic ProN', 'Yu Gothic UI', Meiryo, 'Noto Sans CJK JP', 'Noto Sans JP',
     sans-serif;
-  --font-story:
+  --font-story-serif:
     'Literata Variable', 'Hiragino Mincho ProN', 'Yu Mincho', 'Noto Serif CJK JP', 'Noto Serif JP',
     'Source Han Serif JP', serif;
 }
@@ -380,7 +381,7 @@
   --font-ui:
     'Inter Variable', system-ui, -apple-system, 'Segoe UI', 'Apple SD Gothic Neo', 'Malgun Gothic',
     'Noto Sans CJK KR', 'Noto Sans KR', sans-serif;
-  --font-story:
+  --font-story-serif:
     'Literata Variable', 'Noto Serif CJK KR', 'Noto Serif KR', 'Source Han Serif KR', AppleMyungjo,
     Batang, serif;
 }

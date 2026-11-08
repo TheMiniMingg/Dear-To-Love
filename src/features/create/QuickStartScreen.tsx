@@ -1,12 +1,14 @@
 import { useEffect, useRef, useState } from 'react';
-import { Play, Shuffle } from 'lucide-react';
+import { pickPresetFile, pickPresetTarget } from '../../api/presets';
+import { Dialog } from '../../components/Dialog';
+import { Download, PenLine, Play, Shuffle, Trash2, Upload } from 'lucide-react';
 import { commands, errorMessage } from '../../api/commands';
 import { useUiStore } from '../../app/store';
 import { ArrowPicker } from '../../components/ArrowPicker';
-import type { Detail, Perspective, TemplateCatalog } from '../../types';
+import type { Detail, Perspective, TemplateCatalog, UserPreset } from '../../types';
 import { STORY_TYPES, withStoryType, worldFits } from './ContentFields';
 import { charactersFor, fittingScenarios, suits } from './WizardSteps';
-import { t, tOptions } from '../../i18n';
+import { formatAgo, t, tOptions } from '../../i18n';
 import { DETAILS, PERSPECTIVES, appStoryLanguage, storyLanguageLabel } from './StyleFields';
 import { trackingSummary } from './TrackingFields';
 import { StoryCover } from './StoryCover';
@@ -23,6 +25,79 @@ export function QuickStartScreen() {
   const [detail, setDetail] = useState<Detail | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [presets, setPresets] = useState<UserPreset[] | null>(null);
+  const [presetNote, setPresetNote] = useState<string | null>(null);
+  const [confirmPreset, setConfirmPreset] = useState<UserPreset | null>(null);
+
+  useEffect(() => {
+    let live = true;
+    commands
+      .listUserPresets()
+      .then((list) => live && setPresets(list))
+      .catch(() => live && setPresets([]));
+    return () => {
+      live = false;
+    };
+  }, []);
+
+  /** Runs a preset action, showing what it did or what went wrong. */
+  const presetAct = async (f: () => Promise<string | null>) => {
+    setError(null);
+    setPresetNote(null);
+    setBusy(true);
+    try {
+      const note = await f();
+      if (note) setPresetNote(note);
+      setPresets(await commands.listUserPresets());
+    } catch (e) {
+      setError(errorMessage(e));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  /** A new story from the preset, as the wizard would make it. */
+  const beginPreset = (p: UserPreset) =>
+    void presetAct(async () => {
+      const created = await commands.createStory(p.draft);
+      navigate({ name: 'reader', routeId: created.mainRouteId });
+      return null;
+    });
+
+  /** The preset in the Custom Story wizard, open on Review, to change first. */
+  const editPreset = (p: UserPreset) =>
+    void presetAct(async () => {
+      await commands.saveWizardDraft({
+        mode: 'custom',
+        step: 'review',
+        draft: p.draft,
+        savedAt: '',
+      });
+      navigate({ name: 'create' });
+      return null;
+    });
+
+  const exportPreset = (p: UserPreset) =>
+    void presetAct(async () => {
+      const path = await pickPresetTarget(p.name);
+      if (!path) return null;
+      const written = await commands.exportUserPreset(p.id, path);
+      return t('Saved {name} to {path}.', { name: p.name, path: written });
+    });
+
+  const importPreset = () =>
+    void presetAct(async () => {
+      const path = await pickPresetFile();
+      if (!path) return null;
+      const p = await commands.importUserPreset(path);
+      return t('Imported the preset {name}.', { name: p.name });
+    });
+
+  const deletePreset = (p: UserPreset) =>
+    void presetAct(async () => {
+      await commands.deleteUserPreset(p.id);
+      return t('Deleted the preset {name}.', { name: p.name });
+    });
   // Until you pick a character yourself, the character follows the world.
   const ownCharacter = useRef(false);
 
@@ -250,6 +325,108 @@ export function QuickStartScreen() {
             </button>
           </StoryCover>
         </div>
+      )}
+      <section className="your-presets" aria-labelledby="qs-presets-title">
+        <div className="section-head">
+          <h2 id="qs-presets-title">{t('Your presets')}</h2>
+          <button type="button" disabled={busy} onClick={importPreset}>
+            <Upload className="btn-icon" aria-hidden={true} />
+            {t('Import a preset file…')}
+          </button>
+        </div>
+        <p className="muted small">
+          {t(
+            'Worlds, casts and rules saved from your own stories, without their turns. Save one from More on a story card. A preset file (.dtlpreset) holds no keys, pictures or settings, so it is safe to share.',
+          )}
+        </p>
+        {presetNote && (
+          <p className="muted small" role="status">
+            {presetNote}
+          </p>
+        )}
+        {presets && presets.length === 0 && <p className="muted">{t('None yet.')}</p>}
+        {presets && presets.length > 0 && (
+          <ul className="preset-list" aria-label={t('Your presets')}>
+            {presets.map((p) => (
+              <li key={p.id} className="preset-card">
+                <div className="preset-card-text">
+                  <strong>{p.name}</strong>
+                  <span className="muted small">
+                    {[
+                      p.fromStoryTitle
+                        ? t('from {title}', { title: p.fromStoryTitle })
+                        : t('imported'),
+                      t('{n} characters', { n: 1 + p.draft.npcs.length }),
+                      p.draft.world.setting,
+                      formatAgo(p.createdAt),
+                    ]
+                      .filter(Boolean)
+                      .join(' · ')}
+                  </span>
+                </div>
+                <div className="button-row">
+                  <button
+                    type="button"
+                    className="primary"
+                    disabled={busy}
+                    onClick={() => beginPreset(p)}
+                    aria-label={t('Begin {title}', { title: p.name })}
+                  >
+                    <Play className="btn-icon" aria-hidden={true} />
+                    {t('Begin')}
+                  </button>
+                  <button
+                    type="button"
+                    disabled={busy}
+                    onClick={() => editPreset(p)}
+                    title={t('Open it in Custom Story to change things first')}
+                  >
+                    <PenLine className="btn-icon" aria-hidden={true} />
+                    {t('Change first')}
+                  </button>
+                  <button type="button" disabled={busy} onClick={() => exportPreset(p)}>
+                    <Download className="btn-icon" aria-hidden={true} />
+                    {t('Save as file…')}
+                  </button>
+                  <button
+                    type="button"
+                    className="danger-link"
+                    disabled={busy}
+                    onClick={() => setConfirmPreset(p)}
+                  >
+                    <Trash2 className="btn-icon" aria-hidden={true} />
+                    {t('Delete')}
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+      {confirmPreset && (
+        <Dialog title={t('Delete preset?')} onClose={() => setConfirmPreset(null)}>
+          <p>
+            {t('{name} will be gone for good. Stories made from it are not affected.', {
+              name: confirmPreset.name,
+            })}
+          </p>
+          <div className="button-row dialog-actions">
+            <button type="button" onClick={() => setConfirmPreset(null)}>
+              {t('Keep preset')}
+            </button>
+            <button
+              type="button"
+              className="danger"
+              onClick={() => {
+                const p = confirmPreset;
+                setConfirmPreset(null);
+                deletePreset(p);
+              }}
+            >
+              {t('Delete preset')}
+            </button>
+          </div>
+        </Dialog>
       )}
     </section>
   );

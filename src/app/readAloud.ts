@@ -37,9 +37,11 @@ type Prefs = {
   speed: ReadingSpeed;
   /** Read each new reply aloud as it lands, without a click. */
   autoRead: boolean;
+  /** Characters whose lines are skipped when reading aloud, by name. */
+  muted: string[];
 };
 
-const DEFAULTS: Prefs = { voice: null, speed: 'normal', autoRead: false };
+const DEFAULTS: Prefs = { voice: null, speed: 'normal', autoRead: false, muted: [] };
 
 function load(): Prefs {
   try {
@@ -50,6 +52,11 @@ function load(): Prefs {
         ? (raw?.speed as ReadingSpeed)
         : DEFAULTS.speed,
       autoRead: raw?.autoRead === true,
+      muted: Array.isArray(raw?.muted)
+        ? raw.muted
+            .filter((n): n is string => typeof n === 'string' && n.trim() !== '')
+            .slice(0, 200)
+        : [],
     };
   } catch {
     return DEFAULTS;
@@ -80,6 +87,30 @@ export function speechLang(storyLanguage: string | null | undefined): string | u
 }
 
 /** The computer's speech, when this window has it. */
+/**
+ * The reply in pieces by reader, leaving out the lines of muted characters.
+ * Muted names are segmented too, so their lines can be dropped even when the
+ * voice pack has no voice for them (or there is no pack).
+ */
+export function unmutedSegments(
+  text: string,
+  voiced: string[],
+  muted: string[],
+): { who: string | null; text: string }[] {
+  if (muted.length === 0 && voiced.length === 0) return [{ who: null, text }];
+  const lower = new Set(muted.map((n) => n.trim().toLowerCase()).filter(Boolean));
+  const names = [...new Set([...voiced, ...muted])];
+  return speakerSegments(text, names).filter(
+    (seg) => seg.who === null || !lower.has(seg.who.trim().toLowerCase()),
+  );
+}
+
+/** Whether a character's lines are skipped when reading aloud. */
+export function isMuted(name: string): boolean {
+  const n = name.trim().toLowerCase();
+  return useReadAloud.getState().muted.some((m) => m.trim().toLowerCase() === n);
+}
+
 function synth(): SpeechSynthesis | null {
   return typeof window !== 'undefined' && 'speechSynthesis' in window
     ? window.speechSynthesis
@@ -143,6 +174,8 @@ type ReadAloudState = Prefs & {
   setVoice: (voice: string | null) => void;
   setSpeed: (speed: ReadingSpeed) => void;
   setAutoRead: (autoRead: boolean) => void;
+  /** Skip (or read again) one character's lines, by name. */
+  setMuted: (name: string, muted: boolean) => void;
   /**
    * Read `text` aloud as `id`, stopping anything else first. With a voice
    * pack chosen, each character's lines are read in their own voice.
@@ -217,13 +250,13 @@ function aiPieces(text: string, max = 900): string[] {
 
 export const useReadAloud = create<ReadAloudState>((set, get) => {
   const keep = (next: Partial<Prefs>) => {
-    const { voice, speed, autoRead } = { ...get(), ...next };
+    const { voice, speed, autoRead, muted } = { ...get(), ...next };
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({ voice, speed, autoRead }));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ voice, speed, autoRead, muted }));
     } catch {
       // A preference only.
     }
-    set({ voice, speed, autoRead });
+    set({ voice, speed, autoRead, muted });
   };
 
   const finish = (mine: number) => {
@@ -240,16 +273,19 @@ export const useReadAloud = create<ReadAloudState>((set, get) => {
     const speech = synth();
     if (!speech || !canReadAloud()) return;
     const rate = READING_SPEEDS.find((s) => s.id === (pack ? pack.speed : get().speed))?.rate ?? 1;
+    const muted = get().muted;
     const lines = pack
-      ? speakerSegments(text, voicedNames(pack)).flatMap((seg) => {
+      ? unmutedSegments(text, voicedNames(pack), muted).flatMap((seg) => {
           const v = voiceFor(pack, seg.who);
           const chosen = computerVoice(speech, v.voice, v.label);
           return speechParts(seg.text).map((part) => ({ part, chosen }));
         })
-      : speechParts(text).map((part) => ({
-          part,
-          chosen: computerVoice(speech, get().voice),
-        }));
+      : unmutedSegments(text, [], muted).flatMap((seg) =>
+          speechParts(seg.text).map((part) => ({
+            part,
+            chosen: computerVoice(speech, get().voice),
+          })),
+        );
     if (lines.length === 0) return set({ reading: null });
     lines.forEach(({ part, chosen }, i) => {
       const u = new SpeechSynthesisUtterance(part);
@@ -283,7 +319,7 @@ export const useReadAloud = create<ReadAloudState>((set, get) => {
       });
       return;
     }
-    const pieces = speakerSegments(text, voicedNames(pack)).flatMap((seg) => {
+    const pieces = unmutedSegments(text, voicedNames(pack), get().muted).flatMap((seg) => {
       const voice = voiceFor(pack, seg.who).voice;
       return aiPieces(seg.text).map((part) => ({ voice, text: part }));
     });
@@ -355,6 +391,12 @@ export const useReadAloud = create<ReadAloudState>((set, get) => {
     setVoice: (voice) => keep({ voice }),
     setSpeed: (speed) => keep({ speed }),
     setAutoRead: (autoRead) => keep({ autoRead }),
+    setMuted: (name, on) => {
+      const n = name.trim();
+      if (!n) return;
+      const rest = get().muted.filter((m) => m.toLowerCase() !== n.toLowerCase());
+      keep({ muted: on ? [...rest, n] : rest });
+    },
     stop: () => {
       session += 1;
       synth()?.cancel();
