@@ -620,6 +620,17 @@ asking the storyteller:
 **Picture view** on the right side of the story turns the stage off for text only, and on
 again. The choice is kept on this computer.
 
+### A picture for each place
+
+The storyteller marks each change of scene with its place (`<scene place="The pier"/>`), and
+the stage can follow it. **Pictures → Places** in the reader lists where the story is now,
+the places it has been, the places in its memory notes, and the ones that already have a
+picture; **Another place** names one ahead of time. A place's picture is a slot like any
+other (`place:<name in lower case>`, as items are keyed), so it can be chosen for one route
+from now on or as the story default, and it goes into storypacks and backups. While the
+scene's place has a picture, the stage shows it instead of the background; otherwise the
+background shows as before.
+
 ## Keyboard shortcuts
 
 **F1** (or **Ctrl+/**) shows every shortcut, from any screen; so does **Shortcuts** on the

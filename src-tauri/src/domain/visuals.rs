@@ -10,6 +10,7 @@ pub const COVER: &str = "cover";
 pub const BACKGROUND: &str = "background";
 pub const PORTRAIT_PREFIX: &str = "portrait:";
 pub const ITEM_PREFIX: &str = "item:";
+pub const PLACE_PREFIX: &str = "place:";
 
 const MAX_CHARACTER_ID: usize = 128;
 
@@ -23,6 +24,17 @@ pub enum VisualSlot {
     Portrait(String),
     /// An inventory item's picture, by `tracking::item_key` of its name.
     Item(String),
+    /// A place's picture, by `tracking::item_key` of its name: the stage
+    /// shows it instead of the background while the story is there.
+    Place(String),
+}
+
+/// An item's or a place's key: its name in lower case with single spaces.
+fn is_key(key: &str) -> bool {
+    !key.is_empty()
+        && key.chars().count() <= MAX_CHARACTER_ID
+        && !key.chars().any(char::is_control)
+        && key == crate::domain::tracking::item_key(key)
 }
 
 impl VisualSlot {
@@ -32,16 +44,21 @@ impl VisualSlot {
             BACKGROUND => Ok(Self::Background),
             s if s.starts_with(ITEM_PREFIX) => {
                 let key = &s[ITEM_PREFIX.len()..];
-                if key.is_empty()
-                    || key.chars().count() > MAX_CHARACTER_ID
-                    || key.chars().any(char::is_control)
-                    || key != crate::domain::tracking::item_key(key)
-                {
+                if !is_key(key) {
                     return Err(AppError::invalid_input(format!(
                         "unknown picture slot {slot:?} (an item's is item:<name in lower case>)"
                     )));
                 }
                 Ok(Self::Item(key.to_string()))
+            }
+            s if s.starts_with(PLACE_PREFIX) => {
+                let key = &s[PLACE_PREFIX.len()..];
+                if !is_key(key) {
+                    return Err(AppError::invalid_input(format!(
+                        "unknown picture slot {slot:?} (a place's is place:<name in lower case>)"
+                    )));
+                }
+                Ok(Self::Place(key.to_string()))
             }
             s => match s.strip_prefix(PORTRAIT_PREFIX) {
                 Some(id)
@@ -64,6 +81,7 @@ impl VisualSlot {
             Self::Background => BACKGROUND.into(),
             Self::Portrait(id) => format!("{PORTRAIT_PREFIX}{id}"),
             Self::Item(key) => format!("{ITEM_PREFIX}{key}"),
+            Self::Place(key) => format!("{PLACE_PREFIX}{key}"),
         }
     }
 
@@ -74,6 +92,7 @@ impl VisualSlot {
             Self::Background => ("story", story_id, BACKGROUND),
             Self::Portrait(id) => ("character", id, "portrait"),
             Self::Item(key) => ("item", key, "picture"),
+            Self::Place(key) => ("place", key, "picture"),
         }
     }
 
@@ -83,6 +102,7 @@ impl VisualSlot {
             ("story", BACKGROUND) => Some(Self::Background),
             ("character", "portrait") => Some(Self::Portrait(owner_id.to_string())),
             ("item", "picture") => Some(Self::Item(owner_id.to_string())),
+            ("place", "picture") => Some(Self::Place(owner_id.to_string())),
             _ => None,
         }
     }
@@ -105,6 +125,7 @@ mod tests {
             "portrait:mara",
             "portrait:custom:npc-1",
             "item:rusty key",
+            "place:the lamp room",
         ] {
             let slot = VisualSlot::parse(key).unwrap();
             assert_eq!(slot.key(), key);
@@ -126,6 +147,8 @@ mod tests {
             "item:",
             "item:Rusty Key",
             "item:rusty  key",
+            "place:",
+            "place:The Lamp Room",
         ] {
             assert!(VisualSlot::parse(bad).is_err(), "{bad:?}");
         }

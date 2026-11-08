@@ -1946,4 +1946,17 @@ export const settings: Messages = {
       'このコンピューターで無料の AI 音声：Kokoro-FastAPI（または OpenAI 形式の音声サーバー）を動かし、ボイスパックでその声を選びます。',
       '이 컴퓨터에서 무료로 쓰는 AI 음성: Kokoro-FastAPI(또는 OpenAI 방식의 음성 서버)를 실행하고 보이스 팩에서 그 목소리를 고르세요.',
     ],
+  'Read each new reply aloud': [
+    '朗读每条新回复',
+    '朗讀每條新回覆',
+    '新しい返答をそれぞれ読み上げる',
+    '새 답장을 매번 소리 내어 읽기',
+  ],
+  'A reply is read as soon as it is written, in the story you are reading. The speaker under a reply still reads it again, or stops it.':
+    [
+      '你正在阅读的故事中，回复一写完就会朗读。回复下方的扬声器仍可再次朗读或停止。',
+      '你正在閱讀的故事中，回覆一寫完就會朗讀。回覆下方的喇叭仍可再次朗讀或停止。',
+      '読んでいる物語では、返答が書き終わるとすぐに読み上げられます。返答の下のスピーカーで、もう一度読んだり止めたりできます。',
+      '읽고 있는 이야기에서 답장이 작성되는 즉시 읽어 줍니다. 답장 아래의 스피커로 다시 읽거나 멈출 수 있습니다.',
+    ],
 };

@@ -76,7 +76,7 @@ import { usePictureMaker } from '../images/MakePortrait';
 import { PicturesPanel } from './PicturesPanel';
 import { ReaderRail } from './ReaderRail';
 import { ScenePictures } from './ScenePictures';
-import { usePictureView } from './stage';
+import { scenePlaces, usePictureView } from './stage';
 import { StoryDetailsPanel, type DetailsTab } from './StoryDetailsPanel';
 import { StoryMemoryPanel } from './StoryMemoryPanel';
 import { REMEMBER_NAME_ID } from './Notebook';
@@ -328,6 +328,19 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
     refreshBudget();
   }, [refreshBudget]);
 
+  /**
+   * A reply that just landed is read aloud when Settings -> Sound says so
+   * (and the reply is a finished one, not a stopped run's).
+   */
+  const readNewReply = useCallback((v: RouteView) => {
+    if (!useReadAloud.getState().autoRead || !readAloudAvailable()) return;
+    const last = v.history[v.history.length - 1];
+    if (last?.kind !== 'assistant') return;
+    useReadAloud
+      .getState()
+      .read(last.id, plainText(last.payload.text), speechLang(v.state.state.narration?.language));
+  }, []);
+
   /** A reply is being written by someone else (e.g. before this screen
    * remounted): show it as in progress and poll until it lands. */
   const follow = useCallback(
@@ -342,6 +355,7 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
           if (v.awaitingReply?.activeRun?.id !== runId) {
             setView(v);
             setStream(null);
+            readNewReply(v);
             return;
           }
         } catch {
@@ -349,7 +363,7 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
         }
       }
     },
-    [routeId],
+    [routeId, readNewReply],
   );
 
   /**
@@ -374,6 +388,7 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
         setStream(null);
         setSaveStatus(t('Autosaved {time}', { time: timeNow() }));
         refreshBudget();
+        readNewReply(v);
       } catch (e) {
         if (!mounted.current) return;
         if (e instanceof CommandError && e.code === 'RUN_NOT_ACTIVE') {
@@ -389,7 +404,7 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
         refreshBudget();
       }
     },
-    [follow, refreshBudget],
+    [follow, refreshBudget, readNewReply],
   );
 
   useEffect(() => {
@@ -1786,6 +1801,7 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
                 <PicturesPanel
                   view={view}
                   awaitingReply={awaitingReply || writing}
+                  places={scenePlaces(events)}
                   onChanged={(v, status) => {
                     setView(v);
                     setSaveStatus(t('{status} {time}', { status, time: timeNow() }));

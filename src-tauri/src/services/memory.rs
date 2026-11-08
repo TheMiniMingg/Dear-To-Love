@@ -170,15 +170,22 @@ pub fn extractive(prev: Option<&str>, chunk: &[EventRow], player_name: &str) -> 
 }
 
 /// The turns as "Name: …" and "Narrator: …" lines, each clipped to `max_chars`.
+/// Message tags are read as plain words ("[Text from Mara] …"), and the
+/// asides beside a reply (memory notes, threads, new characters, next
+/// moves) are left out: the app keeps those itself, so a summary or a
+/// recap is asked only about the story.
 pub fn transcript(chunk: &[EventRow], player_name: &str, max_chars: usize) -> AppResult<String> {
     let mut out = Vec::new();
     for e in chunk {
         match EventBody::from_parts(&e.kind, &e.payload_json)? {
             EventBody::Player(p) => out.push(format!(
                 "{player_name}: {}",
-                clip(&p.shown_text(), max_chars)
+                clip(&plain_message_tags(&p.shown_text()), max_chars)
             )),
-            EventBody::Assistant(a) => out.push(format!("Narrator: {}", clip(&a.text, max_chars))),
+            EventBody::Assistant(a) => out.push(format!(
+                "Narrator: {}",
+                clip(&plain_message_tags(&a.text), max_chars)
+            )),
             EventBody::ChapterStart(c) => out.push(format!(
                 "[{}]",
                 crate::domain::events::chapter_heading(c.ordinal, &c.title)

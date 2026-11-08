@@ -1,15 +1,16 @@
 import { useState } from 'react';
 import { Thumb } from '../images/ImageGrid';
 import type { EventDto, RouteView } from '../../types';
-import { BACKGROUND, picture, portraitSlot } from './pictures';
+import { picture, portraitSlot, sceneBackground } from './pictures';
 import { replyTexts, stageCast, stageFocus, usePictureView } from './stage';
 import { t } from '../../i18n';
 
 /**
  * The stage above the story (visual-novel style): the scene's background with
  * the portrait of the character the story is with, which changes when someone
- * new appears. Others in the scene can be shown with a click. Hidden when the
- * reader chooses text only.
+ * new appears. A place with a picture of its own shows that picture while
+ * the story is there. Others in the scene can be shown with a click. Hidden
+ * when the reader chooses text only.
  */
 export function ScenePictures({
   view,
@@ -25,7 +26,7 @@ export function ScenePictures({
   const [picked, setPicked] = useState<{ id: string; at: number } | null>(null);
   if (!shown) return null;
   const s = view.state.state;
-  const bg = picture(view, BACKGROUND).assetId;
+  const bg = sceneBackground(view).assetId;
   const cast = stageCast(view);
   const replies = replyTexts(events, draft);
   const auto =

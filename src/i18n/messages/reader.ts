@@ -2162,4 +2162,24 @@ export const reader: Messages = {
   ],
   'Previous version': ['上一个版本', '上一個版本', '前のバージョン', '이전 버전'],
   'Next version': ['下一个版本', '下一個版本', '次のバージョン', '다음 버전'],
+  'While the story is at a place with a picture of its own, the stage shows it instead of the background. The storyteller marks each change of scene with its place.':
+    [
+      '故事来到有专属图片的地点时，舞台会显示该图片而不是背景。讲述者会在每次场景切换时标出地点。',
+      '故事來到有專屬圖片的地點時，舞台會顯示該圖片而不是背景。講述者會在每次場景切換時標出地點。',
+      '物語が専用の画像を持つ場所にいる間、ステージには背景の代わりにその画像が表示されます。語り手は場面が変わるたびにその場所を記します。',
+      '이야기가 전용 이미지가 있는 장소에 있는 동안 무대에는 배경 대신 그 이미지가 표시됩니다. 이야기꾼은 장면이 바뀔 때마다 그 장소를 표시합니다.',
+    ],
+  'The story is here now.': [
+    '故事现在就在这里。',
+    '故事現在就在這裡。',
+    '物語は今ここにいます。',
+    '이야기는 지금 여기에 있습니다.',
+  ],
+  'Another place': ['另一个地点', '另一個地點', '別の場所', '다른 장소'],
+  'Another place, for example: the pier': [
+    '另一个地点，例如：码头',
+    '另一個地點，例如：碼頭',
+    '別の場所、例：桟橋',
+    '다른 장소, 예: 부두',
+  ],
 };

@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+- **A picture for each place.** **Pictures → Places** gives any place in the story a picture
+  of its own: where the story is now, the places it has been, the places in its memory, or
+  one you name ahead of time. While the story is at a place with a picture, the stage shows
+  it instead of the background, so the scene follows the storyteller's scene marks without a
+  click. Place pictures travel in storypacks and backups like any other.
+- **Read each new reply aloud.** A switch in **Settings → Sound → Read aloud** reads every
+  reply as soon as it is written, in the story you are reading, with the voices you chose.
+  The speaker under a reply still reads it again or stops it.
+- **Cleaner memory.** The story summaries and chapter recaps the storyteller is asked for
+  now see texts, calls and other message cards as plain words, and never the notes, threads
+  and ideas the app keeps beside a reply: shorter requests, and nothing to confuse them.
 - **Voice packs.** **Settings → Sound → Voices** can read each character in a voice of their
   own, with a narrator for the rest. Voices come from your computer, from ElevenLabs (its
   voices, or ones you designed or cloned there) or from a voice server of your own such as
