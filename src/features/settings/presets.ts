@@ -18,8 +18,9 @@ export type Preset = {
   /** An example model name, shown in the empty Model field. */
   model?: string;
   /**
-   * Current model names offered in the Model field's list (checked
-   * November 2026). Any other name can still be typed.
+   * Current model names offered under the Model field, best first (checked
+   * November 2026; notes and prices in models.ts). Any other name can
+   * still be typed.
    */
   suggestions?: string[];
   /** One sentence on getting started with this service. */
@@ -35,7 +36,16 @@ export const GROUP_LABELS: Record<PresetGroup, string> = {
 };
 
 const LOCAL = { group: 'local', billing: 'local', needsKey: false } as const;
-const LAB = { group: 'labs', billing: 'paid', needsKey: true, replyTokens: 4000 } as const;
+// Paid services send the story so far with every reply, up to the context
+// limit, so a long story's reply costs more the higher it is. 32,000 tokens
+// keeps the last few dozen turns word for word and a summary of the rest.
+const LAB = {
+  group: 'labs',
+  billing: 'paid',
+  needsKey: true,
+  replyTokens: 4000,
+  contextTokens: 32_000,
+} as const;
 const HOSTED = { group: 'hosted', billing: 'paid', needsKey: true, contextTokens: 32_000 } as const;
 const COMPATIBLE = 'openai_compatible' as const;
 
@@ -48,7 +58,8 @@ export const PRESETS: Preset[] = [
     adapter: 'ollama',
     baseUrl: 'http://localhost:11434',
     contextTokens: 8192,
-    model: 'llama3.2',
+    model: 'gemma4:12b',
+    suggestions: ['gemma4:12b', 'gemma4:e2b', 'llama3.2', 'qwen3.8:27b', 'dolphin3'],
   },
   {
     ...LOCAL,
@@ -110,7 +121,6 @@ export const PRESETS: Preset[] = [
     label: 'OpenAI',
     adapter: COMPATIBLE,
     baseUrl: 'https://api.openai.com/v1',
-    contextTokens: 128_000,
     model: 'gpt-6.1-terra',
     suggestions: ['gpt-6.1-terra', 'gpt-6.1-sol', 'gpt-6-astra', 'gpt-6-luna'],
     note: msg('Create a key at platform.openai.com.'),
@@ -121,9 +131,8 @@ export const PRESETS: Preset[] = [
     label: 'Anthropic (Claude)',
     adapter: 'anthropic',
     baseUrl: 'https://api.anthropic.com/v1',
-    contextTokens: 128_000,
-    model: 'claude-opus-5-5',
-    suggestions: ['claude-opus-5-5', 'claude-sonnet-5-5', 'claude-haiku-5-5'],
+    model: 'claude-sonnet-5-5',
+    suggestions: ['claude-sonnet-5-5', 'claude-opus-5-5', 'claude-haiku-5-5', 'claude-fable-5-1'],
     note: msg('Create a key at platform.claude.com. Uses Anthropic’s own API.'),
   },
   {
@@ -132,9 +141,13 @@ export const PRESETS: Preset[] = [
     label: 'Google Gemini',
     adapter: COMPATIBLE,
     baseUrl: 'https://generativelanguage.googleapis.com/v1beta/openai',
-    contextTokens: 128_000,
-    model: 'gemini-3.6-flash',
-    suggestions: ['gemini-3.6-flash', 'gemini-3.5-flash-lite'],
+    model: 'gemini-3.8-flash',
+    suggestions: [
+      'gemini-3.8-flash',
+      'gemini-3.6-flash',
+      'gemini-3.5-flash-lite',
+      'gemini-4-argon',
+    ],
     note: msg('Create a key in Google AI Studio (aistudio.google.com).'),
   },
   {
@@ -143,7 +156,8 @@ export const PRESETS: Preset[] = [
     label: 'xAI (Grok)',
     adapter: COMPATIBLE,
     baseUrl: 'https://api.x.ai/v1',
-    contextTokens: 128_000,
+    model: 'grok-4.7',
+    suggestions: ['grok-4.7'],
     note: msg('Create a key at console.x.ai.'),
   },
   {
@@ -152,7 +166,8 @@ export const PRESETS: Preset[] = [
     label: 'Mistral AI',
     adapter: COMPATIBLE,
     baseUrl: 'https://api.mistral.ai/v1',
-    contextTokens: 32_000,
+    model: 'mistral-large-latest',
+    suggestions: ['mistral-large-latest', 'mistral-medium-latest', 'mistral-small-latest'],
     note: msg('Create a key at console.mistral.ai.'),
   },
   {
@@ -161,7 +176,8 @@ export const PRESETS: Preset[] = [
     label: 'DeepSeek',
     adapter: COMPATIBLE,
     baseUrl: 'https://api.deepseek.com/v1',
-    contextTokens: 64_000,
+    model: 'deepseek-flash',
+    suggestions: ['deepseek-flash', 'deepseek-v4-pro'],
     note: msg('Create a key at platform.deepseek.com.'),
   },
   {
@@ -170,6 +186,15 @@ export const PRESETS: Preset[] = [
     label: 'OpenRouter',
     adapter: COMPATIBLE,
     baseUrl: 'https://openrouter.ai/api/v1',
+    model: 'deepseek/deepseek-v4.1-flash',
+    suggestions: [
+      'deepseek/deepseek-v4.1-flash',
+      'z-ai/glm-5.3-flash',
+      'moonshotai/kimi-k3.1-pro',
+      'minimax/minimax-m3.1-flash',
+      'openai/gpt-6.1-sol',
+      'anthropic/claude-opus-5.5',
+    ],
     note: msg('One key reaches hundreds of models, open and closed, with different content rules.'),
   },
   {

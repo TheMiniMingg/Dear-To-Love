@@ -141,7 +141,7 @@ async fn http_errors_are_typed_and_never_echo_the_key() {
         ),
         (
             400,
-            r#"{"error":{"message":"Invalid value for 'temperature': must be at most 2."}}"#,
+            r#"{"error":{"message":"Invalid value for 'n': only 1 is supported."}}"#,
             ErrorCode::ProviderError,
             Charge::None,
         ),
@@ -307,8 +307,8 @@ fn openai_reasoning_models_get_their_default_temperature_and_low_effort() {
         assert!(body.get("temperature").is_some(), "{model}");
         assert!(body.get("reasoning_effort").is_none(), "{model}");
     }
-    // Other services keep the setting, whatever the model is called.
-    let other = OpenAiCompatible::new("https://openrouter.ai/api/v1", None).unwrap();
+    // Other servers keep the setting, whatever the model is called.
+    let other = OpenAiCompatible::new("http://localhost:1234/v1", None).unwrap();
     let r = GenerateRequest {
         model_id: "openai/gpt-6.1-terra".into(),
         ..req()
@@ -316,6 +316,165 @@ fn openai_reasoning_models_get_their_default_temperature_and_low_effort() {
     let body = other.request_body(&r);
     assert!(body.get("temperature").is_some());
     assert!(body.get("reasoning_effort").is_none());
+    assert!(!other.thinks_first("gpt-6.1-terra"));
+}
+
+fn body_for(base: &str, model: &str) -> serde_json::Value {
+    let a = OpenAiCompatible::new(base, None).unwrap();
+    a.request_body(&GenerateRequest {
+        model_id: model.into(),
+        ..req()
+    })
+}
+
+#[test]
+fn gemini_grok_and_openrouter_thinking_models_are_asked_for_low_effort() {
+    let google = "https://generativelanguage.googleapis.com/v1beta/openai";
+    for model in [
+        "gemini-3.8-flash",
+        "gemini-3.6-flash",
+        "gemini-4-argon",
+        "gemini-3.5-flash-lite",
+        "gemini-flash-latest",
+    ] {
+        let body = body_for(google, model);
+        assert_eq!(body["reasoning_effort"], "low", "{model}");
+        // Gemini 3 and later keep their own temperature.
+        assert!(body.get("temperature").is_none(), "{model}");
+        assert_eq!(body["max_tokens"], 300, "{model}");
+    }
+    let body = body_for(google, "gemini-2.5-flash");
+    assert_eq!(body["reasoning_effort"], "low");
+    assert!(body.get("temperature").is_some());
+    for model in [
+        "gemini-2.5-flash-lite",
+        "gemini-2.0-flash",
+        "gemma-4-27b-it",
+    ] {
+        let body = body_for(google, model);
+        assert!(body.get("reasoning_effort").is_none(), "{model}");
+        assert!(body.get("temperature").is_some(), "{model}");
+    }
+
+    let xai = "https://api.x.ai/v1";
+    for model in [
+        "grok-4.7",
+        "grok-4",
+        "grok-4-fast-reasoning",
+        "grok-3-mini",
+        "grok-5",
+    ] {
+        let body = body_for(xai, model);
+        assert_eq!(body["reasoning_effort"], "low", "{model}");
+        assert!(body.get("temperature").is_some(), "{model}");
+    }
+    for model in ["grok-4-fast-non-reasoning", "grok-3", "grok-2-vision"] {
+        assert!(
+            body_for(xai, model).get("reasoning_effort").is_none(),
+            "{model}"
+        );
+    }
+
+    let router = "https://openrouter.ai/api/v1";
+    for model in [
+        "openai/gpt-6.1-sol",
+        "anthropic/claude-opus-5.5",
+        "anthropic/claude-sonnet-5.5:beta",
+        "google/gemini-3.8-flash",
+        "x-ai/grok-4.7",
+        "deepseek/deepseek-r1",
+        "qwen/qwen3.8-235b-thinking",
+    ] {
+        let body = body_for(router, model);
+        assert_eq!(body["reasoning"]["effort"], "low", "{model}");
+        assert!(body.get("reasoning_effort").is_none(), "{model}");
+        assert!(body.get("temperature").is_none(), "{model}");
+    }
+    for model in [
+        "deepseek/deepseek-v4.1-flash",
+        "anthropic/claude-3.5-sonnet",
+        "openai/gpt-4o",
+        "z-ai/glm-5.3-flash",
+    ] {
+        let body = body_for(router, model);
+        assert!(body.get("reasoning").is_none(), "{model}");
+        assert!(body.get("temperature").is_some(), "{model}");
+    }
+}
+
+#[tokio::test]
+async fn a_setting_the_model_refuses_is_sent_once_more_without_it() {
+    let server = serve(vec![
+        Reply::json(
+            400,
+            r#"{"error":{"message":"Unsupported value: 'temperature' does not support 0.7 with this model. Only the default (1) value is supported.","type":"invalid_request_error","param":"temperature"}}"#,
+        ),
+        Reply::sse_text(&["The seal ", "cracks."], None),
+    ])
+    .await;
+    let a = OpenAiCompatible::new(&server.base_url, None).unwrap();
+    let (out, seen) = run(&a, &req()).await;
+    assert_eq!(out.unwrap().text, "The seal cracks.");
+    assert_eq!(seen, "The seal cracks.");
+    let sent = server.requests();
+    assert_eq!(sent.len(), 2);
+    assert!(sent[0].body.contains("temperature"));
+    let second: serde_json::Value = serde_json::from_str(&sent[1].body).unwrap();
+    assert!(second.get("temperature").is_none());
+    assert_eq!(second["max_tokens"], 300);
+}
+
+#[tokio::test]
+async fn a_server_that_wants_the_other_token_limit_name_gets_it() {
+    let server = serve(vec![
+        Reply::json(
+            400,
+            r#"{"error":{"message":"Unsupported parameter: 'max_tokens' is not supported with this model. Use 'max_completion_tokens' instead.","param":"max_tokens"}}"#,
+        ),
+        Reply::sse_text(&["Done."], None),
+    ])
+    .await;
+    let a = OpenAiCompatible::new(&server.base_url, None).unwrap();
+    assert_eq!(run(&a, &req()).await.0.unwrap().text, "Done.");
+    let second: serde_json::Value = serde_json::from_str(&server.requests()[1].body).unwrap();
+    assert_eq!(second["max_completion_tokens"], 300);
+    assert!(second.get("max_tokens").is_none());
+}
+
+#[tokio::test]
+async fn other_refusals_are_not_sent_again() {
+    for body in [
+        r#"{"error":{"message":"The model `story-modle` does not exist"}}"#,
+        r#"{"error":{"message":"This model's maximum context length is 8192 tokens; temperature ok"}}"#,
+        r#"[{"error":{"code":400,"message":"API key not valid. Please pass a valid API key.","status":"INVALID_ARGUMENT"}}]"#,
+    ] {
+        let server = serve(vec![Reply::json(400, body), Reply::sse_text(&["no"], None)]).await;
+        let a = OpenAiCompatible::new(&server.base_url, None).unwrap();
+        let err = run(&a, &req()).await.0.unwrap_err();
+        assert_eq!(err.charge, Charge::None, "{body}");
+        assert_eq!(server.requests().len(), 1, "{body}");
+    }
+    // Refused twice: the second answer is the one reported, and no third try.
+    let server = serve(vec![
+        Reply::json(
+            400,
+            r#"{"error":{"message":"temperature is not supported"}}"#,
+        ),
+        Reply::json(
+            400,
+            r#"{"error":{"message":"stream_options is not supported"}}"#,
+        ),
+        Reply::sse_text(&["no"], None),
+    ])
+    .await;
+    let a = OpenAiCompatible::new(&server.base_url, None).unwrap();
+    let err = run(&a, &req()).await.0.unwrap_err();
+    assert!(
+        err.error.message.contains("stream_options"),
+        "{}",
+        err.error.message
+    );
+    assert_eq!(server.requests().len(), 2);
 }
 
 #[test]

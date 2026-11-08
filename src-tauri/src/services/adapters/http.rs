@@ -112,6 +112,36 @@ pub fn looks_like_bad_key(body: &str) -> bool {
                 || b.contains("incorrect")))
 }
 
+/// A request refused outright (HTTP 400 or 422) because of a setting this
+/// app adds on its own, such as a temperature a model no longer takes: the
+/// setting is taken out of `body` so the request can be sent once more.
+/// `optional` pairs each setting with the words an error names it by. A
+/// refused key or a story too long for the model is never "fixed" this way.
+/// Returns whether anything was taken out.
+pub fn drop_refused(
+    body: &mut Value,
+    status: u16,
+    error: &str,
+    optional: &[(&str, &[&str])],
+) -> bool {
+    if !matches!(status, 400 | 422) || looks_like_bad_key(error) || looks_like_context_limit(error)
+    {
+        return false;
+    }
+    let said = error.to_ascii_lowercase();
+    let Some(fields) = body.as_object_mut() else {
+        return false;
+    };
+    let mut changed = false;
+    for (key, names) in optional {
+        if fields.contains_key(*key) && names.iter().any(|n| said.contains(n)) {
+            fields.remove(*key);
+            changed = true;
+        }
+    }
+    changed
+}
+
 /// Map an HTTP error status. Requests refused outright (bad key, rate limit,
 /// unknown model) are not charged; server errors might have been.
 pub fn http_error(status: u16, body: &str) -> GenerateError {

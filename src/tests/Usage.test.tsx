@@ -191,6 +191,8 @@ describe('Usage & budget screen', () => {
   it('saves prices for a paid connection; local ones need none', async () => {
     render(<UsageScreen />);
     expect(await screen.findByText(/Local model: \$0 API charge/)).toBeInTheDocument();
+    // A model the app doesn't list gets no listed prices to fill in.
+    expect(screen.queryByRole('button', { name: 'Use the listed prices' })).toBeNull();
     await userEvent.click(screen.getByRole('button', { name: 'Add prices' }));
     const form = screen.getByRole('form', { name: 'Prices for Cloud · big' });
     await userEvent.type(within(form).getByLabelText('Input, USD per 1M tokens'), '0.15');
@@ -203,6 +205,32 @@ describe('Usage & budget screen', () => {
       cachedInputUsdPerMillion: null,
     });
     expect(await screen.findByText(/\$0\.15 in · \$0\.6 out/)).toBeInTheDocument();
+  });
+
+  it('fills in the listed prices for a model the app knows, to check and save', async () => {
+    invoke.mockImplementation(async (cmd: string, args: Record<string, unknown>) => {
+      if (cmd === 'list_rates') return [{ ...rates[0], modelId: 'claude-sonnet-5-5' }, rates[1]];
+      if (cmd === 'set_rates') return [{ ...rates[0], card: null }, rates[1]];
+      if (cmd === 'get_usage_summary') return summary;
+      if (cmd === 'list_api_requests') return [];
+      if (cmd === 'get_budget_status') return status(disabled);
+      if (cmd === 'list_connections') return [];
+      throw { code: 'NOT_FOUND', message: `unknown ${cmd} ${JSON.stringify(args)}` };
+    });
+    render(<UsageScreen />);
+    await userEvent.click(await screen.findByRole('button', { name: 'Use the listed prices' }));
+    const form = screen.getByRole('form', { name: 'Prices for Cloud · claude-sonnet-5-5' });
+    expect(within(form).getByLabelText('Input, USD per 1M tokens')).toHaveValue('2');
+    expect(within(form).getByLabelText('Output, USD per 1M tokens')).toHaveValue('10');
+    expect(within(form).getByLabelText('Cached input (optional)')).toHaveValue('0.2');
+    expect(within(form).getByText(/checked November 2026/)).toBeInTheDocument();
+    await userEvent.click(within(form).getByRole('button', { name: 'Save prices' }));
+    expect(invoke).toHaveBeenCalledWith('set_rates', {
+      profileId: 'p1',
+      inputUsdPerMillion: '2',
+      outputUsdPerMillion: '10',
+      cachedInputUsdPerMillion: '0.2',
+    });
   });
 
   it('turns on a budget that pauses paid replies', async () => {

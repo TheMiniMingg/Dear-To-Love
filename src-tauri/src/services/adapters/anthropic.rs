@@ -4,7 +4,9 @@
 //! and alternate, and the reply streams as typed server-sent events. Text
 //! deltas are the reply; thinking blocks are skipped. Sampling settings
 //! (temperature) are not sent: current Claude models choose their own and
-//! reject them.
+//! reject them. Models that think by default (Claude 5 and later) are asked
+//! for low effort: a story reply needs little planning, and thinking spends
+//! the same `max_tokens` the reply does.
 
 use std::time::Duration;
 
@@ -27,6 +29,37 @@ pub const API_VERSION: &str = "2023-06-01";
 /// Said on the player's behalf when a window would otherwise start with a
 /// story reply, which the API does not accept.
 const OPENING_TURN: &str = "(The story continues.)";
+
+/// Settings this app adds by itself, and how an error names each one.
+const OPTIONAL: &[(&str, &[&str])] = &[("output_config", &["output_config", "effort"])];
+
+/// Claude models that think unless told otherwise: Opus, Sonnet and Haiku 5
+/// and later, and every Fable and Mythos. Dated names ("…-20261001") and
+/// OpenRouter's dotted ones ("claude-opus-5.5") count too.
+pub fn thinks_by_default(model_id: &str) -> bool {
+    let m = model_id.trim().to_ascii_lowercase();
+    let m = m
+        .rsplit(['/', '.'])
+        .find(|p| p.contains("claude-"))
+        .unwrap_or(&m);
+    let Some(at) = m.find("claude-") else {
+        return false;
+    };
+    let mut parts = m[at + "claude-".len()..].split('-');
+    match parts.next() {
+        Some("fable" | "mythos") => true,
+        Some("opus" | "sonnet" | "haiku") => parts
+            .next()
+            .map(|v| {
+                v.chars()
+                    .take_while(char::is_ascii_digit)
+                    .collect::<String>()
+            })
+            .and_then(|v| v.parse::<u32>().ok())
+            .is_some_and(|v| v >= 5),
+        _ => false,
+    }
+}
 
 pub struct Anthropic {
     base_url: String,
@@ -101,7 +134,59 @@ impl Anthropic {
         if !system.is_empty() {
             body["system"] = json!(system.join("\n\n"));
         }
+        if self.thinks_first(&req.model_id) {
+            body["output_config"] = json!({ "effort": "low" });
+        }
         body
+    }
+
+    /// A Claude model that thinks before it writes unless told otherwise.
+    pub fn thinks_first(&self, model_id: &str) -> bool {
+        thinks_by_default(model_id)
+    }
+
+    /// Send one request; a refusal for the effort setting (an older model,
+    /// or a proxy that does not know it) is sent once more without it.
+    /// Nothing is charged for a refused request.
+    async fn post(
+        &self,
+        body: &mut Value,
+        cancel: &CancellationToken,
+        idle: Duration,
+    ) -> Result<reqwest::Response, GenerateError> {
+        let mut resent = false;
+        loop {
+            let bytes = serde_json::to_vec(body)
+                .map_err(|e| GenerateError::not_sent(AppError::internal(e.to_string())))?;
+            let send = self
+                .headers(
+                    self.client
+                        .post(format!("{}/messages", self.base_url))
+                        .header(CONTENT_TYPE, "application/json"),
+                )
+                .body(bytes)
+                .send();
+            let resp = tokio::select! {
+                _ = cancel.cancelled() => return Err(GenerateError::cancelled()),
+                r = tokio::time::timeout(idle, send) => match r {
+                    Err(_) => return Err(GenerateError::maybe_charged(unreachable_err(
+                        "the AI service did not answer in time",
+                    ))),
+                    Ok(Err(e)) => return Err(send_error(e)),
+                    Ok(Ok(resp)) => resp,
+                },
+            };
+            let status = resp.status();
+            if status.is_success() {
+                return Ok(resp);
+            }
+            let text = read_limited(resp, cancel, idle).await;
+            if !resent && http::drop_refused(body, status.as_u16(), &text, OPTIONAL) {
+                resent = true;
+                continue;
+            }
+            return Err(http_error(status.as_u16(), &text));
+        }
     }
 
     /// Stream one reply. `on_delta` receives display-only draft text.
@@ -112,33 +197,8 @@ impl Anthropic {
         on_delta: &mut (dyn FnMut(&str) + Send),
     ) -> Result<Completion, GenerateError> {
         let idle = Duration::from_millis(req.timeout_ms as u64);
-        let body = serde_json::to_vec(&self.request_body(req))
-            .map_err(|e| GenerateError::not_sent(AppError::internal(e.to_string())))?;
-        let send = self
-            .headers(
-                self.client
-                    .post(format!("{}/messages", self.base_url))
-                    .header(CONTENT_TYPE, "application/json"),
-            )
-            .body(body)
-            .send();
-
-        let resp = tokio::select! {
-            _ = cancel.cancelled() => return Err(GenerateError::cancelled()),
-            r = tokio::time::timeout(idle, send) => match r {
-                Err(_) => return Err(GenerateError::maybe_charged(unreachable_err(
-                    "the AI service did not answer in time",
-                ))),
-                Ok(Err(e)) => return Err(send_error(e)),
-                Ok(Ok(resp)) => resp,
-            },
-        };
-
-        let status = resp.status();
-        if !status.is_success() {
-            let text = read_limited(resp, cancel, idle).await;
-            return Err(http_error(status.as_u16(), &text));
-        }
+        let mut body = self.request_body(req);
+        let resp = self.post(&mut body, cancel, idle).await?;
         let is_json = resp
             .headers()
             .get(CONTENT_TYPE)

@@ -2,8 +2,15 @@ import { useEffect, useId, useState } from 'react';
 import { commands, errorMessage } from '../../api/commands';
 import type { RateCardView } from '../../types';
 import { t } from '../../i18n';
+import { CHECKED, knownModel, type Price } from '../settings/models';
 
 type Draft = { input: string; output: string; cached: string };
+
+const listedDraft = (p: Price): Draft => ({
+  input: String(p.input),
+  output: String(p.output),
+  cached: p.cached != null ? String(p.cached) : '',
+});
 
 const emptyDraft = (v: RateCardView): Draft => ({
   input: v.card?.inputUsdPerMillion ?? '',
@@ -17,7 +24,9 @@ function RateRow({ view, onSaved }: { view: RateCardView; onSaved: (v: RateCardV
   const [draft, setDraft] = useState<Draft>(() => emptyDraft(view));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [listed, setListed] = useState(false);
   const card = view.card;
+  const known = knownModel(view.modelId)?.price;
   const name = `${view.providerLabel} · ${view.modelId}`;
 
   if (view.billing === 'local') {
@@ -68,11 +77,25 @@ function RateRow({ view, onSaved }: { view: RateCardView; onSaved: (v: RateCardV
         ) : (
           <span className="note-warn">{t('No prices: costs show as unknown.')}</span>
         )}
+        {!editing && !card && known && (
+          <button
+            type="button"
+            className="primary"
+            onClick={() => {
+              setDraft(listedDraft(known));
+              setListed(true);
+              setEditing(true);
+            }}
+          >
+            {t('Use the listed prices')}
+          </button>
+        )}
         {!editing && (
           <button
             type="button"
             onClick={() => {
               setDraft(emptyDraft(view));
+              setListed(false);
               setEditing(true);
             }}
           >
@@ -120,6 +143,14 @@ function RateRow({ view, onSaved }: { view: RateCardView; onSaved: (v: RateCardV
               />
             </label>
           </div>
+          {listed && (
+            <p className="muted small">
+              {t(
+                'Filled in from the prices this app lists, checked {checked}. Check them against the service’s pricing page, then save.',
+                { checked: t(CHECKED) },
+              )}
+            </p>
+          )}
           <p className="muted small">
             {t(
               "Copy these from your provider's pricing page. New prices apply to requests from now on; past requests keep the prices they were estimated with. Without a cached price, cached tokens are counted at the input price and marked approximate.",

@@ -179,13 +179,6 @@ export const settings: Messages = {
     'Stable Diffusion WebUI（画像）',
     'Stable Diffusion WebUI(이미지)',
   ],
-  "Uses Anthropic's own Messages API. Claude picks its own temperature, so that setting is not sent. Some Claude models think before they write, so leave room in the reply length.":
-    [
-      '使用 Anthropic 自己的 Messages API。Claude 会自行决定温度，因此不会发送该设置。有些 Claude 模型会先思考再写，所以请在回复长度上留出余量。',
-      '使用 Anthropic 自己的 Messages API。Claude 會自行決定溫度，因此不會傳送該設定。有些 Claude 模型會先思考再寫，所以請在回覆長度上留出餘裕。',
-      'Anthropic 独自の Messages API を使います。Claude は温度を自分で決めるため、その設定は送りません。書く前に考える Claude モデルもあるので、返信の長さには余裕を持たせてください。',
-      'Anthropic 자체 Messages API를 씁니다. Claude는 온도를 스스로 정하므로 그 설정은 보내지 않습니다. 쓰기 전에 생각하는 Claude 모델도 있으니 답장 길이에 여유를 두세요.',
-    ],
   "Uses Ollama's own API so each request asks for the context limit below. Install a model first, for example with {command}.":
     [
       '使用 Ollama 自己的 API，以便每次请求都按下方的上下文上限来要求。请先安装模型，例如用 {command}。',
@@ -479,13 +472,6 @@ export const settings: Messages = {
     '라이브러리의 이미지',
   ],
   'Setup guide': ['设置指南', '設定指南', 'セットアップガイド', '설정 가이드'],
-  'Play right away': ['马上开始玩', '馬上開始玩', 'すぐに遊ぶ', '바로 플레이하기'],
-  'Choose where replies come from': [
-    '选择回复的来源',
-    '選擇回覆的來源',
-    '返答をどこで作るか選ぶ',
-    '답변을 만들 곳 고르기',
-  ],
   'Connect a service': ['连接一个服务', '連線一個服務', 'サービスに接続する', '서비스 연결하기'],
   'Test it and start playing': [
     '测试并开始玩',
@@ -493,7 +479,6 @@ export const settings: Messages = {
     'テストして遊び始める',
     '테스트하고 플레이 시작하기',
   ],
-  'Keep costs in check': ['控制费用', '控制費用', '費用を抑える', '비용 관리하기'],
   'Your keys stay on this computer': [
     '你的密钥只保存在这台电脑上',
     '你的金鑰只儲存在這台電腦上',
@@ -520,27 +505,7 @@ export const settings: Messages = {
     'API 키 필요, 사용량만큼 유료',
   ],
   'Set it up here': ['在这里设置', '在這裡設定', 'ここで設定', '여기서 설정'],
-  'You can play right away: the built-in offline storyteller needs nothing. To have an AI model write your stories, connect one of the services below. It takes a few minutes, and you can switch any time.':
-    [
-      '你现在就能开始玩：内置的离线讲述者无需任何设置。想让 AI 模型来写你的故事，就连接下面的某个服务。只需几分钟，之后随时可以更换。',
-      '你現在就能開始玩：內建的離線講述者無需任何設定。想讓 AI 模型來寫你的故事，就連線下面的某個服務。只需幾分鐘，之後隨時可以更換。',
-      'すぐに遊べます。内蔵のオフラインの語り手は何も準備がいりません。AI モデルにストーリーを書いてもらうには、下のサービスのどれかに接続してください。数分で済み、いつでも切り替えられます。',
-      '지금 바로 플레이할 수 있습니다. 내장된 오프라인 이야기꾼은 아무 준비가 필요 없습니다. AI 모델이 스토리를 쓰게 하려면 아래 서비스 중 하나를 연결하세요. 몇 분이면 되고 언제든 바꿀 수 있습니다.',
-    ],
   'On this page': ['本页内容', '本頁內容', 'このページの内容', '이 페이지의 내용'],
-  'In the library, choose {newStory}, pick a story and choose {start}.': [
-    '在书库中选择{newStory}，挑一个故事，然后选择{start}。',
-    '在書庫中選擇{newStory}，挑一個故事，然後選擇{start}。',
-    'ライブラリで{newStory}を選び、ストーリーを選んで{start}を押します。',
-    '라이브러리에서 {newStory}를 선택하고 스토리를 고른 뒤 {start}을 누르세요.',
-  ],
-  'The offline storyteller writes the replies: simple ones, free and without internet. You can switch to an AI model later, even in the middle of a story.':
-    [
-      '回复由离线讲述者撰写：内容简单、免费，且不需要网络。之后可以随时换成 AI 模型，即使故事进行到一半也可以。',
-      '回覆由離線講述者撰寫：內容簡單、免費，且不需要網路。之後可以隨時換成 AI 模型，即使故事進行到一半也可以。',
-      '返答はオフラインの語り手が書きます。シンプルで、無料で、インターネットもいりません。あとから AI モデルに切り替えられ、ストーリーの途中でもかまいません。',
-      '답변은 오프라인 이야기꾼이 씁니다. 간단하고, 무료이며, 인터넷이 필요 없습니다. 나중에 AI 모델로 바꿀 수 있고, 스토리 중간에도 됩니다.',
-    ],
   'Nothing leaves your computer and nothing costs money. Small models run on most recent computers and write simpler stories; bigger ones write better but need a strong graphics card or a lot of memory.':
     [
       '所有内容都不会离开你的电脑，也不花钱。小模型能在大多数较新的电脑上运行，写出的故事较简单；大模型写得更好，但需要强劲的显卡或大量内存。',
@@ -561,13 +526,6 @@ export const settings: Messages = {
       '由服務商替你執行的開放模型：通常比 AI 實驗室便宜，可選的模型也很多。內容規則因模型和服務而異。',
       'サービスが代わりに動かしてくれるオープンモデルです。AI ラボより安いことが多く、選べるモデルもたくさんあります。内容のルールはモデルやサービスによって異なります。',
       '서비스가 대신 실행해 주는 오픈 모델입니다. AI 연구소보다 저렴한 경우가 많고, 고를 수 있는 모델도 많습니다. 콘텐츠 규칙은 모델과 서비스마다 다릅니다.',
-    ],
-  'Pick one and open it for its steps. Links open in your browser; Set it up here opens a new connection with the service filled in.':
-    [
-      '选一个并展开查看步骤。链接会在浏览器中打开；“在这里设置”会打开一个已填好该服务的新连接。',
-      '選一個並展開查看步驟。連結會在瀏覽器中開啟；「在這裡設定」會開啟一個已填好該服務的新連線。',
-      'どれかを選んで開くと手順が表示されます。リンクはブラウザーで開きます。「ここで設定」を押すと、そのサービスが入力済みの新しい接続が開きます。',
-      '하나를 골라 펼치면 단계가 나옵니다. 링크는 브라우저에서 열립니다. ‘여기서 설정’을 누르면 그 서비스가 입력된 새 연결이 열립니다.',
     ],
   'Something else? Any service or program with an OpenAI-compatible API works: choose Add connection in Settings, then Other, and type its address.':
     [
@@ -604,19 +562,6 @@ export const settings: Messages = {
     '最初の画像の接続が使われます。「設定 → 画像」でほかの接続を選ぶことも、使わないこともできます。',
     '첫 번째 이미지 연결이 사용됩니다. ‘설정 → 이미지’에서 다른 연결을 고르거나 사용하지 않을 수 있습니다.',
   ],
-  '{usage} estimates what each paid connection has cost, and can warn you or pause paid replies at a monthly limit you choose.':
-    [
-      '{usage}会估算每个付费连接的花费，并可在达到你设定的每月上限时提醒你或暂停付费回复。',
-      '{usage}會估算每個付費連線的花費，並可在達到你設定的每月上限時提醒你或暫停付費回覆。',
-      '{usage}では、有料の接続ごとにかかった費用を見積もり、決めた月の上限で警告したり有料の返答を止めたりできます。',
-      '{usage}에서는 유료 연결마다 든 비용을 추정하고, 정한 월 한도에 이르면 알려 주거나 유료 답변을 멈출 수 있습니다.',
-    ],
-  "Set a spending limit on the service's own site too: the app can't see your balance.": [
-    '也请在服务自己的网站上设置消费上限：本应用看不到你的余额。',
-    '也請在服務自己的網站上設定消費上限：本應用程式看不到你的餘額。',
-    'サービスのサイトでも利用上限を設定してください。このアプリには残高が見えません。',
-    '서비스 사이트에서도 지출 한도를 정해 두세요. 이 앱은 잔액을 볼 수 없습니다.',
-  ],
   "API keys are kept in your computer's own password store (Credential Manager on Windows, Keychain on a Mac, the Secret Service on Linux) and are only sent to the service they belong to. They are never put in stories, storypacks, backups, exports or diagnostics reports.":
     [
       'API 密钥保存在你电脑自带的密码存储中（Windows 的凭据管理器、Mac 的钥匙串、Linux 的 Secret Service），只会发送给它所属的服务。它们绝不会出现在故事、故事包、备份、导出文件或诊断报告中。',
@@ -650,13 +595,6 @@ export const settings: Messages = {
       '常見原因是模型名稱：請完全依照服務的模型列表輸入。回覆下方的訊息會說明更多。',
       'よくある原因はモデル名です。サービスのモデル一覧のとおりに正確に入力してください。詳しくは返答の下のメッセージに出ます。',
       '모델 이름이 원인인 경우가 많습니다. 서비스의 모델 목록에 나온 그대로 입력하세요. 자세한 내용은 답변 아래 메시지에 나옵니다.',
-    ],
-  '{diagnostics} checks the app and your connections, and can make a report to share that leaves out keys and story text.':
-    [
-      '{diagnostics}会检查应用和你的连接，并可生成一份便于分享的报告，其中不含密钥和故事文本。',
-      '{diagnostics}會檢查應用程式和你的連線，並可產生一份便於分享的報告，其中不含金鑰和故事文字。',
-      '{diagnostics}はアプリと接続を確認し、キーやストーリーの文章を含まない共有用のレポートを作れます。',
-      '{diagnostics}은 앱과 연결을 확인하고, 키와 스토리 내용을 뺀 공유용 보고서를 만들 수 있습니다.',
     ],
   'Get a key': ['获取密钥', '取得金鑰', 'キーを取得', '키 받기'],
   'Model list': ['模型列表', '模型列表', 'モデル一覧', '모델 목록'],
@@ -826,81 +764,13 @@ export const settings: Messages = {
     '무엇을 고를지, 키를 어디서 받을지 모르겠다면 {guide}에서 차근차근 안내합니다.',
   ],
   'The setup guide': ['设置指南', '設定指南', 'セットアップガイド', '설정 가이드'],
-  'Which model should I use?': [
-    '该用哪个模型？',
-    '該用哪個模型？',
-    'どのモデルを使えばいい？',
-    '어떤 모델을 쓰면 좋을까요?',
-  ],
-  'Suggestions, checked in November 2026. Names change often: the service’s model list has the current ones, and any model you like works.':
-    [
-      '以下建议核对于 2026 年 11 月。模型名称经常变化：以服务商的模型列表为准，你喜欢的任何模型都可以用。',
-      '以下建議核對於 2026 年 11 月。模型名稱經常變動：以服務商的模型清單為準，你喜歡的任何模型都可以用。',
-      '2026 年 11 月時点のおすすめです。モデル名はよく変わるので、最新の名前はサービスのモデル一覧で確認してください。好きなモデルならどれでも使えます。',
-      '2026년 11월 기준 추천입니다. 모델 이름은 자주 바뀌니 최신 이름은 서비스의 모델 목록에서 확인하세요. 원하는 모델은 무엇이든 쓸 수 있습니다.',
-    ],
-  'Stories and pictures with one key': [
-    '一个密钥同时写故事和画图',
-    '一個金鑰同時寫故事和畫圖',
-    'ひとつのキーで物語も画像も',
-    '키 하나로 이야기와 그림까지',
-  ],
-  'OpenAI. {terra} writes clear, natural stories quickly, {sol} is stronger for long, twisting plots, and {astra} is the most capable and costs the most. {pictures} makes portraits and item pictures with the same key.':
-    [
-      'OpenAI。{terra} 写得快，文字清晰自然；{sol} 更擅长又长又曲折的剧情；{astra} 能力最强，价格也最高。{pictures} 用同一个密钥画角色肖像和物品图片。',
-      'OpenAI。{terra} 寫得快，文字清晰自然；{sol} 更擅長又長又曲折的劇情；{astra} 能力最強，價格也最高。{pictures} 用同一個金鑰畫角色肖像和物品圖片。',
-      'OpenAI。{terra} は速く、明快で自然な文章を書きます。{sol} は長く入り組んだ物語に強く、{astra} は最も高性能で料金も最も高めです。{pictures} なら同じキーで肖像画やアイテムの画像を作れます。',
-      'OpenAI. {terra}는 빠르고 명확하며 자연스럽게 씁니다. {sol}은 길고 반전 많은 이야기에 더 강하고, {astra}는 가장 뛰어나지만 가장 비쌉니다. {pictures}로 같은 키로 초상화와 아이템 그림을 만들 수 있습니다.',
-    ],
   'Long stories that stay consistent': [
     '长篇故事也前后一致',
     '長篇故事也前後一致',
     '長い物語でも一貫性を保つ',
     '긴 이야기도 일관되게',
   ],
-  'Anthropic’s Claude. {opus} keeps characters, threads and tone straight over long stories, and {sonnet} costs less for everyday play. Claude doesn’t make pictures, so add a picture connection too.':
-    [
-      'Anthropic 的 Claude。{opus} 在长篇故事里也能记清角色、线索和基调；{sonnet} 更便宜，适合日常游玩。Claude 不画图，所以还要另加一个图片连接。',
-      'Anthropic 的 Claude。{opus} 在長篇故事裡也能記清角色、線索和基調；{sonnet} 更便宜，適合日常遊玩。Claude 不畫圖，所以還要另加一個圖片連線。',
-      'Anthropic の Claude。{opus} は長い物語でも登場人物や伏線、雰囲気をぶれずに保ちます。{sonnet} は普段遊ぶのに安価です。Claude は画像を作らないので、画像用の接続も追加してください。',
-      'Anthropic의 Claude. {opus}는 긴 이야기에서도 인물, 복선, 분위기를 흔들림 없이 유지하고, {sonnet}은 평소에 즐기기에 더 저렴합니다. Claude는 그림을 만들지 않으니 그림 연결도 추가하세요.',
-    ],
-  'Cheap and quick': ['便宜又快', '便宜又快', '安くて速い', '저렴하고 빠르게'],
-  '{luna}, {flash} or {haiku}: a fraction of a cent per reply, good for trying things out and for light stories.':
-    [
-      '{luna}、{flash} 或 {haiku}：每次回复不到一美分，适合试玩和轻松的故事。',
-      '{luna}、{flash} 或 {haiku}：每次回覆不到一美分，適合試玩和輕鬆的故事。',
-      '{luna}、{flash}、{haiku}：1 回の返答が 1 セント未満。お試しや気軽な物語に向いています。',
-      '{luna}, {flash}, {haiku}: 답장 한 번에 1센트도 안 들어 가볍게 시험해 보거나 가벼운 이야기에 좋습니다.',
-    ],
-  'Many models with one key': [
-    '一个密钥用很多模型',
-    '一個金鑰用很多模型',
-    'ひとつのキーで多くのモデルを',
-    '키 하나로 여러 모델을',
-  ],
-  'OpenRouter offers hundreds of models, including open ones with looser content rules, and its roleplay list shows what other players use most.':
-    [
-      'OpenRouter 提供数百个模型，包括内容限制较宽松的开源模型；它的角色扮演榜单显示其他玩家最常用的模型。',
-      'OpenRouter 提供數百個模型，包括內容限制較寬鬆的開源模型；它的角色扮演榜單顯示其他玩家最常用的模型。',
-      'OpenRouter には数百のモデルがあり、内容の制限がゆるめのオープンモデルもあります。ロールプレイ一覧で他のプレイヤーがよく使うモデルがわかります。',
-      'OpenRouter에는 수백 개의 모델이 있고 콘텐츠 규칙이 느슨한 오픈 모델도 있습니다. 롤플레이 목록에서 다른 플레이어가 가장 많이 쓰는 모델을 볼 수 있습니다.',
-    ],
   'Free and private': ['免费又私密', '免費又私密', '無料でプライベート', '무료이고 비공개로'],
-  'On this computer with Ollama or LM Studio. {small} runs on almost any computer. Models of 12 to 14B write much better and want about 16 GB of memory; 27 to 32B models need a strong graphics card.':
-    [
-      '用 Ollama 或 LM Studio 在本机运行。{small} 几乎在任何电脑上都能跑。12B 到 14B 的模型写得好得多，需要约 16 GB 内存；27B 到 32B 的模型需要性能强的显卡。',
-      '用 Ollama 或 LM Studio 在本機執行。{small} 幾乎在任何電腦上都能跑。12B 到 14B 的模型寫得好得多，需要約 16 GB 記憶體；27B 到 32B 的模型需要效能強的顯示卡。',
-      'Ollama か LM Studio でこのコンピューター上で動かします。{small} はほぼどのコンピューターでも動きます。12〜14B のモデルはずっと上手に書けますが、約 16 GB のメモリが必要です。27〜32B のモデルには高性能なグラフィックカードが必要です。',
-      'Ollama나 LM Studio로 이 컴퓨터에서 실행합니다. {small}은 거의 모든 컴퓨터에서 돌아갑니다. 12~14B 모델은 훨씬 잘 쓰지만 메모리가 16GB 정도 필요하고, 27~32B 모델은 성능 좋은 그래픽카드가 필요합니다.',
-    ],
-  '{flare} is quick for portraits and items, and {sunburst} takes more care over detail. Free on this computer: Stable Diffusion WebUI.':
-    [
-      '{flare} 画肖像和物品又快又好；{sunburst} 更注重细节。想在本机免费画图：Stable Diffusion WebUI。',
-      '{flare} 畫肖像和物品又快又好；{sunburst} 更注重細節。想在本機免費畫圖：Stable Diffusion WebUI。',
-      '{flare} は肖像画やアイテムを手早く描き、{sunburst} は細部をより丁寧に描きます。このコンピューターで無料なら Stable Diffusion WebUI。',
-      '{flare}는 초상화와 아이템을 빠르게 그리고, {sunburst}는 세부를 더 공들여 그립니다. 이 컴퓨터에서 무료로: Stable Diffusion WebUI.',
-    ],
   'OpenAI retired this picture model. Edit the connection and choose {model}.': [
     'OpenAI 已停用这个图片模型。请编辑此连接并改选 {model}。',
     'OpenAI 已停用這個圖片模型。請編輯此連線並改選 {model}。',
@@ -1122,13 +992,6 @@ export const settings: Messages = {
     'ドアの上のベルが鳴り、一瞬、カフェ全体が静まりかえる。',
     '문 위의 종이 울리고, 잠시 카페 전체가 조용해진다.',
   ],
-  "OpenAI's GPT-5, GPT-6 and o-series models think before they write. For them the app sends no temperature, asks for low reasoning effort and allows 2,000 more tokens for the thinking, which usage and the budget count.":
-    [
-      'OpenAI 的 GPT-5、GPT-6 和 o 系列模型会先思考再写作。对这些模型，应用不发送温度，请求低推理强度，并为思考额外预留 2,000 个 token，用量和预算都会计入。',
-      'OpenAI 的 GPT-5、GPT-6 和 o 系列模型會先思考再寫作。對這些模型，應用程式不傳送溫度，要求低推理強度，並為思考額外預留 2,000 個 token，用量和預算都會計入。',
-      'OpenAI の GPT-5、GPT-6、o シリーズのモデルは、書く前に考えます。これらのモデルには温度を送らず、推論の強さを「低」にし、考えるための 2,000 トークンを追加で確保します。この分も使用量と予算に含まれます。',
-      'OpenAI의 GPT-5, GPT-6, o 시리즈 모델은 쓰기 전에 먼저 생각합니다. 이 모델들에는 온도를 보내지 않고, 추론 강도를 낮게 요청하며, 생각할 토큰 2,000개를 더 허용합니다. 이 부분도 사용량과 예산에 포함됩니다.',
-    ],
   'Connected, but “{model}” is not in the server’s model list. Check the model name.': [
     '已连接，但服务器的模型列表中没有“{model}”。请检查模型名称。',
     '已連線，但伺服器的模型清單中沒有「{model}」。請檢查模型名稱。',
@@ -1148,4 +1011,514 @@ export const settings: Messages = {
       'この接続には API キーが保存されていません。ほとんどのオンラインサービスでは必要です。「編集」から追加してください。',
       '이 연결에는 API 키가 저장되어 있지 않으며, 대부분의 온라인 서비스는 키가 필요합니다. 편집을 눌러 추가하세요.',
     ],
+  'The short version': ['简要说明', '簡要說明', 'まずはここだけ', '핵심 요약'],
+  'Recommended models': ['推荐模型', '推薦模型', 'おすすめのモデル', '추천 모델'],
+  'Costs and your budget': ['费用与预算', '費用與預算', '費用と予算', '비용과 예산'],
+  free: ['免费', '免費', '無料', '무료'],
+  'about {cost} a reply': [
+    '每条回复约 {cost}',
+    '每則回覆約 {cost}',
+    '返信 1 回あたり約 {cost}',
+    '답장 1회에 약 {cost}',
+  ],
+  'price on its model page': [
+    '价格见模型页面',
+    '價格見模型頁面',
+    '料金はモデルのページに',
+    '가격은 모델 페이지에서',
+  ],
+  'Set up {model}': ['设置 {model}', '設定 {model}', '{model} を設定', '{model} 설정'],
+  'One reply': ['一条回复', '一則回覆', '返信 1 回', '답장 1회'],
+  '100 replies': ['100 条回复', '100 則回覆', '返信 100 回', '답장 100회'],
+  Recommended: ['推荐', '推薦', 'おすすめ', '추천'],
+  'Play free, right now': [
+    '现在就免费玩',
+    '現在就免費玩',
+    '今すぐ無料で遊ぶ',
+    '지금 바로 무료로 플레이',
+  ],
+  'The built-in offline storyteller needs nothing: no account, no internet. In the library, choose {newStory}, pick a story and choose {start}.':
+    [
+      '内置的离线讲述者什么都不需要：不用账户，也不用联网。在故事库中选择{newStory}，挑一个故事，然后选择{start}。',
+      '內建的離線講述者什麼都不需要：不用帳戶，也不用連網。在故事庫中選擇{newStory}，挑一個故事，然後選擇{start}。',
+      '内蔵のオフライン語り手なら何も要りません。アカウントもインターネットも不要です。ライブラリで{newStory}を選び、ストーリーを選んで{start}を押します。',
+      '내장된 오프라인 이야기꾼은 아무것도 필요 없습니다. 계정도 인터넷도 필요 없어요. 라이브러리에서 {newStory}를 고르고 이야기를 선택한 뒤 {start}를 누르세요.',
+    ],
+  'Better stories: connect an AI': [
+    '想要更好的故事：连接 AI',
+    '想要更好的故事：連接 AI',
+    'もっと良い物語に：AI をつなぐ',
+    '더 좋은 이야기를 원하면: AI 연결',
+  ],
+  'Takes about five minutes. Most services cost 1 to 3 cents a reply in a long story; models on your own computer are free. You can switch any time, even mid-story.':
+    [
+      '大约五分钟。在长故事中，大多数服务每条回复花费 1 到 3 美分；在你自己电脑上运行的模型免费。随时都可以切换，故事进行中也行。',
+      '大約五分鐘。在長故事中，大多數服務每則回覆花費 1 到 3 美分；在你自己電腦上執行的模型免費。隨時都可以切換，故事進行中也行。',
+      '5 分ほどで済みます。長い物語では、多くのサービスは返信 1 回あたり 1〜3 セントです。自分のパソコンで動くモデルは無料です。いつでも、物語の途中でも切り替えられます。',
+      '5분 정도면 됩니다. 긴 이야기에서 대부분의 서비스는 답장 1회에 1~3센트이고, 내 컴퓨터에서 돌리는 모델은 무료입니다. 언제든, 이야기 도중에도 바꿀 수 있어요.',
+    ],
+  'See recommended models': [
+    '查看推荐模型',
+    '查看推薦模型',
+    'おすすめのモデルを見る',
+    '추천 모델 보기',
+  ],
+  'Stay within budget': ['控制在预算之内', '控制在預算之內', '予算内に収める', '예산 안에서 쓰기'],
+  '{usage} estimates what each reply cost and can pause paid replies at a monthly limit you choose. Set a limit on the service’s own site too.':
+    [
+      '{usage}会估算每条回复的费用，并能在达到你设定的每月上限时暂停付费回复。也请在服务商自己的网站上设置上限。',
+      '{usage}會估算每則回覆的費用，並能在達到你設定的每月上限時暫停付費回覆。也請在服務商自己的網站上設定上限。',
+      '{usage}は返信ごとの費用を見積もり、自分で決めた月の上限で有料の返信を止められます。サービス側のサイトでも上限を設定しておきましょう。',
+      '{usage}은 답장마다 든 비용을 추정하고, 직접 정한 월 한도에서 유료 답장을 멈출 수 있습니다. 서비스 자체 사이트에서도 한도를 설정하세요.',
+    ],
+  'Your keys stay here': [
+    '你的密钥留在这里',
+    '你的金鑰留在這裡',
+    'キーはこのパソコンに',
+    '키는 이 컴퓨터에만',
+  ],
+  "API keys are kept in your computer's own password store and sent only to the service they belong to. Never in stories, exports or reports.":
+    [
+      'API 密钥保存在你电脑自带的密码库中，只会发送给它所属的服务。绝不会出现在故事、导出文件或报告中。',
+      'API 金鑰保存在你電腦內建的密碼庫中，只會傳送給它所屬的服務。絕不會出現在故事、匯出檔案或報告中。',
+      'API キーはパソコン自体のパスワード保管庫に保存され、そのキーのサービスにだけ送られます。ストーリー、書き出し、レポートには決して入りません。',
+      'API 키는 컴퓨터 자체의 비밀번호 저장소에 보관되며 해당 서비스에만 전송됩니다. 이야기, 내보내기, 보고서에는 절대 들어가지 않아요.',
+    ],
+  'Good places to start, checked {checked}. Set up opens a new connection with the service and model filled in; you paste the key.':
+    [
+      '适合起步的选择，核对于 {checked}。点“设置”会打开一个已填好服务和模型的新连接，你只需粘贴密钥。',
+      '適合起步的選擇，核對於 {checked}。點「設定」會開啟一個已填好服務和模型的新連線，你只需貼上金鑰。',
+      '始めやすいモデルです（{checked}時点で確認）。「設定」を押すと、サービスとモデルが入力済みの新しい接続が開きます。あとはキーを貼り付けるだけです。',
+      '시작하기 좋은 모델들입니다({checked} 기준 확인). 설정을 누르면 서비스와 모델이 채워진 새 연결이 열리고, 키만 붙여 넣으면 됩니다.',
+    ],
+  'Names change often: each service’s model list has the current ones, and any model you like works. The connection form suggests a few more for each service.':
+    [
+      '模型名称经常变化：各服务的模型列表里有最新的名称，你喜欢的任何模型都能用。连接表单还会为每个服务多推荐几个。',
+      '模型名稱經常變化：各服務的模型列表裡有最新的名稱，你喜歡的任何模型都能用。連線表單還會為每個服務多推薦幾個。',
+      'モデル名はよく変わります。最新の名前は各サービスのモデル一覧にあり、好きなモデルを使えます。接続フォームでもサービスごとにいくつか提案します。',
+      '모델 이름은 자주 바뀝니다. 최신 이름은 각 서비스의 모델 목록에 있고, 원하는 모델은 무엇이든 쓸 수 있어요. 연결 양식에서도 서비스마다 몇 가지를 더 추천합니다.',
+    ],
+  'OpenRouter roleplay list': [
+    'OpenRouter 角色扮演榜',
+    'OpenRouter 角色扮演榜',
+    'OpenRouter のロールプレイ一覧',
+    'OpenRouter 롤플레이 목록',
+  ],
+  'Paid services charge for the words they read and write. Each reply sends the story so far, up to the connection’s context limit, so replies cost a little more as a story grows.':
+    [
+      '付费服务按读取和写出的文字收费。每条回复都会发送到目前为止的故事（最多到连接的上下文上限），所以故事越长，回复就稍微越贵。',
+      '付費服務按讀取和寫出的文字收費。每則回覆都會傳送到目前為止的故事（最多到連線的上下文上限），所以故事越長，回覆就稍微越貴。',
+      '有料サービスは、読む文字と書く文字の量で課金されます。返信のたびにそれまでの物語を（接続のコンテキスト上限まで）送るので、物語が長くなるほど返信は少しずつ高くなります。',
+      '유료 서비스는 읽고 쓰는 글자 양에 따라 요금을 받습니다. 답장할 때마다 지금까지의 이야기를(연결의 컨텍스트 한도까지) 보내므로, 이야기가 길어질수록 답장이 조금씩 비싸집니다.',
+    ],
+  'For a reply well into a story: about 12,000 tokens read and 600 written, plus a little thinking for models that think first. Early replies cost much less. List prices checked {checked}; the services’ pricing pages have the current ones.':
+    [
+      '按故事进行一段时间后的一条回复计算：读取约 12,000 个 token、写出约 600 个，先思考的模型还要加上少量思考。开头的回复便宜得多。标价核对于 {checked}；最新价格请看各服务的定价页面。',
+      '按故事進行一段時間後的一則回覆計算：讀取約 12,000 個 token、寫出約 600 個，先思考的模型還要加上少量思考。開頭的回覆便宜得多。標價核對於 {checked}；最新價格請看各服務的定價頁面。',
+      '物語がかなり進んだあとの返信 1 回分：読み込み約 12,000 トークン、書き出し約 600 トークン。先に考えるモデルは少し考える分が加わります。序盤の返信はずっと安くなります。定価は{checked}時点で確認したもので、最新の料金は各サービスの料金ページにあります。',
+      '이야기가 꽤 진행된 뒤의 답장 1회 기준: 약 12,000토큰을 읽고 600토큰을 씁니다. 먼저 생각하는 모델은 생각하는 분량이 조금 더해집니다. 초반 답장은 훨씬 저렴해요. 정가는 {checked} 기준으로 확인했으며, 최신 가격은 각 서비스의 요금 페이지에 있습니다.',
+    ],
+  '{usage} shows what each connection has cost, warns you near a monthly limit you choose, and can pause paid replies when it is reached.':
+    [
+      '{usage}会显示每个连接花了多少钱，在接近你设定的每月上限时提醒你，并能在达到上限时暂停付费回复。',
+      '{usage}會顯示每個連線花了多少錢，在接近你設定的每月上限時提醒你，並能在達到上限時暫停付費回覆。',
+      '{usage}では接続ごとの費用がわかり、決めた月の上限に近づくと知らせ、上限に達したら有料の返信を止められます。',
+      '{usage}에서는 연결마다 든 비용을 보여 주고, 정한 월 한도에 가까워지면 알려 주며, 한도에 닿으면 유료 답장을 멈출 수 있습니다.',
+    ],
+  'It needs each model’s prices. Under Prices there, {listed} fills them in for the models this guide lists; for others, copy them from the service’s pricing page.':
+    [
+      '这需要每个模型的价格。在那里的“价格”中，{listed}会为本指南列出的模型自动填好；其他模型请从服务商的定价页面复制。',
+      '這需要每個模型的價格。在那裡的「價格」中，{listed}會為本指南列出的模型自動填好；其他模型請從服務商的定價頁面複製。',
+      'そのためにはモデルごとの料金が必要です。そこの「料金」で{listed}を押すと、このガイドに載っているモデルは自動で入力されます。それ以外はサービスの料金ページから写してください。',
+      '이를 위해 모델마다 가격이 필요합니다. 그곳의 가격에서 {listed}를 누르면 이 안내에 나온 모델은 자동으로 채워지고, 다른 모델은 서비스의 요금 페이지에서 옮겨 적으세요.',
+    ],
+  'Use the listed prices': [
+    '使用列出的价格',
+    '使用列出的價格',
+    '掲載の料金を使う',
+    '안내된 가격 사용',
+  ],
+  "Set a spending limit on the service's own site too: the app can't see your balance, and that limit is the one that really stops charges.":
+    [
+      '也请在服务商自己的网站上设置消费上限：应用看不到你的余额，而那里的上限才是真正能停止扣费的。',
+      '也請在服務商自己的網站上設定消費上限：應用程式看不到你的餘額，而那裡的上限才是真正能停止扣款的。',
+      'サービス側のサイトでも利用上限を設定してください。アプリには残高が見えず、本当に請求を止められるのはそちらの上限です。',
+      '서비스 자체 사이트에서도 지출 한도를 설정하세요. 앱은 잔액을 볼 수 없고, 실제로 청구를 막는 것은 그쪽 한도입니다.',
+    ],
+  'A lower context limit (the connection’s Advanced settings) keeps long stories cheaper; older parts of the story are summarized to fit.':
+    [
+      '调低上下文上限（在连接的高级设置中）能让长故事更省钱；较早的故事内容会被概括以便放得下。',
+      '調低上下文上限（在連線的進階設定中）能讓長故事更省錢；較早的故事內容會被概括以便放得下。',
+      'コンテキスト上限（接続の詳細設定）を下げると長い物語が安く済みます。物語の古い部分は収まるように要約されます。',
+      '컨텍스트 한도(연결의 고급 설정)를 낮추면 긴 이야기가 더 저렴해집니다. 이야기의 앞부분은 들어가도록 요약됩니다.',
+    ],
+  'OpenAI limits': ['OpenAI 限额', 'OpenAI 限額', 'OpenAI の上限', 'OpenAI 한도'],
+  'Anthropic limits': ['Anthropic 限额', 'Anthropic 限額', 'Anthropic の上限', 'Anthropic 한도'],
+  'OpenRouter key limits': [
+    'OpenRouter 密钥限额',
+    'OpenRouter 金鑰限額',
+    'OpenRouter のキー上限',
+    'OpenRouter 키 한도',
+  ],
+  'Pick one and open it for its steps; open Step by step inside for every click. Links open in your browser; Set it up here opens a new connection with the service filled in.':
+    [
+      '选一个并展开查看步骤；展开里面的“逐步说明”可看到每一次点击。链接会在浏览器中打开；“在这里设置”会打开一个已填好该服务的新连接。',
+      '選一個並展開查看步驟；展開裡面的「逐步說明」可看到每一次點擊。連結會在瀏覽器中開啟；「在這裡設定」會開啟一個已填好該服務的新連線。',
+      'どれかを選んで開くと手順が見られます。中の「ステップごとの手順」を開けば、クリックひとつずつ説明します。リンクはブラウザで開き、「ここで設定」はそのサービスを入力済みの新しい接続を開きます。',
+      '하나를 골라 펼치면 단계가 나옵니다. 안의 단계별 안내를 펼치면 클릭 하나하나까지 설명해요. 링크는 브라우저에서 열리고, 여기서 설정은 해당 서비스가 채워진 새 연결을 엽니다.',
+    ],
+  'The service’s rules stopped this reply. Try another reply, change the action, or use a model with looser rules, such as one on OpenRouter or your own computer.':
+    [
+      '服务的规则拦下了这条回复。可以换一条回复、修改行动，或改用规则更宽松的模型，比如 OpenRouter 上的或你自己电脑上的模型。',
+      '服務的規則攔下了這則回覆。可以換一則回覆、修改行動，或改用規則更寬鬆的模型，例如 OpenRouter 上的或你自己電腦上的模型。',
+      'サービスのルールでこの返信が止められました。別の返信を試す、行動を変える、または OpenRouter や自分のパソコンのモデルなど、ルールの緩いモデルを使ってください。',
+      '서비스 규칙 때문에 이 답장이 막혔습니다. 다른 답장을 시도하거나, 행동을 바꾸거나, OpenRouter나 내 컴퓨터의 모델처럼 규칙이 느슨한 모델을 쓰세요.',
+    ],
+  'A reply stops halfway or comes back empty': [
+    '回复写到一半停下或是空的',
+    '回覆寫到一半停下或是空的',
+    '返信が途中で止まる・空で返ってくる',
+    '답장이 중간에 끊기거나 비어서 돌아올 때',
+  ],
+  'Raise Longest reply in the connection’s Advanced settings. Models that think first use part of it for their thinking.':
+    [
+      '在连接的高级设置中调高“最长回复”。先思考的模型会用掉其中一部分来思考。',
+      '在連線的進階設定中調高「最長回覆」。先思考的模型會用掉其中一部分來思考。',
+      '接続の詳細設定で「返信の最大長」を上げてください。先に考えるモデルは、その一部を考えるのに使います。',
+      '연결의 고급 설정에서 최대 답장 길이를 늘리세요. 먼저 생각하는 모델은 그중 일부를 생각하는 데 씁니다.',
+    ],
+  '{diagnostics} checks the app and your connections, and can make a report to share that leaves out keys and story text. {report} in the footer puts that report with your own words, ready to copy or save.':
+    [
+      '{diagnostics}会检查应用和你的连接，并可生成一份不含密钥和故事文字的报告用于分享。页脚的{report}会把这份报告和你自己的描述放在一起，方便复制或保存。',
+      '{diagnostics}會檢查應用程式和你的連線，並可產生一份不含金鑰和故事文字的報告用於分享。頁尾的{report}會把這份報告和你自己的描述放在一起，方便複製或儲存。',
+      '{diagnostics}はアプリと接続を確認し、キーや物語の文章を含まない共有用レポートを作れます。フッターの{report}では、そのレポートに自分の言葉を添えて、コピーや保存ができます。',
+      '{diagnostics}은 앱과 연결을 점검하고, 키와 이야기 글을 뺀 공유용 보고서를 만들 수 있습니다. 하단의 {report}는 그 보고서에 내 설명을 붙여 복사하거나 저장할 수 있게 해 줍니다.',
+    ],
+  'Step by step, every click: {service}': [
+    '逐步说明，每一次点击：{service}',
+    '逐步說明，每一次點擊：{service}',
+    'ステップごとの手順（クリックひとつずつ）：{service}',
+    '단계별 안내, 클릭 하나하나: {service}',
+  ],
+  'Choose {getKey} below. It opens {site} in your browser.': [
+    '选择下方的{getKey}。它会在浏览器中打开 {site}。',
+    '選擇下方的{getKey}。它會在瀏覽器中開啟 {site}。',
+    '下の{getKey}を押します。ブラウザで {site} が開きます。',
+    '아래의 {getKey}를 누르세요. 브라우저에서 {site}가 열립니다.',
+  ],
+  'Sign in, or make an account with your email or a Google account.': [
+    '登录，或用电子邮箱或 Google 账户注册一个账户。',
+    '登入，或用電子郵件或 Google 帳戶註冊一個帳戶。',
+    'サインインするか、メールアドレスか Google アカウントでアカウントを作ります。',
+    '로그인하거나, 이메일이나 Google 계정으로 계정을 만드세요.',
+  ],
+  'Add some credit: find Billing on the site and add a card, or buy credit ahead. US$5 lasts a few hundred replies on most recommended models.':
+    [
+      '充一点额度：在网站上找到“Billing”（账单），绑定银行卡或预先购买额度。用大多数推荐模型，5 美元够写几百条回复。',
+      '儲值一點額度：在網站上找到「Billing」（帳單），綁定信用卡或預先購買額度。用大多數推薦模型，5 美元夠寫幾百則回覆。',
+      'クレジットを入れます。サイトで Billing（請求）を開き、カードを登録するか前払いでクレジットを買います。おすすめのモデルの多くでは、5 米ドルで数百回の返信になります。',
+      '크레딧을 넣으세요. 사이트에서 Billing(결제)을 찾아 카드를 등록하거나 크레딧을 미리 사면 됩니다. 추천 모델 대부분에서 5달러면 답장 수백 회입니다.',
+    ],
+  'Make a new key. The button says something like Create key or Create new secret key. Name it Dear to Love so you know later what it is for.':
+    [
+      '新建一个密钥。按钮通常叫 Create key 或 Create new secret key 之类。把它命名为 Dear to Love，以后就知道它是做什么用的。',
+      '新增一個金鑰。按鈕通常叫 Create key 或 Create new secret key 之類。把它命名為 Dear to Love，以後就知道它是做什麼用的。',
+      '新しいキーを作ります。ボタンは Create key や Create new secret key のような名前です。あとで用途がわかるよう、名前は Dear to Love にしましょう。',
+      '새 키를 만드세요. 버튼 이름은 Create key나 Create new secret key 같은 식입니다. 나중에 용도를 알 수 있게 이름을 Dear to Love로 지으세요.',
+    ],
+  'Copy the key right away: most sites show it only once. Keep it private, like a password.': [
+    '立刻复制密钥：大多数网站只显示一次。像密码一样保管好，不要外传。',
+    '立刻複製金鑰：大多數網站只顯示一次。像密碼一樣保管好，不要外流。',
+    'キーはすぐにコピーしてください。多くのサイトでは一度しか表示されません。パスワードと同じく、人に見せないでください。',
+    '키는 바로 복사하세요. 대부분의 사이트는 한 번만 보여 줍니다. 비밀번호처럼 남에게 알리지 마세요.',
+  ],
+  'Back in Dear to Love, choose {setUp} below. It opens the form with the service and address filled in.':
+    [
+      '回到 Dear to Love，选择下方的{setUp}。它会打开一个已填好服务和地址的表单。',
+      '回到 Dear to Love，選擇下方的{setUp}。它會開啟一個已填好服務和位址的表單。',
+      'Dear to Love に戻り、下の{setUp}を押します。サービスとアドレスが入力済みのフォームが開きます。',
+      'Dear to Love로 돌아와 아래의 {setUp}을 누르세요. 서비스와 주소가 채워진 양식이 열립니다.',
+    ],
+  'Paste the key into {apiKey}.': [
+    '把密钥粘贴到{apiKey}中。',
+    '把金鑰貼到{apiKey}中。',
+    'キーを{apiKey}に貼り付けます。',
+    '키를 {apiKey}에 붙여 넣으세요.',
+  ],
+  'Pick a model under {model}, for example {example}. Any name from the service’s model list works.':
+    [
+      '在{model}下选一个模型，例如 {example}。服务模型列表中的任何名称都可以。',
+      '在{model}下選一個模型，例如 {example}。服務模型列表中的任何名稱都可以。',
+      '{model}でモデルを選びます（例：{example}）。サービスのモデル一覧にある名前ならどれでも使えます。',
+      '{model}에서 모델을 고르세요(예: {example}). 서비스 모델 목록에 있는 이름이면 무엇이든 됩니다.',
+    ],
+  'Type the model’s name under {model} as the program shows it. No key is needed.': [
+    '在{model}中按程序显示的样子输入模型名称。不需要密钥。',
+    '在{model}中按程式顯示的樣子輸入模型名稱。不需要金鑰。',
+    '{model}に、プログラムに表示されているとおりのモデル名を入力します。キーは要りません。',
+    '{model}에 프로그램에 표시된 그대로 모델 이름을 입력하세요. 키는 필요 없습니다.',
+  ],
+  'Choose {save}, then {test} beside the new connection. It checks the address, the key and the model, for free.':
+    [
+      '选择{save}，然后点新连接旁的{test}。它会免费检查地址、密钥和模型。',
+      '選擇{save}，然後點新連線旁的{test}。它會免費檢查位址、金鑰和模型。',
+      '{save}を押し、新しい接続の横の{test}を押します。アドレス、キー、モデルを無料で確認します。',
+      '{save}을 누른 다음 새 연결 옆의 {test}를 누르세요. 주소, 키, 모델을 무료로 확인합니다.',
+    ],
+  'Start a story. Your first connection writes the replies; {send} shows one short sample first, for a fraction of a cent.':
+    [
+      '开始一个故事。你的第一个连接会负责写回复；{send}可以先花不到一美分看一段简短示例。',
+      '開始一個故事。你的第一個連線會負責寫回覆；{send}可以先花不到一美分看一段簡短示例。',
+      '物語を始めましょう。最初の接続が返信を書きます。{send}を使えば、1 セント未満で短いサンプルを先に見られます。',
+      '이야기를 시작하세요. 첫 연결이 답장을 씁니다. {send}로 1센트도 안 되는 비용에 짧은 예시를 먼저 볼 수 있어요.',
+    ],
+  'Sites and programs rename their buttons now and then. If one is called something else, look for the closest match.':
+    [
+      '网站和程序时常会改按钮名称。如果名称不一样，找最接近的那个即可。',
+      '網站和程式時常會改按鈕名稱。如果名稱不一樣，找最接近的那個即可。',
+      'サイトやプログラムのボタン名はときどき変わります。名前が違うときは、いちばん近いものを探してください。',
+      '사이트와 프로그램은 버튼 이름을 가끔 바꿉니다. 이름이 다르면 가장 비슷한 것을 찾으세요.',
+    ],
+  'If OpenAI answers that your organization must be verified, verify it in OpenAI’s settings (Organization, then General) and try again a few minutes later.':
+    [
+      '如果 OpenAI 回复说你的组织需要验证，请在 OpenAI 的设置中（Organization，然后 General）完成验证，几分钟后再试。',
+      '如果 OpenAI 回覆說你的組織需要驗證，請在 OpenAI 的設定中（Organization，然後 General）完成驗證，幾分鐘後再試。',
+      'OpenAI から組織の認証が必要と返ってきたら、OpenAI の設定（Organization → General）で認証し、数分後にもう一度試してください。',
+      'OpenAI가 조직 인증이 필요하다고 답하면, OpenAI 설정(Organization → General)에서 인증한 뒤 몇 분 후 다시 시도하세요.',
+    ],
+  'Google AI Studio has a free tier with low daily limits, so you can try it before paying. Google may use what you send on the free tier to improve its products; set up billing in AI Studio to lift the limits.':
+    [
+      'Google AI Studio 有每日限额较低的免费层，可以先试用再付费。在免费层上，Google 可能会用你发送的内容改进其产品；在 AI Studio 中设置结算即可提高限额。',
+      'Google AI Studio 有每日限額較低的免費方案，可以先試用再付費。在免費方案上，Google 可能會用你傳送的內容改善其產品；在 AI Studio 中設定帳單即可提高限額。',
+      'Google AI Studio には 1 日の上限が低い無料枠があり、支払う前に試せます。無料枠では、送った内容が Google の製品改善に使われることがあります。AI Studio で請求を設定すると上限が上がります。',
+      'Google AI Studio에는 하루 한도가 낮은 무료 등급이 있어 결제 전에 써 볼 수 있습니다. 무료 등급에서는 보낸 내용이 Google 제품 개선에 쓰일 수 있어요. AI Studio에서 결제를 설정하면 한도가 올라갑니다.',
+    ],
+  'Choose Get API key, then Create API key. Name it Dear to Love.': [
+    '选择 Get API key，然后选择 Create API key。命名为 Dear to Love。',
+    '選擇 Get API key，然後選擇 Create API key。命名為 Dear to Love。',
+    'Get API key、続けて Create API key を押します。名前は Dear to Love にします。',
+    'Get API key를 누른 다음 Create API key를 누르세요. 이름은 Dear to Love로 하세요.',
+  ],
+  'Buy a few dollars of credit on the Credits page. A few models are free, with low limits.': [
+    '在 Credits 页面购买几美元的额度。少数模型免费，但限额较低。',
+    '在 Credits 頁面購買幾美元的額度。少數模型免費，但限額較低。',
+    'Credits のページで数ドル分のクレジットを買います。いくつかのモデルは無料ですが、上限は低めです。',
+    'Credits 페이지에서 몇 달러어치 크레딧을 사세요. 일부 모델은 무료지만 한도가 낮습니다.',
+  ],
+  'Open Keys and choose Create Key. You can give the key its own spending limit there, which is a good idea.':
+    [
+      '打开 Keys，选择 Create Key。你可以在那里为这个密钥单独设置消费上限，建议这样做。',
+      '開啟 Keys，選擇 Create Key。你可以在那裡為這個金鑰單獨設定消費上限，建議這樣做。',
+      'Keys を開いて Create Key を押します。そこでキーごとに利用上限を設定できるので、設定しておくと安心です。',
+      'Keys를 열고 Create Key를 누르세요. 거기서 키마다 지출 한도를 따로 정할 수 있으니 설정해 두는 게 좋습니다.',
+    ],
+  'Each model’s page on OpenRouter shows its price, its content rules and the exact name to type.':
+    [
+      'OpenRouter 上每个模型的页面都会显示其价格、内容规则以及要输入的准确名称。',
+      'OpenRouter 上每個模型的頁面都會顯示其價格、內容規則以及要輸入的準確名稱。',
+      'OpenRouter の各モデルのページには、料金、内容のルール、入力する正確な名前が載っています。',
+      'OpenRouter의 각 모델 페이지에는 가격, 콘텐츠 규칙, 입력할 정확한 이름이 나와 있습니다.',
+    ],
+  'Open Access Tokens and create a new fine-grained token that may make calls to Inference Providers. Name it Dear to Love.':
+    [
+      '打开 Access Tokens，新建一个可调用 Inference Providers 的细粒度令牌。命名为 Dear to Love。',
+      '開啟 Access Tokens，新增一個可呼叫 Inference Providers 的細粒度權杖。命名為 Dear to Love。',
+      'Access Tokens を開き、Inference Providers を呼び出せる fine-grained トークンを新しく作ります。名前は Dear to Love にします。',
+      'Access Tokens를 열고 Inference Providers를 호출할 수 있는 fine-grained 토큰을 새로 만드세요. 이름은 Dear to Love로 하세요.',
+    ],
+  'Choose {download} below and install Ollama. Open it once; after that it runs quietly in the background.':
+    [
+      '选择下方的{download}并安装 Ollama。打开一次，之后它会在后台安静运行。',
+      '選擇下方的{download}並安裝 Ollama。開啟一次，之後它會在背景安靜執行。',
+      '下の{download}を押して Ollama をインストールします。一度開けば、あとはバックグラウンドで静かに動きます。',
+      '아래의 {download}를 눌러 Ollama를 설치하세요. 한 번 열어 두면 그 뒤로는 백그라운드에서 조용히 실행됩니다.',
+    ],
+  'Open a terminal. On Windows, press Start, type Terminal and press Enter. On a Mac, press Cmd+Space, type Terminal and press Enter.':
+    [
+      '打开终端。在 Windows 上，按“开始”，输入 Terminal 并按回车。在 Mac 上，按 Cmd+空格，输入 Terminal 并按回车。',
+      '開啟終端機。在 Windows 上，按「開始」，輸入 Terminal 並按 Enter。在 Mac 上，按 Cmd+空白鍵，輸入 Terminal 並按 Enter。',
+      'ターミナルを開きます。Windows ではスタートを押し、Terminal と入力して Enter。Mac では Cmd+Space を押し、Terminal と入力して Enter を押します。',
+      '터미널을 여세요. Windows에서는 시작을 누르고 Terminal을 입력한 뒤 Enter, Mac에서는 Cmd+Space를 누르고 Terminal을 입력한 뒤 Enter를 누르세요.',
+    ],
+  'Type this and press Enter. The model is several GB, so it takes a few minutes:': [
+    '输入下面这行并按回车。模型有好几 GB，需要几分钟：',
+    '輸入下面這行並按 Enter。模型有好幾 GB，需要幾分鐘：',
+    '次のように入力して Enter を押します。モデルは数 GB あるので、数分かかります：',
+    '아래를 입력하고 Enter를 누르세요. 모델이 몇 GB라서 몇 분 걸립니다:',
+  ],
+  'Not much memory? {small} runs on computers with 8 GB. With a graphics card that has 24 GB, {large} writes much better.':
+    [
+      '内存不多？{small} 在 8 GB 的电脑上就能运行。如果显卡有 24 GB 显存，{large} 写得好得多。',
+      '記憶體不多？{small} 在 8 GB 的電腦上就能執行。如果顯示卡有 24 GB 顯示記憶體，{large} 寫得好得多。',
+      'メモリが少なめなら、{small} は 8 GB のパソコンでも動きます。24 GB のグラフィックカードがあれば、{large} のほうがずっと上手に書きます。',
+      '메모리가 적다면 {small}는 8 GB 컴퓨터에서도 돌아갑니다. 24 GB 그래픽카드가 있다면 {large}가 훨씬 잘 씁니다.',
+    ],
+  'Choose {download} below, install LM Studio and open it.': [
+    '选择下方的{download}，安装 LM Studio 并打开它。',
+    '選擇下方的{download}，安裝 LM Studio 並開啟它。',
+    '下の{download}を押し、LM Studio をインストールして開きます。',
+    '아래의 {download}를 눌러 LM Studio를 설치하고 여세요.',
+  ],
+  'Find a model in its Discover tab (the magnifying glass), such as Gemma 4 12B, and download it.':
+    [
+      '在 Discover 标签页（放大镜图标）中找一个模型，例如 Gemma 4 12B，然后下载。',
+      '在 Discover 分頁（放大鏡圖示）中找一個模型，例如 Gemma 4 12B，然後下載。',
+      'Discover タブ（虫めがね）で Gemma 4 12B などのモデルを探してダウンロードします。',
+      'Discover 탭(돋보기)에서 Gemma 4 12B 같은 모델을 찾아 내려받으세요.',
+    ],
+  'In the Developer tab, load the model with a context length of 8192 or more, then switch the server on.':
+    [
+      '在 Developer 标签页中，以 8192 或更大的上下文长度加载模型，然后开启服务器。',
+      '在 Developer 分頁中，以 8192 或更大的上下文長度載入模型，然後開啟伺服器。',
+      'Developer タブで、コンテキスト長を 8192 以上にしてモデルを読み込み、サーバーをオンにします。',
+      'Developer 탭에서 컨텍스트 길이를 8192 이상으로 해서 모델을 불러온 뒤 서버를 켜세요.',
+    ],
+  'Set {context} under Advanced to the context length the model was loaded with, so long stories fit.':
+    [
+      '把高级设置中的{context}设成模型加载时的上下文长度，这样长故事也放得下。',
+      '把進階設定中的{context}設成模型載入時的上下文長度，這樣長故事也放得下。',
+      '長い物語が収まるよう、詳細設定の{context}をモデルを読み込んだときのコンテキスト長に合わせます。',
+      '긴 이야기가 들어가도록 고급 설정의 {context}를 모델을 불러올 때의 컨텍스트 길이에 맞추세요.',
+    ],
+  'Already have an OpenAI key for stories? The same key works: skip to pasting it.': [
+    '已经有用于故事的 OpenAI 密钥？同一个密钥就能用：直接跳到粘贴那一步。',
+    '已經有用於故事的 OpenAI 金鑰？同一個金鑰就能用：直接跳到貼上那一步。',
+    '物語用の OpenAI キーがもうある？同じキーが使えるので、貼り付けの手順まで飛ばしてかまいません。',
+    '이야기용 OpenAI 키가 이미 있나요? 같은 키를 쓸 수 있으니 붙여 넣는 단계로 건너뛰세요.',
+  ],
+  'Settings → Pictures chooses which connection makes pictures, or none.': [
+    '在“设置 → 图片”中选择由哪个连接生成图片，或不使用。',
+    '在「設定 → 圖片」中選擇由哪個連線產生圖片，或不使用。',
+    'どの接続で画像を作るか（または作らないか）は、設定 → 画像で選びます。',
+    '설정 → 이미지에서 어떤 연결이 이미지를 만들지, 또는 안 만들지 고릅니다.',
+  ],
+  'Best place to start': ['最适合起步', '最適合起步', '最初の一歩に', '처음 시작하기에 가장 좋음'],
+  'Clear, natural stories, written quickly. The same key makes portraits and item pictures.': [
+    '故事清晰自然，写得也快。同一个密钥还能生成肖像和物品图片。',
+    '故事清晰自然，寫得也快。同一個金鑰還能產生肖像和物品圖片。',
+    'わかりやすく自然な物語を、すばやく書きます。同じキーで肖像画やアイテムの画像も作れます。',
+    '명확하고 자연스러운 이야기를 빠르게 씁니다. 같은 키로 초상화와 아이템 그림도 만들 수 있어요.',
+  ],
+  'Keeps characters, threads and tone straight over long stories. Claude Opus 5.5 is stronger still, at about twice the price.':
+    [
+      '在长故事中也能保持角色、线索和基调一致。Claude Opus 5.5 更强，价格大约是两倍。',
+      '在長故事中也能保持角色、線索和基調一致。Claude Opus 5.5 更強，價格大約是兩倍。',
+      '長い物語でも登場人物、伏線、雰囲気がぶれません。Claude Opus 5.5 はさらに強力で、料金はおよそ 2 倍です。',
+      '긴 이야기에서도 인물, 줄거리, 분위기를 일관되게 유지합니다. Claude Opus 5.5는 더 뛰어나고 가격은 약 두 배입니다.',
+    ],
+  'Cheap and good': ['便宜又好用', '便宜又好用', '安くて優秀', '저렴하고 좋음'],
+  'Quick and capable, and Google has a free tier to try it first.': [
+    '快速又能干，而且 Google 提供免费层可以先试用。',
+    '快速又能幹，而且 Google 提供免費方案可以先試用。',
+    '速くて有能です。Google には先に試せる無料枠もあります。',
+    '빠르고 유능하며, Google에는 먼저 써 볼 수 있는 무료 등급도 있습니다.',
+  ],
+  'Many models, looser rules': [
+    '模型多，规则宽松',
+    '模型多，規則寬鬆',
+    'モデルが豊富、ルールが緩め',
+    '모델이 많고 규칙이 느슨함',
+  ],
+  'One key for hundreds of models, including open ones with looser content rules. A favourite for roleplay.':
+    [
+      '一个密钥就能用数百个模型，其中包括内容规则更宽松的开放模型。是角色扮演的热门之选。',
+      '一個金鑰就能用數百個模型，其中包括內容規則更寬鬆的開放模型。是角色扮演的熱門之選。',
+      'ひとつのキーで数百のモデルが使え、内容のルールが緩めのオープンなモデルもあります。ロールプレイで人気です。',
+      '키 하나로 수백 개 모델을 쓸 수 있고, 콘텐츠 규칙이 느슨한 오픈 모델도 있습니다. 롤플레이에서 인기가 많아요.',
+    ],
+  'Runs on your own computer with about 16 GB of memory. Nothing leaves it.': [
+    '在你自己的电脑上运行，需要约 16 GB 内存。任何内容都不会离开电脑。',
+    '在你自己的電腦上執行，需要約 16 GB 記憶體。任何內容都不會離開電腦。',
+    '16 GB ほどのメモリがあれば自分のパソコンで動きます。何も外に出ません。',
+    '메모리 16 GB 정도면 내 컴퓨터에서 돌아갑니다. 아무것도 밖으로 나가지 않아요.',
+  ],
+  "Uses Anthropic's own Messages API. Claude picks its own temperature, so that setting is not sent.":
+    [
+      '使用 Anthropic 自己的 Messages API。Claude 会自行选择温度，所以不会发送这个设置。',
+      '使用 Anthropic 自己的 Messages API。Claude 會自行選擇溫度，所以不會傳送這個設定。',
+      'Anthropic 独自の Messages API を使います。Claude は温度を自分で決めるので、その設定は送りません。',
+      'Anthropic 자체 Messages API를 씁니다. Claude는 온도를 스스로 정하므로 그 설정은 보내지 않습니다.',
+    ],
+  'Most current models from OpenAI, Anthropic, Google and xAI think before they write. For them the app asks for brief thinking and allows 2,000 more tokens for it, which usage and the budget count, and leaves out the temperature where the model keeps its own.':
+    [
+      'OpenAI、Anthropic、Google 和 xAI 的大多数现有模型会先思考再写作。对这些模型，应用会要求简短思考并为此多留 2,000 个 token（用量和预算会计入），在模型坚持使用自己的温度时也不发送温度。',
+      'OpenAI、Anthropic、Google 和 xAI 的大多數現有模型會先思考再寫作。對這些模型，應用程式會要求簡短思考並為此多留 2,000 個 token（用量和預算會計入），在模型堅持使用自己的溫度時也不傳送溫度。',
+      'OpenAI、Anthropic、Google、xAI の現行モデルの多くは、書く前に考えます。それらには短く考えるよう頼み、そのために 2,000 トークン多く確保します（使用量と予算に含まれます）。温度を自分で決めるモデルには温度を送りません。',
+      'OpenAI, Anthropic, Google, xAI의 현재 모델 대부분은 쓰기 전에 생각합니다. 이런 모델에는 짧게 생각하도록 요청하고 그만큼 2,000토큰을 더 허용하며(사용량과 예산에 포함), 온도를 스스로 정하는 모델에는 온도를 보내지 않습니다.',
+    ],
+  'Suggested models': ['推荐模型', '推薦模型', 'おすすめのモデル', '추천 모델'],
+  'November 2026': ['2026 年 11 月', '2026 年 11 月', '2026 年 11 月', '2026년 11월'],
+  'all-round, quick': ['全面、快速', '全面、快速', '万能で速い', '두루 좋고 빠름'],
+  'stronger plots': ['情节更强', '情節更強', 'より良い筋書き', '더 탄탄한 줄거리'],
+  'the most capable, costs the most': [
+    '能力最强，也最贵',
+    '能力最強，也最貴',
+    '最も高性能、最も高価',
+    '가장 뛰어나고 가장 비쌈',
+  ],
+  cheapest: ['最便宜', '最便宜', '最安', '가장 저렴'],
+  'cheap and good': ['便宜又好', '便宜又好', '安くて優秀', '저렴하고 좋음'],
+  'long stories that stay consistent': [
+    '长故事也能保持一致',
+    '長故事也能保持一致',
+    '長い物語でもぶれない',
+    '긴 이야기도 일관됨',
+  ],
+  'the best at long, careful stories': [
+    '最擅长细致的长故事',
+    '最擅長細緻的長故事',
+    '長く丁寧な物語が最も得意',
+    '길고 섬세한 이야기에 최고',
+  ],
+  'the previous Flash': ['上一代 Flash', '上一代 Flash', 'ひとつ前の Flash', '이전 세대 Flash'],
+  'the strongest Gemini; paid accounts only': [
+    '最强的 Gemini；仅限付费账户',
+    '最強的 Gemini；僅限付費帳戶',
+    '最強の Gemini。有料アカウントのみ',
+    '가장 강력한 Gemini, 유료 계정 전용',
+  ],
+  'popular for roleplay, cheap': [
+    '角色扮演热门，便宜',
+    '角色扮演熱門，便宜',
+    'ロールプレイで人気、安い',
+    '롤플레이 인기, 저렴',
+  ],
+  'good stories; about 10 GB of memory': [
+    '故事不错；约 10 GB 内存',
+    '故事不錯；約 10 GB 記憶體',
+    '良い物語。メモリ約 10 GB',
+    '좋은 이야기, 메모리 약 10 GB',
+  ],
+  'for computers with 8 GB': [
+    '适合 8 GB 内存的电脑',
+    '適合 8 GB 記憶體的電腦',
+    '8 GB のパソコン向け',
+    '8 GB 컴퓨터용',
+  ],
+  'runs almost anywhere; simple stories': [
+    '几乎哪里都能跑；故事较简单',
+    '幾乎哪裡都能跑；故事較簡單',
+    'ほぼどこでも動く。物語はシンプル',
+    '거의 어디서나 실행, 이야기는 단순',
+  ],
+  'much better; a graphics card with 24 GB': [
+    '好得多；需要 24 GB 显卡',
+    '好得多；需要 24 GB 顯示卡',
+    'ずっと上手。24 GB のグラフィックカードが必要',
+    '훨씬 좋음, 24 GB 그래픽카드 필요',
+  ],
+  'fewer refusals for dark fiction': [
+    '黑暗题材更少拒绝',
+    '黑暗題材更少拒絕',
+    'ダークな物語でも断りにくい',
+    '어두운 소설도 덜 거절함',
+  ],
+  'Filled in from the prices this app lists, checked {checked}. Check them against the service’s pricing page, then save.':
+    [
+      '已按本应用列出的价格填好（核对于 {checked}）。请对照服务的定价页面确认后再保存。',
+      '已按本應用程式列出的價格填好（核對於 {checked}）。請對照服務的定價頁面確認後再儲存。',
+      'このアプリに載っている料金（{checked}時点で確認）で入力しました。サービスの料金ページと見比べてから保存してください。',
+      '이 앱에 나온 가격({checked} 기준 확인)으로 채웠습니다. 서비스 요금 페이지와 비교한 뒤 저장하세요.',
+    ],
+  'Set up': ['设置', '設定', '設定する', '설정'],
 };

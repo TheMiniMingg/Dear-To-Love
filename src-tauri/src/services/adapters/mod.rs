@@ -1,6 +1,9 @@
 //! Model adapters. Each turns a provider-neutral `GenerateRequest` into one
-//! outbound call and streams draft text back. Adapters never retry: every
-//! retry is a new generation run with its own ledger row.
+//! outbound call and streams draft text back. Adapters never resend a call
+//! that may have been billed: every retry is a new generation run with its
+//! own ledger row. The one exception costs nothing: a request refused
+//! outright (HTTP 400) for a setting the app added on its own, such as a
+//! temperature the model no longer takes, is sent once more without it.
 
 pub mod anthropic;
 pub mod http;
@@ -182,19 +185,30 @@ pub enum Adapter {
     Pictures(super::pictures::PictureMaker),
 }
 
-/// Extra tokens an OpenAI reasoning model may spend reasoning before it
-/// writes. Reasoning counts against the token limit, so without this room a
-/// short limit can end before any story is written. The budget reserves it.
+/// Extra tokens a model that thinks first (OpenAI's reasoning models,
+/// Claude 5, Gemini 2.5 and later, Grok 4) may spend before it writes.
+/// Thinking counts against the token limit, so without this room a short
+/// limit can end before any story is written. The budget reserves it.
 pub const REASONING_ROOM: u32 = 2_000;
 
 impl Adapter {
-    /// The request as this connection should send it: room to reason first
-    /// for a model that does. Callers reserve the budget for what this
-    /// returns, so the reservation covers the reasoning too.
+    /// The request as this connection should send it: room to think first
+    /// for a model that does, and no temperature for one that keeps its own.
+    /// Callers reserve the budget for what this returns, so the reservation
+    /// covers the thinking too.
     pub fn fit_request(&self, mut req: GenerateRequest) -> GenerateRequest {
-        if let Self::OpenAi(a) = self {
-            if a.thinks_first(&req.model_id) {
-                req.max_output_tokens = req.max_output_tokens.saturating_add(REASONING_ROOM);
+        let (thinks, keeps_temperature) = match self {
+            Self::OpenAi(a) => match a.thinking(&req.model_id) {
+                Some(t) => (true, t.temperature),
+                None => (false, true),
+            },
+            // Claude's adapter never sends a temperature.
+            Self::Anthropic(a) => (a.thinks_first(&req.model_id), true),
+            _ => (false, true),
+        };
+        if thinks {
+            req.max_output_tokens = req.max_output_tokens.saturating_add(REASONING_ROOM);
+            if !keeps_temperature {
                 req.temperature = None;
             }
         }

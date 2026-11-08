@@ -37,6 +37,9 @@ function keepTextSize(size: number): number {
   return size;
 }
 
+/** A connection the setup guide asked Settings to start: a preset id and maybe a model. */
+export type NewConnection = { preset: string; model?: string };
+
 type UiState = {
   screen: Screen;
   /** Where Back returns to, newest last (Settings, Usage, Diagnostics). */
@@ -53,10 +56,10 @@ type UiState = {
   clearDraft: (routeId: string) => void;
   stepTextSize: (delta: 1 | -1) => void;
   setTextSize: (size: number) => void;
-  /** A service the setup guide asked Settings to add (a connection preset id). */
-  newConnection: string | null;
-  /** Opens Settings with a new connection for this preset. */
-  addConnection: (preset: string) => void;
+  /** A service the setup guide asked Settings to add, and the model it picked. */
+  newConnection: NewConnection | null;
+  /** Opens Settings with a new connection for this preset (and model). */
+  addConnection: (preset: string, model?: string) => void;
   clearNewConnection: () => void;
 };
 
@@ -67,9 +70,9 @@ export const useUiStore = create<UiState>((set) => ({
   textSize: loadTextSize(),
   updates: null,
   newConnection: null,
-  addConnection: (preset) =>
+  addConnection: (preset, model) =>
     set((s) => ({
-      newConnection: preset,
+      newConnection: model ? { preset, model } : { preset },
       screen: { name: 'settings' },
       history: [...s.history, s.screen].slice(-HISTORY_LIMIT),
     })),

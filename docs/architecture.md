@@ -105,7 +105,11 @@ app start       pending/streaming runs -> interrupted; open ledger rows -> unkno
   `interrupted` and nothing attaches anywhere.
 - `events.generation_run_id` and `api_requests.generation_run_id` are unique,
   so a run can commit at most one reply and has at most one ledger row.
-- Adapters never retry. Requests to loopback addresses bypass proxies.
+- Adapters never retry a call that may have been billed; a request refused
+  outright for a setting the app added itself is sent once more without it
+  (ADR 0028). Models that think first are asked for brief thinking and get
+  `REASONING_ROOM` more output tokens (`Adapter::fit_request`). Requests to
+  loopback addresses bypass proxies.
   `openai_compatible` speaks `POST /chat/completions` (SSE); `ollama` speaks
   Ollama's `POST /api/chat` (NDJSON) and sends `options.num_ctx` from the
   connection's context limit, because Ollama otherwise loads models with its

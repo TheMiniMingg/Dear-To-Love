@@ -2,6 +2,29 @@
 
 ## Unreleased
 
+- **A setup guide that starts with what matters.** The Setup guide opens with the short
+  version (play free now, connect an AI, stay within budget, your keys stay here), then a few
+  **recommended models** with what a reply costs and a **Set up** button that fills in the
+  service and model, then a table of what replies cost with each model. A bar of contents
+  stays at the top while you read.
+- **Every click, if you want it.** Each service in the guide, and the connection form under
+  **Service**, has **Step by step, every click**: from making an account and a key to testing
+  the connection, with terminal help for Ollama.
+- **Current models, suggested in one click.** The connection form shows suggested models for
+  each service with a few words on each (checked November 2026): Gemini 3.8 Flash, Grok 4.7,
+  DeepSeek's Flash and V4 Pro, Mistral's latest, popular OpenRouter models for roleplay, and
+  Ollama models by memory size. Claude now suggests Sonnet 5.5 first.
+- **Prices without the hunt.** **Usage & budget → Prices** offers **Use the listed prices**
+  for models the app knows, so estimates and the budget work; check and save them.
+- **New paid connections start at a 32,000-token context**, which keeps a long story's replies
+  about a quarter of the price; older parts of the story are summarized as before. Existing
+  connections are unchanged.
+- **Models that think first work better.** Claude 5, Gemini 2.5 and later, Grok 4 and those
+  models through OpenRouter are now asked to think briefly, with 2,000 more tokens for it, so
+  short reply limits no longer end before the story is written. If a service refuses a
+  setting the app adds on its own (such as a temperature a model no longer takes), the
+  request is sent once more without it, at no charge for the refused one.
+
 - **Install updates from the app.** When a new release is out, **Settings → Updates** can
   install it and restart (the footer notice leads there). The download is checked against the
   app's own signature first, and nothing is downloaded until you ask. This needs a release
