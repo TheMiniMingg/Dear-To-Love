@@ -106,6 +106,17 @@ fn portrait_prompts_describe_the_character_without_names_and_stay_safe() {
         "long looks never cut off the safe-for-work sentence"
     );
 
+    let tidy = Character {
+        appearance: Some("Short black hair, an easy grin.".into()),
+        ..Character::default()
+    };
+    assert!(
+        portrait_prompt(&tidy, &World::default(), PortraitStyle::Painted)
+            .text
+            .contains("Looks: Short black hair, an easy grin. One person"),
+        "looks that end in a full stop don't get a second one"
+    );
+
     let orc = Character {
         species: Some("Orc".into()),
         pronouns: Some("he/him".into()),
@@ -276,6 +287,15 @@ async fn a_portrait_is_made_kept_for_its_story_and_recorded() {
     assert_eq!(sent["model"], "gpt-image-1");
     assert!(sent["prompt"].as_str().unwrap().contains("lizardfolk"));
     assert!(!reqs[0].body.contains("Mara"));
+    assert_eq!(
+        made.asset.made_from.as_deref(),
+        sent["prompt"].as_str(),
+        "the picture keeps the description it was drawn from"
+    );
+    assert_eq!(
+        rows::list(&env.t.db).await.unwrap()[0].made_from,
+        made.asset.made_from
+    );
 
     assert_eq!(
         env.ledger().await,

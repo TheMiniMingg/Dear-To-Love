@@ -103,6 +103,13 @@ async fn rich_story(t: &TestDb) -> Rich {
     .unwrap()
     .asset
     .id;
+    rows::set_made_from(
+        &t.db,
+        &image,
+        "A harbor at dawn, a detailed digital painting.",
+    )
+    .await
+    .unwrap();
     let story = create_story(
         &t.db,
         CreateStoryInput {
@@ -305,6 +312,11 @@ async fn storypack_round_trips_into_a_fresh_install() {
     assert!(!imgs[0].shared);
     assert_eq!(imgs[0].stories.len(), 1);
     assert_eq!(imgs[0].stories[0].id, got.story_id);
+    assert_eq!(
+        imgs[0].made_from.as_deref(),
+        Some("A harbor at dawn, a detailed digital painting."),
+        "a made picture keeps what it was drawn from"
+    );
 
     let before = list_routes(&t.db, &r.story.story_id).await.unwrap();
     let after = list_routes(&fresh.db, &got.story_id).await.unwrap();

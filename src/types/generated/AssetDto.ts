@@ -9,4 +9,9 @@ export type AssetDto = { id: string, mime: string, width: number, height: number
  * Any story can use it. Otherwise only `stories` can (none: its
  * stories were deleted, or the story it was added for wasn't made).
  */
-shared: boolean, stories: Array<AssetStory>, };
+shared: boolean, stories: Array<AssetStory>, 
+/**
+ * For a picture the app made: the description the picture service was
+ * sent.
+ */
+madeFrom: string | null, };

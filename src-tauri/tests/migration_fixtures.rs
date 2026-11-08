@@ -172,6 +172,30 @@ async fn v8_fixture_upgrades_to_current() {
     );
 }
 
+#[tokio::test]
+async fn v9_fixture_upgrades_to_current() {
+    let (db, _dir) = upgrade_fixture(9, include_str!("fixtures/data_v9.sql")).await;
+    let rows: Vec<(String, Option<String>)> =
+        sqlx::query_as("SELECT label, made_from FROM assets ORDER BY created_at")
+            .fetch_all(db.reader())
+            .await
+            .unwrap();
+    assert_eq!(rows.len(), 2);
+    assert!(rows[0].1.as_deref().unwrap().contains("Looks: grey eyes."));
+    assert_eq!(rows[1], ("Pier".to_string(), None));
+}
+
+/// Pictures from before made pictures kept their description have none.
+#[tokio::test]
+async fn older_pictures_have_no_description() {
+    let (db, _dir) = upgrade_fixture(7, include_str!("fixtures/data_v7.sql")).await;
+    let made_from: Option<String> = sqlx::query_scalar("SELECT made_from FROM assets")
+        .fetch_one(db.reader())
+        .await
+        .unwrap();
+    assert_eq!(made_from, None);
+}
+
 /// Replies asked for before reply options existed are plain replies.
 #[tokio::test]
 async fn v1_runs_have_no_reply_options() {

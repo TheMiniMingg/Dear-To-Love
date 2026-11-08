@@ -33,6 +33,7 @@ const harbor: AssetDto = {
   createdAt: '2026-11-06T00:00:00Z',
   shared: true,
   stories: [],
+  madeFrom: null,
 };
 const mara: AssetDto = { ...harbor, id: 'img-2', label: 'Mara', tags: [] };
 
@@ -98,6 +99,26 @@ describe('Images screen', () => {
     expect(details).toHaveTextContent('1200 × 800 · 342 KB · PNG');
     expect(within(details).getByRole('checkbox', { name: 'Background' })).toBeChecked();
     expect(await within(details).findByText('Not used in any story.')).toBeVisible();
+    expect(within(details).queryByText('What was sent to make it')).toBeNull();
+  });
+
+  it('shows what was sent to make a picture the app made', async () => {
+    const made: AssetDto = {
+      ...mara,
+      label: 'Portrait of Mara',
+      tags: ['Portrait'],
+      madeFrom: 'Head-and-shoulders portrait of a woman. Looks: red hair. Avoid: text.',
+    };
+    invoke.mockImplementation(async (cmd: string) => {
+      if (cmd === 'list_images') return [made];
+      if (cmd === 'image_usages') return [];
+      throw { code: 'NOT_FOUND', message: cmd };
+    });
+    render(<ImagesScreen />);
+    await userEvent.click(await screen.findByRole('button', { name: /Portrait of Mara/ }));
+    const details = await screen.findByRole('region', { name: 'Image: Portrait of Mara' });
+    await userEvent.click(within(details).getByText('What was sent to make it'));
+    expect(within(details).getByText(made.madeFrom!)).toBeVisible();
   });
 
   it('keeps images that a story shows, and deletes unused ones after asking', async () => {

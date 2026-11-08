@@ -404,6 +404,7 @@ fn write_pack(
                     byte_size: bytes.len() as u64,
                     label: a.label.clone(),
                     tags: serde_json::from_str(&a.tags_json).unwrap_or_default(),
+                    made_from: a.made_from.clone(),
                 });
                 files.push((name, bytes));
             }
@@ -954,8 +955,8 @@ async fn commit(db: &Database, op_id: &str, p: &Prepared) -> AppResult<Storypack
                     .cloned()
                     .collect();
                 sqlx::query(
-                    "INSERT INTO assets (id, sha256, original_rel, thumb_rel, mime, width, height, byte_size, label, tags_json, created_at, shared) \
-                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)",
+                    "INSERT INTO assets (id, sha256, original_rel, thumb_rel, mime, width, height, byte_size, label, tags_json, created_at, shared, made_from) \
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)",
                 )
                 .bind(&id)
                 .bind(&img.pack.sha256)
@@ -968,6 +969,12 @@ async fn commit(db: &Database, op_id: &str, p: &Prepared) -> AppResult<Storypack
                 .bind(img.pack.label.chars().take(asset_rows::MAX_LABEL).collect::<String>())
                 .bind(serde_json::to_string(&tags).expect("tags serialize"))
                 .bind(now())
+                .bind(img.pack.made_from.as_deref().map(|m| {
+                    m.trim()
+                        .chars()
+                        .take(asset_rows::MAX_MADE_FROM)
+                        .collect::<String>()
+                }))
                 .execute(&mut *tx)
                 .await?;
                 added += 1;

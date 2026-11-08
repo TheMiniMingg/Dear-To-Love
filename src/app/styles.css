@@ -2264,6 +2264,21 @@ img.msg-avatar {
 .make-portrait .field {
   max-width: 14rem;
 }
+/* What a made picture was drawn from, folded away under it. */
+.made-from {
+  margin: 0.25rem 0;
+  font-size: 0.9rem;
+}
+.made-from > summary {
+  color: var(--muted);
+}
+.made-from-text {
+  margin: 0.4rem 0;
+  padding: 0.4rem 0.6rem;
+  border-left: 3px solid var(--border);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
 /* What a portrait or item picture is made from, changeable before it is made. */
 .picture-description {
   display: flex;

@@ -50,6 +50,7 @@ const portrait: AssetDto = {
   createdAt: '',
   shared: false,
   stories: [{ id: 's1', title: 'Harbor' }],
+  madeFrom: null,
 };
 
 describe('Make a portrait', () => {

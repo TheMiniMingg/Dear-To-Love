@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+- **See how a picture was made.** A portrait or item picture the app makes keeps the
+  description the picture service was sent. Open it in the image library, or pick it under
+  **Pictures**, and choose **What was sent to make it**. Cards for new characters now give
+  what a painter needs (apparent age, build, skin tone or heritage, hair, eyes, clothes), so
+  their portraits match the story, and a description no longer ends in two full stops.
+- **Testing a connection explains more.** The result is in your language, a wrong Google
+  Gemini key is reported as a refused key, and a paid connection with no key saved says so.
+- Fixed: replies from OpenAI's GPT-6 models (the preset's default) failed or came back
+  empty. The app now treats every GPT-5, GPT-6 and o-series model as one that thinks first:
+  no temperature, low reasoning effort, and 2,000 more tokens for the thinking.
+
 - **Keep going.** With nothing typed, the send button is **Keep going**: the story goes on
   without your character doing anything.
 - **How long the next reply is.** **Short**, **Normal** or **Long** beside the kinds of action

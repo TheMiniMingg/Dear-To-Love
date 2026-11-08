@@ -147,7 +147,7 @@ async fn report_has_counts_and_results_but_nothing_private() {
     assert!(text.starts_with(HEADER));
     for want in [
         "Version: v0.1.0 (linux x86_64, Debug build)",
-        "Database schema: v8",
+        "Database schema: v9",
         "Stories: 1 story, 1 route, 2 events, 0 saves, 0 bookmarks, 0 images",
         "AI connections: none; 0 API requests recorded",
         "Update checks: off\n",

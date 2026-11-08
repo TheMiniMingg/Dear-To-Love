@@ -587,6 +587,10 @@ fn memory_notes_reach_the_storyteller_grouped_by_kind() {
     assert!(p.contains("- Write notes in Japanese.\n"));
     assert!(p.contains("\nOPEN THREADS\n") && p.contains("<thread done>"));
     assert!(p.contains("\nNEW CHARACTERS\n") && p.contains("<character name=\"Rowan Ellis\""));
+    assert!(
+        p.contains("skin tone or heritage, hair, eyes, clothes"),
+        "cards give a painter what they need"
+    );
     assert!(p.contains("Write threads and cards in Japanese.\n"));
 }
 

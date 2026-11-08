@@ -31,6 +31,8 @@ pub struct AssetRow {
     pub created_at: String,
     /// 1: any story can use it. 0: only the stories in `asset_stories`.
     pub shared: i64,
+    /// The description a made picture was drawn from.
+    pub made_from: Option<String>,
 }
 
 /// A story a story-only image belongs to.
@@ -60,6 +62,9 @@ pub struct AssetDto {
     /// stories were deleted, or the story it was added for wasn't made).
     pub shared: bool,
     pub stories: Vec<AssetStory>,
+    /// For a picture the app made: the description the picture service was
+    /// sent.
+    pub made_from: Option<String>,
 }
 
 impl AssetRow {
@@ -77,6 +82,7 @@ impl AssetRow {
             created_at: self.created_at.clone(),
             shared: self.shared != 0,
             stories: vec![],
+            made_from: self.made_from.clone(),
         }
     }
 }
@@ -102,7 +108,7 @@ macro_rules! select_assets {
     ($tail:literal) => {
         concat!(
             "SELECT id, sha256, original_rel, thumb_rel, mime, width, height, byte_size, \
-             label, tags_json, created_at, shared FROM assets ",
+             label, tags_json, created_at, shared, made_from FROM assets ",
             $tail
         )
     };
@@ -440,6 +446,22 @@ pub async fn update_details(
             "that image is not in the library",
         ));
     }
+    let row = get(db, id).await?;
+    let mut conn = db.reader().acquire().await?;
+    dto(&mut conn, &row).await
+}
+
+/// Longest description kept with a made picture.
+pub const MAX_MADE_FROM: usize = 2_000;
+
+/// Keep the description a made picture was drawn from.
+pub async fn set_made_from(db: &Database, id: &str, description: &str) -> AppResult<AssetDto> {
+    let text: String = description.trim().chars().take(MAX_MADE_FROM).collect();
+    sqlx::query("UPDATE assets SET made_from = ? WHERE id = ?")
+        .bind((!text.is_empty()).then_some(text))
+        .bind(id)
+        .execute(db.writer())
+        .await?;
     let row = get(db, id).await?;
     let mut conn = db.reader().acquire().await?;
     dto(&mut conn, &row).await

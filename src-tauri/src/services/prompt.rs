@@ -36,7 +36,7 @@ use crate::domain::tracking::Tracking;
 use crate::errors::{AppError, AppResult, ErrorCode};
 use crate::services::tokens::{estimate_message, estimate_messages, estimate_text};
 
-pub const PROMPT_SCHEMA_VERSION: u32 = 12;
+pub const PROMPT_SCHEMA_VERSION: u32 = 13;
 /// What the storyteller reads for **Keep going**, an action with no words.
 pub const KEEP_GOING: &str = "(Out of character: I let the story go on without acting. \
      Continue from where it left off, and don't decide anything for my character.)";
@@ -324,9 +324,14 @@ fn threads_contract(language: Option<&str>) -> String {
          matter for what comes next: at most one or two in a reply, often none.\n\
          \nNEW CHARACTERS\nWhen someone new with a name joins the story and is not among the \
          CHARACTERS above, end that reply with a card for them, once: <character \
-         name=\"Rowan Ellis\" role=\"barista\" pronouns=\"he/him\" age=\"30s\">How they look \
-         and come across, in one or two sentences.</character> The player chooses whether to \
-         add them to the cast.\n",
+         name=\"Rowan Ellis\" role=\"barista\" pronouns=\"he/him\" age=\"30s\">Tall and lean, \
+         light brown skin, short black curls, dark brown eyes, a small silver nose ring, a \
+         flour-dusted green apron over a band T-shirt. Easy grin, talks fast.</character> \
+         Give what a painter would need, as the story has shown it: apparent age, height and \
+         build, skin tone or heritage, hair, eyes, clothes and anything that stands out, then a \
+         few words on how they come across. The player chooses whether to add them to the \
+         cast, and the app can draw their portrait from the card. Once someone is in \
+         CHARACTERS, keep to the looks written there.\n",
     );
     if let Some(language) = language.map(str::trim).filter(|l| !l.is_empty()) {
         out.push_str(&format!("Write threads and cards in {language}.\n"));
