@@ -527,7 +527,8 @@ export function SettingsScreen() {
         >
           <ConnectionForm
             existing={editing === 'new' ? null : editing}
-            preset={editing === 'new' ? (newConnection ?? undefined) : undefined}
+            preset={editing === 'new' ? newConnection?.preset : undefined}
+            model={editing === 'new' ? newConnection?.model : undefined}
             onCancel={() => setEditing(null)}
             onSaved={(p) => {
               setEditing(null);

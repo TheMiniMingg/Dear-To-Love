@@ -221,3 +221,87 @@ async fn lists_models_with_the_key_header() {
     assert!(sent.path.starts_with("/v1/models"));
     assert_eq!(sent.header("x-api-key"), Some("sk-ant-x"));
 }
+
+#[test]
+fn claude_models_that_think_by_default_are_asked_for_low_effort() {
+    use super::thinks_by_default;
+    for m in [
+        "claude-opus-5-5",
+        "claude-sonnet-5-5",
+        "claude-haiku-5-5",
+        "claude-fable-5-1",
+        "claude-sonnet-5",
+        "claude-opus-5-20260301",
+        "anthropic/claude-opus-5.5",
+        "us.anthropic.claude-sonnet-5-5-v1:0",
+    ] {
+        assert!(thinks_by_default(m), "{m}");
+    }
+    for m in [
+        "claude-haiku-4-5",
+        "claude-opus-4-8",
+        "claude-sonnet-4-6",
+        "claude-3-5-sonnet-latest",
+        "anthropic/claude-3.5-sonnet",
+        "story-model",
+    ] {
+        assert!(!thinks_by_default(m), "{m}");
+    }
+    let a = Anthropic::new("https://api.anthropic.com/v1", None).unwrap();
+    let body = a.request_body(&GenerateRequest {
+        model_id: "claude-opus-5-5".into(),
+        ..req()
+    });
+    assert_eq!(body["output_config"]["effort"], "low");
+    assert!(body.get("temperature").is_none());
+    let body = a.request_body(&GenerateRequest {
+        model_id: "claude-haiku-4-5".into(),
+        ..req()
+    });
+    assert!(body.get("output_config").is_none());
+
+    use crate::services::adapters::{Adapter, REASONING_ROOM};
+    let live = Adapter::live(
+        crate::domain::provider::AdapterKind::Anthropic,
+        "https://api.anthropic.com/v1",
+        None,
+    )
+    .unwrap();
+    let r = live.fit_request(GenerateRequest {
+        model_id: "claude-sonnet-5-5".into(),
+        ..req()
+    });
+    assert_eq!(
+        r.max_output_tokens,
+        req().max_output_tokens + REASONING_ROOM
+    );
+    let r = live.fit_request(GenerateRequest {
+        model_id: "claude-haiku-4-5".into(),
+        ..req()
+    });
+    assert_eq!(r.max_output_tokens, req().max_output_tokens);
+}
+
+#[tokio::test]
+async fn a_refused_effort_setting_is_sent_once_more_without_it() {
+    let server = serve(vec![
+        Reply::json(
+            400,
+            r#"{"type":"error","error":{"type":"invalid_request_error","message":"output_config.effort: this model does not support effort"}}"#,
+        ),
+        stream(&["The lamp ", "hums."], "end_turn"),
+    ])
+    .await;
+    let a = Anthropic::new(&server.base_url, Some("k".into())).unwrap();
+    let r = GenerateRequest {
+        model_id: "claude-sonnet-5-5".into(),
+        ..req()
+    };
+    let (out, seen) = run(&a, &r).await;
+    assert_eq!(out.unwrap().text, "The lamp hums.");
+    assert_eq!(seen, "The lamp hums.");
+    let sent = server.requests();
+    assert_eq!(sent.len(), 2);
+    assert!(sent[0].body.contains("output_config"));
+    assert!(!sent[1].body.contains("output_config"));
+}

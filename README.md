@@ -84,9 +84,9 @@ from the release page.
 2. Write what you do and press Enter. Without any setup, the built-in offline storyteller
    answers, so you can try everything first.
 3. When you want a real AI storyteller, open the **Setup guide** (in the library, in
-   Settings and at the bottom of every screen). It explains which kind of service to pick,
-   walks through each one with buttons to its key and model pages, and fills in a new
-   connection for you.
+   Settings and at the bottom of every screen). It starts with the short version, recommends
+   a few models with what a reply costs, sets up a connection with one click, and spells out
+   every click for each service if you want it.
 
 ![Preset Story: The Unsigned Letter as a cover in Midnight, with its genres, cast, first page and Start story](docs/screenshots/quickstart.webp)
 
@@ -474,49 +474,57 @@ connection** yourself:
 | **Open models, hosted**: OpenRouter, Groq, Together AI, Fireworks AI, DeepInfra, Hugging Face                                                       | An API key                                        | Paid per use  |
 | **Other**                                                                                                                                           | Any OpenAI-compatible address, key and model name | Varies        |
 
-Pick the service and the address is filled in; the Model field suggests current model names.
-Keys are kept in your system's credential store (Windows Credential Manager, macOS Keychain,
-Linux Secret Service), never in story files, exports or backups. **Test connection** checks a
-connection for free. Choose it as the **Storyteller** in Settings, or give one story its own
-storyteller by clicking the storyteller's name above it. Switching keeps everything the story
-remembers.
+Pick the service and the address is filled in. Under **Model**, suggested models for that
+service are one click away, with a few words on each, and **Step by step, every click**
+walks through making an account and a key. Keys are kept in your system's credential store
+(Windows Credential Manager, macOS Keychain, Linux Secret Service), never in story files,
+exports or backups. **Test connection** checks a connection for free. Choose it as the
+**Storyteller** in Settings, or give one story its own storyteller by clicking the
+storyteller's name above it. Switching keeps everything the story remembers.
+
+![The Setup guide: the short version first, with the contents bar above](docs/screenshots/guide-top.webp)
+
+_The Setup guide starts with the short version; the contents bar stays at the top._
+
+### Which model should I use?
+
+A few good places to start, checked in November 2026 (the guide's **Recommended models**
+sets each one up for you). Names change often: each service's model list has the current
+ones, and any model you like works.
+
+| For                               | Model                                           | One reply in a long story |
+| --------------------------------- | ----------------------------------------------- | ------------------------- |
+| The best place to start           | OpenAI `gpt-6.1-terra` (same key for pictures)  | about 2¢                  |
+| Long stories that stay consistent | Claude `claude-sonnet-5-5` (Opus 5.5: about 7¢) | about 3¢                  |
+| Cheap and good                    | Google `gemini-3.8-flash` (has a free tier)     | about 1¢                  |
+| Many models, looser rules         | OpenRouter, e.g. `deepseek/deepseek-v4.1-flash` | see its model page        |
+| Free and private                  | Ollama `gemma4:12b` (about 16 GB of memory)     | free                      |
+| The cheapest                      | `gpt-6-luna` or `claude-haiku-5-5`              | about 0.2¢                |
+
+"One reply in a long story" assumes about 12,000 tokens read and 600 written; early replies
+cost much less. Models that think before they write (most current ones from OpenAI,
+Anthropic, Google and xAI) are asked to think briefly, with 2,000 more tokens of room. For
+pictures, `gpt-image-2.6-flare` is quick and `gpt-image-2.6-sunburst` takes more care; free on
+your computer: Stable Diffusion WebUI.
+
+![Recommended models in the Setup guide, each with what a reply costs and Set up](docs/screenshots/guide-picks.webp)
+
+_Recommended models, each with what a reply costs and a Set up button._
+
+![Step by step, every click: OpenAI, opened in the Setup guide](docs/screenshots/guide-steps.webp)
+
+_Every click for a service, folded away until you open it._
+
+### Costs and your budget
+
+Paid services charge for what they read and write, and each reply sends the story so far up
+to the connection's context limit. New paid connections start at 32,000 tokens, which keeps a
+long story's replies cheap; older parts of the story are summarized to fit.
 
 Every request is logged in **Usage & budget** with its token count and estimated cost, and an
-optional monthly budget can warn you or pause paid replies. Set a spending limit in your
-provider's dashboard too.
-
-<details>
-<summary><strong>Which model should I use?</strong></summary>
-
-Suggestions, checked in November 2026. Model names change often: the service's model list
-has the current ones, and any model you like works. The same suggestions are folded away in
-the app's Setup guide.
-
-- **Stories and pictures with one key:** OpenAI. `gpt-6.1-terra` writes clear, natural
-  stories quickly, `gpt-6.1-sol` is stronger for long, twisting plots, and `gpt-6-astra` is
-  the most capable and costs the most. `gpt-image-2.6-flare` makes portraits and item
-  pictures with the same key.
-- **Long stories that stay consistent:** Anthropic's Claude. Claude Opus keeps characters,
-  threads and tone straight over long stories, and Claude Sonnet costs less for everyday
-  play. Claude doesn't make pictures, so add a picture connection too.
-- **Cheap and quick:** `gpt-6-luna`, `gemini-3.6-flash` or Claude Haiku cost a fraction of a
-  cent per reply, good for trying things out and for light stories.
-- **Many models with one key:** [OpenRouter](https://openrouter.ai) offers hundreds of
-  models, including open ones with looser content rules, and its
-  [roleplay list](https://openrouter.ai/collections/roleplay) shows what other players use
-  most.
-- **Free and private:** run a model on your computer with Ollama or LM Studio. `llama3.2`
-  runs on almost any computer; models of 12 to 14B write much better and want about 16 GB of
-  memory; 27 to 32B models need a strong graphics card.
-- **Pictures:** `gpt-image-2.6-flare` is quick for portraits and items, and
-  `gpt-image-2.6-sunburst` takes more care over detail. Free on your computer: Stable
-  Diffusion WebUI.
-
-![Which model should I use?, opened in the Setup guide](docs/screenshots/guide-models.webp)
-
-_Which model should I use?, opened in the Setup guide._
-
-</details>
+optional monthly budget can warn you or pause paid replies. Estimates need each model's
+prices: **Use the listed prices** fills them in for the models above (check, then save).
+Set a spending limit in your provider's dashboard too: that one really stops charges.
 
 ### Pictures
 

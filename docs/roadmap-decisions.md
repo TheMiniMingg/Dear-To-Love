@@ -7,7 +7,10 @@ and the roadmap differ, this file wins.
 
 - **Retries:** provider adapters never retry internally. Every retry is a new
   generation run with its own `api_requests` ledger row (keeps
-  `api_requests.generation_run_id` UNIQUE valid).
+  `api_requests.generation_run_id` UNIQUE valid). The one exception costs nothing:
+  a request refused outright (HTTP 400/422) for a setting the app added itself,
+  such as a temperature the model no longer takes, is sent once more without it
+  (ADR 0028).
 - **Deletion:** only whole stories can be deleted. Routes can be hidden, never
   deleted, because other routes may share their events.
 - **Chapters:** a new chapter starts when the player chooses **End chapter**,

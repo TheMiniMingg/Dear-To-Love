@@ -141,8 +141,20 @@ describe('Settings: AI connections', () => {
     await userEvent.selectOptions(screen.getByLabelText('Service'), 'ollama');
     expect(screen.getByLabelText('Type')).toHaveValue('ollama');
     expect(screen.getByLabelText('Address')).toHaveValue('http://localhost:11434');
-    expect(screen.getByText(/ollama pull/)).toBeInTheDocument();
-    await userEvent.type(screen.getByLabelText('Model'), 'llama3.2');
+    expect(screen.getAllByText('ollama pull gemma4:12b').at(-1)).toBeVisible();
+    // The every-click steps are folded under the service, with the command.
+    const steps = screen.getByTestId('steps-ollama');
+    expect(steps).not.toHaveAttribute('open');
+    await userEvent.click(within(steps).getByText(/Step by step, every click/));
+    expect(within(steps).getByText(/Open a terminal/)).toBeVisible();
+    expect(within(steps).getByText('ollama pull gemma4:12b')).toBeVisible();
+    // A suggested model fills the field in one click.
+    await userEvent.click(screen.getByRole('button', { name: /llama3\.2/ }));
+    expect(screen.getByLabelText('Model')).toHaveValue('llama3.2');
+    expect(screen.getByRole('button', { name: /llama3\.2/ })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
     await userEvent.click(screen.getByRole('button', { name: 'Save connection' }));
     const input = invoke.mock.calls.find((c) => c[0] === 'save_connection')?.[1].input;
     expect(input).toMatchObject({
@@ -177,8 +189,9 @@ describe('Settings: AI connections', () => {
     expect(screen.getByLabelText('Address')).toHaveValue('https://api.anthropic.com/v1');
     expect(screen.getByLabelText('Model')).toHaveAttribute(
       'placeholder',
-      'For example claude-opus-5-5',
+      'For example claude-sonnet-5-5',
     );
+    expect(screen.getByText(/think before they write/)).toBeInTheDocument();
     await userEvent.type(screen.getByLabelText('Model'), 'claude-opus-5-5');
     await userEvent.type(screen.getByLabelText('API key'), 'sk-ant-1');
     await userEvent.click(screen.getByRole('button', { name: 'Save connection' }));
@@ -187,7 +200,8 @@ describe('Settings: AI connections', () => {
       label: 'Anthropic (Claude)',
       adapter: 'anthropic',
       billing: 'paid',
-      settings: { maxOutputTokens: 4000, maxContextTokens: 128000 },
+      // Paid services start lower, so long stories stay cheap.
+      settings: { maxOutputTokens: 4000, maxContextTokens: 32000 },
     });
   });
 

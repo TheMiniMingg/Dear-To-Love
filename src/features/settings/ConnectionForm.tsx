@@ -3,22 +3,36 @@ import { commands, errorMessage } from '../../api/commands';
 import type { AdapterKind, Billing, ProviderProfile, ProviderProfileInput } from '../../types';
 import { makesPictures } from './kinds';
 import { GROUP_LABELS, PRESETS, type Preset, type PresetGroup } from './presets';
+import { knownModel } from './models';
+import { StepByStep, guideFor } from '../guide/StepByStep';
 import { t, tr } from '../../i18n';
 
 const GROUPS = Object.keys(GROUP_LABELS) as PresetGroup[];
 
 const DEFAULT_CONTEXT_TOKENS = 16000;
 
+/** Services whose current models think before they write (adapters/openai.rs). */
+const THINKING_HOSTS =
+  /^https?:\/\/(api\.openai\.com|generativelanguage\.googleapis\.com|api\.x\.ai|openrouter\.ai)(\/|:|$)/i;
+
 type Props = {
   existing: ProviderProfile | null;
   /** For a new connection: the service to start from (a preset id). */
   preset?: string;
+  /** For a new connection: a model the setup guide recommended. */
+  model?: string;
   onSaved: (p: ProviderProfile) => void;
   onCancel: () => void;
 };
 
 /** Add or edit a connection to an AI service. The key goes to the OS credential store. */
-export function ConnectionForm({ existing, preset: startPreset, onSaved, onCancel }: Props) {
+export function ConnectionForm({
+  existing,
+  preset: startPreset,
+  model: startModel,
+  onSaved,
+  onCancel,
+}: Props) {
   const id = useId();
   const start = existing ? null : (PRESETS.find((x) => x.id === startPreset) ?? null);
   const from = start && start.id !== 'custom' ? start : null;
@@ -28,7 +42,7 @@ export function ConnectionForm({ existing, preset: startPreset, onSaved, onCance
   );
   const [baseUrl, setBaseUrl] = useState(existing?.baseUrl ?? from?.baseUrl ?? '');
   const [modelId, setModelId] = useState(
-    existing?.modelId ?? (from?.model && makesPictures(from) ? from.model : ''),
+    existing?.modelId ?? startModel ?? (from?.model && makesPictures(from) ? from.model : ''),
   );
   const [billing, setBilling] = useState<Billing>(existing?.billing ?? from?.billing ?? 'paid');
   const [apiKey, setApiKey] = useState('');
@@ -51,6 +65,11 @@ export function ConnectionForm({ existing, preset: startPreset, onSaved, onCance
   const [error, setError] = useState<string | null>(null);
   const [preset, setPreset] = useState<Preset | null>(start);
   const pictures = makesPictures({ adapter });
+  const guide = existing ? undefined : guideFor(preset?.id);
+  const thinking =
+    !pictures &&
+    (adapter === 'anthropic' ||
+      (adapter === 'openai_compatible' && THINKING_HOSTS.test(baseUrl.trim())));
 
   const applyPreset = (presetId: string) => {
     const p = PRESETS.find((x) => x.id === presetId) ?? null;
@@ -136,6 +155,7 @@ export function ConnectionForm({ existing, preset: startPreset, onSaved, onCance
                   'Big AI labs, hosted open models and models on your own computer all work. Anything with an OpenAI-compatible API works through Other.',
                 )}
           </p>
+          {guide && <StepByStep guide={guide} where="form" onError={setError} />}
         </div>
       )}
       <div className="field">
@@ -161,14 +181,14 @@ export function ConnectionForm({ existing, preset: startPreset, onSaved, onCance
         {adapter === 'anthropic' && (
           <p className="muted small">
             {t(
-              "Uses Anthropic's own Messages API. Claude picks its own temperature, so that setting is not sent. Some Claude models think before they write, so leave room in the reply length.",
+              "Uses Anthropic's own Messages API. Claude picks its own temperature, so that setting is not sent.",
             )}
           </p>
         )}
-        {adapter === 'openai_compatible' && /\/\/api\.openai\.com(\/|$)/i.test(baseUrl.trim()) && (
+        {thinking && (
           <p className="muted small">
             {t(
-              "OpenAI's GPT-5, GPT-6 and o-series models think before they write. For them the app sends no temperature, asks for low reasoning effort and allows 2,000 more tokens for the thinking, which usage and the budget count.",
+              'Most current models from OpenAI, Anthropic, Google and xAI think before they write. For them the app asks for brief thinking and allows 2,000 more tokens for it, which usage and the budget count, and leaves out the temperature where the model keeps its own.',
             )}
           </p>
         )}
@@ -176,7 +196,7 @@ export function ConnectionForm({ existing, preset: startPreset, onSaved, onCance
           <p className="muted small">
             {tr(
               "Uses Ollama's own API so each request asks for the context limit below. Install a model first, for example with {command}.",
-              { command: <code>ollama pull llama3.2</code> },
+              { command: <code>ollama pull gemma4:12b</code> },
             )}
           </p>
         )}
@@ -233,6 +253,25 @@ export function ConnectionForm({ existing, preset: startPreset, onSaved, onCance
               <option key={m} value={m} />
             ))}
           </datalist>
+        )}
+        {preset?.suggestions && !existing && (
+          <div className="model-chips" role="group" aria-label={t('Suggested models')}>
+            {preset.suggestions.map((m) => {
+              const note = knownModel(m)?.note;
+              return (
+                <button
+                  key={m}
+                  type="button"
+                  className="chip chip-button"
+                  aria-pressed={modelId === m}
+                  onClick={() => setModelId(m)}
+                >
+                  <code>{m}</code>
+                  {note && <span className="muted"> · {t(note)}</span>}
+                </button>
+              );
+            })}
+          </div>
         )}
         <p id={`${id}-model-hint`} className="muted small">
           {tr(

@@ -24,7 +24,58 @@ pub struct OpenAiCompatible {
     base_url: String,
     api_key: Option<String>,
     client: reqwest::Client,
+    host: Host,
 }
+
+/// The services whose models are asked differently. Any other server gets
+/// the request exactly as the connection's settings say.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Host {
+    OpenAi,
+    Google,
+    Xai,
+    OpenRouter,
+    Other,
+}
+
+impl Host {
+    fn of(base_url: &str) -> Self {
+        let host = url::Url::parse(base_url)
+            .ok()
+            .and_then(|u| u.host_str().map(str::to_ascii_lowercase))
+            .unwrap_or_default();
+        match host.as_str() {
+            "api.openai.com" => Self::OpenAi,
+            "generativelanguage.googleapis.com" => Self::Google,
+            "api.x.ai" => Self::Xai,
+            "openrouter.ai" => Self::OpenRouter,
+            _ => Self::Other,
+        }
+    }
+}
+
+/// How a model that thinks before it writes is asked to keep that short.
+/// Story replies need little planning, and thinking spends the same token
+/// limit the reply does.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct ThinksFirst {
+    /// OpenRouter takes `reasoning: {effort}`; the others `reasoning_effort`.
+    nested: bool,
+    /// Whether the model still takes a temperature of its own.
+    pub temperature: bool,
+}
+
+/// Settings this app adds by itself, and how an error names each one. A
+/// request refused for one of them is sent once more without it.
+const OPTIONAL: &[(&str, &[&str])] = &[
+    ("temperature", &["temperature"]),
+    (
+        "reasoning_effort",
+        &["reasoning_effort", "reasoningeffort", "reasoning effort"],
+    ),
+    ("reasoning", &["reasoning"]),
+    ("stream_options", &["stream_options"]),
+];
 
 impl OpenAiCompatible {
     pub fn new(base_url: &str, api_key: Option<String>) -> Result<Self, AppError> {
@@ -33,6 +84,7 @@ impl OpenAiCompatible {
             base_url: base_url.trim_end_matches('/').to_string(),
             api_key: api_key.filter(|k| !k.trim().is_empty()),
             client,
+            host: Host::of(base_url),
         })
     }
 
@@ -43,13 +95,7 @@ impl OpenAiCompatible {
     /// Official OpenAI rejects `max_tokens` for newer models; most other
     /// compatible servers only know `max_tokens`.
     fn uses_max_completion_tokens(&self) -> bool {
-        url::Url::parse(&self.base_url)
-            .ok()
-            .and_then(|u| {
-                u.host_str()
-                    .map(|h| h.eq_ignore_ascii_case("api.openai.com"))
-            })
-            .unwrap_or(false)
+        self.host == Host::OpenAi
     }
 
     pub fn request_body(&self, req: &GenerateRequest) -> Value {
@@ -79,21 +125,90 @@ impl OpenAiCompatible {
             "max_tokens"
         };
         body[limit_field] = json!(req.max_output_tokens);
-        if self.thinks_first(&req.model_id) {
-            // Reasoning models reject a temperature of their own while they
-            // reason. A story reply needs little reasoning, and low effort
-            // leaves the token limit for the writing.
-            body["reasoning_effort"] = json!("low");
-        } else if let Some(t) = req.temperature {
-            body["temperature"] = json!(t);
+        match self.thinking(&req.model_id) {
+            Some(t) => {
+                if t.nested {
+                    body["reasoning"] = json!({ "effort": "low" });
+                } else {
+                    body["reasoning_effort"] = json!("low");
+                }
+                if let Some(temp) = req.temperature.filter(|_| t.temperature) {
+                    body["temperature"] = json!(temp);
+                }
+            }
+            None => {
+                if let Some(temp) = req.temperature {
+                    body["temperature"] = json!(temp);
+                }
+            }
         }
         body
     }
 
-    /// An OpenAI reasoning model on OpenAI's own API: it reasons before it
-    /// writes, and the reasoning counts against the token limit.
+    /// A model that thinks before it writes on a service known to count
+    /// that thinking against the token limit: OpenAI's reasoning models,
+    /// Gemini 2.5 and later, Grok 4 and later, and those models through
+    /// OpenRouter. Other servers are sent the settings as they are.
+    pub fn thinking(&self, model_id: &str) -> Option<ThinksFirst> {
+        let m = model_id.trim().to_ascii_lowercase();
+        let (thinks, temperature) = match self.host {
+            Host::OpenAi => (reasoning_model(&m), false),
+            Host::Google => (gemini_thinks(&m), !gemini_fixed_temperature(&m)),
+            Host::Xai => (grok_thinks(&m), true),
+            Host::OpenRouter => (routed_thinks(&m), false),
+            Host::Other => (false, true),
+        };
+        thinks.then_some(ThinksFirst {
+            nested: self.host == Host::OpenRouter,
+            temperature,
+        })
+    }
+
     pub fn thinks_first(&self, model_id: &str) -> bool {
-        self.uses_max_completion_tokens() && reasoning_model(model_id)
+        self.thinking(model_id).is_some()
+    }
+
+    /// Send one request; a refusal for a setting this app added is sent
+    /// once more without it. Nothing is charged for a refused request.
+    async fn post(
+        &self,
+        body: &mut Value,
+        cancel: &CancellationToken,
+        idle: Duration,
+    ) -> Result<reqwest::Response, GenerateError> {
+        let mut resent = false;
+        loop {
+            let bytes = serde_json::to_vec(body)
+                .map_err(|e| GenerateError::not_sent(AppError::internal(e.to_string())))?;
+            let send = self
+                .auth(
+                    self.client
+                        .post(format!("{}/chat/completions", self.base_url))
+                        .header(CONTENT_TYPE, "application/json"),
+                )
+                .body(bytes)
+                .send();
+            let resp = tokio::select! {
+                _ = cancel.cancelled() => return Err(GenerateError::cancelled()),
+                r = tokio::time::timeout(idle, send) => match r {
+                    Err(_) => return Err(GenerateError::maybe_charged(unreachable_err(
+                        "the AI service did not answer in time",
+                    ))),
+                    Ok(Err(e)) => return Err(send_error(e)),
+                    Ok(Ok(resp)) => resp,
+                },
+            };
+            let status = resp.status();
+            if status.is_success() {
+                return Ok(resp);
+            }
+            let text = read_limited(resp, cancel, idle).await;
+            if !resent && loosen(body, status.as_u16(), &text) {
+                resent = true;
+                continue;
+            }
+            return Err(http_error(status.as_u16(), &text));
+        }
     }
 
     /// Stream one reply. `on_delta` receives display-only draft text.
@@ -104,33 +219,8 @@ impl OpenAiCompatible {
         on_delta: &mut (dyn FnMut(&str) + Send),
     ) -> Result<Completion, GenerateError> {
         let idle = Duration::from_millis(req.timeout_ms as u64);
-        let body = serde_json::to_vec(&self.request_body(req))
-            .map_err(|e| GenerateError::not_sent(AppError::internal(e.to_string())))?;
-        let send = self
-            .auth(
-                self.client
-                    .post(format!("{}/chat/completions", self.base_url))
-                    .header(CONTENT_TYPE, "application/json"),
-            )
-            .body(body)
-            .send();
-
-        let resp = tokio::select! {
-            _ = cancel.cancelled() => return Err(GenerateError::cancelled()),
-            r = tokio::time::timeout(idle, send) => match r {
-                Err(_) => return Err(GenerateError::maybe_charged(unreachable_err(
-                    "the AI service did not answer in time",
-                ))),
-                Ok(Err(e)) => return Err(send_error(e)),
-                Ok(Ok(resp)) => resp,
-            },
-        };
-
-        let status = resp.status();
-        if !status.is_success() {
-            let text = read_limited(resp, cancel, idle).await;
-            return Err(http_error(status.as_u16(), &text));
-        }
+        let mut body = self.request_body(req);
+        let resp = self.post(&mut body, cancel, idle).await?;
         let is_json = resp
             .headers()
             .get(CONTENT_TYPE)
@@ -256,6 +346,93 @@ fn reasoning_model(model_id: &str) -> bool {
         return version(rest).is_some_and(|v| v >= 5);
     }
     m.strip_prefix('o').and_then(version).is_some()
+}
+
+/// Take out what a refused request names, or switch the token limit's
+/// name when the error asks for the other one.
+fn loosen(body: &mut Value, status: u16, error: &str) -> bool {
+    let mut changed = http::drop_refused(body, status, error, OPTIONAL);
+    let said = error.to_ascii_lowercase();
+    if matches!(status, 400 | 422) && said.contains("max_completion_tokens") {
+        if let Some(fields) = body.as_object_mut() {
+            let (from, to) = if fields.contains_key("max_tokens") {
+                ("max_tokens", "max_completion_tokens")
+            } else {
+                ("max_completion_tokens", "max_tokens")
+            };
+            if let Some(v) = fields.remove(from) {
+                fields.insert(to.into(), v);
+                changed = true;
+            }
+        }
+    }
+    changed
+}
+
+/// The model's name without a service prefix ("google/", "models/").
+fn bare(m: &str) -> &str {
+    m.rsplit('/').next().unwrap_or(m)
+}
+
+/// The leading version in "3.8-flash" or "2.5-pro" as tenths (38, 25).
+fn tenths(rest: &str) -> Option<u32> {
+    let mut parts = rest.split(['-', ':']).next()?.split('.');
+    let major: u32 = parts.next()?.parse().ok()?;
+    let minor: u32 = match parts.next() {
+        Some(d) => d.chars().next()?.to_digit(10)?,
+        None => 0,
+    };
+    Some(major * 10 + minor)
+}
+
+/// Gemini 2.5 and later think before they write; 2.5 Flash-Lite only
+/// when asked. "-latest" names point at a current, thinking model.
+fn gemini_thinks(m: &str) -> bool {
+    let Some(rest) = bare(m).strip_prefix("gemini-") else {
+        return false;
+    };
+    if rest.ends_with("-latest") && !rest.starts_with(|c: char| c.is_ascii_digit()) {
+        return true;
+    }
+    match tenths(rest) {
+        Some(25) => !rest.contains("lite"),
+        Some(v) => v > 25,
+        None => false,
+    }
+}
+
+/// Gemini 3 and later keep their own temperature: Google deprecated the
+/// setting and plans to refuse it.
+fn gemini_fixed_temperature(m: &str) -> bool {
+    let Some(rest) = bare(m).strip_prefix("gemini-") else {
+        return false;
+    };
+    tenths(rest).map_or(rest.ends_with("-latest"), |v| v >= 30)
+}
+
+/// Grok 3 Mini and Grok 4 and later reason first, unless the name says
+/// it doesn't.
+fn grok_thinks(m: &str) -> bool {
+    let Some(rest) = bare(m).strip_prefix("grok-") else {
+        return false;
+    };
+    if rest.contains("non-reasoning") {
+        return false;
+    }
+    rest.starts_with("3-mini") || tenths(rest).is_some_and(|v| v >= 40)
+}
+
+/// Through OpenRouter, the model's maker comes first ("openai/gpt-6.1-sol").
+fn routed_thinks(m: &str) -> bool {
+    let (maker, model) = m.split_once('/').unwrap_or(("", m));
+    let model = model.split(':').next().unwrap_or(model);
+    match maker {
+        "openai" => reasoning_model(model),
+        "anthropic" => super::anthropic::thinks_by_default(model),
+        "google" => gemini_thinks(model),
+        "x-ai" => grok_thinks(model),
+        _ => model.contains("thinking") || model.contains("reasoner") || model.ends_with("-r1"),
+    }
 }
 
 #[derive(Default)]

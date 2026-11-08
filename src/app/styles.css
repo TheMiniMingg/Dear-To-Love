@@ -2667,16 +2667,33 @@ img.msg-avatar {
   font-size: 1.05rem;
   margin: 0.75rem 0 0;
 }
+/* The contents stay in reach while reading: a row of chips that sticks. */
+.guide-toc {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  margin: 0.75rem -0.25rem 0;
+  padding: 0.5rem 0.25rem;
+  background: color-mix(in srgb, var(--bg) 97%, transparent);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--border);
+}
 .guide-toc ol {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
-  gap: 0.25rem 1.5rem;
-  margin: 1rem 0 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin: 0;
   padding: 0;
   list-style: none;
 }
-.guide-toc button {
-  text-align: left;
+.guide-toc .chip {
+  font-size: 0.8rem;
+}
+@media (max-width: 900px) {
+  .guide-toc .chip {
+    padding: 0.1rem 0.55rem;
+    font-size: 0.75rem;
+  }
 }
 .guide-section h2 {
   margin-bottom: 0.6rem;
@@ -2700,19 +2717,81 @@ img.msg-avatar {
   grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
   gap: 0.75rem;
 }
-.guide-option {
+/* Four short cards: two by two, or one column in a narrow window. */
+.guide-essentials {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+}
+.guide-option,
+.guide-pick {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
   padding: 0.85rem 1.1rem;
   border: 1px solid var(--border);
   border-radius: var(--radius);
   background: var(--surface);
   box-shadow: var(--shadow-sm);
 }
-.guide-option h3 {
-  margin: 0 0 0.35rem;
+.guide-option h3,
+.guide-pick h3 {
+  margin: 0;
   font-size: 0.95rem;
 }
-.guide-option p {
+.guide-option p,
+.guide-pick p {
   margin: 0;
+}
+.guide-option > button,
+.guide-pick > button {
+  align-self: flex-start;
+  margin-top: auto;
+}
+.guide-picks {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+.guide-pick-model {
+  display: flex;
+  flex-direction: column;
+}
+.guide-pick-model code {
+  font-size: 0.95em;
+  overflow-wrap: anywhere;
+}
+.guide-pick-cost {
+  font-weight: 600;
+  color: var(--accent);
+}
+.table-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+}
+.guide-prices {
+  border-collapse: collapse;
+  min-width: 100%;
+  margin: 0.5rem 0;
+}
+.guide-prices th,
+.guide-prices td {
+  padding: 0.35rem 0.75rem 0.35rem 0;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  vertical-align: baseline;
+}
+.guide-prices td {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.guide-prices tbody th {
+  font-weight: normal;
+}
+.guide-group + .guide-group {
+  margin-top: 1rem;
+}
+.guide-group > p {
+  margin: 0 0 0.5rem;
 }
 .guide-service {
   border: 1px solid var(--border);
@@ -2729,22 +2808,49 @@ img.msg-avatar {
   align-items: baseline;
   gap: 0.25rem 0.75rem;
   padding: 0.15rem 0;
+  list-style: none;
 }
-.guide-service summary::before {
+.guide-service summary .badge {
+  margin-left: 0;
+}
+.guide-service summary::before,
+.step-by-step summary::before {
   content: '▸';
   color: var(--muted);
 }
-.guide-service[open] summary::before {
+.guide-service[open] summary::before,
+.step-by-step[open] summary::before {
   content: '▾';
 }
-.guide-service summary::-webkit-details-marker {
+.guide-service summary::-webkit-details-marker,
+.step-by-step summary::-webkit-details-marker {
   display: none;
-}
-.guide-service summary {
-  list-style: none;
 }
 .guide-service .guide-steps {
   margin-top: 0.6rem;
+}
+/* Every click, folded inside a service (or under the form's Service). */
+.step-by-step {
+  margin: 0.5rem 0 0.75rem;
+  padding: 0.45rem 0.75rem;
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--accent) 5%, transparent);
+}
+.step-by-step summary {
+  display: flex;
+  gap: 0.4rem;
+  font-weight: 600;
+  cursor: pointer;
+  list-style: none;
+}
+.step-by-step .guide-steps {
+  margin-top: 0.6rem;
+}
+.step-by-step .guide-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
 }
 .guide-command {
   display: block;
@@ -2760,6 +2866,11 @@ img.msg-avatar {
 .guide-links {
   display: contents;
 }
+.guide-section-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
 .guide-problems dt {
   font-weight: 600;
   margin-top: 0.6rem;
@@ -2767,48 +2878,26 @@ img.msg-avatar {
 .guide-problems dd {
   margin: 0.15rem 0 0 1.25rem;
 }
-/* Which model should I use? (folded away until opened) */
-.guide-models {
-  margin-top: 0.75rem;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 0.5rem 0.85rem;
+.has-backdrop .guide-service,
+.has-backdrop .guide-option,
+.has-backdrop .guide-pick {
+  background: color-mix(in srgb, var(--bg) 70%, transparent);
 }
-.guide-models summary {
-  font-weight: 600;
-  list-style: none;
-  padding: 0.15rem 0;
-}
-.guide-models summary::-webkit-details-marker {
-  display: none;
-}
-.guide-models summary::before {
-  content: '▸ ';
-  color: var(--muted);
-}
-.guide-models[open] summary::before {
-  content: '▾ ';
-}
-.guide-picks dt {
-  font-weight: 600;
-  margin-top: 0.6rem;
-}
-.guide-picks dd {
-  margin: 0.15rem 0 0;
-}
-.guide-picks code {
-  overflow-wrap: anywhere;
-}
-.guide-models .guide-links {
+/* The connection form's suggested models: a click fills the Model field. */
+.model-chips {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-top: 0.75rem;
+  gap: 0.35rem;
+  margin: 0.4rem 0 0.45rem;
 }
-.has-backdrop .guide-models,
-.has-backdrop .guide-service,
-.has-backdrop .guide-option {
-  background: color-mix(in srgb, var(--bg) 70%, transparent);
+.model-chips .chip {
+  font-size: 0.78rem;
+  text-align: left;
+}
+.model-chips .chip[aria-pressed='true'] {
+  border-color: var(--accent);
+  color: var(--fg);
+  background: color-mix(in srgb, var(--accent) 12%, var(--surface));
 }
 
 /* RPG tracking: setting it up (TrackingFields). */
