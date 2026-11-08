@@ -248,6 +248,7 @@ pub fn run() {
             commands::app::diagnostics_report,
             commands::app::save_diagnostics_report,
             commands::app::open_support_page,
+            commands::app::open_issue_page,
             commands::app::open_repository_page,
             commands::app::open_guide_link,
             commands::app::frontend_ready,

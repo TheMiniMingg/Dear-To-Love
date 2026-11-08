@@ -1,7 +1,7 @@
 // Storytelling tools: Keep going, the length of the next reply, Another
 // reply with a hint, editing the latest reply, taking back a turn, a note to
 // the storyteller, and "Remember this" for words picked in the story.
-import { act, render, screen, within } from '@testing-library/react';
+import { act, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { EventDto, RouteView, StoryMemory } from '../types';
@@ -302,7 +302,7 @@ describe('Storytelling tools', () => {
     expect(within(form).getByLabelText('What to remember')).toHaveValue(
       'Mara opens the door and smiles.',
     );
-    expect(within(form).getByLabelText('Name')).toHaveFocus();
+    await waitFor(() => expect(within(form).getByLabelText('Name')).toHaveFocus());
   });
 });
 

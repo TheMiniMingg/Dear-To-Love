@@ -324,4 +324,46 @@ export const common: Messages = {
     'このストーリーには表紙の絵がないので、表紙にはタイトルが入ります。',
     '이 스토리에는 표지 그림이 없어서 표지에 제목이 들어갑니다.',
   ],
+  'Report a problem': ['报告问题', '回報問題', '問題を報告', '문제 신고'],
+  'bug feedback': ['错误 反馈', '錯誤 意見回饋', 'バグ フィードバック', '버그 피드백'],
+  'Say what happened, and the app adds a short report: versions and check results, with no story text, titles, API keys or file paths. Nothing is sent from here. Copy it into an email or a message to whoever gave you the app, or into a new issue on GitHub.':
+    [
+      '说说发生了什么，应用会附上一份简短报告：版本和检查结果，不含故事文字、标题、API 密钥或文件路径。这里不会发送任何内容。把它复制到发给提供应用给你的人的邮件或消息里，或者复制到 GitHub 的新议题中。',
+      '說說發生了什麼，應用程式會附上一份簡短報告：版本和檢查結果，不含故事文字、標題、API 金鑰或檔案路徑。這裡不會傳送任何內容。把它複製到寄給提供應用程式給你的人的郵件或訊息裡，或者複製到 GitHub 的新議題中。',
+      '何が起きたかを書くと、アプリが短いレポートを添えます。内容はバージョンとチェック結果だけで、物語の文章、タイトル、API キー、ファイルのパスは含みません。ここからは何も送信されません。アプリをくれた人へのメールやメッセージ、または GitHub の新しい Issue に貼り付けてください。',
+      '무슨 일이 있었는지 쓰면 앱이 짧은 보고서를 덧붙입니다. 버전과 점검 결과만 담기며, 이야기 본문, 제목, API 키, 파일 경로는 들어가지 않습니다. 여기서는 아무것도 보내지 않습니다. 앱을 준 사람에게 보내는 이메일이나 메시지, 또는 GitHub의 새 이슈에 붙여 넣으세요.',
+    ],
+  'What happened?': ['发生了什么？', '發生了什麼？', '何が起きましたか？', '무슨 일이 있었나요?'],
+  'What you did, what you expected, and what happened instead.': [
+    '你做了什么，你期望发生什么，实际发生了什么。',
+    '你做了什麼，你期望發生什麼，實際發生了什麼。',
+    '何をしたか、どうなると思ったか、実際にはどうなったか。',
+    '무엇을 했는지, 무엇을 기대했는지, 실제로는 어떻게 됐는지.',
+  ],
+  'The report it adds': ['附上的报告', '附上的報告', '添えるレポート', '덧붙이는 보고서'],
+  'Copy and open GitHub': [
+    '复制并打开 GitHub',
+    '複製並開啟 GitHub',
+    'コピーして GitHub を開く',
+    '복사하고 GitHub 열기',
+  ],
+  Copy: ['复制', '複製', 'コピー', '복사'],
+  'Copying did not work here. Save it as a file and attach that instead.': [
+    '这里无法复制。请另存为文件，然后附上该文件。',
+    '這裡無法複製。請另存為檔案，然後附上該檔案。',
+    'ここではコピーできませんでした。ファイルに保存して、それを添付してください。',
+    '여기서는 복사할 수 없었습니다. 파일로 저장해서 첨부하세요.',
+  ],
+  'Copied. Paste it into the issue that opened in your browser.': [
+    '已复制。请粘贴到浏览器中打开的议题里。',
+    '已複製。請貼到瀏覽器中開啟的議題裡。',
+    'コピーしました。ブラウザーで開いた Issue に貼り付けてください。',
+    '복사했습니다. 브라우저에서 열린 이슈에 붙여 넣으세요.',
+  ],
+  'Copied. Paste it into an email or a message.': [
+    '已复制。请粘贴到邮件或消息中。',
+    '已複製。請貼到郵件或訊息中。',
+    'コピーしました。メールやメッセージに貼り付けてください。',
+    '복사했습니다. 이메일이나 메시지에 붙여 넣으세요.',
+  ],
 };

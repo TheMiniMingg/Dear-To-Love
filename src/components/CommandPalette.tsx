@@ -1,6 +1,7 @@
 import { useEffect, useId, useMemo, useRef, useState, type KeyboardEvent } from 'react';
 import {
   BookOpen,
+  Bug,
   Compass,
   DatabaseBackup,
   Gauge,
@@ -17,6 +18,7 @@ import { commands } from '../api/commands';
 import { isComposing } from '../app/keyboard';
 import { paletteSources, searchPalette, usePalette, type PaletteEntry } from '../app/palette';
 import { isShortcut, shortcutKeys, useShortcutHelp } from '../app/shortcuts';
+import { useProblemReport } from '../features/diagnostics/ProblemDialog';
 import { useUiStore, type Screen } from '../app/store';
 import { goToSettingsSection, SETTINGS_SECTIONS } from '../features/settings/SettingsScreen';
 import type { StorySummary } from '../types';
@@ -75,6 +77,14 @@ function entries(stories: StorySummary[]): PaletteEntry[] {
       icon: Keyboard,
       keys: 'help',
       run: () => useShortcutHelp.getState().setOpen(true),
+    },
+    {
+      id: 'report-problem',
+      group: goGroup,
+      label: t('Report a problem'),
+      keywords: t('bug feedback'),
+      icon: Bug,
+      run: () => useProblemReport.getState().setOpen(true),
     },
     ...SETTINGS_SECTIONS.map(([id, label]) => ({
       id: `settings:${id}`,

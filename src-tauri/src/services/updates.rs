@@ -87,6 +87,13 @@ pub fn parse_links(json: &str) -> AppResult<PublicLinks> {
     })
 }
 
+impl PublicLinks {
+    /// The repository's "new issue" page, for reporting a problem.
+    pub fn new_issue_url(&self) -> String {
+        format!("https://github.com/{}/{}/issues/new", self.owner, self.repo)
+    }
+}
+
 /// The links shipped with this build.
 pub fn public_links() -> &'static PublicLinks {
     static LINKS: OnceLock<PublicLinks> = OnceLock::new();

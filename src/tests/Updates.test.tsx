@@ -84,6 +84,7 @@ beforeEach(() => {
       case 'open_release_page':
       case 'open_support_page':
       case 'open_repository_page':
+      case 'open_issue_page':
         return null;
       case 'run_diagnostics':
         return [];
@@ -218,5 +219,41 @@ describe('Diagnostics report', () => {
     expect(await within(dialog).findByRole('status')).toHaveTextContent(
       'Saved Dear to Love diagnostics 2026-11-06.txt.',
     );
+  });
+});
+
+describe('Report a problem', () => {
+  it("adds the player's words under the report, copies it and can open a new issue", async () => {
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
+    render(<StatusFooter />);
+    await userEvent.click(screen.getByRole('button', { name: 'Report a problem' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Report a problem' });
+    await userEvent.type(
+      within(dialog).getByRole('textbox', { name: 'What happened?' }),
+      'The reply stopped halfway.',
+    );
+    const report =
+      'Dear to Love diagnostics report\nVersion: v1.9.0 (linux x86_64, Release build)\n\n' +
+      'What happened\n-------------\nThe reply stopped halfway.\n';
+    await vi.waitFor(() =>
+      expect(within(dialog).getByRole('button', { name: 'Copy' })).toBeEnabled(),
+    );
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Copy' }));
+    expect(writeText).toHaveBeenCalledWith(report);
+    expect(within(dialog).getByRole('status')).toHaveTextContent('Paste it into an email');
+
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Copy and open GitHub' }));
+    expect(invoke).toHaveBeenCalledWith('open_issue_page', undefined);
+    expect(await within(dialog).findByRole('status')).toHaveTextContent(
+      'Paste it into the issue that opened in your browser.',
+    );
+
+    saveDialog.mockResolvedValue('/home/me/report.txt');
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Save as file…' }));
+    expect(invoke).toHaveBeenCalledWith('save_diagnostics_report', {
+      path: '/home/me/report.txt',
+      report,
+    });
   });
 });

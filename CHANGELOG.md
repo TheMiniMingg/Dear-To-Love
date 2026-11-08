@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- **Report a problem.** The footer (and Ctrl/Cmd+K) has **Report a problem**: say what
+  happened, and the app adds the short diagnostics report, with no story text, keys or paths.
+  **Copy** it into a message, **Save as file…**, or **Copy and open GitHub** for a new issue.
+  Nothing is sent from the app.
 - **A portrait for someone new.** With a picture connection, the card for a new character
   has **Make their portrait too** ticked: adding them to the cast draws their portrait from
   the card's looks and shows it on that route once it's made. **Settings → Pictures** turns

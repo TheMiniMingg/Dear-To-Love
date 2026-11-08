@@ -17,7 +17,7 @@ export async function pickReportTarget(today = new Date()): Promise<string | nul
 }
 
 /** Clipboard API first; the older selection copy where the webview refuses it. */
-async function copyText(text: string, area: HTMLTextAreaElement | null): Promise<boolean> {
+export async function copyText(text: string, area: HTMLTextAreaElement | null): Promise<boolean> {
   try {
     await navigator.clipboard.writeText(text);
     return true;

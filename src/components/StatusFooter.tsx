@@ -3,6 +3,7 @@ import { commands } from '../api/commands';
 import { ariaKeys, useShortcutHelp, withKeys } from '../app/shortcuts';
 import { useUiStore } from '../app/store';
 import type { AppInfo } from '../types';
+import { ProblemDialog, useProblemReport } from '../features/diagnostics/ProblemDialog';
 import { t, tr } from '../i18n';
 
 /** How often an open app repeats the daily update check (it reuses a recent result). */
@@ -18,6 +19,8 @@ export function StatusFooter() {
   const updates = useUiStore((s) => s.updates);
   const setUpdates = useUiStore((s) => s.setUpdates);
   const setHelp = useShortcutHelp((s) => s.setOpen);
+  const reporting = useProblemReport((s) => s.open);
+  const setReporting = useProblemReport((s) => s.setOpen);
   const [info, setInfo] = useState<AppInfo | null>(null);
 
   useEffect(() => {
@@ -65,6 +68,10 @@ export function StatusFooter() {
       >
         {t('Diagnostics')}
       </button>
+      <button type="button" className="link-button" onClick={() => setReporting(true)}>
+        {t('Report a problem')}
+      </button>
+      {reporting && <ProblemDialog onClose={() => setReporting(false)} />}
       <button type="button" className="link-button" onClick={() => navigate({ name: 'guide' })}>
         {t('Setup guide')}
       </button>

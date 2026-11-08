@@ -127,6 +127,15 @@ pub fn open_guide_link(app: AppHandle, id: String) -> AppResult<()> {
         .map_err(|e| AppError::internal(format!("could not open the browser: {e}")))
 }
 
+/// Opens the repository's new-issue page in the system browser. Nothing is
+/// sent: the player pastes their report there themselves.
+#[tauri::command]
+pub fn open_issue_page(app: AppHandle) -> AppResult<()> {
+    app.opener()
+        .open_url(public_links().new_issue_url(), None::<&str>)
+        .map_err(|e| AppError::internal(format!("could not open the browser: {e}")))
+}
+
 /// Opens the configured "Support development" page in the system browser.
 #[tauri::command]
 pub fn open_support_page(app: AppHandle) -> AppResult<()> {

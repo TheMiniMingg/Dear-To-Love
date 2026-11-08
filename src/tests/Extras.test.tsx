@@ -1,6 +1,6 @@
 // Batch 6 extras: the command palette, the chapter list in the header, read
 // aloud, the first-time tips, and how people feel about the player.
-import { act, render, screen, within } from '@testing-library/react';
+import { act, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { EventDto, StoryStateV1 } from '../types';
@@ -228,7 +228,10 @@ describe('First-time tips', () => {
     render(<ReaderScreen routeId="route-1" />);
     const tips = await screen.findByRole('region', { name: 'Tips for your first story' });
     expect(tips).toHaveTextContent('Tip 1 of 4');
-    expect(document.querySelector('#composer-input')).toHaveClass('tour-target');
+    // The box can be drawn just after the tips; they look again shortly.
+    await waitFor(() =>
+      expect(document.querySelector('#composer-input')).toHaveClass('tour-target'),
+    );
     await userEvent.click(within(tips).getByRole('button', { name: 'Next tip' }));
     expect(tips).toHaveTextContent('Tip 2 of 4');
     await userEvent.click(within(tips).getByRole('button', { name: 'Skip tips' }));

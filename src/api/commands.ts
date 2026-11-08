@@ -350,6 +350,8 @@ export const commands = {
   saveDiagnosticsReport: (path: string, report: string) =>
     call<string>('save_diagnostics_report', { path, report }),
   openSupportPage: () => call<void>('open_support_page'),
+  /** The repository's new-issue page, in the browser. Sends nothing. */
+  openIssuePage: () => call<void>('open_issue_page'),
   openRepositoryPage: () => call<void>('open_repository_page'),
   /** Opens a setup guide page (by its name in features/guide/links.json) in the browser. */
   openGuideLink: (id: string) => call<void>('open_guide_link', { id }),
