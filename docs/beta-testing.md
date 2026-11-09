@@ -34,8 +34,10 @@ is expected:
 ## 2. Play a first story
 
 1. Choose **Preset Story**, pick a kind of story with the arrows, then **Start story**.
-2. Write what you do and press Enter. With no setup, the built-in offline storyteller
-   answers. Its replies are simple, but everything else works, so you can look around.
+   Rather click than type? Set **Help with your next move** to **Choices A–D** first.
+2. Write what you do and press Enter (or click a choice). With no setup, the built-in
+   offline storyteller answers. Its replies are simple, but everything else works, so you
+   can look around.
 3. Above the box, choose what kind of action it is: **Do or say**, **Send a text**,
    **Call** or **Think**. With nothing typed, **Keep going** lets the story move on.
 4. Under a reply, **Another reply** writes it again. Every choice is kept as a route, so you
