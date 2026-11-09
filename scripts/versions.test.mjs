@@ -10,6 +10,10 @@ import {
   SEMVER,
   changelogSection,
   readVersions,
+  readmeLinks,
+  readmeProblems,
+  readmeVersionProblems,
+  setReadmeVersion,
   setVersion,
   versionProblems,
 } from './lib/versions.mjs';
@@ -20,6 +24,7 @@ function copyOfRepoVersions() {
   const dir = mkdtempSync(path.join(tmpdir(), 'dtl-versions-'));
   mkdirSync(path.join(dir, 'src-tauri'));
   for (const f of [
+    'README.md',
     'package.json',
     'src-tauri/tauri.conf.json',
     'src-tauri/Cargo.toml',
@@ -82,6 +87,51 @@ test('set-version changes only the version strings', () => {
   const lock = readFileSync(path.join(dir, 'src-tauri/Cargo.lock'), 'utf8');
   assert.equal(lock.split('version = "9.8.7"').length - 1, 1);
   assert.throws(() => setVersion(dir, 'v1.0'), /not a SemVer/);
+  // The README's download links follow.
+  assert.deepEqual(readmeVersionProblems(dir, '9.8.7'), []);
+  assert.ok(readFileSync(path.join(dir, 'README.md'), 'utf8').includes('/v9.8.7/'));
+});
+
+test('the README links to the installers of this version', () => {
+  const version = readVersions(root).tauri;
+  const links = readmeLinks(readFileSync(path.join(root, 'README.md'), 'utf8'));
+  const files = links.map((l) => l.file).filter(Boolean);
+  // Windows, Mac and each Linux package.
+  for (const end of [
+    '_x64-setup.exe',
+    '_universal.dmg',
+    '_amd64.AppImage',
+    '_amd64.deb',
+    '.x86_64.rpm',
+  ]) {
+    assert.ok(
+      files.some((f) => f.endsWith(end)),
+      `no download link ending ${end}`,
+    );
+  }
+  assert.deepEqual(readmeVersionProblems(root, version), []);
+});
+
+test('README release links move to a new version and stale ones are caught', () => {
+  const base = 'https://github.com/TheMiniMingg/Dear-To-Love/releases';
+  const text = [
+    `<a href="${base}/download/v0.1.0/Dear.to.Love_0.1.0_x64-setup.exe">`,
+    `[rpm](${base}/download/v0.1.0/Dear.to.Love-0.1.0-1.x86_64.rpm)`,
+    `[What's new](${base}/tag/v0.1.0) and [all releases](${base}).`,
+  ].join('\n');
+  assert.deepEqual(readmeProblems(text, '0.1.0'), []);
+  assert.equal(readmeProblems(text, '0.2.0').length, 3);
+  const moved = setReadmeVersion(text, '0.2.0');
+  assert.deepEqual(readmeProblems(moved, '0.2.0'), []);
+  assert.ok(moved.includes(`${base}/download/v0.2.0/Dear.to.Love_0.2.0_x64-setup.exe"`));
+  assert.ok(moved.includes(`${base}/download/v0.2.0/Dear.to.Love-0.2.0-1.x86_64.rpm)`));
+  assert.ok(moved.includes(`(${base}/tag/v0.2.0)`));
+  assert.ok(moved.includes(`[all releases](${base}).`));
+  // A file named for another version than its tag is caught too.
+  assert.equal(
+    readmeProblems(`${base}/download/v0.2.0/Dear.to.Love_0.1.0_amd64.deb`, '0.2.0').length,
+    1,
+  );
 });
 
 test('release notes come from the matching CHANGELOG section', () => {

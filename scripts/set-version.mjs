@@ -1,4 +1,5 @@
-// Sets the app version everywhere it is recorded: `pnpm set-version 1.2.3`.
+// Sets the app version everywhere it is recorded, including the README's
+// download links: `pnpm set-version 1.2.3`.
 import { fileURLToPath } from 'node:url';
 import { readVersions, setVersion } from './lib/versions.mjs';
 

@@ -7,7 +7,7 @@ publish.
 ## Steps
 
 1. On `main`, set the version everywhere it is recorded (`package.json`, `tauri.conf.json`,
-   `Cargo.toml`, `Cargo.lock`):
+   `Cargo.toml`, `Cargo.lock`, and the README's download links):
 
    ```sh
    pnpm set-version 0.2.0
@@ -37,7 +37,8 @@ publish.
      `latest.json` when the build signed its updater files, and notes from the CHANGELOG
      section plus how to install.
 6. Open the draft on GitHub, read it, and **Publish**. Only then does the app's update check
-   (for users who turned it on) see the new version.
+   (for users who turned it on) see the new version, and the README's download buttons work
+   (they point at this version's files).
 
 A pull request that changes the release tooling runs the same builds and smoke tests without
 creating a release. **Run workflow** on the Actions tab does the same for any branch.

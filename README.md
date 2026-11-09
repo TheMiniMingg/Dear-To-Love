@@ -12,9 +12,45 @@ computer. A built-in offline storyteller lets you play with neither.
 Windows, macOS and Linux. The app is in English, Simplified Chinese, Traditional Chinese,
 Japanese and Korean, and stories can be written in many more languages.
 
-![A café story told in script style: where and when at the top, the scene's picture and portraits, speakers' portraits beside their lines, and the action pills and tools](docs/screenshots/reader.webp)
+## Download
+
+Free, with no account needed. Download the installer for your computer, open it, and follow
+the steps.
+
+<p>
+  <a href="https://github.com/TheMiniMingg/Dear-To-Love/releases/download/v0.1.0/Dear.to.Love_0.1.0_x64-setup.exe"><img src="docs/download/windows.svg" width="250" alt="Download for Windows: installer (.exe) for Windows 10/11"></a>
+  <a href="https://github.com/TheMiniMingg/Dear-To-Love/releases/download/v0.1.0/Dear.to.Love_0.1.0_universal.dmg"><img src="docs/download/mac.svg" width="250" alt="Download for Mac: installer (.dmg) for all Macs"></a>
+  <a href="https://github.com/TheMiniMingg/Dear-To-Love/releases/download/v0.1.0/Dear.to.Love_0.1.0_amd64.AppImage"><img src="docs/download/linux.svg" width="250" alt="Download for Linux: AppImage for any 64-bit Linux"></a>
+</p>
+
+| Your computer               | Installer                                                                                                                          | How to install                                                                                                                                                          |
+| --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Windows 10 or 11            | [Windows installer (.exe)](https://github.com/TheMiniMingg/Dear-To-Love/releases/download/v0.1.0/Dear.to.Love_0.1.0_x64-setup.exe) | Open it and follow the steps. An [.msi installer](https://github.com/TheMiniMingg/Dear-To-Love/releases/download/v0.1.0/Dear.to.Love_0.1.0_x64_en-US.msi) is there too. |
+| Mac, Apple silicon or Intel | [Mac installer (.dmg)](https://github.com/TheMiniMingg/Dear-To-Love/releases/download/v0.1.0/Dear.to.Love_0.1.0_universal.dmg)     | Open it and drag **Dear to Love** into **Applications**.                                                                                                                |
+| Ubuntu, Debian, Mint        | [Linux package (.deb)](https://github.com/TheMiniMingg/Dear-To-Love/releases/download/v0.1.0/Dear.to.Love_0.1.0_amd64.deb)         | Open it, or run `sudo apt install ./Dear.to.Love_*_amd64.deb`                                                                                                           |
+| Fedora, openSUSE            | [Linux package (.rpm)](https://github.com/TheMiniMingg/Dear-To-Love/releases/download/v0.1.0/Dear.to.Love-0.1.0-1.x86_64.rpm)      | Open it, or run `sudo dnf install ./Dear.to.Love-*.x86_64.rpm`                                                                                                          |
+| Any other Linux             | [Linux AppImage](https://github.com/TheMiniMingg/Dear-To-Love/releases/download/v0.1.0/Dear.to.Love_0.1.0_amd64.AppImage)          | Make it executable (`chmod +x`), then open it.                                                                                                                          |
+
+**The first time you open it**, your computer may warn you, because the app isn't
+code-signed yet:
+
+- **Windows:** SmartScreen says it "protected your PC". Choose **More info → Run anyway**.
+- **Mac:** right-click the app → **Open**, or System Settings → Privacy & Security →
+  **Open Anyway**. If macOS says the app "is damaged", run
+  `xattr -dr com.apple.quarantine "/Applications/Dear to Love.app"` in Terminal once.
+- **Linux AppImage:** some distributions need `libfuse2` (`sudo apt install libfuse2`).
+
+Installing a newer version keeps your stories, and **Settings → Updates** can install new
+versions for you, after checking each against the app's own signature. See
+[what's new in this version](https://github.com/TheMiniMingg/Dear-To-Love/releases/tag/v0.1.0), or [every release](https://github.com/TheMiniMingg/Dear-To-Love/releases) with its checksums
+(`SHA256SUMS.txt`). You can also [build it from source](#build-from-source).
+
+Testing the beta? [The beta guide](docs/beta-testing.md) covers installing, a first story and
+reporting problems in ten minutes.
 
 ## Highlights
+
+![A café story told in script style: where and when at the top, the scene's picture and portraits, speakers' portraits beside their lines, and the action pills and tools](docs/screenshots/reader.webp)
 
 - **Start in a few clicks** from 33 worlds, 47 scenarios and 27 characters, or build your
   own story from scratch. Bring a character from another story, or from a character card.
@@ -40,43 +76,6 @@ Japanese and Korean, and stories can be written in many more languages.
 - **Choices A–D** if you'd rather click than type: four ways the story could go after each
   reply, or write your own.
 - **Every feature can be switched off** with a checkbox.
-
-## Download
-
-**[Download the latest release](https://github.com/TheMiniMingg/Dear-To-Love/releases/latest)**
-and pick the file for your system (below). No account is needed. You can also
-[build it from source](#build-from-source).
-
-Testing the beta? [The beta guide](docs/beta-testing.md) covers installing, a first story and
-reporting problems in ten minutes.
-
-<details>
-<summary>Which file to pick, and opening an unsigned build</summary>
-
-| System                          | File                                                             |
-| ------------------------------- | ---------------------------------------------------------------- |
-| Windows 10/11 (64-bit)          | `…_x64-setup.exe` (installs for you only) or `…_x64_en-US.msi`   |
-| macOS (Apple silicon and Intel) | `…_universal.dmg`: open it and drag Dear to Love to Applications |
-| Debian, Ubuntu (64-bit)         | `…_amd64.deb`: `sudo apt install ./Dear.to.Love_…_amd64.deb`     |
-| Fedora, openSUSE (64-bit)       | `….x86_64.rpm`                                                   |
-| Other Linux (64-bit)            | `…_amd64.AppImage`: `chmod +x` it and run it                     |
-
-Each release lists SHA-256 checksums in `SHA256SUMS.txt`.
-
-The builds are not code-signed yet, so your system warns you the first time:
-
-- **Windows:** SmartScreen says it "protected your PC". Choose **More info → Run anyway**.
-- **macOS:** right-click the app → **Open**, or System Settings → Privacy & Security →
-  **Open Anyway**. If macOS says the app "is damaged", run
-  `xattr -dr com.apple.quarantine "/Applications/Dear to Love.app"` in Terminal once.
-- **Linux AppImage:** some distributions need `libfuse2` (`sudo apt install libfuse2`).
-
-Installing a newer version keeps your stories. Turn on update checks in **Settings → Updates**
-to be told when a new release is out. From there, **Install … and restart** installs it in one
-step (the download is checked against the app's own signature first); otherwise download it
-from the release page.
-
-</details>
 
 ## Getting started
 

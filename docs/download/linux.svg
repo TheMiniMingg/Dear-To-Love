@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="300" height="64" viewBox="0 0 300 64" role="img" aria-label="Download for Linux: AppImage · any 64-bit Linux">
+  <title>Download for Linux: AppImage · any 64-bit Linux</title>
+  <rect width="300" height="64" rx="14" fill="#c2185b"/>
+  <rect x="1" y="1" width="298" height="62" rx="13" fill="none" stroke="#ffffff" stroke-opacity="0.18"/>
+  <g fill="none" stroke="#ffffff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" transform="translate(18 18)">
+    <path d="M14 3v17"/>
+    <path d="M7 13l7 7 7-7"/>
+    <path d="M4 25h20"/>
+  </g>
+  <g font-family="'Segoe UI', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif" fill="#ffffff">
+    <text x="58" y="30" font-size="19" font-weight="700">Download for Linux</text>
+    <text x="58" y="49" font-size="12.5" fill-opacity="0.92">AppImage · any 64-bit Linux</text>
+  </g>
+</svg>
