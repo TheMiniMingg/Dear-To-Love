@@ -110,6 +110,11 @@ export function HelpScreen() {
               'are suggestions you can click or ignore; the storyteller never takes them for you.',
             )}
           </Term>
+          <Term name={t('Choices A–D')}>
+            {t(
+              'turn the ideas into four choices that take the story different ways: click one to send it as your turn, or write your own. Switch them on in Tune the telling, Story details or Preset Story (Help with your next move).',
+            )}
+          </Term>
         </ul>
       </Section>
 

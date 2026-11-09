@@ -240,6 +240,23 @@ describe('Preset Story cover', () => {
     expect(within(cover).getByText('The lamp flickers as you climb.')).toBeInTheDocument();
     expect(within(cover).getByRole('button', { name: 'Start story' })).toBeEnabled();
   });
+
+  it('starts with choices A to D when picked, and keeps the pick for next time', async () => {
+    localStorage.clear();
+    const { unmount } = render(<QuickStartScreen />);
+    const pick = await screen.findByRole('combobox', { name: 'Help with your next move' });
+    expect(pick).toHaveValue('ideas');
+    await userEvent.selectOptions(pick, 'choices');
+    await userEvent.click(screen.getByRole('button', { name: 'Start story' }));
+    await waitFor(() =>
+      expect(lastCall('quick_start')?.input).toMatchObject({ nextMove: 'choices' }),
+    );
+    unmount();
+    render(<QuickStartScreen />);
+    expect(await screen.findByRole('combobox', { name: 'Help with your next move' })).toHaveValue(
+      'choices',
+    );
+  });
 });
 
 describe('Settings → Look: reading', () => {

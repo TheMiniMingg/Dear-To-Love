@@ -473,7 +473,7 @@ export function shortName(name: string): string {
 /**
  * Ideas for the first move of a chapter, before the storyteller has
  * offered any: look around, talk to someone in the scene (or ask who is
- * there), or wait and listen.
+ * there), or wait and listen, and with choices A to D a fourth, surprising one.
  */
 export function openingIdeas(state: StoryStateV1): string[] {
   const other = state.scene.participantIds
@@ -484,6 +484,10 @@ export function openingIdeas(state: StoryStateV1): string[] {
     t('Look around'),
     other ? t('Talk to {name}', { name: other }) : t('Ask who is there'),
     t('Wait and listen'),
+    // Choices come four at a time.
+    ...(state.narration?.choices && !state.narration.noSuggestions
+      ? [t('Do something no one expects')]
+      : []),
   ];
 }
 

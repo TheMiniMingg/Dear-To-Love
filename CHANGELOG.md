@@ -19,6 +19,9 @@ happens next and plays everyone else. Your stories, saves and pictures stay on y
   with a hint, edit a reply or take back your last turn, and **Tune the telling** for detail,
   pacing, twists and point of view. Branch from any moment and see the routes as a list, a
   map or a timeline.
+- **Choices A–D** if you'd rather click than type: four ways the story could go after each
+  reply, one click to send, or write your own. Turn it on in Preset Story, Story details or
+  Tune the telling.
 - **Tell it your way**: narrated, script, roleplay chat, thoughts and dialogue, mostly
   messages or a classic text adventure. Texts and phone calls show up as phone cards.
 - **RPG mode**: health and mana bars, counters, an inventory and dice for risky moments, and a
@@ -37,6 +40,13 @@ happens next and plays everyone else. Your stories, saves and pictures stay on y
 
 Everything below went into 0.1.0, newest first.
 
+- **Choices A–D.** For when you'd rather click than type: after each reply the storyteller
+  offers four choices that take the story different ways, lettered A to D. Click one to send
+  it as your turn, use the pencil to change it first, or write your own. Turn it on with
+  **Help with your next move** in Preset Story, Custom Story, Story details or **Tune the
+  telling** (Quick Start remembers your pick). The ideas you had before are still the
+  default, and **Off** hides both. Each reply gets a few words longer, which costs a little
+  more on a paid connection. The offline storyteller offers choices too.
 - **How to play.** A page with the whole game: playing a turn, the three ways to steer the
   storyteller (a note, the rules, Remember this), changing your mind, chapters and memory,
   what to do when a story gets long, pictures, reading aloud, dice, saving and sharing, cost

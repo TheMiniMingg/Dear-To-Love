@@ -5,6 +5,7 @@ import {
   Dices,
   Drama,
   Lightbulb,
+  PenLine,
   Phone,
   Send,
   Smartphone,
@@ -46,6 +47,11 @@ type Props = {
    * it is empty; picking one puts it in the box to send or change.
    */
   ideas?: string[];
+  /**
+   * Show the ideas as choices A to D instead: picking one sends it as the
+   * turn at once, and each can still be put in the box to change first.
+   */
+  choices?: boolean;
   /** The player's standing note to the storyteller, shown above the box. */
   note?: string;
   /** Change the note (opens its window). */
@@ -53,6 +59,9 @@ type Props = {
 };
 
 type Mode = ComposeMode | 'roll';
+
+/** Choices are lettered like a quiz, whatever the app's language. */
+const CHOICE_LETTERS = ['A', 'B', 'C', 'D'];
 
 const MODES: { value: Mode; label: string; icon: LucideIcon }[] = [
   { value: 'act', label: msg('Do or say'), icon: Drama },
@@ -104,6 +113,7 @@ export function Composer({
   diceRules = {},
   tools,
   ideas = [],
+  choices = false,
   note,
   onNote,
 }: Props) {
@@ -151,6 +161,13 @@ export function Composer({
       el.setSelectionRange(el.value.length, el.value.length);
     });
   };
+  /** A choice is the turn: sent as it is, with the reply length picked. */
+  const sendChoice = (idea: string) => {
+    if (disabled) return;
+    const options = lengthOptions(length);
+    setLength('normal');
+    onSubmit(idea, undefined, options);
+  };
   const showIdeas = !disabled && mode === 'act' && !value.trim() && ideas.length > 0;
   const onKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey && !isComposing(e)) {
@@ -166,7 +183,45 @@ export function Composer({
         submit();
       }}
     >
-      {showIdeas && (
+      {showIdeas && choices && (
+        <div className="next-choices" role="group" aria-label={t('Choices for what to do next')}>
+          <ol className="next-choice-list">
+            {ideas.map((idea, i) => (
+              <li key={idea} className="next-choice">
+                <button
+                  type="button"
+                  className="next-choice-pick"
+                  aria-label={`${CHOICE_LETTERS[i] ?? ''}. ${idea}`}
+                  title={t('Send this as your turn')}
+                  onClick={() => sendChoice(idea)}
+                >
+                  <span className="next-choice-letter">{CHOICE_LETTERS[i]}</span>
+                  <span className="next-choice-words">{idea}</span>
+                </button>
+                <button
+                  type="button"
+                  className="icon-button next-choice-change"
+                  aria-label={t('Change choice {letter} first', {
+                    letter: CHOICE_LETTERS[i] ?? '',
+                  })}
+                  title={t('Put this in the box, to send or change')}
+                  onClick={() => pickIdea(idea)}
+                >
+                  <PenLine aria-hidden={true} size={15} />
+                </button>
+              </li>
+            ))}
+          </ol>
+          <button
+            type="button"
+            className="link-button next-choice-own"
+            onClick={() => ref.current?.focus()}
+          >
+            {t('Or write your own')}
+          </button>
+        </div>
+      )}
+      {showIdeas && !choices && (
         <div className="next-moves" role="group" aria-label={t('Ideas for what to do next')}>
           <Lightbulb className="next-moves-icon" aria-hidden={true} size={15} />
           {ideas.map((idea) => (

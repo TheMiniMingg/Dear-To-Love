@@ -15,6 +15,7 @@ fn state() -> EffectiveState {
             detail: None,
             story_type: None,
             language: None,
+            next_move: None,
         })
         .unwrap();
     EffectiveState::new(input.base_state)
@@ -604,9 +605,14 @@ fn next_moves_the_time_and_open_threads_reach_the_storyteller() {
     assert!(p.contains("Open threads: Find the sender\n"));
     assert!(p.contains("\nNEXT MOVES\n"));
     assert!(p.contains("<next>Ask Mina about the sketches</next>"));
+    assert!(!p.contains("CHOICES"));
+    s.state.narration.choices = true;
+    let p = system_prompt(&s, &frame());
+    assert!(p.contains("\nCHOICES\nEnd every reply with exactly four choices"));
+    assert!(p.contains("choices A to D") && !p.contains("NEXT MOVES"));
     s.state.narration.no_suggestions = true;
     let p = system_prompt(&s, &frame());
-    assert!(!p.contains("NEXT MOVES") && !p.contains("<next>"));
+    assert!(!p.contains("NEXT MOVES") && !p.contains("CHOICES") && !p.contains("<next>"));
     s.state.scene.time.clear();
     assert!(!system_prompt(&s, &frame()).contains("Time:"));
 }

@@ -37,6 +37,8 @@ Japanese and Korean, and stories can be written in many more languages.
   Forest, Ocean, Lavender, Ember, Terminal and the high-contrast Ink). A story can take the
   look that fits its genre, any reply can be read aloud in a voice for each character, and
   any route can be saved as an e-book.
+- **Choices A–D** if you'd rather click than type: four ways the story could go after each
+  reply, or write your own.
 - **Every feature can be switched off** with a checkbox.
 
 ## Download
@@ -118,6 +120,8 @@ _The memory line under a reply._
 the cast, or change them first. With a picture connection, **Make their portrait too** draws
 them from the card's description, and the portrait shows beside their lines. Above the box,
 two or three ideas for your next move wait: pick one to put it in the box, or write your own.
+Rather click than type? **Choices A–D** gives four directions after each reply instead, and
+one click sends the one you pick.
 
 ![Hazel Okafor, a florist, joins the story: her card with Make their portrait too ticked, a new thread on the memory line, and three ideas above the box](docs/screenshots/newcomer-portrait.webp)
 

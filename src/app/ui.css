@@ -1563,6 +1563,85 @@ details.more-options > summary {
   background: var(--accent-soft);
 }
 
+/* ---------- choices A to D, above the composer ---------- */
+.next-choices {
+  flex-basis: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+}
+.next-choice-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr));
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.next-choice {
+  display: flex;
+  align-items: stretch;
+  min-width: 0;
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--border));
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  transition:
+    border-color 0.15s var(--ease),
+    background-color 0.15s var(--ease);
+}
+.next-choice:hover,
+.next-choice:focus-within {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+.next-choice-pick {
+  flex: 1;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  min-width: 0;
+  padding: 0.4rem 0.6rem;
+  border: none;
+  background: none;
+  color: var(--fg);
+  font-size: 0.88rem;
+  text-align: left;
+}
+.next-choice-letter {
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  width: 1.45rem;
+  height: 1.45rem;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--on-accent);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+.next-choice-words {
+  min-width: 0;
+  padding-top: 0.1rem;
+  overflow-wrap: anywhere;
+}
+.next-choice-change {
+  flex: none;
+  border: none;
+  border-inline-start: 1px solid var(--border);
+  border-radius: 0;
+  background: none;
+  color: var(--muted);
+}
+.next-choice-change:hover {
+  color: var(--accent);
+}
+.next-choice-own {
+  align-self: flex-start;
+  font-size: 0.82rem;
+  color: var(--accent);
+}
+
 /* ---------- a story as a book cover (Preset Story, Custom Story's preview) ---------- */
 .story-cover-card {
   position: sticky;
