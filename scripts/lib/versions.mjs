@@ -1,6 +1,6 @@
 // The app version lives in four files that must agree; tauri.conf.json is
 // the source of truth. Release tags are `v` plus that version (T48).
-import { readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 
 /** SemVer 2.0 without build metadata, e.g. 1.2.3 or 1.2.3-beta.1. */
@@ -13,6 +13,7 @@ const FILES = {
   cargo: 'src-tauri/Cargo.toml',
   lock: 'src-tauri/Cargo.lock',
 };
+const README = 'README.md';
 
 const JSON_VERSION = /^(\s*"version"\s*:\s*")([^"]+)(")/m;
 const CARGO_VERSION = /^(version\s*=\s*")([^"]+)(")/m;
@@ -60,6 +61,45 @@ export function setVersion(root, version) {
   edit('tauri', replace(JSON_VERSION, FILES.tauri));
   edit('cargo', replace(CARGO_VERSION, FILES.cargo));
   edit('lock', replace(LOCK_VERSION, FILES.lock));
+  // The README's download links name this version's installers.
+  const readme = path.join(root, README);
+  if (existsSync(readme)) {
+    writeFileSync(readme, setReadmeVersion(readFileSync(readme, 'utf8'), version));
+  }
+}
+
+// A link to a release or one of its files: .../releases/download/v1.2.3/<file>
+// or .../releases/tag/v1.2.3.
+const RELEASE_LINK =
+  /(https:\/\/github\.com\/TheMiniMingg\/Dear-To-Love\/releases\/(?:download|tag)\/)v([^/\s"'<>)]+)(\/[^\s"'<>)]+)?/g;
+
+/** The README's links to a release or its files, with the version each names. */
+export function readmeLinks(text) {
+  return [...text.matchAll(RELEASE_LINK)].map((m) => ({
+    url: m[0],
+    tag: m[2],
+    file: m[3]?.slice(1) ?? null,
+  }));
+}
+
+/** Points every release link at `version`: the tag and the version in each file name. */
+export function setReadmeVersion(text, version) {
+  return text.replace(RELEASE_LINK, (_, base, old, file = '') => {
+    return `${base}v${version}${file.split(old).join(version)}`;
+  });
+}
+
+/** README links that name another version than `version`, empty when all agree. */
+export function readmeProblems(text, version) {
+  return readmeLinks(text)
+    .filter((l) => l.tag !== version || (l.file !== null && !l.file.includes(version)))
+    .map((l) => `${README} links to ${l.url}, not version ${version}`);
+}
+
+/** Problems with the README's release links in the repository at `root`. */
+export function readmeVersionProblems(root, version) {
+  const readme = path.join(root, README);
+  return existsSync(readme) ? readmeProblems(readFileSync(readme, 'utf8'), version) : [];
 }
 
 /** The CHANGELOG section for `version` (`## 1.2.3` or `## [1.2.3] - date`), or null. */

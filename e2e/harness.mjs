@@ -99,10 +99,23 @@ export async function textOf(browser, selector) {
 }
 
 export async function waitForText(browser, selector, needle, ms = 10000) {
-  await browser.waitUntil(async () => (await textOf(browser, selector)).includes(needle), {
-    timeout: ms,
-    timeoutMsg: `"${needle}" did not appear in ${selector}`,
-  });
+  try {
+    await browser.waitUntil(async () => (await textOf(browser, selector)).includes(needle), {
+      timeout: ms,
+      timeoutMsg: `"${needle}" did not appear in ${selector}`,
+    });
+  } catch (e) {
+    // Say what was there instead, so a failure on CI shows its cause.
+    const seen = await browser
+      .execute((s) => {
+        const el = document.querySelector(s);
+        const dialogs = document.querySelectorAll('[role="dialog"]').length;
+        const text = (el?.textContent ?? '').replace(/\s+/g, ' ').trim();
+        return `${el ? `it held "${text.slice(0, 300)}"` : 'no such element'}; ${dialogs} dialog(s) open`;
+      }, selector)
+      .catch(() => 'the page did not answer');
+    throw new Error(`"${needle}" did not appear in ${selector}: ${seen}`, { cause: e });
+  }
 }
 
 /**
