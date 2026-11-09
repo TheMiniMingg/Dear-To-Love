@@ -23,6 +23,10 @@ publish.
    git tag v0.2.0 && git push origin v0.2.0
    ```
 
+   Or, without a terminal: **Actions → Start a release → Run workflow**, and type the
+   version (`0.2.0`). It checks the version, its CHANGELOG section and that the tag is new,
+   tags main's latest commit and starts the Release workflow on that tag.
+
 5. Watch the **Release** workflow. It:
    - fails at once if the tag isn't exactly `v` + the packaged version (T48), or the
      CHANGELOG has no section for it;
