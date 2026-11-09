@@ -1018,7 +1018,8 @@ impl Ctx<'_> {
         parts.join("\n\n")
     }
 
-    /// Two or three ideas for the player's next move, unless they are off.
+    /// Two or three ideas for the player's next move, or four choices (A to
+    /// D), unless they are off.
     fn next_moves(&self) -> Option<String> {
         if self.n.no_suggestions {
             return None;
@@ -1054,12 +1055,27 @@ impl Ctx<'_> {
             ]
         };
         let start = self.seed.byte(23) as usize % general.len();
-        let want = if self.npc.is_some() { 3 } else { 2 };
-        for i in 0..general.len() {
+        let want = if self.n.choices {
+            4
+        } else if self.npc.is_some() {
+            3
+        } else {
+            2
+        };
+        // Choices take the story four ways, one of them unexpected.
+        let extra: &[&str] = match (self.n.choices, self.is_fight()) {
+            (false, _) => &[],
+            (true, true) => &["Call out for help", "Try to talk my way out"],
+            (true, false) => &["Do something no one expects"],
+        };
+        let pool = (0..general.len())
+            .map(|i| general[(start + i) % general.len()])
+            .chain(extra.iter().copied());
+        for idea in pool {
             if ideas.len() >= want {
                 break;
             }
-            ideas.push(general[(start + i) % general.len()].to_string());
+            ideas.push(idea.to_string());
         }
         Some(
             ideas

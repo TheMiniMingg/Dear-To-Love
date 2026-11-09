@@ -478,9 +478,64 @@ describe('Ideas for the next move', () => {
   });
 
   it('are not offered when the story turned them off', async () => {
-    setup(viewWith({ narration: { noSuggestions: true } }));
+    setup(viewWith({ narration: { noSuggestions: true, choices: true } }));
     expect(await screen.findByText(/Gulls wheel over the boats/)).toBeInTheDocument();
     expect(screen.queryByRole('group', { name: 'Ideas for what to do next' })).toBeNull();
+    expect(screen.queryByRole('group', { name: 'Choices for what to do next' })).toBeNull();
+  });
+});
+
+describe('Choices A to D', () => {
+  const sent = () =>
+    invoke.mock.calls.filter(([cmd]) => cmd === 'submit_action').map(([, args]) => args);
+
+  it('are lettered, and the one clicked is sent as the turn at once', async () => {
+    setup(viewWith({ narration: { choices: true } }), {
+      submit_action: () => ({ runId: 'run-1', view: viewWith({ narration: { choices: true } }) }),
+      generate_reply: () => new Promise(() => undefined),
+    });
+    const choices = await screen.findByRole('group', { name: 'Choices for what to do next' });
+    expect(screen.queryByRole('group', { name: 'Ideas for what to do next' })).toBeNull();
+    const picks = within(choices).getAllByRole('button', { name: /^[A-D]\. / });
+    expect(picks.map((b) => b.getAttribute('aria-label'))).toEqual([
+      'A. Wave back at Rowan',
+      'B. Ask about the letter',
+    ]);
+    await userEvent.click(within(choices).getByRole('button', { name: 'B. Ask about the letter' }));
+    expect(sent()).toEqual([expect.objectContaining({ text: 'Ask about the letter' })]);
+  });
+
+  it('can be changed first, or set aside to write your own', async () => {
+    setup(viewWith({ narration: { choices: true } }));
+    const choices = await screen.findByRole('group', { name: 'Choices for what to do next' });
+    const box = screen.getByLabelText('What do you do?');
+    await userEvent.click(within(choices).getByRole('button', { name: 'Or write your own' }));
+    expect(box).toHaveFocus();
+    await userEvent.click(within(choices).getByRole('button', { name: 'Change choice A first' }));
+    expect(box).toHaveValue('Wave back at Rowan');
+    expect(sent()).toEqual([]);
+    expect(screen.queryByRole('group', { name: 'Choices for what to do next' })).toBeNull();
+  });
+
+  it('are a story detail with three settings', () => {
+    const before = viewWith().state.state;
+    const after = structuredClone(before);
+    after.narration = { ...after.narration, choices: true };
+    const { changes, lines } = diffState(before, after);
+    expect(changes).toContainEqual({
+      op: 'setNarration',
+      narration: expect.objectContaining({ choices: true }),
+    });
+    expect(lines).toContainEqual({
+      what: 'Narration · Help with your next move',
+      before: 'Ideas to pick',
+      after: 'Choices A–D',
+    });
+    // Off wins: choices are not kept while suggestions are off.
+    after.narration = { ...after.narration, noSuggestions: true };
+    const off = diffState(before, after).changes.find((c) => c.op === 'setNarration');
+    expect(off).toMatchObject({ narration: { noSuggestions: true } });
+    expect(off && 'narration' in off && off.narration.choices).toBeFalsy();
   });
 });
 
@@ -507,8 +562,8 @@ describe('Where and when', () => {
     });
     expect(lines).toContainEqual({ what: 'Scene · When', before: 'Dawn', after: 'Noon' });
     expect(lines).toContainEqual({
-      what: 'Narration · Suggest what you could do next',
-      before: 'On',
+      what: 'Narration · Help with your next move',
+      before: 'Ideas to pick',
       after: 'Off',
     });
   });

@@ -1586,6 +1586,7 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
                 onNote={awaitingReply || writing ? undefined : openNote}
                 disabled={busy || awaitingReply || writing}
                 ideas={ideas}
+                choices={!!view.state.state.narration?.choices}
                 placeholder={t('What do you do? (Enter to send, Shift+Enter for a new line)')}
                 playerName={player?.name ?? t('You')}
                 dice={!!view.state.state.narration?.dice}
@@ -1633,7 +1634,9 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
                     <ToolButton
                       icon={SlidersHorizontal}
                       label={t('Tune the telling')}
-                      title={t('Detail, pacing, twists and point of view, from the next reply on')}
+                      title={t(
+                        'Detail, pacing, twists, point of view and choices, from the next reply on',
+                      )}
                       keys={undefined}
                       onClick={() => setPanel('tune')}
                       disabled={busy || awaitingReply || writing}

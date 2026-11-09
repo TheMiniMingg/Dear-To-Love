@@ -75,6 +75,7 @@ export type { ModelMessage } from './generated/ModelMessage';
 export type { ModelUsage } from './generated/ModelUsage';
 export type { Narration } from './generated/Narration';
 export type { NarrationStyle } from './generated/NarrationStyle';
+export type { NextMove } from './generated/NextMove';
 export type { NormalizedUsage } from './generated/NormalizedUsage';
 export type { NoteKind } from './generated/NoteKind';
 export type { NotebookTidy } from './generated/NotebookTidy';

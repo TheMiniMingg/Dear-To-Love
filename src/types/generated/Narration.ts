@@ -64,6 +64,12 @@ manualMemory?: boolean,
  */
 noSuggestions?: boolean, 
 /**
+ * Four choices (A to D) after each reply that take the story different
+ * ways, instead of two or three ideas; the reader sends the one picked
+ * as the player's turn. Ignored while suggestions are off.
+ */
+choices?: boolean, 
+/**
  * How the player would like it told, in their own words ("like a cozy
  * anime, lots of banter").
  */

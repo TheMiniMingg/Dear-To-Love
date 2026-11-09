@@ -2232,12 +2232,6 @@ export const reader: Messages = {
     '책갈피: {label}',
   ],
   'Memory {percent}%': ['记忆 {percent}%', '記憶 {percent}%', '記憶 {percent}%', '기억 {percent}%'],
-  'Detail, pacing, twists and point of view, from the next reply on': [
-    '细节、节奏、转折和视角，从下一条回复开始生效',
-    '細節、節奏、轉折和視角，從下一則回覆開始生效',
-    '描写の量・テンポ・どんでん返し・視点を、次の返信から変えます',
-    '묘사 정도, 전개 속도, 반전, 시점을 다음 응답부터 바꿉니다',
-  ],
   'Tell the storyteller what you want from the story, out of character. It steers every reply from now on until you change it, and is never part of the story. For what is true in the world, use Rules in Story details; for a fact to keep, use Remember this.':
     [
       '以玩家身份告诉讲述者你想要怎样的故事。它会引导之后的每一条回复，直到你修改为止，而且永远不会成为故事的一部分。世界中成立的事实请用故事设定里的“规则”；要记住的某件事请用“记住这个”。',
@@ -2325,4 +2319,34 @@ export const reader: Messages = {
       '語り手は、終えた章をあらすじで読み、その後の {n} ターンをそのまま読みます。',
       '이야기꾼은 끝낸 챕터를 요약으로 읽고, 그 뒤의 {n}개 턴을 그대로 읽습니다.',
     ],
+  'Choices for what to do next': [
+    '接下来的选项',
+    '接下來的選項',
+    '次にすることの選択肢',
+    '다음 행동 선택지',
+  ],
+  'Send this as your turn': [
+    '把这个作为你的行动发送',
+    '把這個作為你的行動送出',
+    'これを自分の番として送る',
+    '이것을 내 차례로 보내기',
+  ],
+  'Change choice {letter} first': [
+    '先修改选项 {letter}',
+    '先修改選項 {letter}',
+    '選択肢 {letter} を先に書き換える',
+    '선택지 {letter}을(를) 먼저 고치기',
+  ],
+  'Do something no one expects': [
+    '做件谁也想不到的事',
+    '做件誰也想不到的事',
+    '誰も予想しないことをする',
+    '아무도 예상 못 한 일을 하기',
+  ],
+  'Detail, pacing, twists, point of view and choices, from the next reply on': [
+    '细节、节奏、转折、视角和选项，从下一条回复开始生效',
+    '細節、節奏、轉折、視角和選項，從下一則回覆開始生效',
+    '描写の量・テンポ・どんでん返し・視点・選択肢を、次の返信から変えます',
+    '묘사 정도, 전개 속도, 반전, 시점, 선택지를 다음 응답부터 바꿉니다',
+  ],
 };

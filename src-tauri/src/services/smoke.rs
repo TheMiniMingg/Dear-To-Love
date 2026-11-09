@@ -106,6 +106,7 @@ async fn seed(db: &Database) -> AppResult<String> {
         detail: None,
         story_type: None,
         language: None,
+        next_move: None,
     })?;
     let created = stories::create_story(db, input).await?;
     saves::create_save(db, &created.story_id, &created.main_route_id, SEED_SAVE).await?;

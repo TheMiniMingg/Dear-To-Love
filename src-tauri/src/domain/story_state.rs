@@ -288,6 +288,12 @@ pub struct Narration {
     #[serde(default, skip_serializing_if = "is_false")]
     #[ts(as = "Option<bool>", optional)]
     pub no_suggestions: bool,
+    /// Four choices (A to D) after each reply that take the story different
+    /// ways, instead of two or three ideas; the reader sends the one picked
+    /// as the player's turn. Ignored while suggestions are off.
+    #[serde(default, skip_serializing_if = "is_false")]
+    #[ts(as = "Option<bool>", optional)]
+    pub choices: bool,
     /// How the player would like it told, in their own words ("like a cozy
     /// anime, lots of banter").
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -328,6 +334,7 @@ impl Default for Narration {
             dice_rules: None,
             manual_memory: false,
             no_suggestions: false,
+            choices: false,
             style_notes: None,
             storyteller_note: None,
         }
