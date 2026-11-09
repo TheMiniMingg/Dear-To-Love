@@ -143,7 +143,7 @@ jobs:
               fs.writeFileSync(file, JSON.stringify(config));
               fs.appendFileSync(process.env.GITHUB_ENV, `TAURI_UPDATER_CONFIG=${file}\n`);
             '
-            echo "Updater files will be signed."
+            echo "::notice title=Update signing::Updater files will be signed."
           else
             echo "No update signing key: this build links to the release page for updates."
           fi
@@ -161,6 +161,19 @@ jobs:
           if [ -n "$TAURI_EXTRA_CONFIG" ]; then args+=(--config "$TAURI_EXTRA_CONFIG"); fi
           if [ -n "$TAURI_UPDATER_CONFIG" ]; then args+=(--config "$TAURI_UPDATER_CONFIG"); fi
           pnpm tauri build "${args[@]}"
+      # A build that was given the update key must have signed its updater
+      # files, or the release would have no latest.json.
+      - name: Check the updater files are signed
+        if: env.TAURI_UPDATER_CONFIG != ''
+        shell: bash
+        run: |
+          mapfile -t sigs < <(find "${{ matrix.bundle_dir }}" -name '*.sig')
+          printf '%s\n' "${sigs[@]}"
+          if [ "${#sigs[@]}" -eq 0 ]; then
+            echo "::error title=Update signing::The build wrote no .sig files."
+            exit 1
+          fi
+          echo "::notice title=Update signing::${#sigs[@]} signed updater files."
       - uses: actions/upload-artifact@v4
         with:
           name: installers-${{ matrix.name }}
@@ -238,6 +251,7 @@ jobs:
           version="${{ needs.version.outputs.version }}"
           flags=()
           if [ "$SIGNED" = "true" ]; then flags+=(--signed); fi
+          if compgen -G "dist/*.sig" > /dev/null; then flags+=(--updates); fi
           node scripts/release-notes.mjs "$version" "${flags[@]}" > notes.md
           node scripts/updater-manifest.mjs dist "$version" "$GITHUB_REF_NAME" "$GITHUB_REPOSITORY" notes.md
           release=(--draft --verify-tag)

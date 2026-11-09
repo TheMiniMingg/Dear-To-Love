@@ -41,9 +41,9 @@ Japanese and Korean, and stories can be written in many more languages.
 
 ## Download
 
-> **Downloads arrive with the first release.** Dear to Love is still being built, so there is
-> no installer on the [Releases page](https://github.com/TheMiniMingg/Dear-To-Love/releases)
-> yet. Until then you can [build it from source](#build-from-source).
+**[Download the latest release](https://github.com/TheMiniMingg/Dear-To-Love/releases/latest)**
+and pick the file for your system (below). No account is needed. You can also
+[build it from source](#build-from-source).
 
 Testing the beta? [The beta guide](docs/beta-testing.md) covers installing, a first story and
 reporting problems in ten minutes.

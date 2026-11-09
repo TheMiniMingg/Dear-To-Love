@@ -29,8 +29,9 @@ publish.
    - builds Linux (`.deb`, `.rpm`, `.AppImage`, on Ubuntu 22.04 for older glibc), Windows
      (NSIS `setup.exe` and `.msi`) and macOS (one universal `.dmg` for Apple silicon and Intel);
    - runs the installer smoke test on a clean machine for each system (below);
-   - creates a draft release with every file (spaces in names become dots), `SHA256SUMS.txt`
-     and notes from the CHANGELOG.
+   - creates a draft release with every file (spaces in names become dots), `SHA256SUMS.txt`,
+     `latest.json` when the build signed its updater files, and notes from the CHANGELOG
+     section plus how to install.
 6. Open the draft on GitHub, read it, and **Publish**. Only then does the app's update check
    (for users who turned it on) see the new version.
 
