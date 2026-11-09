@@ -1,0 +1,55 @@
+name: Start a release
+
+# One click on the Actions tab (Run workflow) instead of pushing a tag by
+# hand: tags main's latest commit `v` + the version typed in, after checking
+# it is the packaged version with a CHANGELOG section and no tag yet, then
+# starts the Release workflow on that tag. Release builds the installers into
+# a draft release; publishing it is still a click on the Releases page.
+# (A tag pushed with this workflow's token starts no workflow by itself, so
+# Release is started here, and runs once.)
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Version to release, e.g. 0.1.0 (the app's version on main)
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: start-release
+
+jobs:
+  tag:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+      - name: Check the version, its notes and the tag
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          tag="v${VERSION#v}"
+          node scripts/check-version.mjs --tag "$tag"
+          node scripts/release-notes.mjs "$tag" > /dev/null
+          if git ls-remote --exit-code --tags origin "refs/tags/$tag" > /dev/null; then
+            echo "::error title=Already tagged::$tag exists. Pick the next version."
+            exit 1
+          fi
+          echo "TAG=$tag" >> "$GITHUB_ENV"
+      - name: Tag main and start the Release workflow
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git tag "$TAG"
+          git push origin "refs/tags/$TAG"
+          gh workflow run release.yml --ref "$TAG"
+          echo "::notice title=Release started::$TAG is tagged at $(git rev-parse --short HEAD). The Release workflow is building it into a draft release."
