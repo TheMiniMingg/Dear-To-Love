@@ -13,6 +13,7 @@ import { trackingSummary } from '../create/TrackingFields';
 import { cleanOptionalList, minorsIn, RATING_LABELS } from '../create/ContentFields';
 import {
   DETAILS,
+  NEXT_MOVES,
   PACINGS,
   PERSPECTIVES,
   STYLES,
@@ -21,6 +22,7 @@ import {
   cleanDiceRules,
   diceSummary,
   labelOf,
+  nextMoveOf,
 } from '../create/StyleFields';
 import { joinList, msg, t } from '../../i18n';
 
@@ -140,6 +142,7 @@ function cleanNarration(n: Narration): Narration {
   if (n.quietPhones) out.quietPhones = true;
   if (n.manualMemory) out.manualMemory = true;
   if (n.noSuggestions) out.noSuggestions = true;
+  else if (n.choices) out.choices = true;
   const styleNotes = n.styleNotes?.trim();
   if (styleNotes) out.styleNotes = styleNotes;
   const storytellerNote = n.storytellerNote?.trim();
@@ -242,7 +245,7 @@ export function diffState(
       autopilot: onOff(n.autopilot),
       quietPhones: onOff(!n.quietPhones),
       manualMemory: onOff(!n.manualMemory),
-      noSuggestions: onOff(!n.noSuggestions),
+      nextMove: labelOf(NEXT_MOVES, nextMoveOf(n)),
       styleNotes: n.styleNotes ?? t('Not set'),
       storytellerNote: n.storytellerNote ?? t('Not set'),
       diceRules: diceSummary(n.diceRules) || t('Usual'),
@@ -268,7 +271,7 @@ export function diffState(
         ['autopilot', msg('Your small reactions')],
         ['quietPhones', msg('Characters can text or call you first')],
         ['manualMemory', msg('Let the storyteller keep memory notes')],
-        ['noSuggestions', msg('Suggest what you could do next')],
+        ['nextMove', msg('Help with your next move')],
         ['styleNotes', msg('Your own style (optional)')],
         ['storytellerNote', msg('Note to the storyteller')],
         ['surprises', msg('Twists and surprises')],

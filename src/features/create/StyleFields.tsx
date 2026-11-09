@@ -5,6 +5,7 @@ import type {
   DiceRules,
   Narration,
   NarrationStyle,
+  NextMove,
   Pacing,
   Perspective,
   RollFrequency,
@@ -113,6 +114,32 @@ export const SURPRISES: PickerOption<Surprises>[] = [
   { value: 'often', label: msg('Often'), hint: msg('Complications and twists keep coming.') },
   { value: 'off', label: msg('None'), hint: msg('Things follow from what you and the others do.') },
 ];
+/** What the storyteller offers for the player's next move after each reply. */
+export const NEXT_MOVES: PickerOption<NextMove>[] = [
+  {
+    value: 'ideas',
+    label: msg('Ideas to pick'),
+    hint: msg('Two or three ideas above the box after each reply. Pick one to put it in the box.'),
+  },
+  {
+    value: 'choices',
+    label: msg('Choices A–D'),
+    hint: msg(
+      'Four choices after each reply that take the story different ways. Click one to send it, or write your own. Each reply gets a few words longer.',
+    ),
+  },
+  { value: 'off', label: msg('Off'), hint: msg('You write every move yourself.') },
+];
+export function nextMoveOf(n: Narration): NextMove {
+  return n.noSuggestions ? 'off' : n.choices ? 'choices' : 'ideas';
+}
+/** The narration fields for a next-move choice; unset when usual. */
+export function nextMovePatch(move: NextMove): Pick<Narration, 'noSuggestions' | 'choices'> {
+  return {
+    noSuggestions: move === 'off' ? true : undefined,
+    choices: move === 'choices' ? true : undefined,
+  };
+}
 const ASKERS: PickerOption<'both' | 'player'>[] = [
   { value: 'both', label: msg('The storyteller, and you any time') },
   { value: 'player', label: msg('Only you, when you choose to') },
@@ -187,6 +214,7 @@ export function tellingOf(n: Narration): Partial<Narration> {
     autopilot: n.autopilot,
     manualMemory: n.manualMemory,
     noSuggestions: n.noSuggestions,
+    choices: n.choices,
     styleNotes: n.styleNotes,
     surprises: n.surprises,
     language: n.language,
@@ -623,13 +651,11 @@ export function FeatureFields({
         checked={!narration.manualMemory}
         onChange={(on) => onChange({ manualMemory: on ? undefined : true })}
       />
-      <Check
-        label={t('Suggest what you could do next')}
-        hint={t(
-          'Two or three ideas above the box after each reply. Pick one to put it in the box.',
-        )}
-        checked={!narration.noSuggestions}
-        onChange={(on) => onChange({ noSuggestions: on ? undefined : true })}
+      <ArrowPicker
+        label={t('Help with your next move')}
+        options={tOptions(NEXT_MOVES)}
+        value={nextMoveOf(narration)}
+        onChange={(move) => onChange(nextMovePatch(move))}
       />
       <ArrowPicker
         label={t('Twists and surprises')}

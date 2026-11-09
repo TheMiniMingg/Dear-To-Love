@@ -239,6 +239,23 @@ pub struct QuickStartInput {
     #[serde(default)]
     #[ts(optional)]
     pub language: Option<String>,
+    /// What the storyteller offers for the next move; unset keeps the ideas.
+    #[serde(default)]
+    #[ts(optional)]
+    pub next_move: Option<NextMove>,
+}
+
+/// What the storyteller offers for the player's next move after each reply.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "lowercase")]
+#[ts(export)]
+pub enum NextMove {
+    /// Two or three ideas to put in the box.
+    Ideas,
+    /// Four choices (A to D) that take the story different ways.
+    Choices,
+    /// Nothing: the player writes every move.
+    Off,
 }
 
 pub(crate) fn check_id(id: &str) -> AppResult<()> {
@@ -410,6 +427,11 @@ impl TemplateCatalog {
         if let Some(d) = input.detail {
             narration.detail = d;
         }
+        match input.next_move {
+            Some(NextMove::Choices) => narration.choices = true,
+            Some(NextMove::Off) => narration.no_suggestions = true,
+            Some(NextMove::Ideas) | None => {}
+        }
         if let Some(l) = input.language.as_deref().map(str::trim) {
             if !l.is_empty() {
                 narration.language = Some(l.to_string());
@@ -467,6 +489,7 @@ mod tests {
             detail: None,
             story_type: None,
             language: None,
+            next_move: None,
         }
     }
 
@@ -530,6 +553,13 @@ mod tests {
         let d = cat.resolve_quick_start(&input).unwrap();
         assert_eq!(d.base_state.narration.perspective, Perspective::Third);
         assert_eq!(d.base_state.narration.detail, Detail::Cinematic);
+        assert!(!d.base_state.narration.choices);
+        input.next_move = Some(NextMove::Choices);
+        let d = cat.resolve_quick_start(&input).unwrap();
+        assert!(d.base_state.narration.choices, "choices A to D when picked");
+        input.next_move = Some(NextMove::Off);
+        let d = cat.resolve_quick_start(&input).unwrap();
+        assert!(d.base_state.narration.no_suggestions && !d.base_state.narration.choices);
     }
 
     #[test]
@@ -593,6 +623,7 @@ mod tests {
                         detail: None,
                         story_type: None,
                         language: None,
+                        next_move: None,
                     };
                     let story = cat.resolve_quick_start(&input).unwrap_or_else(|e| {
                         panic!("{} + {} + {}: {}", w.id, s.id, c.id, e.message)

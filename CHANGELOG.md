@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- **Choices A–D.** For when you'd rather click than type: after each reply the storyteller
+  offers four choices that take the story different ways, lettered A to D. Click one to send
+  it as your turn, use the pencil to change it first, or write your own. Turn it on with
+  **Help with your next move** in Preset Story, Custom Story, Story details or **Tune the
+  telling** (Quick Start remembers your pick). The ideas you had before are still the
+  default, and **Off** hides both. Each reply gets a few words longer, which costs a little
+  more on a paid connection. The offline storyteller offers choices too.
 - **How to play.** A page with the whole game: playing a turn, the three ways to steer the
   storyteller (a note, the rules, Remember this), changing your mind, chapters and memory,
   what to do when a story gets long, pictures, reading aloud, dice, saving and sharing, cost

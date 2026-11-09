@@ -152,7 +152,13 @@ The storyteller fills in a few more things as it writes, each one yours to chang
   adults-only story refuses anyone whose age says under 18.
 - **Ideas for your next move.** Each reply ends with two or three `<next>…</next>` ideas.
   They sit above the empty action box; picking one puts it in the box to send or change.
-  **Suggest what you could do next** in the story's settings turns them off.
+  **Help with your next move** (Story details, Tune the telling, Preset Story) switches
+  between these ideas, **Choices A–D** and **Off**. With choices the prompt's `CHOICES`
+  section asks for exactly four `<next>` choices that take the story different ways (one
+  bold, one careful, one about someone else, one unexpected); the reader letters them A to
+  D, and clicking one sends it as the player's turn. That costs a few more output tokens
+  per reply than the ideas (four lines of up to fifteen words instead of two or three of up
+  to ten).
 - **Where and when.** The storyteller marks a new place or time with
   `<scene place="…" time="…"/>`. With headings on, the mark shows as a heading; off, it is
   hidden, but the scene above the story and in **Story details** follows it either way, and a

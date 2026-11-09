@@ -590,3 +590,28 @@ fn suggests_next_moves_unless_turned_off() {
     let off = with(|s| s.narration.no_suggestions = true);
     assert!(!reply(&off, "Open the window", 3, false).contains("<next>"));
 }
+
+#[test]
+fn offers_four_different_choices_when_asked() {
+    let choices = with(|s| s.narration.choices = true);
+    for (action, turn) in [("Open the window", 3), ("Attack the guard", 4), ("Wait", 9)] {
+        let r = reply(&choices, action, turn, false);
+        let mut picks: Vec<&str> = r
+            .match_indices("<next>")
+            .map(|(i, _)| {
+                let rest = &r[i + 6..];
+                &rest[..rest.find("</next>").unwrap()]
+            })
+            .collect();
+        assert_eq!(picks.len(), 4, "{r}");
+        picks.sort_unstable();
+        picks.dedup();
+        assert_eq!(picks.len(), 4, "different choices: {r}");
+    }
+    // Off still wins over choices.
+    let off = with(|s| {
+        s.narration.choices = true;
+        s.narration.no_suggestions = true;
+    });
+    assert!(!reply(&off, "Open the window", 3, false).contains("<next>"));
+}

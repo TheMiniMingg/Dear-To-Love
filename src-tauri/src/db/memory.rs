@@ -157,6 +157,7 @@ mod tests {
                 detail: None,
                 story_type: None,
                 language: None,
+                next_move: None,
             })
             .unwrap();
         create_story(db, draft).await.unwrap()

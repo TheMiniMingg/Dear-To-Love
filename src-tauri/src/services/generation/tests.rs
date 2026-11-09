@@ -34,6 +34,7 @@ impl Env {
                 detail: None,
                 story_type: None,
                 language: None,
+                next_move: None,
             })
             .unwrap();
         let story = create_story(&t.db, draft).await.unwrap();
@@ -402,6 +403,7 @@ async fn another_story_plays_while_a_reply_is_being_written() {
             detail: None,
             story_type: None,
             language: None,
+            next_move: None,
         })
         .unwrap();
     let other = create_story(env.db(), draft).await.unwrap();

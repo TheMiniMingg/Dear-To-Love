@@ -215,6 +215,7 @@ async fn characters_from_other_stories_are_listed_once_with_the_player_first() {
         detail: None,
         story_type: None,
         language: None,
+        next_move: None,
     };
     let catalog = TemplateCatalog::bundled();
     for _ in 0..2 {

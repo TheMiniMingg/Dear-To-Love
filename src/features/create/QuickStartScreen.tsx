@@ -5,11 +5,17 @@ import { Download, PenLine, Play, Shuffle, Trash2, Upload } from 'lucide-react';
 import { commands, errorMessage } from '../../api/commands';
 import { useUiStore } from '../../app/store';
 import { ArrowPicker } from '../../components/ArrowPicker';
-import type { Detail, Perspective, TemplateCatalog, UserPreset } from '../../types';
+import type { Detail, NextMove, Perspective, TemplateCatalog, UserPreset } from '../../types';
 import { STORY_TYPES, withStoryType, worldFits } from './ContentFields';
 import { charactersFor, fittingScenarios, suits } from './WizardSteps';
 import { formatAgo, t, tOptions } from '../../i18n';
-import { DETAILS, PERSPECTIVES, appStoryLanguage, storyLanguageLabel } from './StyleFields';
+import {
+  DETAILS,
+  NEXT_MOVES,
+  PERSPECTIVES,
+  appStoryLanguage,
+  storyLanguageLabel,
+} from './StyleFields';
 import { trackingSummary } from './TrackingFields';
 import { StoryCover } from './StoryCover';
 
@@ -23,6 +29,7 @@ export function QuickStartScreen() {
   const [characterId, setCharacterId] = useState('');
   const [perspective, setPerspective] = useState<Perspective | null>(null);
   const [detail, setDetail] = useState<Detail | null>(null);
+  const [nextMove, setNextMove] = useState<NextMove>(lastNextMove);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [presets, setPresets] = useState<UserPreset[] | null>(null);
@@ -176,6 +183,7 @@ export function QuickStartScreen() {
         detail: effectiveDetail,
         storyType: storyType || undefined,
         language: storyLanguage,
+        nextMove,
       });
       navigate({ name: 'reader', routeId: created.mainRouteId });
     } catch (e) {
@@ -268,6 +276,15 @@ export function QuickStartScreen() {
               options={tOptions(DETAILS)}
               value={effectiveDetail}
               onChange={setDetail}
+            />
+            <ArrowPicker
+              label={t('Help with your next move')}
+              options={tOptions(NEXT_MOVES)}
+              value={nextMove}
+              onChange={(move) => {
+                setNextMove(move);
+                rememberNextMove(move);
+              }}
             />
           </div>
           <StoryCover
@@ -430,4 +447,25 @@ export function QuickStartScreen() {
       )}
     </section>
   );
+}
+
+/** Quick Start keeps the last next-move pick for the next story. */
+const NEXT_MOVE_KEY = 'dtl.quickStart.nextMove';
+
+function lastNextMove(): NextMove {
+  try {
+    const v = localStorage.getItem(NEXT_MOVE_KEY);
+    return v === 'choices' || v === 'off' ? v : 'ideas';
+  } catch {
+    return 'ideas';
+  }
+}
+
+function rememberNextMove(move: NextMove) {
+  try {
+    if (move === 'ideas') localStorage.removeItem(NEXT_MOVE_KEY);
+    else localStorage.setItem(NEXT_MOVE_KEY, move);
+  } catch {
+    // Not kept; the next story starts with ideas.
+  }
 }

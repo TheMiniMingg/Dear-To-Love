@@ -765,6 +765,7 @@ pub fn fill_offline(
         detail: None,
         story_type: draft.story_type.clone(),
         language: draft.narration.language.clone(),
+        next_move: None,
     })?;
     let from = &preset.player;
     let mut filled = vec![];

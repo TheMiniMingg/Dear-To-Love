@@ -43,7 +43,7 @@ use crate::domain::tracking::Tracking;
 use crate::errors::{AppError, AppResult, ErrorCode};
 use crate::services::tokens::{estimate_message, estimate_messages, estimate_text};
 
-pub const PROMPT_SCHEMA_VERSION: u32 = 15;
+pub const PROMPT_SCHEMA_VERSION: u32 = 16;
 /// What the storyteller reads for **Keep going**, an action with no words.
 pub const KEEP_GOING: &str = "(Out of character: I let the story go on without acting. \
      Continue from where it left off, and don't decide anything for my character.)";
@@ -369,14 +369,28 @@ fn bonds_contract(player_name: &str, language: Option<&str>) -> String {
     out
 }
 
-/// Ideas for the player's next move, unless the story turned them off.
-fn next_moves_contract(player_name: &str, language: Option<&str>) -> String {
-    let mut out = format!(
-        "\nNEXT MOVES\nEnd every reply with two or three short ideas for what {player_name} \
-         could do next, each in its own tag: <next>Ask Mina about the sketches</next>. Write \
-         them as {player_name}'s actions, under ten words each, different from each other and \
-         true to the moment. The app shows them as buttons; they are not part of the story.\n"
-    );
+/// Ideas for the player's next move, unless the story turned them off: two
+/// or three to pick from, or four choices (A to D) that steer the story.
+fn next_moves_contract(player_name: &str, choices: bool, language: Option<&str>) -> String {
+    let mut out = if choices {
+        format!(
+            "\nCHOICES\nEnd every reply with exactly four choices for what {player_name} does \
+             next, each in its own tag: <next>Follow Mina out into the rain</next>. Make them \
+             take the story in clearly different directions, for example one bold, one careful, \
+             one about someone else in the scene and one unexpected. Each is one action \
+             {player_name} could take right now, under fifteen words, true to the moment and to \
+             {player_name}. The app shows them as choices A to D and sends the one picked as \
+             {player_name}'s turn; they are not part of the story.\n"
+        )
+    } else {
+        format!(
+            "\nNEXT MOVES\nEnd every reply with two or three short ideas for what {player_name} \
+             could do next, each in its own tag: <next>Ask Mina about the sketches</next>. Write \
+             them as {player_name}'s actions, under ten words each, different from each other \
+             and true to the moment. The app shows them as buttons; they are not part of the \
+             story.\n"
+        )
+    };
     if let Some(language) = language.map(str::trim).filter(|l| !l.is_empty()) {
         out.push_str(&format!("Write them in {language}.\n"));
     }
@@ -893,6 +907,7 @@ fn system_prompt_with(state: &EffectiveState, frame: &StoryFrame, room: &Room<'_
     if !s.narration.no_suggestions {
         out.push_str(&next_moves_contract(
             player_name,
+            s.narration.choices,
             s.narration.language.as_deref(),
         ));
     }

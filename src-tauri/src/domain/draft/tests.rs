@@ -12,6 +12,7 @@ fn starter() -> CreateStoryDraft {
             detail: None,
             story_type: None,
             language: None,
+            next_move: None,
         })
         .unwrap()
 }

@@ -2,14 +2,23 @@ import { useState } from 'react';
 import { commands, errorMessage } from '../../api/commands';
 import { ArrowPicker } from '../../components/ArrowPicker';
 import type { Narration, RouteView } from '../../types';
-import { DETAILS, PACINGS, PERSPECTIVES, SURPRISES } from '../create/StyleFields';
+import {
+  DETAILS,
+  NEXT_MOVES,
+  PACINGS,
+  PERSPECTIVES,
+  SURPRISES,
+  nextMoveOf,
+  nextMovePatch,
+} from '../create/StyleFields';
 import { diffState, summarize } from './stateDiff';
 import { t, tOptions } from '../../i18n';
 
 /**
- * Tune: the four settings people most often want to change while a story is
- * under way (how much detail, how fast, how many twists, whose eyes), applied
- * from the next reply on. The full set is in Story details → Narration.
+ * Tune: the settings people most often want to change while a story is
+ * under way (how much detail, how fast, how many twists, whose eyes, and
+ * ideas or choices for the next move), applied from the next reply on. The
+ * full set is in Story details → Narration.
  */
 export function TunePanel({
   view,
@@ -77,6 +86,12 @@ export function TunePanel({
         options={tOptions(PERSPECTIVES)}
         value={narration.perspective}
         onChange={(perspective) => set({ perspective })}
+      />
+      <ArrowPicker
+        label={t('Help with your next move')}
+        options={tOptions(NEXT_MOVES)}
+        value={nextMoveOf(narration)}
+        onChange={(move) => set(nextMovePatch(move))}
       />
       {error && (
         <p role="alert" className="error">
