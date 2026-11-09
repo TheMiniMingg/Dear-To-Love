@@ -2,6 +2,44 @@
 
 ## Unreleased
 
+## 0.1.0 - 2026-11-09
+
+The first release. Dear to Love is a desktop app for playing interactive stories with AI: pick
+a world, a character and a situation, write what you do, and the storyteller writes what
+happens next and plays everyone else. Your stories, saves and pictures stay on your computer.
+
+- **Start in a few clicks** from 33 worlds, 47 scenarios and 27 characters, or build your own
+  story from blank fields, with **Fill in the rest** for anything you leave out. Keep a
+  story's setup as a preset of your own and share it as a file.
+- **Bring your own AI**: OpenAI, Claude, Gemini, Grok, Mistral, DeepSeek, OpenRouter and other
+  hosted models with your API key, or a free model on your own computer (Ollama, LM Studio and
+  more). Keys stay in your system's credential store. The built-in offline storyteller plays
+  with neither.
+- **Steer the story**: Keep going, a note to the storyteller, Remember this, another reply
+  with a hint, edit a reply or take back your last turn, and **Tune the telling** for detail,
+  pacing, twists and point of view. Branch from any moment and see the routes as a list, a
+  map or a timeline.
+- **Choices A–D** if you'd rather click than type: four ways the story could go after each
+  reply, one click to send, or write your own. Turn it on in Preset Story, Story details or
+  Tune the telling.
+- **Tell it your way**: narrated, script, roleplay chat, thoughts and dialogue, mostly
+  messages or a classic text adventure. Texts and phone calls show up as phone cards.
+- **RPG mode**: health and mana bars, counters, an inventory and dice for risky moments, and a
+  bar for how each character feels about you.
+- **Long stories stay consistent** with automatic story memory, chapter recaps and threads to
+  follow. A memory gauge warns before the storyteller runs out of room, and **End chapter**
+  frees it.
+- **Pictures and voices**: backgrounds, portraits, places and items from a picture connection
+  or your own files, and any reply read aloud with a voice for each character.
+- **Made for reading**: twelve looks, a story typeface (including one made for low vision and
+  dyslexia), chapters that open like a book's, and any route saved as an e-book.
+- **How to play** in the app explains the whole game, and every feature can be switched off.
+- The app is in English, Simplified and Traditional Chinese, Japanese and Korean.
+
+## Built before 0.1.0
+
+Everything below went into 0.1.0, newest first.
+
 - **Choices A–D.** For when you'd rather click than type: after each reply the storyteller
   offers four choices that take the story different ways, lettered A to D. Click one to send
   it as your turn, use the pencil to change it first, or write your own. Turn it on with
