@@ -167,13 +167,15 @@ jobs:
         if: env.TAURI_UPDATER_CONFIG != ''
         shell: bash
         run: |
-          mapfile -t sigs < <(find "${{ matrix.bundle_dir }}" -name '*.sig')
-          printf '%s\n' "${sigs[@]}"
-          if [ "${#sigs[@]}" -eq 0 ]; then
+          # Bash 3 on macOS: no mapfile.
+          sigs="$(find "${{ matrix.bundle_dir }}" -name '*.sig')"
+          echo "$sigs"
+          count="$(printf '%s' "$sigs" | grep -c . || true)"
+          if [ "$count" -eq 0 ]; then
             echo "::error title=Update signing::The build wrote no .sig files."
             exit 1
           fi
-          echo "::notice title=Update signing::${#sigs[@]} signed updater files."
+          echo "::notice title=Update signing::$count signed updater files."
       - uses: actions/upload-artifact@v4
         with:
           name: installers-${{ matrix.name }}
