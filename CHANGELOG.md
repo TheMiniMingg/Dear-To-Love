@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- **Make room to read**: drag the bar under the scene picture to resize it, or drag it shut for
+  text only, and bring it back with **Show pictures**.
+- **Screen layouts** in Look: Classic, Visual novel, Handheld RPG, Dating sim, Storybook and Text
+  adventure, or your own mix of picture place, story frame and corners.
+- A story read at its end now stays at its end when the picture or the window changes size.
+
 ### Fixed (whole-app sweep, 2026-11-25)
 
 - Items the storyteller names in the plural or shortened ("Healing Potions", "potion") are
