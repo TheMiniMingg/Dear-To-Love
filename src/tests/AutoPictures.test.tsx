@@ -92,6 +92,12 @@ describe('what a story could have a picture of', () => {
       'place:the lamp room',
       'item:brass key',
     ]);
+    // Someone in the cast the latest reply names counts too, even out of the scene.
+    const named = view([reply('ev-2', 'Iris Vane knocks.')]);
+    named.state.state.characters.iris = { id: 'iris', name: 'Iris Vane' } as never;
+    expect(wanted(named, { people: true, places: false, items: false }).map((w) => w.slot)).toEqual(
+      ['portrait:oren', 'portrait:iris'],
+    );
     // Only the kinds chosen.
     expect(wanted(v, { people: false, places: true, items: false }).map((w) => w.slot)).toEqual([
       'place:the lamp room',

@@ -28,7 +28,7 @@ import {
   placeSlot,
   portraitSlot,
 } from './pictures';
-import { scenePlaces } from './stage';
+import { mentioned, scenePlaces } from './stage';
 
 /** Off, ask under the reply first, or make them without asking. */
 export type AutoMode = 'off' | 'ask' | 'auto';
@@ -240,7 +240,7 @@ export function replyCount(events: EventDto[]): number {
 
 /**
  * What the story could have a picture of now, in order: people in the scene
- * without a portrait (not the player), the place it is in when that has no
+ * or named in the latest reply without a portrait (not the player), the place it is in when that has no
  * picture, then items without one. The opening place is left to the story's
  * background when it has one.
  */
@@ -251,7 +251,18 @@ export function wanted(
   const s = view.state.state;
   const out: Want[] = [];
   if (kinds.people) {
-    for (const id of s.scene?.participantIds ?? []) {
+    // Those in the scene, then anyone in the cast the latest reply names.
+    const latest = view.history.findLast((e) => e.kind === 'assistant');
+    const named = latest
+      ? mentioned(
+          latest.payload.text,
+          Object.values(s.characters ?? {})
+            .filter((c) => c.name.trim())
+            .map((c) => ({ id: c.id, names: [c.name.trim()] })),
+        ).map((m) => m.id)
+      : [];
+    const ids = [...new Set([...(s.scene?.participantIds ?? []), ...named])];
+    for (const id of ids) {
       const c = s.characters?.[id];
       if (!c || id === s.playerCharacterId || !c.name.trim()) continue;
       const slot = portraitSlot(id);

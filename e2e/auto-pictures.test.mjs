@@ -75,7 +75,7 @@ test('a reply is paired with a picture, asked for first', async () => {
   await (await b.$('.auto-picture')).scrollIntoView({ block: 'center' });
   await shot('auto-picture-offer');
 
-  await click('.auto-picture button=Make it');
+  await (await (await b.$('.auto-picture')).$('button=Make it')).click();
   await waitForText(b, '.auto-picture', 'New picture', 20000);
   const sent = fake.requests.filter((r) => r.url === '/v1/images/generations');
   assert.equal(sent.length, 1);
