@@ -63,7 +63,7 @@ _Once she joins, her portrait shows in the scene and beside her lines._
 
 **4. Not what you wanted? Try again.** **Another reply** writes it again, shorter or longer,
 with a hint such as "More romantic". Every version is kept as a route, and the arrows under
-the reply (‹ 1 / 2 ›) flip between them. **Routes** shows them as a list, a map or a
+the reply (‹ 1 / 2 ›) flip between them. **Routes** shows them as a route map, a list or a
 timeline, so you can go back to any choice. You can also change your last action, or take
 the turn back.
 
@@ -96,7 +96,10 @@ story can also **Send a text**, **Call** someone, **Think** a thought of your ow
 **Roll dice**.
 
 - **Picture view.** With a background or portraits chosen, a stage above the story shows the
-  scene and whoever you are with, and switches when someone new appears. Give a place a
+  scene and whoever you are with, and switches when someone new appears. When several
+  characters with portraits are in the conversation, they stand side by side (up to four),
+  the one the story is with right now to the fore; the small portraits at the side bring
+  another one forward. Give a place a
   picture of its own under **Pictures → Places** and the stage shows it whenever the story is
   there. **Picture view** beside the story (or Ctrl/Cmd+P) switches to text only and back.
 - **Make room to read.** Drag the small bar under the picture to make it bigger or smaller, or
@@ -112,8 +115,14 @@ story can also **Send a text**, **Call** someone, **Think** a thought of your ow
 - **Save anywhere**: quick-save with Ctrl/Cmd+S, Save / Load, and five autosaves.
 - **Branch** from any reply, ask for **another reply**, or **change an earlier action**. Each
   makes a new route and keeps the original. A reply with more than one version shows
-  ‹ 1 / 2 › under it to flip between them. **Routes** shows them as a list, a map of how
-  they branch, or a timeline.
+  ‹ 1 / 2 › under it to flip between them. **Routes** opens on a route map, like a dating
+  sim's: green splits marked with the in-story time where routes part, branching left to
+  right into one box per route, with the way to your current route lit up. Pick a box to
+  switch, rename or hide that route; zoom with − and +, and drag the chart to move around.
+  The same routes also show as a list or a timeline.
+
+  ![The route map: splits marked Day 2, Day 4, Day 5 and Day 6 branch into seven routes, with the way to the current route lit](screenshots/route-map.webp)
+
 - **End a chapter** when it feels finished: the storyteller writes a recap, you can edit it,
   and later chapters remember it. When the notebook has grown, it also offers to tidy it up:
   merge notes about the same person and shorten long ones. Keep or undo each change. The
@@ -552,6 +561,18 @@ with a picture, the stage shows it instead of the background, following the stor
 scene marks.
 
 ![Pictures → Places: the bakery, where the story is now, can have a picture of its own, and another place can be named ahead of time](screenshots/pictures-places.webp)
+
+**Pictures as the story goes** (**Settings → Pictures**) pairs a reply with pictures of what
+it brings in: someone in the scene with no portrait, a place the story moves to, or an item
+you are given. A matching picture from your images is used first, free; otherwise the picture
+connection makes one. **Ask me first** (the default) puts a card under the reply with **Make
+it**, **Not this one** and **No pictures in this story**; **Make them on their own** makes
+them without asking. Limits keep it from making too many: at most so many per story and per
+day, and a few replies between pictures. Each person, place or item is offered once per story.
+Made pictures are kept for every story by default, so another story can use them again
+(untick **Keep made pictures for every story** to keep each with its own story), and
+**Images** shows them under **Made automatically**. **Pictures** in a story turns it off for
+that story alone.
 
 _Choosing a portrait: add a picture for this story only or to your library, or pick one from either._
 

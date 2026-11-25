@@ -12,7 +12,9 @@ use crate::db::assets::{self, AssetDto, AssetUsage, ImportScope, StoryVisual};
 use crate::domain::visuals::VisualSlot;
 use crate::errors::{AppError, AppResult};
 use crate::services::assets::{self as library, Size};
-use crate::services::pictures::{self, ItemPictureInput, PictureDraft, PortraitInput};
+use crate::services::pictures::{
+    self, ItemPictureInput, PictureDraft, PortraitInput, StoryPictureInput,
+};
 use crate::state::AppState;
 
 /// Most files added in one go.
@@ -179,6 +181,31 @@ pub async fn make_item_picture(
     input: ItemPictureInput,
 ) -> AppResult<AssetDto> {
     let made = pictures::make_item_picture(
+        state.db()?,
+        &state.assets()?,
+        state.secrets.as_ref(),
+        &state.session_id,
+        &input,
+    )
+    .await?;
+    Ok(made.asset)
+}
+
+/// What a picture made while playing would be made from. Sends nothing.
+#[tauri::command]
+pub fn preview_story_picture(input: StoryPictureInput) -> PictureDraft {
+    pictures::draft_story_picture(&input)
+}
+
+/// Makes a portrait, item or place picture while a story is played (one
+/// request, which may be paid); it joins the library for that story, or
+/// for every story when the player chose to share them.
+#[tauri::command]
+pub async fn make_story_picture(
+    state: State<'_, AppState>,
+    input: StoryPictureInput,
+) -> AppResult<AssetDto> {
+    let made = pictures::make_story_picture(
         state.db()?,
         &state.assets()?,
         state.secrets.as_ref(),

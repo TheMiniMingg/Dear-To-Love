@@ -2,13 +2,14 @@ import { useState } from 'react';
 import { Thumb } from '../images/ImageGrid';
 import type { EventDto, RouteView } from '../../types';
 import { picture, placeSlot, portraitSlot, sceneBackground } from './pictures';
-import { replyTexts, stageCast, stageFocus, usePictureView } from './stage';
+import { replyTexts, stageCast, stageGroup, trimGroup, usePictureView } from './stage';
 import { t } from '../../i18n';
 
 /**
  * The stage above the story (visual-novel style): the scene's background with
- * the portrait of the character the story is with, which changes when someone
- * new appears. A place with a picture of its own shows that picture while
+ * the portraits of the characters the story is with, side by side when there
+ * are several, the one in focus to the fore. It changes as people come and
+ * go. A place with a picture of its own shows that picture while
  * the story is there. Others in the scene can be shown with a click. Hidden
  * when the reader chooses text only.
  */
@@ -33,20 +34,23 @@ export function ScenePictures({
   const when = s.scene?.time?.trim() ?? '';
   const cast = stageCast(view);
   const replies = replyTexts(events, draft);
-  const auto =
-    stageFocus(replies, cast) ??
-    // Before anyone is mentioned: the first one in the scene with a portrait.
-    (s.scene?.participantIds ?? []).find((id) => cast.some((c) => c.id === id)) ??
-    null;
-  const focusId = picked && picked.at === replies.length ? picked.id : auto;
-  const focus = focusId ? s.characters?.[focusId] : undefined;
-  const focusAsset = focusId ? picture(view, portraitSlot(focusId)).assetId : null;
-  // Who can be put on stage: those in the scene, and whoever is there now.
+  const participants = s.scene?.participantIds ?? [];
+  const found = stageGroup(replies, cast, participants);
+  // Before anyone is mentioned: the first one in the scene with a portrait.
+  const auto = found.focus ?? participants.find((id) => cast.some((c) => c.id === id)) ?? null;
+  const pickedId = picked && picked.at === replies.length ? picked.id : null;
+  const focusId = pickedId ?? auto;
+  let group = found.group.length ? found.group : auto ? [auto] : [];
+  if (focusId && !group.includes(focusId)) group = trimGroup([...group, focusId], focusId);
+  const onStage = group
+    .map((id) => ({ c: s.characters?.[id], asset: picture(view, portraitSlot(id)).assetId }))
+    .filter((x): x is { c: NonNullable<typeof x.c>; asset: string } => !!x.c && !!x.asset);
+  // Who can be brought forward: those in the scene, and whoever is there now.
   const choices = cast
-    .filter((c) => c.id === focusId || (s.scene?.participantIds ?? []).includes(c.id))
+    .filter((c) => group.includes(c.id) || participants.includes(c.id))
     .map((c) => s.characters[c.id]!)
     .filter(Boolean);
-  if (!bg && !focusAsset) return null;
+  if (!bg && !onStage.length) return null;
   return (
     <div
       className={`scene-pictures stage${bg ? ' has-bg' : ''}`}
@@ -72,15 +76,23 @@ export function ScenePictures({
           {when && <span className="muted"> · {when}</span>}
         </p>
       )}
-      {focus && focusAsset && (
-        <figure className="stage-focus" key={focus.id}>
-          <Thumb
-            assetId={focusAsset}
-            size="full"
-            alt={t('Portrait of {name}', { name: focus.name })}
-          />
-          <figcaption>{focus.name}</figcaption>
-        </figure>
+      {onStage.length > 0 && (
+        <div
+          className={`stage-cast${choices.length > 1 ? ' has-chooser' : ''}`}
+          data-count={onStage.length}
+          data-testid="stage-cast"
+        >
+          {onStage.map(({ c, asset }) => (
+            <figure
+              className={`stage-figure${c.id === focusId ? ' stage-focus' : ''}`}
+              key={c.id}
+              aria-current={onStage.length > 1 && c.id === focusId ? 'true' : undefined}
+            >
+              <Thumb assetId={asset} size="full" alt={t('Portrait of {name}', { name: c.name })} />
+              <figcaption>{c.name}</figcaption>
+            </figure>
+          ))}
+        </div>
       )}
       {choices.length > 1 && (
         <ul className="scene-portraits" aria-label={t('Show on stage')}>

@@ -976,9 +976,26 @@ export const reader: Messages = {
     '新しい分岐としてやり直す',
     '새 분기로 다시 플레이',
   ],
-  'at the start': ['在开头', '在開頭', '最初から', '처음에'],
-  'after turn {n}': ['第 {n} 回合后', '第 {n} 回合後', 'ターン {n} の後', '{n}턴 이후'],
   'Route map': ['路线图', '路線圖', 'ルートマップ', '루트 지도'],
+  'Split {letter}': ['分歧 {letter}', '分歧 {letter}', '分岐 {letter}', '분기 {letter}'],
+  'At the start': ['在开头', '在開頭', '最初から', '처음에'],
+  'After turn {n}': ['第 {n} 回合后', '第 {n} 回合後', 'ターン {n} の後', '{n}턴 이후'],
+  'Split: where routes part': [
+    '分歧：路线分开的地方',
+    '分歧：路線分開的地方',
+    '分岐：ルートが分かれる所',
+    '분기: 루트가 갈라지는 곳',
+  ],
+  'Route: how far it got': [
+    '路线：走到了哪里',
+    '路線：走到了哪裡',
+    'ルート：どこまで進んだか',
+    '루트: 어디까지 왔는지',
+  ],
+  Key: ['图例', '圖例', '凡例', '범례'],
+  Zoom: ['缩放', '縮放', 'ズーム', '확대/축소'],
+  'Zoom in': ['放大', '放大', '拡大', '확대'],
+  'Zoom out': ['缩小', '縮小', '縮小', '축소'],
   current: ['当前', '目前', '現在', '현재'],
   'Route timeline': ['路线时间线', '路線時間軸', 'ルートのタイムライン', '루트 타임라인'],
   'turns {from} to {to}': [
@@ -2258,13 +2275,6 @@ export const reader: Messages = {
     '読み上げ時にこの登場人物のセリフを飛ばす',
     '소리 내어 읽을 때 이 등장인물의 대사 건너뛰기',
   ],
-  'Menu (Esc) holds the rest: Story details and Story memory, Pictures, Export, Routes, and How to play when you want the finer points.':
-    [
-      '其余都在菜单（Esc）里：故事设定和故事记忆、图片、导出、路线，以及想了解细节时的玩法说明。',
-      '其餘都在選單（Esc）裡：故事設定和故事記憶、圖片、匯出、路線，以及想了解細節時的玩法說明。',
-      '残りはメニュー（Esc）にあります。ストーリーの設定とストーリーの記憶、画像、書き出し、ルート、そして細かな点を知りたいときの遊び方です。',
-      '나머지는 메뉴(Esc)에 있습니다. 스토리 설정과 스토리 기억, 이미지, 내보내기, 루트, 그리고 자세한 내용이 궁금할 때 볼 플레이 방법입니다.',
-    ],
   'How the story is told from the next reply on. Earlier replies stay as they are; other routes are not changed.':
     [
       '从下一条回复开始的讲述方式。之前的回复保持不变；其他路线不受影响。',

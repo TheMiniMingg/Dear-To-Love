@@ -225,7 +225,6 @@ fn flavor(state: &EffectiveState) -> Flavor {
         "science fiction",
         "sci-fi",
         "cyberpunk",
-        "post-apocalyptic",
         "space opera",
         "superhero",
     ]) {
@@ -253,7 +252,15 @@ fn flavor(state: &EffectiveState) -> Flavor {
     ]) {
         return Flavor::Heart;
     }
-    if has(&["adventure", "action", "western", "historical", "survival"]) {
+    if has(&[
+        "adventure",
+        "action",
+        "western",
+        "historical",
+        "survival",
+        // Ruins and scavenging, not neon and implants.
+        "post-apocalyptic",
+    ]) {
         return Flavor::Wild;
     }
     let world = format!("{} {}", s.world.era, s.world.setting).to_lowercase();

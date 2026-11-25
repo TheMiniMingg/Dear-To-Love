@@ -291,11 +291,17 @@ describe('Storytelling tools', () => {
     render(<ReaderScreen routeId="route-1" />);
     await screen.findByLabelText('What do you do?');
     const words = screen.getByText('Mara opens the door and smiles.');
-    act(() => {
-      document.getSelection()!.selectAllChildren(words);
-      document.dispatchEvent(new Event('selectionchange'));
+    // The offer listens only once the reader is idle, which can be a moment
+    // after the action box appears on a slow machine: pick the words until
+    // it is listening.
+    const remember = await waitFor(() => {
+      act(() => {
+        document.getSelection()!.selectAllChildren(words);
+        document.dispatchEvent(new Event('selectionchange'));
+      });
+      return screen.getByRole('button', { name: 'Remember this' });
     });
-    await userEvent.click(await screen.findByRole('button', { name: 'Remember this' }));
+    await userEvent.click(remember);
     const dialog = await screen.findByRole('dialog', { name: 'Story memory' });
     const form = within(dialog).getByRole('form', { name: 'New note' });
     expect(within(form).getByLabelText('Kind')).toHaveValue('person');

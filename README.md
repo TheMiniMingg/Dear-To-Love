@@ -62,8 +62,8 @@ reporting problems in ten minutes.
 - **RPG tracking**: health and mana bars, counters such as gold, and an inventory with item
   descriptions and pictures. The storyteller changes them as things happen.
 - **Dice** for risky moments, with every rule adjustable.
-- **Picture view**: the scene's background and the portrait of whoever you are with, like a
-  visual novel. One click switches to text only.
+- **Picture view**: the scene's background and the portraits of whoever you are with, side by
+  side when there are several, like a visual novel. One click switches to text only.
 - **Play several stories at once**, branch from any moment, and keep long stories consistent
   with automatic memory.
 - **Characters with feelings**: a bar for how each character feels about you, from cold to

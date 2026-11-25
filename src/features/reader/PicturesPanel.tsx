@@ -20,6 +20,7 @@ import {
   type Picture,
 } from './pictures';
 import { t, tr } from '../../i18n';
+import { setStoryOff, storyOff, useAutoPictureSettings } from './autoPictures';
 import { routeName } from '../../i18n/names';
 
 type Props = {
@@ -389,12 +390,42 @@ export function PicturesPanel({ view, awaitingReply, places = [], onChanged }: P
           </button>
         </div>
       </section>
+      <StoryAutoPictures storyId={storyId} />
       {error && (
         <p role="alert" className="error">
           {error}
         </p>
       )}
     </div>
+  );
+}
+
+/** Pictures as the story goes, on or off for this story (Settings has the rest). */
+function StoryAutoPictures({ storyId }: { storyId: string }) {
+  const mode = useAutoPictureSettings((s) => s.settings.mode);
+  const [off, setOff] = useState(() => storyOff(storyId));
+  if (mode === 'off') return null;
+  return (
+    <label className="check picture-auto">
+      <input
+        type="checkbox"
+        checked={!off}
+        onChange={(e) => {
+          setStoryOff(storyId, !e.target.checked);
+          setOff(!e.target.checked);
+        }}
+      />
+      <span>
+        {t('Pictures as the story goes in this story')}
+        <span className="muted small">
+          {' '}
+          {mode === 'ask'
+            ? t('A card under a reply offers a picture of someone or somewhere new.')
+            : t('Pictures of someone or somewhere new are made on their own.')}{' '}
+          {t('Limits and kinds are in Settings → Pictures.')}
+        </span>
+      </span>
+    </label>
   );
 }
 

@@ -20,8 +20,9 @@
 .stage-area[data-picture='side'].dragging {
   cursor: col-resize;
 }
-.stage-area.dragging .stage-focus {
+.stage-area.dragging .stage-figure {
   animation: none;
+  transition: none;
 }
 
 /* ---------- the handle between picture and story ---------- */
@@ -138,18 +139,54 @@
   inset: 0;
   width: 100%;
 }
-.stage-area[data-picture='side'] .stage-focus {
+/* Beside the story, the people on stage stand one above the other. */
+.stage-area[data-picture='side'] .stage-cast,
+.stage-area[data-picture='side'] .stage-cast.has-chooser {
+  flex-direction: column;
+  align-items: center;
   height: auto;
   max-height: calc(100% - 1.5rem);
   width: calc(100% - 1.5rem);
   margin: 0;
+  padding: 0;
+  gap: 0.6rem;
 }
-.stage-area[data-picture='side'] .stage-focus img,
-.stage-area[data-picture='side'] .stage-focus .thumb-missing {
+.stage-area[data-picture='side'] .stage-figure,
+.stage-area[data-picture='side'] .stage-cast:not([data-count='1']) .stage-figure:not(.stage-focus) {
+  height: auto;
+  width: 100%;
+  min-height: 0;
   flex: 0 1 auto;
+}
+.stage-area[data-picture='side'] .stage-figure img,
+.stage-area[data-picture='side'] .stage-figure .thumb-missing {
+  flex: 0 1 auto;
+  height: auto;
   width: 100%;
   aspect-ratio: 4 / 5;
   object-position: top;
+}
+/* With company each gets a share of the height, the one in focus the most. */
+.stage-area[data-picture='side'] .stage-cast:not([data-count='1']) {
+  align-self: stretch;
+  height: auto;
+  max-height: none;
+  margin: 0.75rem 0;
+}
+.stage-area[data-picture='side'] .stage-cast:not([data-count='1']) .stage-figure,
+.stage-area[data-picture='side'] .stage-cast:not([data-count='1']) .stage-figure:not(.stage-focus) {
+  flex: 1 1 0;
+}
+.stage-area[data-picture='side'] .stage-cast:not([data-count='1']) .stage-focus {
+  flex-grow: 1.6;
+}
+.stage-area[data-picture='side'] .stage-cast:not([data-count='1']) .stage-figure img,
+.stage-area[data-picture='side'] .stage-cast:not([data-count='1']) .stage-figure .thumb-missing {
+  flex: 1 1 0;
+  min-height: 0;
+  aspect-ratio: auto;
+  /* A strip of each face, not the tops of their heads. */
+  object-position: center 30%;
 }
 .stage-area[data-picture='side'] .scene-portraits {
   right: 0.6rem;
@@ -177,15 +214,35 @@
   .stage-area[data-picture='side'] > .stage-handle {
     display: none;
   }
-  .stage-area[data-picture='side'] .stage-focus {
+  .stage-area[data-picture='side'] .stage-cast,
+  .stage-area[data-picture='side'] .stage-cast:not([data-count='1']) {
+    flex-direction: row;
+    align-items: flex-end;
     height: calc(100% - 1.2rem);
     max-height: none;
     width: auto;
     margin: 0 0 0.6rem;
   }
-  .stage-area[data-picture='side'] .stage-focus img,
-  .stage-area[data-picture='side'] .stage-focus .thumb-missing {
-    flex: 1;
+  .stage-area[data-picture='side'] .stage-cast.has-chooser {
+    padding: 0 4rem;
+  }
+  .stage-area[data-picture='side'] .stage-figure,
+  .stage-area[data-picture='side'] .stage-cast:not([data-count='1']) .stage-figure {
+    height: 100%;
+    width: auto;
+    flex: 0 1 auto;
+  }
+  .stage-area[data-picture='side']
+    .stage-cast:not([data-count='1'])
+    .stage-figure:not(.stage-focus) {
+    height: 84%;
+  }
+  .stage-area[data-picture='side'] .stage-figure img,
+  .stage-area[data-picture='side'] .stage-figure .thumb-missing,
+  .stage-area[data-picture='side'] .stage-cast:not([data-count='1']) .stage-figure img,
+  .stage-area[data-picture='side'] .stage-cast:not([data-count='1']) .stage-figure .thumb-missing {
+    flex: none;
+    height: calc(100% - 0.6rem);
     width: auto;
     aspect-ratio: 1;
   }
@@ -208,7 +265,7 @@
   width: 100%;
   border-radius: 0;
 }
-.stage-area[data-picture='behind'] .stage-focus {
+.stage-area[data-picture='behind'] .stage-cast {
   margin: 1rem 0 0;
   height: calc(100% - var(--box-h) - 1.75rem);
   min-height: 4rem;
@@ -303,8 +360,8 @@
 }
 /* The picture gets the same outline: a window over the dialog box. */
 .reader[data-frame='box'] .stage .scene-bg,
-.reader[data-frame='box'] .stage-focus img,
-.reader[data-frame='box'] .stage-focus .thumb-missing {
+.reader[data-frame='box'] .stage-figure img,
+.reader[data-frame='box'] .stage-figure .thumb-missing {
   border: 3px solid var(--fg);
 }
 .reader[data-frame='box'] .stage-area[data-picture='behind'] .stage .scene-bg {
@@ -321,9 +378,9 @@
   :is(
     .narrative,
     .stage .scene-bg,
-    .stage-focus img,
-    .stage-focus .thumb-missing,
-    .stage-focus figcaption,
+    .stage-figure img,
+    .stage-figure .thumb-missing,
+    .stage-figure figcaption,
     .scene-portraits button,
     .scene-portraits img,
     .stage-caption,

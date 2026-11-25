@@ -18,6 +18,9 @@ export const IMAGE_KINDS = [
   msg('Cover'),
   msg('Expression'),
   msg('Outfit'),
+  msg('Place'),
+  msg('Item'),
+  msg('Made automatically'),
 ] as const;
 
 const FORMAT: Record<string, string> = {

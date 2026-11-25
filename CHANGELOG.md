@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- **Pictures as the story goes**: when a reply brings in someone with no portrait, moves to a
+  new place or gives you an item, the story can show a picture of it under that reply. It
+  uses a matching picture from your images first and otherwise asks the picture connection,
+  asking you first or on its own, with limits per story, per day and between replies.
+  Places are drawn wide. Made pictures stay in Images to be used again in any story.
 - **Make room to read**: drag the bar under the scene picture to resize it, or drag it shut for
   text only, and bring it back with **Show pictures**.
 - **Screen layouts** in Look: Classic, Visual novel, Handheld RPG, Dating sim, Storybook and Text
@@ -12,6 +17,21 @@
   openings, bars and items), and a story in Chinese starts from them. The storyteller is told to
   write everything in the story's language, scene headings and new names included, and is
   reminded again at the end of its instructions.
+
+### Fixed (whole-app sweep, 2026-11-25)
+
+- Items the storyteller names in the plural or shortened ("Healing Potions", "potion") are
+  now taken from the inventory instead of being ignored. Gaining "Torches" stacks onto a
+  Torch.
+- In a short window the buttons beside the story (Stories, Picture view, Look, Shortcuts)
+  show as icons and no longer spill over the action box.
+- Offline chapter recaps keep one line per turn: no scene heading run into the next
+  paragraph, and the recap box shows each line on its own.
+- The offline storyteller writes post-apocalyptic stories with ruins and dread instead of
+  neon and implants, and its dice lines no longer say "just barely" on a big miss.
+- A long place name on a library card ends in "…" instead of being cut at the edge.
+- The first-time tips are four, as the guide says: the fifth repeated the fourth.
+- Tune the telling: More in Story details is a link, so Apply from now stays beside Cancel.
 
 ## 0.1.0 - 2026-11-09
 
