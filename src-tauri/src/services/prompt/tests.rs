@@ -543,6 +543,13 @@ fn tracked_bars_and_items_reach_the_storyteller() {
     }
     let p = system_prompt(&s, &frame());
     assert!(
+        p.contains("  - Rope [Rare, lasts]\n"),
+        "dice off: no dice effects"
+    );
+    assert!(!p.contains("dice=\"odd\""));
+    s.state.narration.dice = true;
+    let p = system_prompt(&s, &frame());
+    assert!(
         p.contains("  - Rope [Rare, on a roll: odd faces only, lasts]\n"),
         "{p}"
     );

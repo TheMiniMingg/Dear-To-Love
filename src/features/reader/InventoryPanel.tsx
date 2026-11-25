@@ -218,7 +218,7 @@ export function InventoryPanel({ view, detailsDisabled, onOpenDetails, onChanged
                       <div className="button-row">
                         <button
                           type="button"
-                          className="primary"
+                          className="item-use"
                           disabled={!onUse}
                           aria-label={t('Use {name}', { name: item.name })}
                           title={

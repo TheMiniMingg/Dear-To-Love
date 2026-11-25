@@ -240,7 +240,7 @@ const PROMPT_ITEM_CHARS: usize = 120;
 
 /// The TRACKING section: the bars, counters and inventory as they are now,
 /// and the tags that change them.
-fn tracking_section(t: &Tracking, player_name: &str) -> String {
+fn tracking_section(t: &Tracking, player_name: &str, dice: bool) -> String {
     let mut out = String::from(
         "\nTRACKING\nThe app keeps these numbers for the story and shows them on screen. \
          Right now:\n",
@@ -272,7 +272,7 @@ fn tracking_section(t: &Tracking, player_name: &str) -> String {
                 if let Some(r) = it.shown_rarity() {
                     traits.push(r.title().to_string());
                 }
-                if let Some(e) = it.dice_effect() {
+                if let Some(e) = it.dice_effect().filter(|_| dice) {
                     traits.push(format!("on a roll: {}", e.words()));
                 }
                 if it.keep {
@@ -325,15 +325,7 @@ fn tracking_section(t: &Tracking, player_name: &str) -> String {
              reply (a chest at the end of a dungeon, a reward, a gift) is of that rarity, and its \
              power matches it. Write it on the gain tag: <item gain=\"Name\" rarity=\"epic\">\
              …</item>. Nothing has to turn up just because a rarity was rolled.\n\
-             - An item can change dice when {player_name} uses it on a roll: add \
-             dice=\"+2\" (adds to the roll), dice=\"odd\" or dice=\"even\" (only odd or even \
-             faces), dice=\"best\" (roll twice, keep the higher) or dice=\"1-2\" (only those \
-             faces). Fit the effect to the rarity: +1 is common, +2 or best uncommon, +3, odd or \
-             even rare, +4 to +5 or half the faces epic, +6 to +7 or a few faces legendary, one \
-             face or more mythical. Add keep=\"yes\" when using it doesn't use it up.\n\
-             - The app applies an item used on a roll and takes it away itself: the roll tag \
-             names it (item=\"…\" effect=\"…\").\n\
-             - {player_name}'s action may start with <item use=\"Name\"/>: they use that item \
+             {dice_items}- {player_name}'s action may start with <item use=\"Name\"/>: they use that item \
              now. Decide whether it can work here. If it does, write what happens and mark it \
              <item use=\"Name\" result=\"used\"/> where it happens (the app takes one away \
              unless it lasts; don't also write lose). If it can't be used now or here, write \
@@ -346,6 +338,22 @@ fn tracking_section(t: &Tracking, player_name: &str) -> String {
                 .collect::<Vec<_>>()
                 .join("; "),
             chances.join(", "),
+            dice_items = if dice {
+                format!(
+                    "- An item can change dice when {player_name} uses it on a roll: add \
+                     dice=\"+2\" (adds to the roll), dice=\"odd\" or dice=\"even\" (only odd or \
+                     even faces), dice=\"best\" (roll twice, keep the higher) or dice=\"1-2\" \
+                     (only those faces). Fit the effect to the rarity: +1 is common, +2 or best \
+                     uncommon, +3, odd or even rare, +4 to +5 or half the faces epic, +6 to +7 \
+                     or a few faces legendary, a single face mythical. Add keep=\"yes\" when \
+                     using it doesn't use it up.\n\
+                     - The app applies an item used on a roll and takes it away itself: the \
+                     roll tag names it (item=\"…\" effect=\"…\").\n"
+                )
+            } else {
+                "- Add keep=\"yes\" to the gain tag when using an item doesn't use it up.\n"
+                    .to_string()
+            },
         ));
     }
     out.push_str(
@@ -948,7 +956,7 @@ fn system_prompt_with(state: &EffectiveState, frame: &StoryFrame, room: &Room<'_
         out.push_str(&dice_rules(s.narration.dice_rules.as_ref(), player_name));
     }
     if let Some(t) = &s.tracking {
-        out.push_str(&tracking_section(t, player_name));
+        out.push_str(&tracking_section(t, player_name, s.narration.dice));
     }
     if !s.narration.manual_memory {
         out.push_str(&notes_contract(s.narration.language.as_deref()));

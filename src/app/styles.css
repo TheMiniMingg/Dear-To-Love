@@ -3166,6 +3166,11 @@ img.msg-avatar {
 .item-traits .rarity-badge {
   margin-left: 0;
 }
+.item-use {
+  font-weight: 600;
+  color: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 50%, var(--border));
+}
 .item-not-now {
   color: var(--warn);
 }
