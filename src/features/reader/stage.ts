@@ -44,7 +44,8 @@ export function mentioned(
   const words = replyWords(text);
   const out: { id: string; first: number; count: number }[] = [];
   for (const c of cast) {
-    const hits = c.names.flatMap((n) => findAll(words, n));
+    // A first name inside the full name ("Mara" in "Mara Quill") is the same mention.
+    const hits = [...new Set(c.names.flatMap((n) => findAll(words, n)))];
     if (hits.length) out.push({ id: c.id, first: Math.min(...hits), count: hits.length });
   }
   return out.sort((a, b) => a.first - b.first);

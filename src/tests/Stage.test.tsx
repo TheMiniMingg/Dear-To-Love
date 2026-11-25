@@ -74,6 +74,10 @@ describe('everyone on stage', () => {
     expect(stageGroup(['Mara sighs. Oren would have laughed.'], cast, ['mara']).group).toEqual([
       'mara',
     ]);
+    // A full name is one mention, not two (the first name inside it).
+    expect(stageGroup(['Mara sighs. Oren Vale would have laughed.'], cast, ['mara']).group).toEqual(
+      ['mara'],
+    );
     // ...unless the reply is about them.
     expect(
       stageGroup(['Mara sighs. Oren would have laughed. Oren always did.'], cast, ['mara']).group,
