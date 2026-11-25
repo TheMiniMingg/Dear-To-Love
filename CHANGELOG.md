@@ -28,6 +28,11 @@
 - The first-time tips are four, as the guide says: the fifth repeated the fourth.
 - Tune the telling: More in Story details is a link, so Apply from now stays beside Cancel.
 
+### Fixed (second sweep, 2026-11-25)
+
+- After scrolling back to re-read, sending an action or starting a new chapter brings the
+  story back to its end, instead of leaving you where you were under a Jump to latest button.
+
 ## 0.1.0 - 2026-11-09
 
 The first release. Dear to Love is a desktop app for playing interactive stories with AI: pick

@@ -676,12 +676,25 @@ export function NarrativeView({
     if (picked) placePick();
   };
 
+  // What the player just did (an action sent, a new chapter started) brings
+  // the story to its end, even when they had scrolled back to re-read.
+  const lastEvent = events[events.length - 1];
+  const prevLastRef = useRef(lastEvent?.id);
   useLayoutEffect(() => {
     const el = scrollRef.current;
+    const prev = prevLastRef.current;
+    prevLastRef.current = lastEvent?.id;
     if (!el) return;
+    const appended =
+      !!lastEvent && !!prev && lastEvent.id !== prev && events.some((e) => e.id === prev);
+    if (appended && (lastEvent.kind === 'player' || lastEvent.kind === 'chapter_start')) {
+      atBottomRef.current = true;
+    }
     if (atBottomRef.current) {
       el.scrollTop = el.scrollHeight;
     }
+    // Runs when content grows; `events` and `lastEvent` are read as they are then.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lastId]);
 
   useEffect(() => {
