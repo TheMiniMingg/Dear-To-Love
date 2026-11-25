@@ -2,6 +2,7 @@ import { useId } from 'react';
 import { Palette } from 'lucide-react';
 import { THEMES, useLook, type ThemeId } from '../../app/look';
 import { ReadingControls, ReadingSample } from '../../components/ReadingControls';
+import { LayoutControls } from '../../components/LayoutControls';
 import { ThemePicker } from '../../components/ThemePicker';
 import { msg, t } from '../../i18n';
 
@@ -75,6 +76,11 @@ export function LookSection() {
         <ReadingControls />
         <ReadingSample theme={theme} />
       </div>
+      <h3 className="settings-subtitle">{t('Screen')}</h3>
+      <p className="muted small">
+        {t('How the reader is laid out: where the pictures go and how the story is framed.')}
+      </p>
+      <LayoutControls />
     </section>
   );
 }

@@ -688,6 +688,21 @@ export function NarrativeView({
     if (!atBottomRef.current) setShowJump(true);
   }, [lastId]);
 
+  // A story read at its end stays at its end when the box around it changes
+  // size: a picture dragged bigger or smaller, a layout switched in Look, or
+  // the window resized.
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el || typeof ResizeObserver === 'undefined') return;
+    const pin = () => {
+      if (atBottomRef.current) el.scrollTop = el.scrollHeight;
+    };
+    const watch = new ResizeObserver(pin);
+    watch.observe(el);
+    if (el.firstElementChild) watch.observe(el.firstElementChild);
+    return () => watch.disconnect();
+  }, []);
+
   // After dialogs close (they hand focus back first), show the event.
   useEffect(() => {
     if (!focus) return;

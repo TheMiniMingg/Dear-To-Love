@@ -99,6 +99,13 @@ story can also **Send a text**, **Call** someone, **Think** a thought of your ow
   scene and whoever you are with, and switches when someone new appears. Give a place a
   picture of its own under **Pictures → Places** and the stage shows it whenever the story is
   there. **Picture view** beside the story (or Ctrl/Cmd+P) switches to text only and back.
+- **Make room to read.** Drag the small bar under the picture to make it bigger or smaller, or
+  drag it shut for text only; **Show pictures** at the top brings it back. Double-click the
+  bar for the usual size.
+- **Screen layouts.** **Look** beside the story has six layouts after kinds of games: Classic,
+  Visual novel (the scene behind a glass text box), Handheld RPG (a chunky dialog box), Dating
+  sim (a tall picture beside the story), Storybook and Text adventure. Or mix your own: where
+  the picture goes, the story's frame and square or round corners. They apply to every story.
 - **Several stories at once.** **Stories** beside the story goes back to the library. A reply
   keeps writing while you play something else, and the library shows "Writing a reply…"
   until it is in. Each story opens where you left it, with your unsent text kept.
