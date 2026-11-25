@@ -2275,13 +2275,6 @@ export const reader: Messages = {
     '読み上げ時にこの登場人物のセリフを飛ばす',
     '소리 내어 읽을 때 이 등장인물의 대사 건너뛰기',
   ],
-  'Menu (Esc) holds the rest: Story details and Story memory, Pictures, Export, Routes, and How to play when you want the finer points.':
-    [
-      '其余都在菜单（Esc）里：故事设定和故事记忆、图片、导出、路线，以及想了解细节时的玩法说明。',
-      '其餘都在選單（Esc）裡：故事設定和故事記憶、圖片、匯出、路線，以及想了解細節時的玩法說明。',
-      '残りはメニュー（Esc）にあります。ストーリーの設定とストーリーの記憶、画像、書き出し、ルート、そして細かな点を知りたいときの遊び方です。',
-      '나머지는 메뉴(Esc)에 있습니다. 스토리 설정과 스토리 기억, 이미지, 내보내기, 루트, 그리고 자세한 내용이 궁금할 때 볼 플레이 방법입니다.',
-    ],
   'How the story is told from the next reply on. Earlier replies stay as they are; other routes are not changed.':
     [
       '从下一条回复开始的讲述方式。之前的回复保持不变；其他路线不受影响。',

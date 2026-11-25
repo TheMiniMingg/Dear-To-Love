@@ -80,6 +80,8 @@ import { NarrativeView } from './NarrativeView';
 import { joinCast, newcomerId } from './NewCharacterCard';
 import { portraitSlot } from './pictures';
 import { usePictureMaker } from '../images/MakePortrait';
+import { AutoPictureCard } from './AutoPictureCard';
+import { useAutoPictures } from './autoPictures';
 import { PicturesPanel } from './PicturesPanel';
 import { ReaderRail } from './ReaderRail';
 import { StageArea } from './StageArea';
@@ -109,7 +111,18 @@ import { intlLocale, joinList, joinSentences, msg, t, tKnown, tr } from '../../i
 import { chapterHasTitle, chapterHeading, routeName, saveName } from '../../i18n/names';
 
 /** A portrait made for someone who joined the cast, waiting to be shown. */
-type MadePortrait = { routeId: string; characterId: string; name: string; assetId: string };
+/** A picture made for this route: it becomes the route's picture for its slot once the route is free. */
+type MadePicture = {
+  routeId: string;
+  slot: string;
+  assetId: string;
+  /** The note on the change ("Portrait of Mara"). */
+  note: string;
+  /** Said when it is in place. */
+  ready: string;
+  /** Said when it couldn't be put in place. */
+  inLibrary: string;
+};
 
 type Panel =
   | null
@@ -600,44 +613,56 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
   // the route's picture for them, from then on, once the route is free to
   // change (no reply being written or waited for).
   const painter = usePictureMaker();
-  const [madePortraits, setMadePortraits] = useState<MadePortrait[]>([]);
+  const [madePictures, setMadePictures] = useState<MadePicture[]>([]);
   const placing = useRef(false);
   useEffect(() => {
-    const next = madePortraits.find((p) => p.routeId === view?.route.id);
+    const next = madePictures.find((p) => p.routeId === view?.route.id);
     if (!view || !next || placing.current || busy || writing || awaitingReply || viewing) return;
     placing.current = true;
-    const done = () => setMadePortraits((all) => all.filter((p) => p !== next));
+    const done = () => setMadePictures((all) => all.filter((p) => p !== next));
     commands
       .editStoryDetails({
         storyId: view.story.id,
         routeId: view.route.id,
         expectedHeadId: view.state.headEventId,
-        changes: [
-          { op: 'setVisualRef', slot: portraitSlot(next.characterId), assetId: next.assetId },
-        ],
-        note: t('Portrait of {name}', { name: next.name }),
+        changes: [{ op: 'setVisualRef', slot: next.slot, assetId: next.assetId }],
+        note: next.note,
       })
       .then((v) => {
         done();
         setView(v);
-        setSaveStatus(t('{name}’s portrait is ready {time}', { name: next.name, time: timeNow() }));
+        setSaveStatus(next.ready);
       })
       .catch((e: unknown) => {
         if (e instanceof CommandError && e.code === 'HEAD_CHANGED') {
           setReload((n) => n + 1);
         } else {
           done();
-          setSaveStatus(
-            t('{name}’s portrait is in your images; choose it under Pictures.', {
-              name: next.name,
-            }),
-          );
+          setSaveStatus(next.inLibrary);
         }
       })
       .finally(() => {
         placing.current = false;
       });
-  }, [madePortraits, view, busy, writing, awaitingReply, viewing]);
+  }, [madePictures, view, busy, writing, awaitingReply, viewing]);
+  const placePicture = useCallback((p: MadePicture) => setMadePictures((all) => [...all, p]), []);
+
+  // Pictures made (or found in the library) as the story goes: for someone
+  // new in the scene, a new place, a new item (Settings -> Pictures).
+  const autoPictures = useAutoPictures({
+    view,
+    free: !!view && !busy && !writing && !awaitingReply && !viewing,
+    painter,
+    onMade: (v, made) =>
+      placePicture({
+        routeId: v.route.id,
+        slot: made.want.slot,
+        assetId: made.assetId,
+        note: made.label,
+        ready: t('{name} is ready {time}', { name: made.label, time: timeNow() }),
+        inLibrary: t('{name} is in your images; choose it under Pictures.', { name: made.label }),
+      }),
+  });
 
   /** Makes the portrait of someone who just joined the cast, in the background. */
   const makeNewcomerPortrait = async (v: RouteView, characterId: string) => {
@@ -652,10 +677,14 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
         style: 'painted',
         storyId: v.story.id,
       });
-      setMadePortraits((all) => [
-        ...all,
-        { routeId: v.route.id, characterId, name, assetId: asset.id },
-      ]);
+      placePicture({
+        routeId: v.route.id,
+        slot: portraitSlot(characterId),
+        assetId: asset.id,
+        note: t('Portrait of {name}', { name }),
+        ready: t('{name}’s portrait is ready {time}', { name, time: timeNow() }),
+        inLibrary: t('{name}’s portrait is in your images; choose it under Pictures.', { name }),
+      });
     } catch (e) {
       setSaveStatus(
         t('{name}’s portrait wasn’t made: {reason}', { name, reason: errorMessage(e) }),
@@ -1534,6 +1563,23 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
                           adultsOnly: view.state.state.narration?.rating === 'explicit',
                           painter,
                           onAdd: addToCast,
+                        }
+                  }
+                  underReply={
+                    viewing || !autoPictures.state.replyId
+                      ? undefined
+                      : {
+                          replyId: autoPictures.state.replyId,
+                          node: (
+                            <AutoPictureCard
+                              state={autoPictures.state}
+                              painter={painter}
+                              onAccept={autoPictures.accept}
+                              onDecline={autoPictures.decline}
+                              onOffForStory={autoPictures.offForStory}
+                              onOpenPictures={() => setPanel('pictures')}
+                            />
+                          ),
                         }
                   }
                   onOpenNotes={viewing ? undefined : () => setPanel('memory')}

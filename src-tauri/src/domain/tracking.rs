@@ -145,6 +145,67 @@ fn same(a: &str, b: &str) -> bool {
     item_key(a) == item_key(b)
 }
 
+/// A key with its last word in the singular: "healing potions" and
+/// "torches" are "healing potion" and "torch".
+fn singular(key: &str) -> String {
+    let (head, last) = key.rsplit_once(' ').unwrap_or(("", key));
+    let one = if let Some(stem) = last.strip_suffix("ies").filter(|s| s.len() > 1) {
+        format!("{stem}y")
+    } else if ["ches", "shes", "sses", "xes", "zes"]
+        .iter()
+        .any(|end| last.ends_with(end))
+    {
+        last[..last.len() - 2].to_string()
+    } else if last.len() > 3 && last.ends_with('s') && !last.ends_with("ss") {
+        last[..last.len() - 1].to_string()
+    } else {
+        last.to_string()
+    };
+    if head.is_empty() {
+        one
+    } else {
+        format!("{head} {one}")
+    }
+}
+
+/// Whether `outer` holds `inner` as whole words.
+fn holds_words(outer: &str, inner: &str) -> bool {
+    format!(" {outer} ").contains(&format!(" {inner} "))
+}
+
+/// The held item a reply's name means: the same name, else the same in
+/// the singular ("Torches" for a Torch). With `loose`, else the one item
+/// whose name holds the words or is held in them ("potion" for a Healing
+/// Potion), when only one does: storytellers shorten names as they write.
+fn find_item(items: &[Item], name: &str, loose: bool) -> Option<usize> {
+    let key = item_key(name);
+    if key.is_empty() {
+        return None;
+    }
+    if let Some(i) = items.iter().position(|it| item_key(&it.name) == key) {
+        return Some(i);
+    }
+    let one = singular(&key);
+    let keys: Vec<String> = items
+        .iter()
+        .map(|it| singular(&item_key(&it.name)))
+        .collect();
+    if let Some(i) = keys.iter().position(|k| *k == one) {
+        return Some(i);
+    }
+    if !loose {
+        return None;
+    }
+    let mut close = keys
+        .iter()
+        .enumerate()
+        .filter(|(_, k)| holds_words(k, &one) || holds_words(&one, k));
+    match (close.next(), close.next()) {
+        (Some((i, _)), None) => Some(i),
+        _ => None,
+    }
+}
+
 /// Whitespace runs become one space, cut to `max` characters.
 fn clip(s: &str, max: usize) -> String {
     let one_line = s.split_whitespace().collect::<Vec<_>>().join(" ");
@@ -248,12 +309,14 @@ impl Tracking {
                     } else if let Some(name) = get("use") {
                         let used = get("result").is_some_and(|r| r.eq_ignore_ascii_case("used"));
                         if used && self.take_one(name) {
-                            used_up.push(item_key(name));
+                            used_up.push(singular(&item_key(name)));
                         }
                     } else if let Some(name) = get("lose") {
                         let all = get("qty").is_some_and(|q| q.eq_ignore_ascii_case("all"));
                         // A use already took this one: "lose" after it says the same.
-                        if let Some(i) = used_up.iter().position(|k| *k == item_key(name)) {
+                        if let Some(i) =
+                            used_up.iter().position(|k| *k == singular(&item_key(name)))
+                        {
                             used_up.remove(i);
                             if !all && qty == 1 {
                                 continue;
@@ -320,7 +383,7 @@ impl Tracking {
             return;
         }
         let full = self.items.len() >= MAX_ITEMS;
-        match self.items.iter_mut().find(|it| same(&it.name, &item.name)) {
+        match find_item(&self.items, &item.name, false).map(|i| &mut self.items[i]) {
             Some(it) => {
                 it.qty = it.qty.saturating_add(item.qty).min(MAX_QTY);
                 if it.description.is_empty() {
@@ -341,7 +404,7 @@ impl Tracking {
         if !self.inventory {
             return None;
         }
-        self.items.iter().find(|it| same(&it.name, name))
+        find_item(&self.items, name, true).map(|i| &self.items[i])
     }
 
     /// Takes one of the item unless it lasts. Returns whether one was taken.
@@ -366,7 +429,7 @@ impl Tracking {
     }
 
     fn lose(&mut self, name: &str, qty: u32) {
-        if let Some(i) = self.items.iter().position(|it| same(&it.name, name)) {
+        if let Some(i) = find_item(&self.items, name, true) {
             let it = &mut self.items[i];
             if it.qty > qty {
                 it.qty -= qty;
@@ -550,6 +613,38 @@ mod tests {
                 ..rpg()
             }
         );
+    }
+
+    #[test]
+    fn items_are_found_by_a_plural_or_a_shorter_name() {
+        let mut t = rpg();
+        t.items.push(Item::new("Torch", 3, ""));
+        t.apply_reply(
+            "<item lose=\"Healing Potions\"/> <item gain=\"Torches\" qty=\"2\"/> \
+             <item lose=\"potion\"/> <item lose=\"torch\" qty=\"4\"/>",
+            "Sam",
+        );
+        assert_eq!(
+            t.items
+                .iter()
+                .map(|i| (i.name.as_str(), i.qty))
+                .collect::<Vec<_>>(),
+            [("Torch", 1)],
+            "both potions are gone and the torches stacked before four burned out"
+        );
+        // A short name that could mean two things changes neither.
+        let mut t = rpg();
+        t.items.push(Item::new("Mana Potion", 1, ""));
+        t.apply_reply("<item lose=\"potion\"/>", "Sam");
+        assert_eq!(t.items.iter().map(|i| i.qty).collect::<Vec<_>>(), [2, 1]);
+        // Gaining never merges by a shorter name: a key is not the Rusty Key.
+        let mut t = rpg();
+        t.apply_reply("<item gain=\"Potion\"/>", "Sam");
+        assert_eq!(t.items.len(), 2);
+        assert_eq!(singular("berries"), "berry");
+        assert_eq!(singular("glass"), "glass");
+        assert_eq!(singular("boxes"), "box");
+        assert_eq!(singular("gas"), "gas");
     }
 
     #[test]

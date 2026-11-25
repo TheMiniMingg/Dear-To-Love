@@ -156,6 +156,15 @@ fn first_sentence_and_clip() {
     assert_eq!(first_sentence("No stop at all", 50), "No stop at all");
     assert_eq!(first_sentence("abcdefghij", 4), "abcd…");
     assert_eq!(first_sentence("v1.2 is out! Yes.", 50), "v1.2 is out!");
+    // A scene's place on its own line is skipped, and a paragraph ends the line.
+    assert_eq!(
+        first_sentence("[The lighthouse]\n\nRain on the glass\n\nMara waits.", 80),
+        "Rain on the glass"
+    );
+    assert_eq!(
+        first_sentence("[Text from Mara] hey. You up?", 80),
+        "[Text from Mara] hey."
+    );
 }
 
 /// A summary or a recap is asked about the story's words: message tags
