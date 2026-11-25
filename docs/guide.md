@@ -96,7 +96,10 @@ story can also **Send a text**, **Call** someone, **Think** a thought of your ow
 **Roll dice**.
 
 - **Picture view.** With a background or portraits chosen, a stage above the story shows the
-  scene and whoever you are with, and switches when someone new appears. Give a place a
+  scene and whoever you are with, and switches when someone new appears. When several
+  characters with portraits are in the conversation, they stand side by side (up to four),
+  the one the story is with right now to the fore; the small portraits at the side bring
+  another one forward. Give a place a
   picture of its own under **Pictures → Places** and the stage shows it whenever the story is
   there. **Picture view** beside the story (or Ctrl/Cmd+P) switches to text only and back.
 - **Make room to read.** Drag the small bar under the picture to make it bigger or smaller, or

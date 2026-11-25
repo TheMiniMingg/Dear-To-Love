@@ -1695,7 +1695,7 @@ button.jump-link:hover {
   height: clamp(8rem, 26vh, 16rem);
 }
 /* Only a background: a banner, as before. */
-.stage:not(:has(.stage-focus)) {
+.stage:not(:has(.stage-figure)) {
   height: clamp(5rem, 18vh, 11rem);
 }
 .stage .scene-bg {
@@ -1712,18 +1712,45 @@ button.jump-link:hover {
   align-items: center;
   justify-content: center;
 }
-.stage-focus {
+/* Everyone the story is with, side by side, the one in focus to the fore. */
+.stage-cast {
   position: relative;
-  margin: 0 0 0.6rem;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: clamp(0.4rem, 2vw, 1.25rem);
   height: calc(100% - 1.2rem);
+  margin: 0 0 0.6rem;
+  max-width: 100%;
+  min-width: 0;
+}
+.stage-cast.has-chooser {
+  padding: 0 4rem;
+}
+.stage-figure {
+  position: relative;
+  margin: 0;
+  height: 100%;
+  min-width: 0;
+  flex: 0 1 auto;
   display: flex;
   flex-direction: column;
   align-items: center;
   animation: stage-in 0.35s ease-out;
+  transition:
+    height 0.25s ease-out,
+    opacity 0.25s ease-out;
 }
-.stage-focus img,
-.stage-focus .thumb-missing {
-  flex: 1;
+/* With company, the others stand a little back. */
+.stage-cast:not([data-count='1']) .stage-figure:not(.stage-focus) {
+  height: 84%;
+  opacity: 0.88;
+}
+/* Sized by height, so a figure is as wide as its picture and no wider. */
+.stage-figure img,
+.stage-figure .thumb-missing {
+  height: calc(100% - 0.6rem);
+  width: auto;
   min-height: 0;
   aspect-ratio: 1;
   max-width: 100%;
@@ -1733,15 +1760,23 @@ button.jump-link:hover {
   box-shadow: var(--shadow-lg);
   background: var(--bg);
 }
-.stage-focus figcaption {
+.stage-figure figcaption {
   margin-top: -0.9rem;
   padding: 0.15rem 0.8rem;
   border-radius: 999px;
-  background: var(--accent);
-  color: var(--on-accent);
+  background: var(--surface);
+  color: var(--fg);
   font-weight: 600;
   font-size: 0.9rem;
   position: relative;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.stage-focus figcaption {
+  background: var(--accent);
+  color: var(--on-accent);
 }
 @keyframes stage-in {
   from {
@@ -1750,8 +1785,9 @@ button.jump-link:hover {
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .stage-focus {
+  .stage-figure {
     animation: none;
+    transition: none;
   }
 }
 .scene-portraits {
@@ -3538,6 +3574,12 @@ img.msg-avatar {
   font-size: 0.85rem;
   box-shadow: var(--shadow-xs);
   backdrop-filter: blur(6px);
+  z-index: 1;
+}
+/* Several on stage reach the corners: the place goes up top, out of the names' way. */
+.stage:has(.stage-cast:not([data-count='1'])) .stage-caption {
+  top: 0.6rem;
+  bottom: auto;
 }
 .context-chip {
   display: inline-flex;
