@@ -1,4 +1,4 @@
-# ADR 0033: Item rarity, items that change dice, loot odds and Use
+# ADR 0034: Item rarity, items that change dice, loot odds and Use
 
 Status: accepted
 
