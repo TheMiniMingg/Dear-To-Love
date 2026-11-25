@@ -63,7 +63,7 @@ _Once she joins, her portrait shows in the scene and beside her lines._
 
 **4. Not what you wanted? Try again.** **Another reply** writes it again, shorter or longer,
 with a hint such as "More romantic". Every version is kept as a route, and the arrows under
-the reply (‹ 1 / 2 ›) flip between them. **Routes** shows them as a list, a map or a
+the reply (‹ 1 / 2 ›) flip between them. **Routes** shows them as a route map, a list or a
 timeline, so you can go back to any choice. You can also change your last action, or take
 the turn back.
 
@@ -115,8 +115,14 @@ story can also **Send a text**, **Call** someone, **Think** a thought of your ow
 - **Save anywhere**: quick-save with Ctrl/Cmd+S, Save / Load, and five autosaves.
 - **Branch** from any reply, ask for **another reply**, or **change an earlier action**. Each
   makes a new route and keeps the original. A reply with more than one version shows
-  ‹ 1 / 2 › under it to flip between them. **Routes** shows them as a list, a map of how
-  they branch, or a timeline.
+  ‹ 1 / 2 › under it to flip between them. **Routes** opens on a route map, like a dating
+  sim's: green splits marked with the in-story time where routes part, branching left to
+  right into one box per route, with the way to your current route lit up. Pick a box to
+  switch, rename or hide that route; zoom with − and +, and drag the chart to move around.
+  The same routes also show as a list or a timeline.
+
+  ![The route map: splits marked Day 2, Day 4, Day 5 and Day 6 branch into seven routes, with the way to the current route lit](screenshots/route-map.webp)
+
 - **End a chapter** when it feels finished: the storyteller writes a recap, you can edit it,
   and later chapters remember it. When the notebook has grown, it also offers to tidy it up:
   merge notes about the same person and shorten long ones. Keep or undo each change. The

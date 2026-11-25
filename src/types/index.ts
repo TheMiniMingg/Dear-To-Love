@@ -117,6 +117,7 @@ export type { SaveType } from './generated/SaveType';
 export type { SaveView } from './generated/SaveView';
 export type { ScenarioTemplate } from './generated/ScenarioTemplate';
 export type { Scene } from './generated/Scene';
+export type { ScenePoint } from './generated/ScenePoint';
 export type { SceneTemplate } from './generated/SceneTemplate';
 export type { SearchHit } from './generated/SearchHit';
 export type { SearchResults } from './generated/SearchResults';

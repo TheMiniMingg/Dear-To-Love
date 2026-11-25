@@ -422,13 +422,13 @@ pub const CLOSERS: &[&str] = &[
 pub const ROLL_SUCCESS: &[&str] = &[
     "The roll goes {your*} way. It works, cleanly enough that {you} almost {do} not trust it.",
     "Luck is on {your*} side this time: it comes off better than {you} hoped.",
-    "{You} make{s} it, with nothing to spare.",
+    "{You} make{s} it, and it holds.",
 ];
 
 pub const ROLL_FAILURE: &[&str] = &[
     "The roll goes against {you*}. It does not work, and now someone may have noticed.",
     "Not this time. It slips away from {you*}, and it will cost something.",
-    "{You} fall{s} short, just barely, and the moment passes.",
+    "{You} fall{s} short, and the moment passes.",
 ];
 
 pub const CRIT_SUCCESS: &[&str] = &[

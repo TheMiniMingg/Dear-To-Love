@@ -2,6 +2,7 @@
 import type { BranchStart } from "./BranchStart";
 import type { ChapterRef } from "./ChapterRef";
 import type { RouteDto } from "./RouteDto";
+import type { ScenePoint } from "./ScenePoint";
 
 /**
  * One route, placed among the others.
@@ -27,4 +28,13 @@ latest?: string,
 /**
  * The chapter this route is in now.
  */
-chapter?: ChapterRef, };
+chapter?: ChapterRef, 
+/**
+ * Where and when the story was when this route left its parent, for
+ * the route chart's split labels ("Thursday, 7:05 AM").
+ */
+forkScene?: ScenePoint, 
+/**
+ * Where and when the story is now on this route.
+ */
+scene?: ScenePoint, };

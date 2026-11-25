@@ -12,6 +12,7 @@ vi.mock('@tauri-apps/api/core', () => ({
 
 import { RoutesPanel } from '../features/routes/RoutesPanel';
 import { layoutRoutes } from '../features/routes/routeLayout';
+import { chartRoutes, splitLetter } from '../features/routes/routeChart';
 
 const route = (id: string, label: string, parent: string | null, extra: Partial<RouteDto> = {}) =>
   ({
@@ -83,6 +84,79 @@ describe('Routes', () => {
     ]);
   });
 
+  it('the chart parts routes at splits, like a dating sim route map', () => {
+    const withScene = nodes.map((n) =>
+      n.route.id === 'aa'
+        ? { ...n, forkScene: { place: 'The lamp room', time: 'Day 2, dusk' } }
+        : n,
+    );
+    const chart = chartRoutes(
+      layoutRoutes(withScene, () => true),
+      'cccc',
+    );
+    const shape = chart.nodes.map((n) =>
+      n.kind === 'split'
+        ? [`Split ${n.letter}`, n.routeId, n.turn, n.col, n.row, n.onPath]
+        : [n.routeId, n.col, n.row, n.onPath],
+    );
+    // Main splits after turn 3 into Main and Alt; Alt splits after turn 5
+    // into Alt and Late night, which splits after turn 6 into itself and Pier.
+    expect(shape).toEqual([
+      ['Split A', 'm', 3, 0, 0.875, true],
+      ['m', 1, 0, false],
+      ['Split B', 'aa', 5, 1, 1.75, true],
+      ['aa', 2, 1, false],
+      ['Split C', 'bbb', 6, 2, 2.5, true],
+      ['bbb', 3, 2, false],
+      ['cccc', 3, 3, true],
+    ]);
+    const a = chart.nodes[0]!;
+    expect(a.kind === 'split' && a.scene?.time).toBe('Day 2, dusk');
+    expect([chart.cols, chart.rows]).toEqual([4, 4]);
+    expect([splitLetter(0), splitLetter(25), splitLetter(26)]).toEqual(['A', 'Z', 'AA']);
+  });
+
+  it('two routes leaving at the same turn share one split', () => {
+    const twin = route('dd', 'Twin', 'm');
+    const more = [...nodes, { route: twin, turns: 4, forkTurn: 3 }];
+    const chart = chartRoutes(
+      layoutRoutes(more, (n) => !n.route.hidden),
+      'm',
+    );
+    const splits = chart.nodes.filter((n) => n.kind === 'split');
+    expect(splits.map((s) => s.kind === 'split' && [s.letter, s.turn, s.branchIds])).toEqual([
+      ['A', 3, ['aa', 'dd']],
+      ['B', 6, ['cccc']],
+    ]);
+  });
+
+  it('the map shows each split with when it happened', async () => {
+    invoke.mockImplementation(async (cmd: string) => {
+      if (cmd === 'get_route_map')
+        return nodes.map((n) =>
+          n.route.id === 'aa' ? { ...n, forkScene: { place: 'The lamp room', time: 'Dusk' } } : n,
+        );
+      throw { code: 'NOT_FOUND', message: cmd };
+    });
+    render(
+      <RoutesPanel
+        storyId="s1"
+        currentRouteId="m"
+        routes={[main, alt, late, pier]}
+        onSwitch={() => {}}
+        onChanged={() => {}}
+      />,
+    );
+    const map = await screen.findByRole('list', { name: 'Route map' });
+    expect(
+      await within(map).findByRole('img', { name: 'Split A, After turn 3, Dusk, The lamp room' }),
+    ).toBeInTheDocument();
+    expect(within(map).getByText('Dusk')).toBeInTheDocument();
+    expect(within(map).getByText('After turn 6')).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Zoom out' }));
+    expect(screen.getByText('80%')).toBeInTheDocument();
+  });
+
   it('the list says where each route branched and what it did differently', async () => {
     const onSwitch = vi.fn();
     render(
@@ -95,6 +169,7 @@ describe('Routes', () => {
       />,
     );
     expect(invoke).toHaveBeenCalledWith('get_route_map', { storyId: 's1' });
+    await userEvent.click(screen.getByRole('radio', { name: 'List' }));
     const list = screen.getByRole('list', { name: 'Routes' });
     expect(await within(list).findByText('Branched from Main after turn 3.')).toBeInTheDocument();
     expect(within(list).getByText('Another reply: “The flame gutters out.”')).toBeInTheDocument();
@@ -123,7 +198,8 @@ describe('Routes', () => {
         onChanged={() => {}}
       />,
     );
-    await userEvent.click(screen.getByRole('radio', { name: 'Map' }));
+    // The map is the first view.
+    expect(screen.getByRole('radio', { name: 'Map' })).toBeChecked();
     const map = await screen.findByRole('list', { name: 'Route map' });
     const altNode = within(map).getByRole('button', { name: 'Alt, current, 9 turns' });
     expect(altNode).toHaveAttribute('aria-pressed', 'true');
@@ -167,6 +243,7 @@ describe('Routes', () => {
         onChanged={() => {}}
       />,
     );
+    await userEvent.click(screen.getByRole('radio', { name: 'List' }));
     const list = screen.getByRole('list', { name: 'Routes' });
     expect(within(list).getByText('Alt')).toBeInTheDocument();
     expect(within(list).getByRole('button', { name: 'Switch' })).toBeInTheDocument();
