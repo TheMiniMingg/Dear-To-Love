@@ -11,8 +11,8 @@ use crate::services::story_setup::{self, FilledDraft};
 use crate::state::AppState;
 
 #[tauri::command]
-pub fn get_template_catalog() -> TemplateCatalog {
-    TemplateCatalog::bundled()
+pub fn get_template_catalog(locale: Option<String>) -> TemplateCatalog {
+    TemplateCatalog::bundled_in(locale.as_deref())
 }
 
 #[tauri::command]
@@ -20,7 +20,7 @@ pub async fn quick_start(
     state: State<'_, AppState>,
     input: QuickStartInput,
 ) -> AppResult<StoryCreated> {
-    let draft = TemplateCatalog::bundled().resolve_quick_start(&input)?;
+    let draft = TemplateCatalog::for_story(&input).resolve_quick_start(&input)?;
     stories::create_story(state.db()?, draft).await
 }
 
@@ -28,7 +28,7 @@ pub async fn quick_start(
 /// starting point). Nothing is saved.
 #[tauri::command]
 pub fn compose_story_draft(input: QuickStartInput) -> AppResult<CreateStoryDraft> {
-    TemplateCatalog::bundled().compose_draft(&input)
+    TemplateCatalog::for_story(&input).compose_draft(&input)
 }
 
 /// What still has to be fixed before `create_story` will accept the draft.

@@ -69,7 +69,7 @@ import type {
   VoicePackFile,
   WizardDraft,
 } from '../types';
-import { msg, t, tKnown } from '../i18n';
+import { locale, msg, t, tKnown } from '../i18n';
 
 /** Error thrown by every wrapper; mirrors the Rust `AppError`. */
 export class CommandError extends Error {
@@ -172,7 +172,8 @@ export const commands = {
   getAppInfo: () => call<AppInfo>('get_app_info'),
   runDiagnostics: (deep = false) => call<DiagnosticCheck[]>('run_diagnostics', { deep }),
 
-  getTemplateCatalog: () => call<TemplateCatalog>('get_template_catalog'),
+  /** The bundled templates, in the app's language where they are translated. */
+  getTemplateCatalog: () => call<TemplateCatalog>('get_template_catalog', { locale: locale() }),
   quickStart: (input: QuickStartInput) => call<StoryCreated>('quick_start', { input }),
   composeStoryDraft: (input: QuickStartInput) =>
     call<CreateStoryDraft>('compose_story_draft', { input }),

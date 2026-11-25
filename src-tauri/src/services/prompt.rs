@@ -43,7 +43,7 @@ use crate::domain::tracking::Tracking;
 use crate::errors::{AppError, AppResult, ErrorCode};
 use crate::services::tokens::{estimate_message, estimate_messages, estimate_text};
 
-pub const PROMPT_SCHEMA_VERSION: u32 = 16;
+pub const PROMPT_SCHEMA_VERSION: u32 = 17;
 /// What the storyteller reads for **Keep going**, an action with no words.
 pub const KEEP_GOING: &str = "(Out of character: I let the story go on without acting. \
      Continue from where it left off, and don't decide anything for my character.)";
@@ -839,8 +839,11 @@ fn system_prompt_with(state: &EffectiveState, frame: &StoryFrame, room: &Room<'_
     if let Some(language) = s.narration.language.as_deref().map(str::trim) {
         if !language.is_empty() {
             out.push_str(&format!(
-                "- Write in {language}, including dialogue and messages, whatever language \
-                 the player writes in.\n"
+                "- Write in {language}, whatever language the player writes in: narration, \
+                 dialogue, messages, thoughts, scene headings (place and time), names you \
+                 make up, notes, cards and ideas for the next move. Keep tag and attribute \
+                 names as they are, and keep the names of characters, places and items that \
+                 already exist.\n"
             ));
         }
     }
@@ -1145,6 +1148,19 @@ fn system_prompt_with(state: &EffectiveState, frame: &StoryFrame, room: &Room<'_
         );
         out.push_str(note);
         out.push('\n');
+    }
+    if let Some(language) = s
+        .narration
+        .language
+        .as_deref()
+        .map(str::trim)
+        .filter(|l| !l.is_empty())
+    {
+        // Said again last: long English instructions above pull a model
+        // back to English otherwise.
+        out.push_str(&format!(
+            "\nLANGUAGE\nWrite your whole reply in {language}.\n"
+        ));
     }
     out
 }

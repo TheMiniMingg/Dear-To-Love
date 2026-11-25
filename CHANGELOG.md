@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- **Simplified Chinese, all the way through.** With the app in 简体中文, the 33 worlds, 47
+  scenarios and 27 characters of Quick Start and the wizard are in Chinese too (names, places,
+  openings, bars and items), and a story in Chinese starts from them. The storyteller is told to
+  write everything in the story's language, scene headings and new names included, and is
+  reminded again at the end of its instructions.
+
 ## 0.1.0 - 2026-11-09
 
 The first release. Dear to Love is a desktop app for playing interactive stories with AI: pick
