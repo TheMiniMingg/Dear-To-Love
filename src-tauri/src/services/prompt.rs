@@ -44,7 +44,9 @@ use crate::domain::tracking::Tracking;
 use crate::errors::{AppError, AppResult, ErrorCode};
 use crate::services::tokens::{estimate_message, estimate_messages, estimate_text};
 
-pub const PROMPT_SCHEMA_VERSION: u32 = 17;
+/// Raised whenever what the storyteller reads changes (18: the story's language and
+/// item rarity, dice and loot odds, which came in side by side as 17).
+pub const PROMPT_SCHEMA_VERSION: u32 = 18;
 /// What the storyteller reads for **Keep going**, an action with no words.
 pub const KEEP_GOING: &str = "(Out of character: I let the story go on without acting. \
      Continue from where it left off, and don't decide anything for my character.)";
