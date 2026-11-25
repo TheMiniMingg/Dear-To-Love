@@ -22,7 +22,7 @@ const SIZE_LABELS: Record<number, string> = {
 };
 
 /** A row of choices where one is picked, like Short / Normal / Long. */
-function Choices<T extends string | number>({
+export function Choices<T extends string | number>({
   legend,
   hint,
   value,

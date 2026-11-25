@@ -7,6 +7,7 @@ import { defaultStoryTheme, themeForGenres, THEMES, useLook } from '../../app/lo
 import { Dialog } from '../../components/Dialog';
 import { ThemePicker } from '../../components/ThemePicker';
 import { ReadingControls } from '../../components/ReadingControls';
+import { LayoutControls } from '../../components/LayoutControls';
 import { t } from '../../i18n';
 
 const ICON = { className: 'rail-icon', 'aria-hidden': true, strokeWidth: 1.75 } as const;
@@ -53,7 +54,7 @@ export function ReaderRail({ storyId, genres }: { storyId: string; genres?: stri
         type="button"
         className="rail-button"
         onClick={() => setLook(true)}
-        title={t('Choose the colors, text size, width and line spacing')}
+        title={t('Choose the colors, text size, width, line spacing and screen layout')}
       >
         <Palette {...ICON} />
         <span className="rail-label">{t('Look')}</span>
@@ -116,6 +117,8 @@ export function StoryLookDialog({
       </p>
       <h3 className="settings-subtitle">{t('Reading, in every story')}</h3>
       <ReadingControls />
+      <h3 className="settings-subtitle">{t('Screen, in every story')}</h3>
+      <LayoutControls />
       <div className="button-row dialog-actions">
         <button type="button" className="primary" onClick={onClose}>
           {t('Done')}
