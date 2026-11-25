@@ -88,6 +88,54 @@ export function stageFocus(replies: string[], cast: Cast[]): string | null {
   return focus;
 }
 
+/** At most this many portraits stand on the stage side by side. */
+export const MAX_ON_STAGE = 4;
+
+/** Replies (that mention someone) looked at for who else is in the conversation. */
+const WITH_WINDOW = 2;
+
+/**
+ * Everyone the story is with right now, for the stage to show side by side:
+ * the one in focus ({@link stageFocus}), and the others in the last couple of
+ * replies who are in the scene, or who the newest reply is clearly about
+ * (named twice or more). Ordered as they came in, so the line-up stays put
+ * while the focus moves; at most {@link MAX_ON_STAGE}, the focus always kept.
+ */
+export function stageGroup(
+  replies: string[],
+  cast: Cast[],
+  participants: readonly string[] = [],
+): { focus: string | null; group: string[] } {
+  const focus = stageFocus(replies, cast);
+  if (!focus) return { focus: null, group: [] };
+  const inScene = new Set(participants);
+  const window = replies
+    .slice(-LOOK_BACK)
+    .map((text) => mentioned(text, cast))
+    .filter((found) => found.length)
+    .slice(-WITH_WINDOW);
+  const group: string[] = [];
+  window.forEach((found, i) => {
+    const newest = i === window.length - 1;
+    for (const f of found) {
+      const keep = f.id === focus || inScene.has(f.id) || (newest && f.count >= 2);
+      if (keep && !group.includes(f.id)) group.push(f.id);
+    }
+  });
+  if (!group.includes(focus)) group.push(focus);
+  return { focus, group: trimGroup(group, focus) };
+}
+
+/** More than {@link MAX_ON_STAGE}: the earliest others step off first, never the focus. */
+export function trimGroup(group: string[], focus: string): string[] {
+  const out = [...group];
+  while (out.length > MAX_ON_STAGE) {
+    const i = out.findIndex((id) => id !== focus);
+    out.splice(i, 1);
+  }
+  return out;
+}
+
 /**
  * The places the story has been, from the scene marks in its replies, the
  * latest first, each once (by its key, so "The pier" and "the pier" are one).

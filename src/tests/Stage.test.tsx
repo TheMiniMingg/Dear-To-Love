@@ -17,7 +17,7 @@ vi.mock('@tauri-apps/api/core', () => ({
 import { ReaderScreen } from '../features/reader/ReaderScreen';
 import { sceneBackground } from '../features/reader/pictures';
 import { placeChoices } from '../features/reader/PicturesPanel';
-import { scenePlaces, stageFocus, usePictureView } from '../features/reader/stage';
+import { scenePlaces, stageFocus, stageGroup, usePictureView } from '../features/reader/stage';
 import { useUiStore } from '../app/store';
 
 const cast = [
@@ -49,6 +49,53 @@ describe('who is on stage', () => {
     // Whole words only for Latin names; Japanese names match inside the text.
     expect(stageFocus(['Maraschino cherries on the table.'], cast)).toBeNull();
     expect(stageFocus(['美咲は笑った。'], cast)).toBe('misaki');
+  });
+});
+
+describe('everyone on stage', () => {
+  const four = [
+    ...cast,
+    { id: 'ines', names: ['Ines Dray', 'Ines'] },
+    { id: 'tobi', names: ['Tobi Lark', 'Tobi'] },
+  ];
+  it('shows the others in the conversation beside the one in focus', () => {
+    expect(stageGroup([], cast)).toEqual({ focus: null, group: [] });
+    // Alone with Mara.
+    expect(stageGroup(['Mara waves from the pier.'], cast).group).toEqual(['mara']);
+    // Oren arrives: he is in focus, Mara stays beside him, in the order they came.
+    expect(
+      stageGroup(['Mara waves.', 'Oren walks in. "Mara," he nods.'], cast, ['mara', 'oren']),
+    ).toEqual({ focus: 'oren', group: ['mara', 'oren'] });
+    // A quiet reply for one of them does not send the other off.
+    expect(
+      stageGroup(['Mara and Oren sit down.', 'Oren pours the tea.'], cast, ['mara', 'oren']).group,
+    ).toEqual(['mara', 'oren']);
+    // Someone only thought of, not in the scene, stays off stage...
+    expect(stageGroup(['Mara sighs. Oren would have laughed.'], cast, ['mara']).group).toEqual([
+      'mara',
+    ]);
+    // ...unless the reply is about them.
+    expect(
+      stageGroup(['Mara sighs. Oren would have laughed. Oren always did.'], cast, ['mara']).group,
+    ).toEqual(['mara', 'oren']);
+    // Who has left the conversation steps off.
+    expect(
+      stageGroup(['Mara waves.', 'Oren talks.', 'Oren talks.', 'Oren talks.'], cast, [
+        'mara',
+        'oren',
+      ]).group,
+    ).toEqual(['oren']);
+  });
+
+  it('keeps at most four, always with the one in focus', () => {
+    const all = ['mara', 'oren', 'misaki', 'ines', 'tobi'];
+    const r = stageGroup(
+      ['Mara, Oren and 美咲 wait.', 'Ines laughs. Tobi bursts in, late as ever.'],
+      four,
+      all,
+    );
+    expect(r.focus).toBe('ines');
+    expect(r.group).toEqual(['oren', 'misaki', 'ines', 'tobi']);
   });
 });
 
@@ -108,8 +155,14 @@ describe('the picture view in the reader', () => {
     // The player's own portrait is never on stage.
     expect(within(stage).queryByRole('button', { name: 'Show Sam Ashby' })).toBeNull();
 
-    await userEvent.click(within(stage).getByRole('button', { name: 'Show Mara Quill' }));
+    // Mara was in the reply before and is in the scene: she stands beside him.
     expect(within(stage).getByRole('img', { name: 'Portrait of Mara Quill' })).toBeVisible();
+    const figures = within(stage).getAllByRole('figure');
+    expect(figures.map((f) => f.textContent)).toEqual(['Mara Quill', 'Oren Vale']);
+    expect(figures[1]).toHaveAttribute('aria-current', 'true');
+
+    await userEvent.click(within(stage).getByRole('button', { name: 'Show Mara Quill' }));
+    expect(within(stage).getAllByRole('figure')[0]).toHaveAttribute('aria-current', 'true');
     expect(within(stage).getByRole('button', { name: 'Show Mara Quill' })).toHaveAttribute(
       'aria-pressed',
       'true',
