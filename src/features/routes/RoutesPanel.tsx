@@ -18,8 +18,8 @@ type Props = {
 type View = 'list' | 'map' | 'timeline';
 
 const VIEWS: { id: View; label: string }[] = [
-  { id: 'list', label: msg('List') },
   { id: 'map', label: msg('Map') },
+  { id: 'list', label: msg('List') },
   { id: 'timeline', label: msg('Timeline') },
 ];
 
@@ -28,9 +28,9 @@ const VIEW_KEY = 'dtl.routesView';
 function loadView(): View {
   try {
     const v = localStorage.getItem(VIEW_KEY);
-    return v === 'map' || v === 'timeline' ? v : 'list';
+    return v === 'list' || v === 'timeline' ? v : 'map';
   } catch {
-    return 'list';
+    return 'map';
   }
 }
 
