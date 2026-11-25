@@ -11,6 +11,7 @@ import { useVoicePacks } from '../../app/voicePacks';
 import { useReadAloud } from '../../app/readAloud';
 import { TrackingFields } from '../create/TrackingFields';
 import { RULES } from '../create/presets';
+import { presetWords } from '../../i18n/presetWords';
 import { RulesField } from '../create/RulesField';
 import { diffState, editProblems, summarize, type ChangeLine } from './stateDiff';
 import { msg, t, tr } from '../../i18n';
@@ -522,7 +523,7 @@ export function StoryDetailsPanel({
             </p>
             <RulesField
               label={t('Rules the storyteller follows')}
-              presets={RULES}
+              presets={presetWords(RULES)}
               value={edited.world.rules}
               onChange={(rules) => set({ world: { ...edited.world, rules } })}
             />
