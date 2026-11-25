@@ -7,7 +7,14 @@
 //! - `<meter name="Health" change="-12"/>` (or `set="40"`, `max="120"`, and
 //!   `who="Kira"` for someone else's);
 //! - `<item gain="Rusty Key" qty="1">An iron key, warm to the touch.</item>`
-//!   and `<item lose="Healing Potion"/>`.
+//!   and `<item lose="Healing Potion"/>`; a new item can say how rare it is
+//!   and what it does to dice (`rarity="epic" dice="odd" keep="yes"`);
+//! - `<item use="Rusty Key" result="used"/>` when the player's Use worked
+//!   (one is taken unless it lasts), or `result="not-now"` with the reason
+//!   when it can't be used yet: then nothing is taken.
+//!
+//! An item used on a roll is taken when the roll is made (see
+//! [`Tracking::apply_roll_item`]).
 //!
 //! Replay applies the tags of each reply in order, so every route, branch
 //! and retry keeps its own values. Story details can also set them.
@@ -15,6 +22,7 @@
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 
+use super::loot::{self, DiceEffect, LootOdds, Rarity};
 use super::text::tag_attrs;
 use crate::errors::{AppError, AppResult};
 
@@ -40,6 +48,11 @@ pub struct Tracking {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[ts(as = "Option<Vec<Item>>", optional)]
     pub items: Vec<Item>,
+    /// How likely each rarity is when something new turns up (Common to
+    /// Mythical). Unset: the usual odds.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub loot_odds: Option<LootOdds>,
 }
 
 /// A bar such as Health 80/100, or a counter such as Gold 35.
@@ -70,6 +83,45 @@ pub struct Item {
     #[serde(default, skip_serializing_if = "String::is_empty")]
     #[ts(as = "Option<String>", optional)]
     pub description: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub rarity: Option<Rarity>,
+    /// What it does to a roll it is used on: `+2`, `odd`, `even`, `best`
+    /// or faces such as `1-2`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub dice: Option<String>,
+    /// Using it doesn't use it up (a lucky charm, a key).
+    #[serde(default, skip_serializing_if = "is_false")]
+    #[ts(as = "Option<bool>", optional)]
+    pub keep: bool,
+}
+
+impl Item {
+    pub fn new(name: impl Into<String>, qty: u32, description: impl Into<String>) -> Self {
+        Self {
+            name: name.into(),
+            qty,
+            description: description.into(),
+            rarity: None,
+            dice: None,
+            keep: false,
+        }
+    }
+
+    /// Its dice effect, if it has a valid one.
+    pub fn dice_effect(&self) -> Option<DiceEffect> {
+        DiceEffect::parse(self.dice.as_deref()?).ok()
+    }
+
+    /// The rarity it shows: its own, raised to what its dice effect needs.
+    pub fn shown_rarity(&self) -> Option<Rarity> {
+        let least = self.dice_effect().map(DiceEffect::least_rarity);
+        match (self.rarity, least) {
+            (Some(r), Some(l)) => Some(r.max(l)),
+            (r, l) => r.or(l),
+        }
+    }
 }
 
 fn is_false(b: &bool) -> bool {
@@ -212,6 +264,8 @@ impl Tracking {
     /// Applies the tags in one of the storyteller's replies. `player` is
     /// the player character's name: a meter "who" names them is theirs.
     pub fn apply_reply(&mut self, text: &str, player: &str) {
+        // Items a `use` took in this reply.
+        let mut used_up: Vec<String> = Vec::new();
         for tag in scan(text) {
             let get = |k: &str| {
                 tag.attrs
@@ -241,13 +295,33 @@ impl Tracking {
                         .unwrap_or(1)
                         .clamp(1, MAX_QTY);
                     if let Some(name) = get("gain") {
-                        self.gain(
-                            &clip(name, MAX_NAME),
-                            qty,
-                            &clip(&tag.body, MAX_DESCRIPTION),
-                        );
+                        let mut item =
+                            Item::new(clip(name, MAX_NAME), qty, clip(&tag.body, MAX_DESCRIPTION));
+                        item.rarity = get("rarity").and_then(Rarity::parse);
+                        item.dice = get("dice")
+                            .and_then(|d| DiceEffect::parse(d).ok())
+                            .map(|d| d.to_string());
+                        item.rarity = item.shown_rarity();
+                        item.keep = get("keep").is_some_and(|k| {
+                            matches!(k.to_lowercase().as_str(), "yes" | "true" | "1")
+                        });
+                        self.gain(item);
+                    } else if let Some(name) = get("use") {
+                        let used = get("result").is_some_and(|r| r.eq_ignore_ascii_case("used"));
+                        if used && self.take_one(name) {
+                            used_up.push(singular(&item_key(name)));
+                        }
                     } else if let Some(name) = get("lose") {
                         let all = get("qty").is_some_and(|q| q.eq_ignore_ascii_case("all"));
+                        // A use already took this one: "lose" after it says the same.
+                        if let Some(i) =
+                            used_up.iter().position(|k| *k == singular(&item_key(name)))
+                        {
+                            used_up.remove(i);
+                            if !all && qty == 1 {
+                                continue;
+                            }
+                        }
                         self.lose(name, if all { MAX_QTY } else { qty });
                     }
                 }
@@ -304,25 +378,54 @@ impl Tracking {
         };
     }
 
-    fn gain(&mut self, name: &str, qty: u32, description: &str) {
-        if name.is_empty() {
+    fn gain(&mut self, item: Item) {
+        if item.name.is_empty() {
             return;
         }
         let full = self.items.len() >= MAX_ITEMS;
-        match find_item(&self.items, name, false).map(|i| &mut self.items[i]) {
+        match find_item(&self.items, &item.name, false).map(|i| &mut self.items[i]) {
             Some(it) => {
-                it.qty = it.qty.saturating_add(qty).min(MAX_QTY);
+                it.qty = it.qty.saturating_add(item.qty).min(MAX_QTY);
                 if it.description.is_empty() {
-                    it.description = description.to_string();
+                    it.description = item.description;
+                }
+                it.rarity = it.rarity.or(item.rarity);
+                if it.dice.is_none() {
+                    it.dice = item.dice;
                 }
             }
-            None if !full => self.items.push(Item {
-                name: name.to_string(),
-                qty,
-                description: description.to_string(),
-            }),
+            None if !full => self.items.push(item),
             None => {}
         }
+    }
+
+    /// The item of that name the player carries.
+    pub fn item(&self, name: &str) -> Option<&Item> {
+        if !self.inventory {
+            return None;
+        }
+        find_item(&self.items, name, true).map(|i| &self.items[i])
+    }
+
+    /// Takes one of the item unless it lasts. Returns whether one was taken.
+    fn take_one(&mut self, name: &str) -> bool {
+        match self.item(name) {
+            Some(it) if !it.keep => {
+                self.lose(name, 1);
+                true
+            }
+            _ => false,
+        }
+    }
+
+    /// The player used `name` on a roll: one is taken unless it lasts.
+    pub fn apply_roll_item(&mut self, name: &str) {
+        self.take_one(name);
+    }
+
+    /// The loot odds in use.
+    pub fn odds(&self) -> LootOdds {
+        self.loot_odds.unwrap_or(loot::DEFAULT_LOOT_ODDS)
     }
 
     fn lose(&mut self, name: &str, qty: u32) {
@@ -398,6 +501,12 @@ impl Tracking {
             if self.items[..i].iter().any(|o| same(&o.name, &it.name)) {
                 return bad(format!("{name} is listed twice"));
             }
+            if let Some(d) = &it.dice {
+                DiceEffect::parse(d)?;
+            }
+        }
+        if let Some(odds) = &self.loot_odds {
+            loot::validate_odds(odds)?;
         }
         Ok(())
     }
@@ -424,11 +533,8 @@ mod tests {
                 },
             ],
             inventory: true,
-            items: vec![Item {
-                name: "Healing Potion".into(),
-                qty: 2,
-                description: "Red and fizzy.".into(),
-            }],
+            items: vec![Item::new("Healing Potion", 2, "Red and fizzy.")],
+            loot_odds: None,
         }
     }
 
@@ -512,11 +618,7 @@ mod tests {
     #[test]
     fn items_are_found_by_a_plural_or_a_shorter_name() {
         let mut t = rpg();
-        t.items.push(Item {
-            name: "Torch".into(),
-            qty: 3,
-            description: String::new(),
-        });
+        t.items.push(Item::new("Torch", 3, ""));
         t.apply_reply(
             "<item lose=\"Healing Potions\"/> <item gain=\"Torches\" qty=\"2\"/> \
              <item lose=\"potion\"/> <item lose=\"torch\" qty=\"4\"/>",
@@ -532,11 +634,7 @@ mod tests {
         );
         // A short name that could mean two things changes neither.
         let mut t = rpg();
-        t.items.push(Item {
-            name: "Mana Potion".into(),
-            qty: 1,
-            description: String::new(),
-        });
+        t.items.push(Item::new("Mana Potion", 1, ""));
         t.apply_reply("<item lose=\"potion\"/>", "Sam");
         assert_eq!(t.items.iter().map(|i| i.qty).collect::<Vec<_>>(), [2, 1]);
         // Gaining never merges by a shorter name: a key is not the Rusty Key.
@@ -563,5 +661,51 @@ mod tests {
         let mut t = rpg();
         t.items[0].name = " ".into();
         assert!(t.validate().is_err());
+    }
+
+    #[test]
+    fn items_keep_rarity_and_dice_and_uses_take_one() {
+        let mut t = rpg();
+        t.apply_reply(
+            "In the chest: <item gain=\"Moon Die\" rarity=\"rare\" dice=\"1-2\">Pale \
+             bone.</item> <item gain=\"Lucky Coin\" dice=\"+1\" keep=\"yes\"/> \
+             <item gain=\"Odd Shard\" dice=\"sideways\"/>",
+            "Sam",
+        );
+        let die = t.item("moon die").unwrap();
+        assert_eq!(
+            die.rarity,
+            Some(Rarity::Legendary),
+            "raised to what its effect needs"
+        );
+        assert_eq!(die.dice.as_deref(), Some("1-2"));
+        let coin = t.item("Lucky Coin").unwrap();
+        assert_eq!((coin.rarity, coin.keep), (Some(Rarity::Common), true));
+        assert_eq!(t.item("Odd Shard").unwrap().dice, None);
+        t.validate().unwrap();
+
+        // Not now: nothing is taken. Used: one is, and a lose after it is the same one.
+        t.apply_reply(
+            "<item use=\"Healing Potion\" result=\"not-now\">You're not hurt.</item>",
+            "Sam",
+        );
+        assert_eq!(t.item("Healing Potion").unwrap().qty, 2);
+        t.apply_reply(
+            "<item use=\"Healing Potion\" result=\"used\"/> <item lose=\"Healing Potion\"/>",
+            "Sam",
+        );
+        assert_eq!(t.item("Healing Potion").unwrap().qty, 1);
+        // Something that lasts stays; a roll spends a die.
+        t.apply_reply("<item use=\"Lucky Coin\" result=\"used\"/>", "Sam");
+        assert!(t.item("Lucky Coin").is_some());
+        t.apply_roll_item("Moon Die");
+        assert!(t.item("Moon Die").is_none());
+
+        let mut odds = t.clone();
+        odds.loot_odds = Some([0; 6]);
+        assert!(odds.validate().is_err());
+        let mut bad = t.clone();
+        bad.items[0].dice = Some("lucky".into());
+        assert!(bad.validate().is_err());
     }
 }

@@ -17,6 +17,7 @@ import type {
 } from '../../types';
 import { joinSentences, t } from '../../i18n';
 import { picture, itemSlot, slotName } from './pictures';
+import { describeEffect, diceEffect, rarityLabel, shownRarity } from './items';
 
 /** How full a bar is, 0 to 100. */
 const fullness = (m: Meter) =>
@@ -82,6 +83,11 @@ type Props = {
   detailsDisabled: boolean;
   onOpenDetails: () => void;
   onChanged: (view: RouteView, status: string) => void;
+  /**
+   * Use an item. Returns why it can't be used right now, or null when it
+   * went to the storyteller. Unset while the story can't take an action.
+   */
+  onUse?: (item: Item) => string | null;
 };
 
 /**
@@ -90,9 +96,11 @@ type Props = {
  * and a picture if one was made. The storyteller keeps them; changing them
  * by hand is in Story details.
  */
-export function InventoryPanel({ view, detailsDisabled, onOpenDetails, onChanged }: Props) {
+export function InventoryPanel({ view, detailsDisabled, onOpenDetails, onChanged, onUse }: Props) {
   const tracking = view.state.state.tracking;
   const [open, setOpen] = useState<string | null>(null);
+  /** Why an item can't be used now, by its slot. */
+  const [notNow, setNotNow] = useState<{ slot: string; why: string } | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -177,8 +185,10 @@ export function InventoryPanel({ view, detailsDisabled, onOpenDetails, onChanged
                 const slot = itemSlot(item.name);
                 const p = picture(view, slot);
                 const opened = open === slot;
+                const rarity = shownRarity(item);
+                const effect = diceEffect(item);
                 return (
-                  <li key={slot} className="inventory-item">
+                  <li key={slot} className={`inventory-item${rarity ? ` rarity-${rarity}` : ''}`}>
                     <div className="inventory-thumb">
                       {p.assetId ? (
                         <Thumb assetId={p.assetId} alt={slotName(view, slot)} />
@@ -193,8 +203,36 @@ export function InventoryPanel({ view, detailsDisabled, onOpenDetails, onChanged
                         {item.name}
                         {item.qty > 1 && <span className="inventory-qty"> × {item.qty}</span>}
                       </strong>
+                      {(rarity || effect || item.keep) && (
+                        <p className="item-traits small">
+                          {rarity && (
+                            <span className={`rarity-badge rarity-${rarity}`}>
+                              {rarityLabel(rarity)}
+                            </span>
+                          )}
+                          {effect && <span>{describeEffect(effect)}</span>}
+                          {item.keep && <span className="muted">{t('Lasts')}</span>}
+                        </p>
+                      )}
                       {item.description && <p className="small">{item.description}</p>}
                       <div className="button-row">
+                        <button
+                          type="button"
+                          className="item-use"
+                          disabled={!onUse}
+                          aria-label={t('Use {name}', { name: item.name })}
+                          title={
+                            onUse
+                              ? t('Tell the storyteller you use it now')
+                              : t('Wait for the reply to finish')
+                          }
+                          onClick={() => {
+                            const why = onUse?.(item) ?? null;
+                            setNotNow(why ? { slot, why } : null);
+                          }}
+                        >
+                          {t('Use')}
+                        </button>
                         <button
                           type="button"
                           aria-expanded={opened}
@@ -218,6 +256,11 @@ export function InventoryPanel({ view, detailsDisabled, onOpenDetails, onChanged
                           </button>
                         )}
                       </div>
+                      {notNow?.slot === slot && (
+                        <p role="status" className="item-not-now small">
+                          {notNow.why}
+                        </p>
+                      )}
                       {opened && (
                         <MakeItemPicture
                           item={item}
@@ -244,6 +287,13 @@ export function InventoryPanel({ view, detailsDisabled, onOpenDetails, onChanged
           'The storyteller changes these as things happen. To change them yourself, use Story details.',
         )}
       </p>
+      {tracking.inventory && items.length > 0 && (
+        <p className="muted small">
+          {t(
+            'Use tells the storyteller you use the item now; anything typed in the action box goes with it. It is only used up if it works.',
+          )}
+        </p>
+      )}
       <div className="button-row">
         <button type="button" disabled={detailsDisabled} onClick={onOpenDetails}>
           {t('Story details')}

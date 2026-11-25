@@ -1,6 +1,7 @@
 import { createContext, useContext } from 'react';
 import type { DiceRoll, DiceRules, RollRequest } from '../../types';
 import { t } from '../../i18n';
+import { describeEffect, parseEffect } from './items';
 
 /** The story's dice rules, for cards that hide the number needed. */
 export const DiceRulesContext = createContext<DiceRules>({});
@@ -26,10 +27,18 @@ function rollDetail(r: {
   stat?: string;
   bonus?: number;
   target?: number;
+  item?: string;
+  effect?: string;
+  dropped?: number[];
 }): string {
   let out = r.dice;
   if (r.faces && r.faces.length > 1) out += ` (${r.faces.join(' + ')})`;
   if (r.stat) out += ` + ${r.stat} ${signed(r.bonus ?? 0)}`;
+  const effect = parseEffect(r.effect);
+  if (r.item && effect) {
+    out += ` · ${t('{item}: {effect}', { item: r.item, effect: describeEffect(effect) })}`;
+    if (r.dropped?.length) out += ` (${t('set aside {n}', { n: r.dropped.join(', ') })})`;
+  }
   if (r.target !== undefined) out += ` · ${t('needs {n}', { n: r.target })}`;
   return out;
 }

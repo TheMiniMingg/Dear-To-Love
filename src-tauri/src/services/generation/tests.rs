@@ -1016,6 +1016,7 @@ async fn a_roll_is_made_with_the_players_stat_and_never_rerolled() {
 
     let head = env.head(env.route()).await;
     let request = RollRequest {
+        item: None,
         label: "Jump the gap".into(),
         dice: "1d20".into(),
         stat: Some("nerve".into()),
@@ -1113,6 +1114,7 @@ async fn a_story_with_its_own_dice_uses_them_and_can_leave_stats_out() {
     // The storyteller asked for 1d20 with a stat: the story's own dice
     // are rolled, without the stat.
     let asked = RollRequest {
+        item: None,
         label: "Jump the gap".into(),
         dice: "1d20".into(),
         stat: Some("Nerve".into()),
@@ -1144,6 +1146,7 @@ async fn a_story_with_its_own_dice_uses_them_and_can_leave_stats_out() {
 
     // A roll the player chose keeps the dice they picked.
     let mine = RollRequest {
+        item: None,
         label: "Luck".into(),
         dice: "1d100".into(),
         stat: None,
@@ -1552,4 +1555,122 @@ async fn editing_the_latest_reply_keeps_its_notes_and_what_followed() {
     .await
     .unwrap_err();
     assert_eq!(err.code, ErrorCode::InvalidInput);
+}
+
+#[tokio::test]
+async fn items_are_used_on_rolls_and_with_the_use_button() {
+    use crate::domain::loot::Rarity;
+    use crate::domain::tracking::{Item, Tracking};
+    let env = Env::new().await;
+    let head = env.head(env.route()).await;
+    let mut die = Item::new("Moon Die", 1, "Pale bone.");
+    die.dice = Some("1-2".into());
+    die.rarity = Some(Rarity::Legendary);
+    let rope = Item::new("Rope", 1, "");
+    crate::services::reader::edit_details(
+        env.db(),
+        &env.story.story_id,
+        env.route(),
+        &head,
+        vec![crate::domain::events::StateEdit::SetTracking {
+            tracking: Some(Tracking {
+                meters: vec![],
+                inventory: true,
+                items: vec![die, rope],
+                loot_odds: Some([0, 0, 0, 0, 0, 1]),
+            }),
+        }],
+        None,
+    )
+    .await
+    .unwrap();
+
+    // The die limits the roll and is spent with it; the loot is drawn.
+    let head = env.head(env.route()).await;
+    let request = RollRequest {
+        label: "Block the blow".into(),
+        dice: "1d20".into(),
+        stat: None,
+        target: None,
+        asked: true,
+        item: Some("moon die".into()),
+    };
+    let sub = submit_action(
+        env.db(),
+        &env.story.story_id,
+        env.route(),
+        &head,
+        "",
+        Some(&request),
+        &NO_OPTIONS,
+    )
+    .await
+    .unwrap();
+    let EventBody::Player(action) = &sub.view.history.last().unwrap().body else {
+        panic!("the head is the action");
+    };
+    let roll = action.roll.clone().unwrap();
+    assert!(roll.faces[0] <= 2, "{roll:?}");
+    assert_eq!(roll.item.as_deref(), Some("Moon Die"));
+    assert_eq!(action.loot, Some(Rarity::Mythical));
+    let tracking = sub.view.state.effective.state.tracking.clone().unwrap();
+    assert!(tracking.item("Moon Die").is_none(), "spent on the roll");
+    env.gen(&sub.run_id).await.0.unwrap();
+
+    // Gone now: neither a roll nor Use can take it again.
+    let head = env.head(env.route()).await;
+    assert!(submit_action(
+        env.db(),
+        &env.story.story_id,
+        env.route(),
+        &head,
+        "",
+        Some(&request),
+        &NO_OPTIONS,
+    )
+    .await
+    .is_err());
+    assert!(submit_action_with(
+        env.db(),
+        &env.story.story_id,
+        env.route(),
+        &head,
+        "",
+        None,
+        Some("Moon Die"),
+        &NO_OPTIONS,
+    )
+    .await
+    .is_err());
+
+    // Use on the rope: the storyteller reads it, the offline one uses it.
+    let sub = submit_action_with(
+        env.db(),
+        &env.story.story_id,
+        env.route(),
+        &head,
+        "on the wall",
+        None,
+        Some("rope"),
+        &NO_OPTIONS,
+    )
+    .await
+    .unwrap();
+    let EventBody::Player(action) = &sub.view.history.last().unwrap().body else {
+        panic!("the head is the action");
+    };
+    assert_eq!(action.use_item.as_deref(), Some("Rope"));
+    assert!(action.story_text().starts_with("<item use=\"Rope\"/>"));
+    let (view, _) = env.gen(&sub.run_id).await;
+    let view = view.unwrap();
+    let EventBody::Assistant(reply) = &view.history.last().unwrap().body else {
+        panic!("expected a reply");
+    };
+    assert!(
+        reply.text.contains("<item use=\"Rope\" result=\"used\"/>"),
+        "{}",
+        reply.text
+    );
+    let tracking = view.state.effective.state.tracking.clone().unwrap();
+    assert!(tracking.item("Rope").is_none(), "used up");
 }

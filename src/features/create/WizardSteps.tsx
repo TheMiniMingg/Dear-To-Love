@@ -33,6 +33,7 @@ import {
   uniq,
 } from './fields';
 import { ERAS, PERSONALITIES, RACES, ROLES, RULES, SETTINGS } from './presets';
+import { presetWords } from '../../i18n/presetWords';
 import { RulesField } from './RulesField';
 import {
   DETAILS,
@@ -384,7 +385,7 @@ export function WorldStep(props: StepProps) {
       )}
       <ComboField
         label={t('Setting')}
-        options={uniq([...catalog.worlds.map((x) => x.world.setting), ...SETTINGS])}
+        options={uniq([...catalog.worlds.map((x) => x.world.setting), ...presetWords(SETTINGS)])}
         value={w.setting}
         placeholder={t('Where it takes place: type your own or pick one')}
         hint={t('Leave it empty and the story finds its own place.')}
@@ -392,7 +393,7 @@ export function WorldStep(props: StepProps) {
       />
       <ComboField
         label={t('Era')}
-        options={uniq([...ERAS, ...catalog.worlds.map((x) => x.world.era)])}
+        options={uniq([...presetWords(ERAS), ...catalog.worlds.map((x) => x.world.era)])}
         value={w.era}
         placeholder={t('When it takes place: type your own or pick one')}
         onChange={(era) => set({ era })}
@@ -410,7 +411,7 @@ export function WorldStep(props: StepProps) {
         />
         <RulesField
           label={t('Rules the storyteller follows')}
-          presets={uniq([...RULES, ...catalog.worlds.flatMap((x) => x.world.rules)])}
+          presets={uniq([...presetWords(RULES), ...catalog.worlds.flatMap((x) => x.world.rules)])}
           value={w.rules}
           hint={t('Things that are always true here. Pick from the list or write your own.')}
           onChange={(rules) => set({ rules })}
@@ -425,11 +426,11 @@ const allCharacters = (catalog: TemplateCatalog) => [
   ...catalog.scenarios.flatMap((s) => s.npcs),
 ];
 const raceOptions = (catalog: TemplateCatalog) =>
-  uniq([...RACES, ...allCharacters(catalog).map((c) => c.species)]);
+  uniq([...presetWords(RACES), ...allCharacters(catalog).map((c) => c.species)]);
 const roleOptions = (catalog: TemplateCatalog) =>
-  uniq([...allCharacters(catalog).map((c) => c.role), ...ROLES]);
+  uniq([...allCharacters(catalog).map((c) => c.role), ...presetWords(ROLES)]);
 const personalityOptions = (catalog: TemplateCatalog) =>
-  uniq([...allCharacters(catalog).flatMap((c) => c.personality), ...PERSONALITIES]);
+  uniq([...allCharacters(catalog).flatMap((c) => c.personality), ...presetWords(PERSONALITIES)]);
 
 /**
  * Age, role, species, about, looks, personality, goals and abilities: the

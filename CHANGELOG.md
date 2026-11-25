@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- **Item rarity and items that change dice** in RPG mode: items are Common to Mythical, and
+  an item can add to a roll, keep only odd or even numbers, keep only some numbers (a 1 or a 2
+  on a d20) or roll twice and keep the higher. Stronger effects need rarer items. The app
+  rolls the rarity of anything you find with odds you can change (Stingy, Balanced,
+  Generous or your own), and the storyteller makes a unique item to match.
+- **Use** in Status and inventory: the storyteller decides whether it works now; if it
+  can't be used yet you are told why and keep it. A dice item goes on the roll you were asked
+  for, or can be picked under Roll dice.
+- **Starter kits** for faster play: Warrior, Rogue, Mage, Ranger, Healer and an
+  adventurer's pack, one click each.
 - **Pictures as the story goes**: when a reply brings in someone with no portrait, moves to a
   new place or gives you an item, the story can show a picture of it under that reply. It
   uses a matching picture from your images first and otherwise asks the picture connection,
@@ -12,6 +22,11 @@
 - **Screen layouts** in Look: Classic, Visual novel, Handheld RPG, Dating sim, Storybook and Text
   adventure, or your own mix of picture place, story frame and corners.
 - A story read at its end now stays at its end when the picture or the window changes size.
+- **Simplified Chinese, all the way through.** With the app in 简体中文, the 33 worlds, 47
+  scenarios and 27 characters of Quick Start and the wizard are in Chinese too (names, places,
+  openings, bars and items), and a story in Chinese starts from them. The storyteller is told to
+  write everything in the story's language, scene headings and new names included, and is
+  reminded again at the end of its instructions.
 
 ### Fixed (whole-app sweep, 2026-11-25)
 

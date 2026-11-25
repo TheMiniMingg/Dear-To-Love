@@ -451,10 +451,18 @@ function EventBlock({
             {playerName}
           </span>
           {e.payload.roll && <RollResult roll={e.payload.roll} fresh={latest} />}
+          {e.payload.useItem && (
+            <p className="tracker-changes">
+              <span className="tracker-chip item use">
+                {t('You use {item}', { item: e.payload.useItem })}
+              </span>
+            </p>
+          )}
           {e.payload.text.trim() ? (
             <RichText text={e.payload.text} playerName={playerName} rolls={false} />
           ) : (
-            !e.payload.roll && <p className="kept-going">{t('You let the story go on.')}</p>
+            !e.payload.roll &&
+            !e.payload.useItem && <p className="kept-going">{t('You let the story go on.')}</p>
           )}
           {(change || takeBack || bookmark) && (
             <div className="turn-actions">

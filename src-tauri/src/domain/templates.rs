@@ -17,14 +17,22 @@ pub const TEMPLATE_SCHEMA_VERSION: u32 = 1;
 /// Placeholder in scenario relationships for the chosen player character.
 pub const PLAYER_PLACEHOLDER: &str = "@player";
 
+/// The bundled templates in English, and the same templates' words in each
+/// language they are translated into (`templates/v1/<language>/`).
 macro_rules! bundled {
     ($($file:literal),* $(,)?) => {
-        &[$(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../templates/v1/", $file))),*]
+        const BUNDLED: &[&str] =
+            &[$(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../templates/v1/", $file))),*];
+        const BUNDLED_ZH_HANS: &[&str] = &[$(include_str!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../templates/v1/zh-Hans/",
+            $file
+        ))),*];
     };
 }
 
-/// 33 worlds, 47 scenarios and 27 characters, in picker order.
-const BUNDLED: &[&str] = bundled![
+// 33 worlds, 47 scenarios and 27 characters, in picker order.
+bundled! {
     "world.harbor-town.json",
     "world.glass-orchard.json",
     "world.meridian-station.json",
@@ -132,7 +140,7 @@ const BUNDLED: &[&str] = bundled![
     "character.henchperson.json",
     "character.skeptic.json",
     "character.cat-burglar.json",
-];
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]
 #[serde(rename_all = "camelCase")]
@@ -384,6 +392,30 @@ impl TemplateCatalog {
         Self::parse(BUNDLED).expect("bundled templates are valid")
     }
 
+    /// The bundled templates with their words in `language` when they are
+    /// translated into it ("zh-Hans", "Simplified Chinese"), else English.
+    /// Ids, links between templates and choices from lists stay the same.
+    pub fn bundled_in(language: Option<&str>) -> Self {
+        match template_language(language) {
+            Some(words) => {
+                let merged: Vec<String> = BUNDLED
+                    .iter()
+                    .zip(words)
+                    .map(|(base, words)| translated(base, words))
+                    .collect();
+                let refs: Vec<&str> = merged.iter().map(String::as_str).collect();
+                Self::parse(&refs).expect("translated templates are valid")
+            }
+            None => Self::bundled(),
+        }
+    }
+
+    /// The templates a story starts from: in the story's language when the
+    /// templates are translated into it.
+    pub fn for_story(input: &QuickStartInput) -> Self {
+        Self::bundled_in(input.language.as_deref())
+    }
+
     /// Merge a world, scenario and character into an editable draft.
     /// Order: world < scenario < character < the choices in `input`.
     pub fn compose_draft(&self, input: &QuickStartInput) -> AppResult<CreateStoryDraft> {
@@ -469,6 +501,78 @@ impl TemplateCatalog {
     }
 }
 
+/// The translated words for an app language tag or a story language name.
+fn template_language(language: Option<&str>) -> Option<&'static [&'static str]> {
+    let l = language?.trim().to_lowercase();
+    match l.as_str() {
+        "zh-hans"
+        | "zh-cn"
+        | "zh-sg"
+        | "zh"
+        | "simplified chinese"
+        | "chinese (simplified)"
+        | "chinese"
+        | "简体中文"
+        | "中文"
+        | "中文（简体）" => Some(BUNDLED_ZH_HANS),
+        _ => None,
+    }
+}
+
+/// Fields a translation never changes: ids, links, and values picked from
+/// a list (which the app translates itself when it shows them).
+const KEPT_AS_IS: [&str; 14] = [
+    "templateSchemaVersion",
+    "type",
+    "id",
+    "fromId",
+    "toId",
+    "worlds",
+    "suits",
+    "control",
+    "pronouns",
+    "age",
+    "genres",
+    "perspective",
+    "detail",
+    "pacing",
+];
+
+/// `base` with its words replaced by those in `words`, a copy of the same
+/// template holding only the translated text. Text replaces text; lists
+/// match item by item; anything else in `words` is ignored.
+fn translated(base: &str, words: &str) -> String {
+    let mut base: serde_json::Value = serde_json::from_str(base).expect("template is JSON");
+    let words: serde_json::Value = serde_json::from_str(words).expect("translation is JSON");
+    overlay(&mut base, &words);
+    base.to_string()
+}
+
+fn overlay(base: &mut serde_json::Value, words: &serde_json::Value) {
+    use serde_json::Value;
+    match (base, words) {
+        (Value::Object(b), Value::Object(w)) => {
+            for (k, v) in w {
+                if KEPT_AS_IS.contains(&k.as_str()) {
+                    continue;
+                }
+                if let Some(slot) = b.get_mut(k) {
+                    overlay(slot, v);
+                }
+            }
+        }
+        (Value::Array(b), Value::Array(w)) => {
+            for (slot, v) in b.iter_mut().zip(w) {
+                overlay(slot, v);
+            }
+        }
+        (b @ Value::String(_), Value::String(w)) if !w.trim().is_empty() => {
+            *b = Value::String(w.clone());
+        }
+        _ => {}
+    }
+}
+
 impl ScenarioTemplate {
     /// Whether this scenario was written for `world_id` (or for any world).
     pub fn fits(&self, world_id: &str) -> bool {
@@ -494,6 +598,120 @@ mod tests {
     }
 
     /// T01 (resolution half): Quick Start without free text gives a valid story.
+    /// Every text of a template, in order, for comparing translations.
+    fn texts(v: &serde_json::Value, out: &mut Vec<String>) {
+        match v {
+            serde_json::Value::String(s) => out.push(s.clone()),
+            serde_json::Value::Array(a) => a.iter().for_each(|x| texts(x, out)),
+            serde_json::Value::Object(o) => o
+                .iter()
+                .filter(|(k, _)| !KEPT_AS_IS.contains(&k.as_str()))
+                .for_each(|(_, x)| texts(x, out)),
+            _ => {}
+        }
+    }
+
+    #[test]
+    fn simplified_chinese_templates_translate_every_word_and_keep_the_rest() {
+        assert_eq!(BUNDLED.len(), BUNDLED_ZH_HANS.len());
+        for (base, words) in BUNDLED.iter().zip(BUNDLED_ZH_HANS) {
+            let en: serde_json::Value = serde_json::from_str(base).unwrap();
+            let zh: serde_json::Value = serde_json::from_str(&translated(base, words)).unwrap();
+            let id = en["id"].as_str().unwrap();
+            // The same shape, ids, links and picked values.
+            let strip = |v: &serde_json::Value| {
+                let mut v = v.clone();
+                fn blank(v: &mut serde_json::Value, key: Option<&str>) {
+                    match v {
+                        serde_json::Value::String(s)
+                            if !key.is_some_and(|k| KEPT_AS_IS.contains(&k)) =>
+                        {
+                            s.clear()
+                        }
+                        serde_json::Value::Array(a) => a.iter_mut().for_each(|x| blank(x, key)),
+                        serde_json::Value::Object(o) => {
+                            o.iter_mut().for_each(|(k, x)| blank(x, Some(k.as_str())))
+                        }
+                        _ => {}
+                    }
+                }
+                blank(&mut v, None);
+                v
+            };
+            assert_eq!(strip(&en), strip(&zh), "{id}: only words change");
+            // Every word is translated: no English left in a text.
+            let mut out = Vec::new();
+            texts(&zh, &mut out);
+            for t in out {
+                let latin = t.chars().filter(|c| c.is_ascii_alphabetic()).count();
+                assert!(
+                    latin * 3 < t.chars().count() || t.chars().count() < 8,
+                    "{id}: untranslated {t:?}"
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn a_chinese_story_starts_from_chinese_templates() {
+        let zh = TemplateCatalog::bundled_in(Some("zh-Hans"));
+        let en = TemplateCatalog::bundled();
+        assert_eq!(zh.worlds[0].id, en.worlds[0].id);
+        assert_ne!(zh.worlds[0].label, en.worlds[0].label);
+        for tag in ["Simplified Chinese", " zh-Hans ", "简体中文"] {
+            assert_eq!(
+                TemplateCatalog::bundled_in(Some(tag)).worlds[0].label,
+                zh.worlds[0].label
+            );
+        }
+        for tag in [
+            None,
+            Some("Japanese"),
+            Some("Traditional Chinese"),
+            Some("en"),
+        ] {
+            assert_eq!(
+                TemplateCatalog::bundled_in(tag).worlds[0].label,
+                en.worlds[0].label
+            );
+        }
+        // Every scenario starts a valid story in Chinese, with a character
+        // it suits, and tracked bars still name the right people.
+        for s in &zh.scenarios {
+            let world = zh
+                .worlds
+                .iter()
+                .find(|w| s.fits(&w.id))
+                .expect("a world for each scenario");
+            let mut input = starter();
+            input.world_id = world.id.clone();
+            input.scenario_id = s.id.clone();
+            input.language = Some("Simplified Chinese".into());
+            let cat = TemplateCatalog::for_story(&input);
+            let story = cat.resolve_quick_start(&input).unwrap();
+            story.base_state.validate().unwrap();
+            assert_eq!(
+                story.base_state.narration.language.as_deref(),
+                Some("Simplified Chinese")
+            );
+            let names: Vec<&str> = s.npcs.iter().map(|c| c.name.as_str()).collect();
+            let en_s = en.scenarios.iter().find(|e| e.id == s.id).unwrap();
+            let en_names: Vec<&str> = en_s.npcs.iter().map(|c| c.name.as_str()).collect();
+            let meters = s.tracking.iter().flat_map(|t| &t.meters);
+            let en_meters = en_s.tracking.iter().flat_map(|t| &t.meters);
+            for (m, e) in meters.zip(en_meters) {
+                if let (Some(who), Some(en_who)) = (m.who.as_deref(), e.who.as_deref()) {
+                    assert_eq!(
+                        names.contains(&who),
+                        en_names.contains(&en_who),
+                        "{}: bar for {who}",
+                        s.id
+                    );
+                }
+            }
+        }
+    }
+
     #[test]
     fn bundled_quick_start_resolves_to_valid_state() {
         let cat = TemplateCatalog::bundled();

@@ -676,6 +676,8 @@ pub async fn edit_prior_player_turn_tx(
             body: EventBody::Player(PlayerPayload {
                 text: crate::domain::text::strip_app_tags(&new_text),
                 roll: old.roll,
+                use_item: old.use_item,
+                loot: old.loot,
             }),
             generation_run_id: None,
         },

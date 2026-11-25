@@ -24,4 +24,16 @@ faces: Array<number>,
 /**
  * Faces plus the dice modifier and the stat.
  */
-total: number, asked?: boolean, critical?: Critical, };
+total: number, asked?: boolean, critical?: Critical, 
+/**
+ * The item used on the roll, spelled as in the inventory.
+ */
+item?: string, 
+/**
+ * What the item did, in the app's spelling (`+2`, `odd`, `1-2`, `best`).
+ */
+effect?: string, 
+/**
+ * With `best`: the lower face of each pair, set aside.
+ */
+dropped?: Array<number>, };

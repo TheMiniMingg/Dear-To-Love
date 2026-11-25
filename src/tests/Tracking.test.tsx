@@ -238,6 +238,29 @@ describe('changes in the story', () => {
     ]);
     expect(diffState({ ...before, tracking }, before).changes).toEqual([{ op: 'setTracking' }]);
     expect(diffState({ ...before, tracking }, { ...before, tracking }).changes).toEqual([]);
+
+    // Rarity, dice effects and loot odds are kept, and the rarity rises to fit.
+    const powered: Tracking = {
+      ...tracking,
+      items: [{ name: 'Moon Die', qty: 1, rarity: 'common', dice: '1–2', keep: true }],
+      lootOdds: [1, 1, 1, 1, 1, 1],
+    };
+    const kept = diffState({ ...before, tracking }, { ...before, tracking: powered });
+    expect(kept.changes).toEqual([
+      {
+        op: 'setTracking',
+        tracking: {
+          ...powered,
+          items: [{ name: 'Moon Die', qty: 1, rarity: 'legendary', dice: '1-2', keep: true }],
+        },
+      },
+    ]);
+    expect(
+      diffState(
+        { ...before, tracking: { ...tracking, lootOdds: [1, 1, 1, 1, 1, 1] } },
+        { ...before, tracking },
+      ).lines[0]?.after,
+    ).toBe('Items or odds changed');
   });
 });
 

@@ -1,6 +1,21 @@
 import { useId } from 'react';
-import type { Item, Meter, Tracking } from '../../types';
+import type { Item, Meter, Rarity, Tracking } from '../../types';
 import { joinList, msg, t, tn } from '../../i18n';
+import {
+  addKit,
+  describeEffect,
+  effectText,
+  leastRarity,
+  MAX_ITEM_BONUS,
+  ODDS_PRESETS,
+  oddsOf,
+  parseEffect,
+  percents,
+  RARITIES,
+  rarityLabel,
+  STARTER_KITS,
+  type DiceEffect,
+} from '../reader/items';
 
 /** Names offered for bars and counters (translated when picked). */
 const METER_NAMES = [
@@ -271,41 +286,58 @@ export function TrackingFields({
           {tr.inventory && (
             <fieldset className="field">
               <legend>{t('Starting items')}</legend>
+              <div className="stat-picks" role="group" aria-label={t('Starter kits')}>
+                <span className="muted small kit-label">{t('Starter kits:')}</span>
+                {STARTER_KITS.map((k) => (
+                  <button
+                    key={k.name}
+                    type="button"
+                    className="pick-button"
+                    title={k.items.map((i) => t(i.name)).join(', ')}
+                    onClick={() => onChange({ ...tr, items: addKit(items, k.items) })}
+                  >
+                    + {t(k.name)}
+                  </button>
+                ))}
+              </div>
               {items.map((it, i) => {
                 const name = it.name.trim() || t('Item {n}', { n: i + 1 });
                 return (
-                  <div key={i} className="tracker-row tracker-item">
-                    <input
-                      aria-label={t('Item {n} name', { n: i + 1 })}
-                      value={it.name}
-                      maxLength={60}
-                      placeholder={t('Name, e.g. Rope')}
-                      onChange={(e) => setItem(i, { name: e.target.value })}
-                    />
-                    <input
-                      aria-label={t('How many {name}', { name })}
-                      type="number"
-                      inputMode="numeric"
-                      min={1}
-                      value={it.qty}
-                      onChange={(e) => setItem(i, { qty: whole(e.target.value, 1, 9999) })}
-                    />
-                    <input
-                      aria-label={t('{name} description', { name })}
-                      className="tracker-description"
-                      value={it.description ?? ''}
-                      maxLength={600}
-                      placeholder={t('What it is (optional)')}
-                      onChange={(e) => setItem(i, { description: e.target.value || undefined })}
-                    />
-                    <button
-                      type="button"
-                      className="danger-link"
-                      aria-label={t('Remove {name}', { name })}
-                      onClick={() => onChange({ ...tr, items: items.filter((_, j) => j !== i) })}
-                    >
-                      {t('Remove')}
-                    </button>
+                  <div key={i} className="tracker-item-block">
+                    <div className="tracker-row tracker-item">
+                      <input
+                        aria-label={t('Item {n} name', { n: i + 1 })}
+                        value={it.name}
+                        maxLength={60}
+                        placeholder={t('Name, e.g. Rope')}
+                        onChange={(e) => setItem(i, { name: e.target.value })}
+                      />
+                      <input
+                        aria-label={t('How many {name}', { name })}
+                        type="number"
+                        inputMode="numeric"
+                        min={1}
+                        value={it.qty}
+                        onChange={(e) => setItem(i, { qty: whole(e.target.value, 1, 9999) })}
+                      />
+                      <input
+                        aria-label={t('{name} description', { name })}
+                        className="tracker-description"
+                        value={it.description ?? ''}
+                        maxLength={600}
+                        placeholder={t('What it is (optional)')}
+                        onChange={(e) => setItem(i, { description: e.target.value || undefined })}
+                      />
+                      <button
+                        type="button"
+                        className="danger-link"
+                        aria-label={t('Remove {name}', { name })}
+                        onClick={() => onChange({ ...tr, items: items.filter((_, j) => j !== i) })}
+                      >
+                        {t('Remove')}
+                      </button>
+                    </div>
+                    <ItemPowers item={it} name={name} onChange={(patch) => setItem(i, patch)} />
                   </div>
                 );
               })}
@@ -321,8 +353,250 @@ export function TrackingFields({
               )}
             </fieldset>
           )}
+          {tr.inventory && <LootOdds tracking={tr} onChange={onChange} />}
         </div>
       )}
     </>
+  );
+}
+
+type EffectKind = DiceEffect['kind'] | '';
+
+const EFFECT_KINDS: { value: EffectKind; label: string }[] = [
+  { value: '', label: msg('No dice effect') },
+  { value: 'bonus', label: msg('Adds to the roll') },
+  { value: 'best', label: msg('Roll twice, keep the higher') },
+  { value: 'odd', label: msg('Odd numbers only') },
+  { value: 'even', label: msg('Even numbers only') },
+  { value: 'faces', label: msg('Only some numbers') },
+];
+
+/**
+ * An item's rarity and what it does to dice, folded under the item: the
+ * rarity rises on its own when the effect is too strong for it.
+ */
+function ItemPowers({
+  item,
+  name,
+  onChange,
+}: {
+  item: Item;
+  name: string;
+  onChange: (patch: Partial<Item>) => void;
+}) {
+  const id = useId();
+  const effect = parseEffect(item.dice);
+  const least = effect ? leastRarity(effect) : undefined;
+  const order = RARITIES.map((r) => r.value);
+  const rarity = item.rarity;
+  const setEffect = (e: DiceEffect | null) => {
+    const patch: Partial<Item> = { dice: e ? effectText(e) : undefined };
+    if (e) {
+      const need = leastRarity(e);
+      if (!rarity || order.indexOf(rarity) < order.indexOf(need)) patch.rarity = need;
+    }
+    onChange(patch);
+  };
+  const kind: EffectKind = effect?.kind ?? '';
+  const summary = [
+    rarity && rarityLabel(rarity),
+    effect && describeEffect(effect),
+    item.keep && t('Lasts'),
+  ]
+    .filter(Boolean)
+    .join(' · ');
+  return (
+    <details className="item-powers">
+      <summary>
+        {t('Rarity and effect')}
+        {summary && <span className="muted small"> · {summary}</span>}
+      </summary>
+      <div className="item-powers-body">
+        <div className="field">
+          <label htmlFor={`${id}-rarity`}>{t('Rarity')}</label>
+          <select
+            id={`${id}-rarity`}
+            aria-label={t('{name} rarity', { name })}
+            value={rarity ?? ''}
+            onChange={(e) =>
+              onChange({ rarity: (e.target.value || undefined) as Rarity | undefined })
+            }
+          >
+            <option value="">{t('Not set')}</option>
+            {RARITIES.map((r) => (
+              <option
+                key={r.value}
+                value={r.value}
+                disabled={!!least && order.indexOf(r.value) < order.indexOf(least)}
+              >
+                {t(r.label)}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="field">
+          <label htmlFor={`${id}-effect`}>{t('On a roll')}</label>
+          <select
+            id={`${id}-effect`}
+            aria-label={t('{name} dice effect', { name })}
+            value={kind}
+            onChange={(e) => {
+              const k = e.target.value as EffectKind;
+              setEffect(
+                k === ''
+                  ? null
+                  : k === 'bonus'
+                    ? { kind: 'bonus', n: 1 }
+                    : k === 'faces'
+                      ? { kind: 'faces', low: 1, high: 2 }
+                      : { kind: k },
+              );
+            }}
+          >
+            {EFFECT_KINDS.map((k) => (
+              <option key={k.value} value={k.value}>
+                {t(k.label)}
+              </option>
+            ))}
+          </select>
+        </div>
+        {effect?.kind === 'bonus' && (
+          <div className="field">
+            <label htmlFor={`${id}-bonus`}>{t('Adds')}</label>
+            <input
+              id={`${id}-bonus`}
+              type="number"
+              min={1}
+              max={MAX_ITEM_BONUS}
+              value={effect.n}
+              onChange={(e) =>
+                setEffect({
+                  kind: 'bonus',
+                  n: Math.min(MAX_ITEM_BONUS, Math.max(1, Math.trunc(Number(e.target.value) || 1))),
+                })
+              }
+            />
+          </div>
+        )}
+        {effect?.kind === 'faces' && (
+          <div className="field item-faces">
+            <label htmlFor={`${id}-low`}>{t('Numbers from')}</label>
+            <input
+              id={`${id}-low`}
+              type="number"
+              min={1}
+              value={effect.low}
+              onChange={(e) => {
+                const low = Math.max(1, Math.trunc(Number(e.target.value) || 1));
+                setEffect({ kind: 'faces', low, high: Math.max(low, effect.high) });
+              }}
+            />
+            <label htmlFor={`${id}-high`}>{t('to')}</label>
+            <input
+              id={`${id}-high`}
+              type="number"
+              min={effect.low}
+              max={1000}
+              value={effect.high}
+              onChange={(e) => {
+                const high = Math.min(
+                  1000,
+                  Math.max(effect.low, Math.trunc(Number(e.target.value) || 1)),
+                );
+                setEffect({ kind: 'faces', low: effect.low, high });
+              }}
+            />
+          </div>
+        )}
+        <label className="check">
+          <input
+            type="checkbox"
+            checked={!!item.keep}
+            onChange={(e) => onChange({ keep: e.target.checked || undefined })}
+          />
+          {t('Lasts: using it does not use it up')}
+        </label>
+        {effect && (
+          <p className="muted small">
+            {t('{effect}. Needs at least {rarity}; stronger effects are rarer.', {
+              effect: describeEffect(effect),
+              rarity: rarityLabel(leastRarity(effect)),
+            })}
+          </p>
+        )}
+      </div>
+    </details>
+  );
+}
+
+/**
+ * How likely each rarity is when the storyteller hands out something new:
+ * a preset, or the player's own numbers. Folded away: the usual odds suit
+ * most stories.
+ */
+function LootOdds({
+  tracking: tr,
+  onChange,
+}: {
+  tracking: Tracking;
+  onChange: (tracking: Tracking) => void;
+}) {
+  const id = useId();
+  const odds = oddsOf(tr);
+  const pct = percents(odds);
+  const preset = ODDS_PRESETS.find((p) => p.odds.every((w, i) => w === odds[i]));
+  const set = (next: number[] | undefined) =>
+    onChange({
+      ...tr,
+      lootOdds: next as Tracking['lootOdds'],
+    });
+  return (
+    <details className="item-powers loot-odds">
+      <summary>
+        {t('Loot rarity odds')}
+        <span className="muted small"> · {preset ? t(preset.name) : t('Your own')}</span>
+      </summary>
+      <div className="item-powers-body">
+        <p className="muted small">
+          {t(
+            'When you find, earn or are given something, the app rolls its rarity with these odds and the storyteller makes an item to match.',
+          )}
+        </p>
+        <div className="stat-picks" role="group" aria-label={t('Loot rarity odds')}>
+          {ODDS_PRESETS.map((p) => (
+            <button
+              key={p.name}
+              type="button"
+              className="pick-button"
+              aria-pressed={preset === p}
+              onClick={() => set(p === ODDS_PRESETS[1] ? undefined : p.odds)}
+            >
+              {t(p.name)}
+            </button>
+          ))}
+        </div>
+        <div className="loot-odds-grid">
+          {RARITIES.map((r, i) => (
+            <div key={r.value} className={`field rarity-${r.value}`}>
+              <label htmlFor={`${id}-${r.value}`}>{t(r.label)}</label>
+              <input
+                id={`${id}-${r.value}`}
+                type="number"
+                min={0}
+                max={1000}
+                value={odds[i]}
+                onChange={(e) => {
+                  const next = [...odds];
+                  next[i] = Math.min(1000, Math.max(0, Math.trunc(Number(e.target.value) || 0)));
+                  if (!next.some((w) => w > 0)) next[0] = 1;
+                  set(next);
+                }}
+              />
+              <span className="muted small">{pct[i]}%</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </details>
   );
 }

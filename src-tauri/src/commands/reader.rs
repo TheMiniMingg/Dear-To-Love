@@ -26,9 +26,11 @@ pub async fn get_route_view(state: State<'_, AppState>, route_id: String) -> App
 }
 
 /// Commit the player's action and create a pending reply. With `roll`,
-/// the app rolls the dice and stores the result with the action. Empty
+/// the app rolls the dice and stores the result with the action; with
+/// `use_item`, the player uses that item from their inventory. Empty
 /// `text` without a roll is Keep going. `options` are for this reply only.
 #[tauri::command]
+#[allow(clippy::too_many_arguments)]
 pub async fn submit_action(
     state: State<'_, AppState>,
     story_id: String,
@@ -36,15 +38,17 @@ pub async fn submit_action(
     expected_head_id: String,
     text: String,
     roll: Option<RollRequest>,
+    use_item: Option<String>,
     options: Option<ReplyOptions>,
 ) -> AppResult<Submitted> {
-    generation::submit_action(
+    generation::submit_action_with(
         state.db()?,
         &story_id,
         &route_id,
         &expected_head_id,
         &text,
         roll.as_ref(),
+        use_item.as_deref(),
         &options.unwrap_or_default(),
     )
     .await
