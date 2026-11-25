@@ -92,6 +92,9 @@ function plainLabel(label: string): string | null {
     [/^Roll: /, () => t('A roll')],
     [/^Got (.+)$/, (m) => t('Got {item}', { item: m[1]! })],
     [/^Lost (.+)$/, (m) => t('Lost {item}', { item: m[1]! })],
+    [/^Used (.+)$/, (m) => t('Used {item}', { item: m[1]! })],
+    [/^Can't use (.+) now$/, (m) => t("Can't use {item} now", { item: m[1]! })],
+    [/^Uses (.+)$/, (m) => t('You use {item}', { item: m[1]! })],
   ];
   for (const [re, make] of rules) {
     const m = re.exec(label);

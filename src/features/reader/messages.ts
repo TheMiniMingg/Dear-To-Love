@@ -196,7 +196,17 @@ function plainLabel(kind: MessageTag, a: Record<string, string>): string {
     }
     case 'item': {
       const named = (name: string) => (a.qty && a.qty !== '1' ? `${a.qty} × ${name}` : name);
-      label = a.gain ? `Got ${named(a.gain)}` : a.lose ? `Lost ${named(a.lose)}` : 'Item';
+      label = a.gain
+        ? `Got ${named(a.gain)}`
+        : a.lose
+          ? `Lost ${named(a.lose)}`
+          : a.use
+            ? a.result
+              ? a.result.toLowerCase() === 'used'
+                ? `Used ${a.use}`
+                : `Can't use ${a.use} now`
+              : `Uses ${a.use}`
+            : 'Item';
       break;
     }
     case 'remember':

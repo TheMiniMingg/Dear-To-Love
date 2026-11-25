@@ -375,6 +375,7 @@ fn dice_stats_and_rolls_reach_the_storyteller() {
     // The roll goes to the storyteller ahead of the player's words.
     let roll = crate::domain::dice::roll(
         &crate::domain::dice::RollRequest {
+            item: None,
             label: "Pass the exam".into(),
             dice: "40-100".into(),
             stat: None,
@@ -388,6 +389,8 @@ fn dice_stats_and_rolls_reach_the_storyteller() {
     let action = event(
         1,
         EventBody::Player(PlayerPayload {
+            use_item: None,
+            loot: None,
             text: "I turn the paper over.".into(),
             roll: Some(roll),
         }),
@@ -480,6 +483,7 @@ fn tracked_bars_and_items_reach_the_storyteller() {
     let mut s = state();
     assert!(!system_prompt(&s, &frame()).contains("TRACKING"));
     s.state.tracking = Some(Tracking {
+        loot_odds: None,
         meters: vec![
             Meter {
                 name: "Health".into(),
@@ -503,11 +507,17 @@ fn tracked_bars_and_items_reach_the_storyteller() {
         inventory: true,
         items: vec![
             Item {
+                rarity: None,
+                dice: None,
+                keep: false,
                 name: "Healing Potion".into(),
                 qty: 2,
                 description: "Red and fizzy.".into(),
             },
             Item {
+                rarity: None,
+                dice: None,
+                keep: false,
                 name: "Rope".into(),
                 qty: 1,
                 description: String::new(),
@@ -521,6 +531,29 @@ fn tracked_bars_and_items_reach_the_storyteller() {
     ));
     assert!(p.contains("<meter name=\"Health\" change=\"-12\"/>"));
     assert!(p.contains("<item gain=\"Name\" qty=\"1\">"));
+    assert!(p.contains("ITEMS AND RARITY") && p.contains("Common 50%, Uncommon 25%"));
+    assert!(p.contains("<item use=\"Name\" result=\"not-now\">"));
+
+    // Rarity, dice and lasting items are listed with them.
+    {
+        let t = s.state.tracking.as_mut().unwrap();
+        t.items[1].dice = Some("odd".into());
+        t.items[1].keep = true;
+        t.loot_odds = Some([0, 0, 0, 0, 1, 1]);
+    }
+    let p = system_prompt(&s, &frame());
+    assert!(
+        p.contains("  - Rope [Rare, lasts]\n"),
+        "dice off: no dice effects"
+    );
+    assert!(!p.contains("dice=\"odd\""));
+    s.state.narration.dice = true;
+    let p = system_prompt(&s, &frame());
+    assert!(
+        p.contains("  - Rope [Rare, on a roll: odd faces only, lasts]\n"),
+        "{p}"
+    );
+    assert!(p.contains("(Legendary 50%, Mythical 50%)"), "{p}");
 
     s.state.tracking.as_mut().unwrap().inventory = false;
     let p = system_prompt(&s, &frame());

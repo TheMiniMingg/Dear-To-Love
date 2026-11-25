@@ -130,6 +130,7 @@ mod tests {
         state.narration.storyteller_note = Some("slow down".into());
         state.open_threads = vec!["Who sent the letter?".into()];
         state.tracking = Some(Tracking {
+            loot_odds: None,
             meters: vec![
                 Meter {
                     name: "Health".into(),

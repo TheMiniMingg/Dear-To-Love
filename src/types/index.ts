@@ -92,6 +92,7 @@ export type { Prompt } from './generated/Prompt';
 export type { ProviderProfile } from './generated/ProviderProfile';
 export type { ProviderProfileInput } from './generated/ProviderProfileInput';
 export type { QuickStartInput } from './generated/QuickStartInput';
+export type { Rarity } from './generated/Rarity';
 export type { RateCard } from './generated/RateCard';
 export type { RateCardView } from './generated/RateCardView';
 export type { Relationship } from './generated/Relationship';

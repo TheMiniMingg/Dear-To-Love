@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 
 use super::dice::DiceRoll;
+use super::loot::Rarity;
 use super::notes::{MemoryNote, NoteKind};
 use super::story_state::{Character, KnownFact, Narration, Relationship, Scene, World};
 use super::text::plain_message_tags;
@@ -82,6 +83,17 @@ pub struct PlayerPayload {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
     pub roll: Option<DiceRoll>,
+    /// An item the player uses with **Use** in Status and inventory. The
+    /// storyteller decides whether it works now; only then is one taken.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub use_item: Option<String>,
+    /// The rarity the app drew for anything new found in the reply, from
+    /// the story's loot odds. Kept so a new version of the reply draws
+    /// the same.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub loot: Option<Rarity>,
 }
 
 impl PlayerPayload {
@@ -89,6 +101,8 @@ impl PlayerPayload {
         Self {
             text: text.into(),
             roll: None,
+            use_item: None,
+            loot: None,
         }
     }
 
@@ -101,6 +115,17 @@ impl PlayerPayload {
             Cow::Owned(super::text::strip_app_tags(&self.text))
         } else {
             Cow::Borrowed(self.text.as_str())
+        };
+        let words = match &self.use_item {
+            None => words,
+            Some(item) => {
+                let tag = format!("<item use=\"{}\"/>", item.replace(['"', '<', '>'], "'"));
+                if words.trim().is_empty() {
+                    Cow::Owned(tag)
+                } else {
+                    Cow::Owned(format!("{tag}\n\n{words}"))
+                }
+            }
         };
         match &self.roll {
             None => words,
@@ -329,6 +354,12 @@ impl EventBody {
                 // No words and no roll is Keep going: the story goes on.
                 if let Some(roll) = &p.roll {
                     roll.validate()?;
+                }
+                if p.use_item
+                    .as_ref()
+                    .is_some_and(|i| i.trim().is_empty() || len(i) > 60)
+                {
+                    return bad("the item used needs a name of up to 60 characters");
                 }
                 if len(&p.text) > MAX_PLAYER_TEXT {
                     return bad("action text is too long");

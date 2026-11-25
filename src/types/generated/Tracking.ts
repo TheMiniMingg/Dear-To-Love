@@ -10,4 +10,9 @@ meters: Array<Meter>,
 /**
  * The player's inventory is kept.
  */
-inventory?: boolean, items?: Array<Item>, };
+inventory?: boolean, items?: Array<Item>, 
+/**
+ * How likely each rarity is when something new turns up (Common to
+ * Mythical). Unset: the usual odds.
+ */
+lootOdds?: [number, number, number, number, number, number], };

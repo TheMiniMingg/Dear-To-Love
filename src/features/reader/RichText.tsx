@@ -2,6 +2,7 @@ import { useContext, type ReactNode } from 'react';
 import type { RollRequest } from '../../types';
 import { Thumb } from '../images/ImageGrid';
 import { RollAsk, RollResult } from './DiceCards';
+import { RARITIES } from './items';
 import {
   APP_TAGS,
   ASIDE_TAGS,
@@ -342,7 +343,7 @@ export function RichText({
     if (b.kind === 'scene' && !sceneHeadings) return;
     if (b.kind === 'meter' || b.kind === 'item') {
       const chip = <TrackerChip key={i} kind={b.kind} attrs={b.attrs} body={b.body} />;
-      if (b.attrs.name || b.attrs.gain || b.attrs.lose) changes.push(chip);
+      if (b.attrs.name || b.attrs.gain || b.attrs.lose || b.attrs.use) changes.push(chip);
       return;
     }
     if (b.kind !== 'prose' || b.text.trim()) flushChanges();
@@ -402,19 +403,34 @@ function TrackerChip({
     const { text, mood } = meterChange(a);
     return <span className={`tracker-chip ${mood}`}>{text}</span>;
   }
+  if (a.use && !a.gain && !a.lose) {
+    const used = a.result?.toLowerCase() === 'used';
+    if (used) {
+      return <span className="tracker-chip item set">{t('Used {item}', { item: a.use })}</span>;
+    }
+    const label = t("Can't use {item} now", { item: a.use });
+    return (
+      <span className="tracker-chip item not-now" role="note">
+        {body ? `${label}: ${body}` : label}
+        <span className="muted"> · {t('You still have it')}</span>
+      </span>
+    );
+  }
   const qty = Math.max(1, Number.parseInt(a.qty ?? '1', 10) || 1);
   const gained = !!a.gain;
+  const rarity = gained ? RARITIES.find((r) => r.value === a.rarity?.toLowerCase()) : undefined;
   const name = a.gain || a.lose || '';
   const label = gained ? t('Got {item}', { item: name }) : t('Lost {item}', { item: name });
   return (
     <span
-      className={`tracker-chip item ${gained ? 'up' : 'down'}`}
+      className={`tracker-chip item ${gained ? 'up' : 'down'}${rarity ? ` rarity-${rarity.value}` : ''}`}
       title={body || undefined}
-      aria-label={body ? `${label}: ${body}` : label}
+      aria-label={(rarity ? `${t(rarity.label)} · ` : '') + (body ? `${label}: ${body}` : label)}
     >
       <span aria-hidden="true">
         {gained ? '+' : '−'}
         {a.qty === 'all' ? '' : qty} {name}
+        {rarity && <span className={`rarity-badge rarity-${rarity.value}`}>{t(rarity.label)}</span>}
       </span>
     </span>
   );

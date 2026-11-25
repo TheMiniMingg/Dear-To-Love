@@ -10,6 +10,7 @@ import type {
   Tracking,
 } from '../../types';
 import { trackingSummary } from '../create/TrackingFields';
+import { effectText, parseEffect, shownRarity } from './items';
 import { cleanOptionalList, minorsIn, RATING_LABELS } from '../create/ContentFields';
 import {
   DETAILS,
@@ -107,10 +108,16 @@ function cleanTracking(tr: Tracking | undefined): Tracking | undefined {
         const item: Item = { name: i.name.trim(), qty: i.qty };
         const description = i.description?.trim();
         if (description) item.description = description;
+        const rarity = shownRarity(i);
+        if (rarity) item.rarity = rarity;
+        const effect = parseEffect(i.dice);
+        if (effect) item.dice = effectText(effect);
+        if (i.keep) item.keep = true;
         return item;
       });
     if (items.length) out.items = items;
   }
+  if (tr.lootOdds) out.lootOdds = tr.lootOdds;
   return out;
 }
 
@@ -376,7 +383,10 @@ export function diffState(
     lines.push({
       what: t('Tracking'),
       before: trackingSummary(before.tracking) || t('Off'),
-      after: trackingSummary(tracking) || t('Off'),
+      after:
+        trackingSummary(tracking) === trackingSummary(before.tracking)
+          ? t('Items or odds changed')
+          : trackingSummary(tracking) || t('Off'),
     });
   }
 

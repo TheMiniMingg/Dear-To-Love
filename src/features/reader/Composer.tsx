@@ -13,7 +13,8 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { isComposing } from '../../app/keyboard';
-import type { DiceRules, ReplyLength, ReplyOptions, RollRequest, Stat } from '../../types';
+import type { DiceRules, Item, ReplyLength, ReplyOptions, RollRequest, Stat } from '../../types';
+import { describeEffect, diceEffect, effectFits } from './items';
 import { isDice, rollFromComposer, wrapAction, type ComposeMode } from './messages';
 import { msg, t } from '../../i18n';
 
@@ -40,6 +41,8 @@ type Props = {
   stats?: Stat[];
   /** The story's dice settings: its own dice, and whether stats count. */
   diceRules?: DiceRules;
+  /** Items in the inventory that change dice, offered on a roll. */
+  diceItems?: Item[];
   /** Buttons shown at the end of the row of kinds (the reader's toolbar). */
   tools?: ReactNode;
   /**
@@ -111,6 +114,7 @@ export function Composer({
   dice = false,
   stats = [],
   diceRules = {},
+  diceItems = [],
   tools,
   ideas = [],
   choices = false,
@@ -122,6 +126,12 @@ export function Composer({
   const [chosen, setMode] = useState<Mode>('act');
   const [to, setTo] = useState('');
   const [roll, setRoll] = useState({ dice: diceRules.dice ?? '1d20', stat: '', target: '' });
+  const [rollItem, setRollItem] = useState('');
+  const usable = diceItems.filter((i) => {
+    const e = diceEffect(i);
+    return !!e && effectFits(e, roll.dice);
+  });
+  const item = usable.find((i) => i.name === rollItem);
   const [length, setLength] = useState<Length>('normal');
   const mode = chosen === 'roll' && !dice ? 'act' : chosen;
   const needsTo = mode === 'text' || mode === 'call';
@@ -140,6 +150,8 @@ export function Composer({
     setLength('normal');
     if (mode === 'roll') {
       const r = rollFromComposer(value, roll);
+      if (item) r.roll.item = item.name;
+      setRollItem('');
       onSubmit(r.text, r.roll, options);
       return;
     }
@@ -319,6 +331,26 @@ export function Composer({
                         {s.value})
                       </option>
                     ))}
+                </select>
+              </>
+            )}
+            {usable.length > 0 && (
+              <>
+                <label htmlFor={`${id}-item`}>{t('Item')}</label>
+                <select
+                  id={`${id}-item`}
+                  value={item ? item.name : ''}
+                  title={t(
+                    'An item from your inventory that changes the dice. It is used up unless it lasts.',
+                  )}
+                  onChange={(e) => setRollItem(e.target.value)}
+                >
+                  <option value="">{t('No item')}</option>
+                  {usable.map((i) => (
+                    <option key={i.name} value={i.name}>
+                      {i.name} ({describeEffect(diceEffect(i)!)})
+                    </option>
+                  ))}
                 </select>
               </>
             )}

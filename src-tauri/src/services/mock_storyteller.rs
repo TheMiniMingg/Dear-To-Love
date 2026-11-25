@@ -17,6 +17,7 @@ use sha2::{Digest, Sha256};
 
 use self::banks::{bank, voices, Bank, Flavor, Voice, Voices};
 use crate::domain::dice::DiceSpec;
+use crate::domain::loot::Rarity;
 use crate::domain::replay::EffectiveState;
 use crate::domain::reply_options::{ReplyLength, ReplyOptions};
 use crate::domain::story_state::{
@@ -315,6 +316,23 @@ fn first_tag_attr(text: &str, tag: &str, attr: &str) -> Option<String> {
     (!value.is_empty()).then(|| value.to_string())
 }
 
+/// The item an action uses with the Use button: `<item use="Name"/>`.
+fn item_used(action: &str) -> Option<String> {
+    let mut rest = action;
+    while let Some(i) = rest.find("<item ") {
+        let after = &rest[i + 6..];
+        let end = after.find('>')?;
+        if let Some((_, v)) = crate::domain::text::tag_attrs(&after[..end])
+            .into_iter()
+            .find(|(k, v)| k == "use" && !v.is_empty())
+        {
+            return Some(v);
+        }
+        rest = &after[end..];
+    }
+    None
+}
+
 /// A name safe to put inside an attribute.
 fn attr(name: &str) -> String {
     name.trim().replace(['"', '<', '>'], "'")
@@ -365,6 +383,8 @@ pub struct Asked {
     /// How many replies this action already has (Another reply).
     pub attempt: usize,
     pub options: ReplyOptions,
+    /// The rarity the app drew for anything found in this reply.
+    pub loot: Option<Rarity>,
 }
 
 struct Ctx<'a> {
@@ -382,6 +402,9 @@ struct Ctx<'a> {
     words: Words,
     kind: ActionKind,
     rolled: Option<Rolled>,
+    loot: Option<Rarity>,
+    /// The item the player used with the Use button.
+    use_tag: Option<String>,
 }
 
 /// A short reply to `action`. `turn` is the number of the player's action
@@ -445,6 +468,8 @@ pub fn reply_with(
         words: Words::of(action),
         kind: classify(action),
         rolled: Rolled::of(action),
+        loot: asked.loot,
+        use_tag: item_used(action),
         seed,
     };
     // A text or call from the player is answered in kind.
@@ -584,6 +609,9 @@ impl Ctx<'_> {
     /// The inventory item the player uses, when they name one.
     fn used_item(&self) -> Option<&Item> {
         let t = self.state.state.tracking.as_ref()?;
+        if let Some(name) = &self.use_tag {
+            return t.item(name);
+        }
         if !t.inventory || !self.words.any(banks::USE_WORDS) {
             return None;
         }
@@ -612,6 +640,12 @@ impl Ctx<'_> {
         }
         if let Some(item) = self.used_item() {
             let what = item.name.trim().to_lowercase();
+            if self.use_tag.is_some() && item.dice_effect().is_some() {
+                return self.say(&format!(
+                    "{{You}} turn{{s}} the {what} over in {{your}} hand, but nothing here calls \
+                     for luck yet."
+                ));
+            }
             return if Words::of(&item.name).any(banks::HEALING) {
                 self.say(&format!(
                     "Warmth spreads through {{you*}} as the {what} takes effect."
@@ -847,7 +881,18 @@ impl Ctx<'_> {
 
         // Using something from the inventory.
         if let Some(item) = self.used_item() {
-            tags.push(format!("<item lose=\"{}\"/>", attr(&item.name)));
+            let name = attr(&item.name);
+            if self.use_tag.is_none() {
+                tags.push(format!("<item lose=\"{name}\"/>"));
+            } else if item.dice_effect().is_some() {
+                // A charm for the dice waits for a roll.
+                tags.push(format!(
+                    "<item use=\"{name}\" result=\"not-now\">It only helps with a roll.</item>"
+                ));
+                return (lines, tags);
+            } else {
+                tags.push(format!("<item use=\"{name}\" result=\"used\"/>"));
+            }
             if let (true, Some(v)) = (Words::of(&item.name).any(banks::HEALING), vital) {
                 if v.max.is_none_or(|max| v.value < max) {
                     tags.push(meter(v, step(v, 20, 35, 30)));
@@ -912,7 +957,11 @@ impl Ctx<'_> {
             if !fresh.is_empty() {
                 let (name, about) = self.seed.pick(&fresh, 42);
                 lines.push(self.line(banks::FOUND, 43));
-                tags.push(format!("<item gain=\"{name}\">{about}</item>"));
+                let rarity = self
+                    .loot
+                    .map(|r| format!(" rarity=\"{}\"", r.word()))
+                    .unwrap_or_default();
+                tags.push(format!("<item gain=\"{name}\"{rarity}>{about}</item>"));
             }
         }
         // Talking warms someone up, or doesn't.

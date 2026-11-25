@@ -220,6 +220,8 @@ export const commands = {
       expectedHeadId: string;
       text: string;
       roll?: RollRequest;
+      /** An item used with Use in Status and inventory. */
+      useItem?: string;
       options?: ReplyOptions;
     },
   ) => call<Submitted>('submit_action', r),
