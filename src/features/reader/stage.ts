@@ -99,8 +99,9 @@ const WITH_WINDOW = 2;
  * Everyone the story is with right now, for the stage to show side by side:
  * the one in focus ({@link stageFocus}), and the others in the last couple of
  * replies who are in the scene, or who the newest reply is clearly about
- * (named twice or more). Ordered as they came in, so the line-up stays put
- * while the focus moves; at most {@link MAX_ON_STAGE}, the focus always kept.
+ * (named twice or more). Ordered by when each first came into the story, so
+ * the line-up stays put while the focus moves and people come and go. At
+ * most {@link MAX_ON_STAGE}, the focus always kept.
  */
 export function stageGroup(
   replies: string[],
@@ -110,19 +111,23 @@ export function stageGroup(
   const focus = stageFocus(replies, cast);
   if (!focus) return { focus: null, group: [] };
   const inScene = new Set(participants);
-  const window = replies
+  const found = replies
     .slice(-LOOK_BACK)
     .map((text) => mentioned(text, cast))
-    .filter((found) => found.length)
-    .slice(-WITH_WINDOW);
+    .filter((f) => f.length);
+  // When each first came into the story, so the line-up keeps its order.
+  const since = new Map<string, number>();
+  found.forEach((f, i) => f.forEach((m) => since.has(m.id) || since.set(m.id, i * 1e6 + m.first)));
+  const window = found.slice(-WITH_WINDOW);
   const group: string[] = [];
-  window.forEach((found, i) => {
+  window.forEach((f, i) => {
     const newest = i === window.length - 1;
-    for (const f of found) {
-      const keep = f.id === focus || inScene.has(f.id) || (newest && f.count >= 2);
-      if (keep && !group.includes(f.id)) group.push(f.id);
+    for (const m of f) {
+      const keep = m.id === focus || inScene.has(m.id) || (newest && m.count >= 2);
+      if (keep && !group.includes(m.id)) group.push(m.id);
     }
   });
+  group.sort((a, b) => (since.get(a) ?? 0) - (since.get(b) ?? 0));
   if (!group.includes(focus)) group.push(focus);
   return { focus, group: trimGroup(group, focus) };
 }

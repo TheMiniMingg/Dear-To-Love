@@ -82,6 +82,13 @@ describe('everyone on stage', () => {
     expect(
       stageGroup(['Mara sighs. Oren would have laughed. Oren always did.'], cast, ['mara']).group,
     ).toEqual(['mara', 'oren']);
+    // Someone coming back takes their old place in the line-up.
+    expect(
+      stageGroup(['Mara waves.', 'Oren talks.', 'Oren talks.', 'Mara is back. Oren nods.'], cast, [
+        'mara',
+        'oren',
+      ]).group,
+    ).toEqual(['mara', 'oren']);
     // Who has left the conversation steps off.
     expect(
       stageGroup(['Mara waves.', 'Oren talks.', 'Oren talks.', 'Oren talks.'], cast, [

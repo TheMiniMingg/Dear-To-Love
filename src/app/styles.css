@@ -1723,7 +1723,7 @@ button.jump-link:hover {
   min-width: 0;
 }
 .stage-cast.has-chooser {
-  padding: 0 3.5rem;
+  padding: 0 4rem;
 }
 .stage-figure {
   position: relative;
@@ -1744,9 +1744,11 @@ button.jump-link:hover {
   height: 84%;
   opacity: 0.88;
 }
+/* Sized by height, so a figure is as wide as its picture and no wider. */
 .stage-figure img,
 .stage-figure .thumb-missing {
-  flex: 1;
+  height: calc(100% - 0.6rem);
+  width: auto;
   min-height: 0;
   aspect-ratio: 1;
   max-width: 100%;
@@ -1821,6 +1823,10 @@ button.jump-link:hover {
   gap: 0.35rem;
   padding: 0.75rem 0.45rem;
   border-left: 1px solid var(--border);
+  /* A short window: the rail scrolls instead of slipping under the action box. */
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: none;
 }
 .rail-button {
   display: flex;
