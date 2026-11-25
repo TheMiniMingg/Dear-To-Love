@@ -44,7 +44,8 @@ export function mentioned(
   const words = replyWords(text);
   const out: { id: string; first: number; count: number }[] = [];
   for (const c of cast) {
-    const hits = c.names.flatMap((n) => findAll(words, n));
+    // A first name inside the full name ("Mara" in "Mara Quill") is the same mention.
+    const hits = [...new Set(c.names.flatMap((n) => findAll(words, n)))];
     if (hits.length) out.push({ id: c.id, first: Math.min(...hits), count: hits.length });
   }
   return out.sort((a, b) => a.first - b.first);
@@ -86,6 +87,59 @@ export function stageFocus(replies: string[], cast: Cast[]): string | null {
     if (recent.length > AWAY) recent.shift();
   }
   return focus;
+}
+
+/** At most this many portraits stand on the stage side by side. */
+export const MAX_ON_STAGE = 4;
+
+/** Replies (that mention someone) looked at for who else is in the conversation. */
+const WITH_WINDOW = 2;
+
+/**
+ * Everyone the story is with right now, for the stage to show side by side:
+ * the one in focus ({@link stageFocus}), and the others in the last couple of
+ * replies who are in the scene, or who the newest reply is clearly about
+ * (named twice or more). Ordered by when each first came into the story, so
+ * the line-up stays put while the focus moves and people come and go. At
+ * most {@link MAX_ON_STAGE}, the focus always kept.
+ */
+export function stageGroup(
+  replies: string[],
+  cast: Cast[],
+  participants: readonly string[] = [],
+): { focus: string | null; group: string[] } {
+  const focus = stageFocus(replies, cast);
+  if (!focus) return { focus: null, group: [] };
+  const inScene = new Set(participants);
+  const found = replies
+    .slice(-LOOK_BACK)
+    .map((text) => mentioned(text, cast))
+    .filter((f) => f.length);
+  // When each first came into the story, so the line-up keeps its order.
+  const since = new Map<string, number>();
+  found.forEach((f, i) => f.forEach((m) => since.has(m.id) || since.set(m.id, i * 1e6 + m.first)));
+  const window = found.slice(-WITH_WINDOW);
+  const group: string[] = [];
+  window.forEach((f, i) => {
+    const newest = i === window.length - 1;
+    for (const m of f) {
+      const keep = m.id === focus || inScene.has(m.id) || (newest && m.count >= 2);
+      if (keep && !group.includes(m.id)) group.push(m.id);
+    }
+  });
+  group.sort((a, b) => (since.get(a) ?? 0) - (since.get(b) ?? 0));
+  if (!group.includes(focus)) group.push(focus);
+  return { focus, group: trimGroup(group, focus) };
+}
+
+/** More than {@link MAX_ON_STAGE}: the earliest others step off first, never the focus. */
+export function trimGroup(group: string[], focus: string): string[] {
+  const out = [...group];
+  while (out.length > MAX_ON_STAGE) {
+    const i = out.findIndex((id) => id !== focus);
+    out.splice(i, 1);
+  }
+  return out;
 }
 
 /**
