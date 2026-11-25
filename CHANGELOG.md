@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- **Make room to read**: drag the bar under the scene picture to resize it, or drag it shut for
+  text only, and bring it back with **Show pictures**.
+- **Screen layouts** in Look: Classic, Visual novel, Handheld RPG, Dating sim, Storybook and Text
+  adventure, or your own mix of picture place, story frame and corners.
+- A story read at its end now stays at its end when the picture or the window changes size.
+
 ## 0.1.0 - 2026-11-09
 
 The first release. Dear to Love is a desktop app for playing interactive stories with AI: pick
