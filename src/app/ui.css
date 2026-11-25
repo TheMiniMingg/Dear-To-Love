@@ -362,6 +362,12 @@
 .story-place svg {
   flex: none;
 }
+/* A flex item of its own, so a long place ends in "…" instead of at the edge. */
+.story-place-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 .story-actions {
   display: flex;
   align-items: center;

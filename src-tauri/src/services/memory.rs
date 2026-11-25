@@ -123,13 +123,24 @@ fn clip(text: &str, max_chars: usize) -> String {
     format!("{}…", cut.trim_end())
 }
 
-/// First sentence, at most `max_chars` characters.
+/// First sentence, at most `max_chars` characters. A paragraph ends a
+/// sentence too, and a scene's place on a line of its own ("[The lighthouse]",
+/// from `plain_message_tags`) is skipped, so a line never runs on into the
+/// next paragraph.
 fn first_sentence(text: &str, max_chars: usize) -> String {
-    let text = text.trim();
+    let mut text = text.trim();
+    while let Some((first, rest)) = text.split_once('\n') {
+        let first = first.trim();
+        if first.starts_with('[') && first.ends_with(']') && !rest.trim().is_empty() {
+            text = rest.trim_start();
+        } else {
+            break;
+        }
+    }
     let mut end = text.len();
     let mut prev_terminal = false;
     for (i, c) in text.char_indices() {
-        if prev_terminal && c.is_whitespace() {
+        if c == '\n' || (prev_terminal && c.is_whitespace()) {
             end = i;
             break;
         }

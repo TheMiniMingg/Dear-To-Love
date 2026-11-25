@@ -714,6 +714,8 @@ textarea:focus-visible {
 }
 .chapter-recap p {
   margin: 0.3rem 0;
+  /* A recap written as lines (the offline storyteller's) keeps them. */
+  white-space: pre-line;
 }
 .chapter-recap .recap-label {
   font-size: 0.85em;
@@ -1787,6 +1789,10 @@ button.jump-link:hover {
   gap: 0.35rem;
   padding: 0.75rem 0.45rem;
   border-left: 1px solid var(--border);
+  /* Never spills over the action box below in a short window. */
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: none;
 }
 .rail-button {
   display: flex;
@@ -1812,6 +1818,26 @@ button.jump-link:hover {
 .rail-icon {
   width: 1.35rem;
   height: 1.35rem;
+}
+/* A short window: icons only (the names stay for screen readers and
+   show on hover), so every button fits beside the story. */
+@media (max-height: 700px) {
+  .reader-rail {
+    gap: 0.2rem;
+    padding: 0.5rem 0.35rem;
+  }
+  .rail-button {
+    min-width: 0;
+    padding: 0.45rem;
+  }
+  .rail-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
 }
 .image-form fieldset,
 .picture-chooser fieldset {

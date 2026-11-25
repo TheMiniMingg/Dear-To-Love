@@ -478,9 +478,9 @@ function StoryCard({
         </p>
         {line && <p className="story-teaser">{line}</p>}
         {s.place && (
-          <p className="story-place small muted" data-testid="story-place">
+          <p className="story-place small muted" data-testid="story-place" title={s.place}>
             <MapPin aria-hidden={true} size={12} />
-            {s.place}
+            <span className="story-place-name">{s.place}</span>
           </p>
         )}
         <div className="story-actions">
