@@ -283,7 +283,12 @@ fn narration_style_thoughts_messages_and_language_reach_the_storyteller() {
          <thought who=\"Name\">…</thought> tags"
     ));
     assert!(p.contains("Never write Sam Ashby's thoughts."));
-    assert!(p.contains("- Write in Japanese, including dialogue and messages"));
+    assert!(p.contains("- Write in Japanese, whatever language the player writes in"));
+    assert!(p.contains("scene headings (place and time)"));
+    assert!(
+        p.ends_with("\nLANGUAGE\nWrite your whole reply in Japanese.\n"),
+        "the language is said again last"
+    );
     assert!(p.contains("\nMESSAGES\n"));
     assert!(p.contains("<text from=\"Name\" time=\"7:11 PM\">the message</text>"));
     assert!(p.contains("<call with=\"Name\" status=\"ringing\"/>"));

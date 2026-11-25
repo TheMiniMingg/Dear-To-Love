@@ -901,8 +901,11 @@ fn system_prompt_with(state: &EffectiveState, frame: &StoryFrame, room: &Room<'_
     if let Some(language) = s.narration.language.as_deref().map(str::trim) {
         if !language.is_empty() {
             out.push_str(&format!(
-                "- Write in {language}, including dialogue and messages, whatever language \
-                 the player writes in.\n"
+                "- Write in {language}, whatever language the player writes in: narration, \
+                 dialogue, messages, thoughts, scene headings (place and time), names you \
+                 make up, notes, cards and ideas for the next move. Keep tag and attribute \
+                 names as they are, and keep the names of characters, places and items that \
+                 already exist.\n"
             ));
         }
     }
@@ -1207,6 +1210,19 @@ fn system_prompt_with(state: &EffectiveState, frame: &StoryFrame, room: &Room<'_
         );
         out.push_str(note);
         out.push('\n');
+    }
+    if let Some(language) = s
+        .narration
+        .language
+        .as_deref()
+        .map(str::trim)
+        .filter(|l| !l.is_empty())
+    {
+        // Said again last: long English instructions above pull a model
+        // back to English otherwise.
+        out.push_str(&format!(
+            "\nLANGUAGE\nWrite your whole reply in {language}.\n"
+        ));
     }
     out
 }
