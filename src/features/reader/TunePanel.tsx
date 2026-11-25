@@ -99,7 +99,7 @@ export function TunePanel({
         </p>
       )}
       <div className="button-row">
-        <button type="button" onClick={onMore}>
+        <button type="button" className="link-button" onClick={onMore}>
           {t('More in Story details…')}
         </button>
         <button type="button" onClick={onCancel}>

@@ -2,6 +2,21 @@
 
 ## Unreleased
 
+### Fixed (whole-app sweep, 2026-11-25)
+
+- Items the storyteller names in the plural or shortened ("Healing Potions", "potion") are
+  now taken from the inventory instead of being ignored. Gaining "Torches" stacks onto a
+  Torch.
+- In a short window the buttons beside the story (Stories, Picture view, Look, Shortcuts)
+  show as icons and no longer spill over the action box.
+- Offline chapter recaps keep one line per turn: no scene heading run into the next
+  paragraph, and the recap box shows each line on its own.
+- The offline storyteller writes post-apocalyptic stories with ruins and dread instead of
+  neon and implants, and its dice lines no longer say "just barely" on a big miss.
+- A long place name on a library card ends in "…" instead of being cut at the edge.
+- The first-time tips are four, as the guide says: the fifth repeated the fourth.
+- Tune the telling: More in Story details is a link, so Apply from now stays beside Cancel.
+
 ## 0.1.0 - 2026-11-09
 
 The first release. Dear to Love is a desktop app for playing interactive stories with AI: pick
