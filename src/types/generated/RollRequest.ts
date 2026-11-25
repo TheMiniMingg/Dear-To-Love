@@ -24,4 +24,8 @@ target?: number,
 /**
  * The storyteller asked for this roll.
  */
-asked?: boolean, };
+asked?: boolean, 
+/**
+ * An item from the player's inventory that changes the dice.
+ */
+item?: string, };

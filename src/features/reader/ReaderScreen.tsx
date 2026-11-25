@@ -62,6 +62,7 @@ import type {
   DiceRules,
   ErrorCode,
   EventDto,
+  Item,
   ReplyLength,
   ReplyOptions,
   RollRequest,
@@ -91,7 +92,15 @@ import { TunePanel } from './TunePanel';
 import { PreviouslyCard, shouldShowPreviously } from './PreviouslyCard';
 import { standingNotes, standingThreads } from './notes';
 import { standingBonds } from './feelings';
-import { nextMoves, openingIdeas, parseBlocks, plainText, type NewCharacter } from './messages';
+import {
+  lastRollRequest,
+  nextMoves,
+  openingIdeas,
+  parseBlocks,
+  plainText,
+  type NewCharacter,
+} from './messages';
+import { diceEffect, effectFits } from './items';
 import { NameColorsContext, nameColorFinder } from './nameColors';
 import { PortraitsContext, portraitFinder } from './portraits';
 import { DiceRulesContext } from './DiceCards';
@@ -699,6 +708,7 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
     roll?: RollRequest,
     fromComposer = true,
     options?: ReplyOptions,
+    useItem?: string,
   ) =>
     view &&
     run(async () => {
@@ -708,6 +718,7 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
         expectedHeadId: view.route.headEventId ?? '',
         text,
         roll,
+        useItem,
         options,
       });
       if (fromComposer) clearDraft(routeId);
@@ -715,6 +726,41 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
       setView(sub.view);
       void generate(sub.runId);
     });
+
+  /**
+   * Status and inventory -> Use. An item for the dice goes on the roll the
+   * storyteller is waiting for; anything else goes to the storyteller, who
+   * says whether it works now. Returns why it can't be used yet, if so.
+   */
+  const useItem = (item: Item): string | null => {
+    if (!view) return null;
+    const effect = diceEffect(item);
+    if (effect) {
+      if (!view.state.state.narration?.dice) {
+        return t('Dice are off in this story, so {item} has nothing to change.', {
+          item: item.name,
+        });
+      }
+      const last = view.history[view.history.length - 1];
+      const ask = last?.kind === 'assistant' ? lastRollRequest(last.payload.text) : null;
+      if (!ask) {
+        return t(
+          'No roll is waiting. Keep {item} for when the storyteller asks for one, or pick it under Roll dice.',
+          { item: item.name },
+        );
+      }
+      const dice = view.state.state.narration?.diceRules?.dice ?? ask.dice;
+      if (!effectFits(effect, dice)) {
+        return t("{item} can't change a roll of {dice}.", { item: item.name, dice });
+      }
+      setPanel(null);
+      void send('', { ...ask, item: item.name }, false);
+      return null;
+    }
+    setPanel(null);
+    void send(draft, undefined, true, undefined, item.name);
+    return null;
+  };
 
   const retry = (budgetOverride = false) =>
     view &&
@@ -1591,6 +1637,11 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
                 playerName={player?.name ?? t('You')}
                 dice={!!view.state.state.narration?.dice}
                 diceRules={diceRules}
+                diceItems={
+                  view.state.state.tracking?.inventory
+                    ? (view.state.state.tracking.items ?? []).filter((i) => diceEffect(i))
+                    : []
+                }
                 stats={player?.stats}
                 contacts={Object.values(view.state.state.characters)
                   .filter((c) => c.control !== 'player')
@@ -1971,6 +2022,7 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
                 <InventoryPanel
                   view={view}
                   detailsDisabled={awaitingReply || writing}
+                  onUse={viewing || busy || writing || awaitingReply ? undefined : useItem}
                   onOpenDetails={() => openDetails()}
                   onChanged={(v, status) => {
                     setView(v);

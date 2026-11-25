@@ -3,7 +3,8 @@
 //! Only explicit events change structured state: `edit` (StateEdit ops) and
 //! `fact_confirm`. Chapter starts move the active chapter. Player and
 //! assistant prose never silently changes structured fields; the
-//! exceptions are tags in the storyteller's replies, which the reader shows
+//! exceptions are an item the player uses on a roll (spent when it is
+//! rolled) and tags in the storyteller's replies, which the reader shows
 //! where they happen: `<meter>` and `<item>` in a story that keeps bars and
 //! items (`tracking`), `<scene>` headings (where and when the story is),
 //! and the `<remember>` and `<forget>` memory notes, `<thread>` open
@@ -97,7 +98,14 @@ impl EffectiveState {
                     bonds::apply_reply(&mut self.state, &p.text, event_id);
                 }
             }
-            EventBody::Player(_) | EventBody::Checkpoint(_) => {}
+            EventBody::Player(p) => {
+                // An item used on a roll is spent when the dice are rolled.
+                let item = p.roll.as_ref().and_then(|r| r.item.as_deref());
+                if let (Some(tracking), Some(item)) = (&mut self.state.tracking, item) {
+                    tracking.apply_roll_item(item);
+                }
+            }
+            EventBody::Checkpoint(_) => {}
             EventBody::Edit(p) => {
                 let chapter = self.active_chapter.as_ref().map(|c| c.ordinal);
                 for change in &p.changes {
@@ -296,6 +304,7 @@ mod tests {
             "e1",
             &edit(vec![StateEdit::SetTracking {
                 tracking: Some(Tracking {
+                    loot_odds: None,
                     meters: vec![Meter {
                         name: "Health".into(),
                         value: 100,

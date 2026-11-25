@@ -469,6 +469,7 @@ fn rpg() -> EffectiveState {
     with(|s| {
         s.narration.genres = vec!["Fantasy".into()];
         s.tracking = Some(Tracking {
+            loot_odds: None,
             meters: vec![
                 Meter {
                     name: "Health".into(),
@@ -497,6 +498,9 @@ fn rpg() -> EffectiveState {
             ],
             inventory: true,
             items: vec![Item {
+                rarity: None,
+                dice: None,
+                keep: false,
                 name: "Healing Potion".into(),
                 qty: 2,
                 description: String::new(),

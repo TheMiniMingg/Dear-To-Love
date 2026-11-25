@@ -391,9 +391,14 @@ pub fn plain_message_tags(text: &str) -> String {
                     Some(q) => format!("{q} × {name}"),
                     None => name.to_string(),
                 };
-                match (get("gain"), get("lose")) {
-                    (Some(name), _) => format!("Got {}", named(name)),
-                    (None, Some(name)) => format!("Lost {}", named(name)),
+                match (get("gain"), get("lose"), get("use")) {
+                    (Some(name), _, _) => format!("Got {}", named(name)),
+                    (None, Some(name), _) => format!("Lost {}", named(name)),
+                    (None, None, Some(name)) => match get("result") {
+                        Some(r) if r.eq_ignore_ascii_case("used") => format!("Used {name}"),
+                        Some(_) => format!("Can't use {name} now"),
+                        None => format!("Uses {name}"),
+                    },
                     _ => "Item".to_string(),
                 }
             }

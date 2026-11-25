@@ -12,6 +12,7 @@ use std::fmt;
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 
+use super::loot::DiceEffect;
 use super::story_state::Character;
 use crate::errors::{AppError, AppResult};
 
@@ -175,6 +176,10 @@ pub struct RollRequest {
     #[serde(default)]
     #[ts(as = "Option<bool>", optional)]
     pub asked: bool,
+    /// An item from the player's inventory that changes the dice.
+    #[serde(default)]
+    #[ts(optional)]
+    pub item: Option<String>,
 }
 
 /// A single die that landed on its highest or lowest face, in a story with
@@ -216,6 +221,18 @@ pub struct DiceRoll {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
     pub critical: Option<Critical>,
+    /// The item used on the roll, spelled as in the inventory.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub item: Option<String>,
+    /// What the item did, in the app's spelling (`+2`, `odd`, `1-2`, `best`).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub effect: Option<String>,
+    /// With `best`: the lower face of each pair, set aside.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[ts(as = "Option<Vec<i32>>", optional)]
+    pub dropped: Vec<i32>,
 }
 
 fn is_zero(n: &i32) -> bool {
@@ -242,6 +259,11 @@ impl DiceRoll {
         }
     }
 
+    /// The item's effect on the roll, if one was used.
+    pub fn effect(&self) -> Option<DiceEffect> {
+        DiceEffect::parse(self.effect.as_deref()?).ok()
+    }
+
     /// The single die (not a range) that it was, if any: its number of sides.
     fn single_die(&self) -> Option<u32> {
         match DiceSpec::parse(&self.dice) {
@@ -255,6 +277,9 @@ impl DiceRoll {
     /// In a story with critical rolls: a single die's highest face is a
     /// critical success and its lowest a critical failure.
     pub fn mark_critical(&mut self) {
+        if self.effect().is_some_and(DiceEffect::shapes_faces) {
+            return;
+        }
         let (Some(sides), Some(&face)) = (self.single_die(), self.faces.first()) else {
             return;
         };
@@ -282,6 +307,12 @@ impl DiceRoll {
                 attr(stat),
                 self.bonus
             ));
+        }
+        if let Some(item) = &self.item {
+            out.push_str(&format!(" item=\"{}\"", attr(item)));
+            if let Some(e) = self.effect() {
+                out.push_str(&format!(" effect=\"{}\"", attr(&e.words())));
+            }
         }
         if self.faces.len() > 1 {
             let faces: Vec<String> = self.faces.iter().map(i32::to_string).collect();
@@ -316,9 +347,47 @@ impl DiceRoll {
         if self.faces.len() != spec.faces() || self.faces.iter().any(|f| *f < lo || *f > hi) {
             return bad("the roll's dice do not match what was rolled");
         }
+        let effect = match &self.effect {
+            None => None,
+            Some(e) => Some(DiceEffect::parse(e)?),
+        };
+        if effect.is_some() != self.item.is_some()
+            || self
+                .item
+                .as_ref()
+                .is_some_and(|i| i.trim().is_empty() || i.chars().count() > 60)
+        {
+            return bad("an item used on a roll needs its name and what it does");
+        }
+        if let Some(e) = effect {
+            let allowed = e
+                .allowed(lo, hi)
+                .ok_or_else(|| AppError::invalid_input("the item can't change these dice"))?;
+            if e.shapes_faces() && self.faces.iter().any(|f| !allowed.contains(f)) {
+                return bad("the roll's dice do not match what the item allows");
+            }
+        }
+        match effect {
+            Some(DiceEffect::Best) => {
+                if self.dropped.len() != self.faces.len()
+                    || self
+                        .dropped
+                        .iter()
+                        .zip(&self.faces)
+                        .any(|(d, f)| d > f || *d < lo)
+                {
+                    return bad("the roll's set-aside dice do not match");
+                }
+            }
+            _ if !self.dropped.is_empty() => {
+                return bad("only rolling twice sets dice aside");
+            }
+            _ => {}
+        }
         let sum: i64 = self.faces.iter().map(|f| i64::from(*f)).sum::<i64>()
             + i64::from(spec.modifier())
-            + i64::from(self.bonus);
+            + i64::from(self.bonus)
+            + i64::from(effect.map_or(0, DiceEffect::bonus));
         if sum != i64::from(self.total) {
             return bad("the roll's total does not add up");
         }
@@ -327,6 +396,9 @@ impl DiceRoll {
         }
         if let Some(c) = self.critical {
             let face = self.faces.first().copied();
+            if effect.is_some_and(DiceEffect::shapes_faces) {
+                return bad("a roll whose faces an item chose has no criticals");
+            }
             let ok = match (self.single_die(), c) {
                 (Some(sides), Critical::Success) => face == Some(sides as i32),
                 (Some(_), Critical::Failure) => face == Some(1),
@@ -366,6 +438,18 @@ pub fn roll(
     player: Option<&Character>,
     uniform: &mut dyn FnMut(u32) -> AppResult<u32>,
 ) -> AppResult<DiceRoll> {
+    roll_with(req, player, None, uniform)
+}
+
+/// [`roll`] with an item's effect: `item` is its name as the inventory
+/// spells it and what it does. Each die shows one of the faces the effect
+/// allows, every one of them equally likely.
+pub fn roll_with(
+    req: &RollRequest,
+    player: Option<&Character>,
+    item: Option<(&str, DiceEffect)>,
+    uniform: &mut dyn FnMut(u32) -> AppResult<u32>,
+) -> AppResult<DiceRoll> {
     let spec = DiceSpec::parse(&req.dice)?;
     let label = match req.label.trim() {
         "" => DEFAULT_LABEL.to_string(),
@@ -393,13 +477,41 @@ pub fn roll(
                 .find(|s| s.name.trim().eq_ignore_ascii_case(name))
         });
     let (lo, hi) = spec.face_bounds();
+    let effect = item.map(|(_, e)| e);
+    if let Some((name, e)) = item {
+        if !e.fits(spec) {
+            return Err(AppError::invalid_input(format!(
+                "{name} can't change a roll of {spec}: it needs {}",
+                e.words()
+            )));
+        }
+    }
     let span = (hi - lo + 1) as u32;
+    let allowed = match effect {
+        Some(e) if e.shapes_faces() => e.allowed(lo, hi),
+        _ => None,
+    };
+    let face = |uniform: &mut dyn FnMut(u32) -> AppResult<u32>| -> AppResult<i32> {
+        Ok(match &allowed {
+            Some(list) => list[uniform(list.len() as u32)? as usize],
+            None => lo + uniform(span)? as i32,
+        })
+    };
     let mut faces = Vec::with_capacity(spec.faces());
+    let mut dropped = Vec::new();
     for _ in 0..spec.faces() {
-        faces.push(lo + uniform(span)? as i32);
+        let a = face(uniform)?;
+        if effect == Some(DiceEffect::Best) {
+            let b = face(uniform)?;
+            faces.push(a.max(b));
+            dropped.push(a.min(b));
+        } else {
+            faces.push(a);
+        }
     }
     let bonus = stat.map_or(0, |s| s.value);
-    let total = faces.iter().sum::<i32>() + spec.modifier() + bonus;
+    let total =
+        faces.iter().sum::<i32>() + spec.modifier() + bonus + effect.map_or(0, DiceEffect::bonus);
     Ok(DiceRoll {
         label,
         dice: spec.to_string(),
@@ -410,6 +522,9 @@ pub fn roll(
         total,
         asked: req.asked,
         critical: None,
+        item: item.map(|(name, _)| name.to_string()),
+        effect: effect.map(|e| e.to_string()),
+        dropped,
     })
 }
 
@@ -420,6 +535,7 @@ mod tests {
 
     fn req(dice: &str) -> RollRequest {
         RollRequest {
+            item: None,
             label: "Pass the test".into(),
             dice: dice.into(),
             stat: None,
@@ -572,5 +688,78 @@ mod tests {
         // A stored critical must match the face.
         mid.critical = Some(Critical::Success);
         assert!(mid.validate().is_err());
+    }
+
+    #[test]
+    fn items_shape_the_dice_fairly() {
+        let one_or_two = DiceEffect::Faces { low: 1, high: 2 };
+        // Every pick the source makes lands on a face the item allows.
+        for pick in 0..2 {
+            let mut fixed = |_n: u32| Ok(pick);
+            let r = roll_with(
+                &req("1d20"),
+                None,
+                Some(("Moon Die", one_or_two)),
+                &mut fixed,
+            )
+            .unwrap();
+            assert_eq!(r.faces, vec![pick as i32 + 1]);
+            assert_eq!(r.item.as_deref(), Some("Moon Die"));
+            assert_eq!(r.effect.as_deref(), Some("1-2"));
+            r.validate().unwrap();
+        }
+        let mut highest = |n: u32| Ok(n - 1);
+        let odd = roll_with(
+            &req("1d20"),
+            None,
+            Some(("Charm", DiceEffect::Odd)),
+            &mut highest,
+        )
+        .unwrap();
+        assert_eq!(odd.faces, vec![19]);
+        let mut odd_crit = odd.clone();
+        odd_crit.mark_critical();
+        assert_eq!(odd_crit.critical, None, "a shaped roll has no criticals");
+
+        let plus = roll_with(
+            &req("1d6"),
+            None,
+            Some(("Coin", DiceEffect::Bonus(2))),
+            &mut highest,
+        )
+        .unwrap();
+        assert_eq!(plus.total, 8);
+        plus.validate().unwrap();
+        assert!(plus
+            .tag()
+            .contains("item=\"Coin\" effect=\"+2 to the roll\""));
+
+        let mut calls = [3u32, 9].into_iter();
+        let mut two = |_n: u32| Ok(calls.next().unwrap());
+        let best = roll_with(
+            &req("1d20"),
+            None,
+            Some(("Clover", DiceEffect::Best)),
+            &mut two,
+        )
+        .unwrap();
+        assert_eq!(
+            (best.faces.clone(), best.dropped.clone()),
+            (vec![10], vec![4])
+        );
+        best.validate().unwrap();
+
+        // An item for faces a die can't show doesn't fit it.
+        let high = DiceEffect::Faces { low: 18, high: 20 };
+        assert!(roll_with(&req("1d6"), None, Some(("Star", high)), &mut highest).is_err());
+
+        // A stored roll must keep to what the item allows.
+        let mut forged = odd.clone();
+        forged.faces = vec![18];
+        forged.total = 18;
+        assert!(forged.validate().is_err());
+        let mut no_item = plus.clone();
+        no_item.item = None;
+        assert!(no_item.validate().is_err());
     }
 }

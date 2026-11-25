@@ -280,6 +280,14 @@ story. Your bars sit above the action box, and **Inventory** lists the whole par
 every item with its description. **Make a picture** draws an item with your picture
 connection, or you can use your own picture.
 
+Items come in six rarities, Common to Mythical, and the rarer an item the stronger it is.
+Some change dice when you use them on a roll: +2, odd or even numbers only, only a 1 or a 2,
+or roll twice and keep the higher. When you find or are given something, the app rolls its
+rarity with the story's **loot rarity odds** and the storyteller makes an item to match.
+**Use** beside an item tells the storyteller you use it now: if it can't work yet, you are
+told why and keep it. **Starter kits** (Warrior, Rogue, Mage and more) fill in typical
+starting gear in one click.
+
 Most of the new adventure scenarios start with this set up, and you can add or change any
 bar, counter or item when creating a story or later in **Story details**. Romance stories
 can track things too, such as affection or a gift you were given.

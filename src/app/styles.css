@@ -3122,6 +3122,122 @@ img.msg-avatar {
   color: var(--muted);
 }
 
+/* Item rarity (items.ts): a colour per rarity, readable on every look. */
+.rarity-common {
+  --rarity: #8a8f98;
+}
+.rarity-uncommon {
+  --rarity: #3f9d4f;
+}
+.rarity-rare {
+  --rarity: #3d7bdc;
+}
+.rarity-epic {
+  --rarity: #9a4fd6;
+}
+.rarity-legendary {
+  --rarity: #e08a1e;
+}
+.rarity-mythical {
+  --rarity: #e0457b;
+}
+.rarity-badge {
+  display: inline-block;
+  margin-left: 0.4em;
+  padding: 0 0.5em;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--rarity) 60%, var(--border));
+  background: color-mix(in srgb, var(--rarity) 14%, var(--surface));
+  color: color-mix(in srgb, var(--rarity) 70%, var(--fg));
+  font-size: 0.8em;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.inventory-item[class*='rarity-'] {
+  border-color: color-mix(in srgb, var(--rarity) 45%, var(--border));
+  box-shadow: inset 3px 0 0 color-mix(in srgb, var(--rarity) 75%, transparent);
+}
+.item-traits {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem 0.6rem;
+}
+.item-traits .rarity-badge {
+  margin-left: 0;
+}
+.item-not-now {
+  color: var(--warn);
+}
+.tracker-chip.not-now {
+  color: var(--warn);
+  border-color: color-mix(in srgb, var(--warn) 45%, var(--border));
+  font-weight: normal;
+}
+.tracker-chip.use {
+  color: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
+}
+.tracker-item-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding-bottom: 0.4rem;
+  border-bottom: 1px dashed var(--border);
+}
+.item-powers > summary {
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: var(--muted);
+  padding: 0.15rem 0;
+}
+.item-powers[open] > summary {
+  color: var(--fg);
+}
+.item-powers-body {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 0.5rem 1rem;
+  padding: 0.4rem 0 0.4rem 1rem;
+}
+.item-powers-body > p {
+  flex-basis: 100%;
+  margin: 0;
+}
+.item-powers-body .field {
+  margin: 0;
+}
+.item-powers-body input[type='number'] {
+  width: 5.5rem;
+}
+.item-faces {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.loot-odds {
+  margin-top: 0.5rem;
+}
+.loot-odds-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(8rem, 1fr));
+  gap: 0.5rem 0.8rem;
+  flex-basis: 100%;
+}
+.loot-odds-grid .field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+.loot-odds-grid label {
+  color: color-mix(in srgb, var(--rarity) 70%, var(--fg));
+  font-weight: 600;
+}
+.kit-label {
+  align-self: center;
+}
+
 /* ---------- How to play ---------- */
 
 .help-nav ol {

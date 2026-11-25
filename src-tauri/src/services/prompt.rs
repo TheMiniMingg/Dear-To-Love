@@ -32,6 +32,7 @@ use ts_rs::TS;
 use crate::db::memory::EligibleSummary;
 use crate::db::timeline::EventRow;
 use crate::domain::events::{EventBody, EventKind};
+use crate::domain::loot::Rarity;
 use crate::domain::notes::{MemoryNote, NoteKind};
 use crate::domain::provider::{ModelMessage, Role};
 use crate::domain::replay::EffectiveState;
@@ -43,7 +44,7 @@ use crate::domain::tracking::Tracking;
 use crate::errors::{AppError, AppResult, ErrorCode};
 use crate::services::tokens::{estimate_message, estimate_messages, estimate_text};
 
-pub const PROMPT_SCHEMA_VERSION: u32 = 16;
+pub const PROMPT_SCHEMA_VERSION: u32 = 17;
 /// What the storyteller reads for **Keep going**, an action with no words.
 pub const KEEP_GOING: &str = "(Out of character: I let the story go on without acting. \
      Continue from where it left off, and don't decide anything for my character.)";
@@ -267,10 +268,25 @@ fn tracking_section(t: &Tracking, player_name: &str) -> String {
                 if about.len() < it.description.len() {
                     about.push('…');
                 }
-                if about.is_empty() {
-                    out.push_str(&format!("  - {}{qty}\n", it.name));
+                let mut traits: Vec<String> = Vec::new();
+                if let Some(r) = it.shown_rarity() {
+                    traits.push(r.title().to_string());
+                }
+                if let Some(e) = it.dice_effect() {
+                    traits.push(format!("on a roll: {}", e.words()));
+                }
+                if it.keep {
+                    traits.push("lasts".into());
+                }
+                let traits = if traits.is_empty() {
+                    String::new()
                 } else {
-                    out.push_str(&format!("  - {}{qty}: {about}\n", it.name));
+                    format!(" [{}]", traits.join(", "))
+                };
+                if about.is_empty() {
+                    out.push_str(&format!("  - {}{qty}{traits}\n", it.name));
+                } else {
+                    out.push_str(&format!("  - {}{qty}{traits}: {about}\n", it.name));
                 }
             }
             if t.items.len() > PROMPT_ITEMS {
@@ -292,6 +308,44 @@ fn tracking_section(t: &Tracking, player_name: &str) -> String {
         out.push_str(&format!(
             "- <item gain=\"Name\" qty=\"1\">what it is, in one line</item> when {player_name} \
              gets something, and <item lose=\"Name\"/> when it is used up, given away or lost.\n"
+        ));
+        let odds = t.odds();
+        let total: u32 = odds.iter().sum::<u32>().max(1);
+        let chances: Vec<String> = Rarity::ALL
+            .iter()
+            .zip(odds)
+            .filter(|(_, w)| *w > 0)
+            .map(|(r, w)| format!("{} {}%", r.title(), (w * 100 + total / 2) / total))
+            .collect();
+        out.push_str(&format!(
+            "\nITEMS AND RARITY\nItems come in six rarities: {}. The rarer, the stronger: {}. \
+             Make each new item unique to this story, with a name and look of its own.\n\
+             - The app rolls the rarity fairly ({}). {player_name}'s action may carry \
+             <item loot=\"Epic\"/>: anything new {player_name} finds, earns or is given in your \
+             reply (a chest at the end of a dungeon, a reward, a gift) is of that rarity, and its \
+             power matches it. Write it on the gain tag: <item gain=\"Name\" rarity=\"epic\">\
+             …</item>. Nothing has to turn up just because a rarity was rolled.\n\
+             - An item can change dice when {player_name} uses it on a roll: add \
+             dice=\"+2\" (adds to the roll), dice=\"odd\" or dice=\"even\" (only odd or even \
+             faces), dice=\"best\" (roll twice, keep the higher) or dice=\"1-2\" (only those \
+             faces). Fit the effect to the rarity: +1 is common, +2 or best uncommon, +3, odd or \
+             even rare, +4 to +5 or half the faces epic, +6 to +7 or a few faces legendary, one \
+             face or more mythical. Add keep=\"yes\" when using it doesn't use it up.\n\
+             - The app applies an item used on a roll and takes it away itself: the roll tag \
+             names it (item=\"…\" effect=\"…\").\n\
+             - {player_name}'s action may start with <item use=\"Name\"/>: they use that item \
+             now. Decide whether it can work here. If it does, write what happens and mark it \
+             <item use=\"Name\" result=\"used\"/> where it happens (the app takes one away \
+             unless it lasts; don't also write lose). If it can't be used now or here, write \
+             <item use=\"Name\" result=\"not-now\">why, in a few words</item>, keep the moment \
+             short and don't move the story on much: nothing is taken.\n",
+            Rarity::ALL.map(Rarity::title).join(", "),
+            Rarity::ALL
+                .iter()
+                .map(|r| format!("{} is {}", r.title(), r.power()))
+                .collect::<Vec<_>>()
+                .join("; "),
+            chances.join(", "),
         ));
     }
     out.push_str(
@@ -1307,9 +1361,20 @@ pub fn assemble(
             }
         }
     }
-    let latest = turns
+    let mut latest = turns
         .pop()
         .ok_or_else(|| AppError::invalid_input("a reply needs a player action to answer"))?;
+    // The rarity the app drew for anything new in this reply.
+    if next_action.is_none() && state.state.tracking.as_ref().is_some_and(|t| t.inventory) {
+        if let Some(last) = history.last() {
+            if let EventBody::Player(p) = EventBody::from_parts(&last.kind, &last.payload_json)? {
+                if let Some(r) = p.loot {
+                    latest.content =
+                        format!("<item loot=\"{}\"/>\n\n{}", r.title(), latest.content);
+                }
+            }
+        }
+    }
     let older = turns;
 
     let recapped;

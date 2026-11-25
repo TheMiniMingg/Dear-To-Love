@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+- **Item rarity and items that change dice** in RPG mode: items are Common to Mythical, and
+  an item can add to a roll, keep only odd or even numbers, keep only some numbers (a 1 or a 2
+  on a d20) or roll twice and keep the higher. Stronger effects need rarer items. The app
+  rolls the rarity of anything you find with odds you can change (Stingy, Balanced,
+  Generous or your own), and the storyteller makes a unique item to match.
+- **Use** in Status and inventory: the storyteller decides whether it works now; if it
+  can't be used yet you are told why and keep it. A dice item goes on the roll you were asked
+  for, or can be picked under Roll dice.
+- **Starter kits** for faster play: Warrior, Rogue, Mage, Ranger, Healer and an
+  adventurer's pack, one click each.
+
 ## 0.1.0 - 2026-11-09
 
 The first release. Dear to Love is a desktop app for playing interactive stories with AI: pick

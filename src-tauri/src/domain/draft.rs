@@ -186,11 +186,15 @@ fn clean_tracking(t: &Tracking) -> Tracking {
                     name: clean_text(&i.name),
                     qty: i.qty,
                     description: clean_text(&i.description),
+                    rarity: i.shown_rarity(),
+                    dice: i.dice_effect().map(|d| d.to_string()),
+                    keep: i.keep,
                 })
                 .collect()
         } else {
             vec![]
         },
+        loot_odds: t.loot_odds,
     }
 }
 

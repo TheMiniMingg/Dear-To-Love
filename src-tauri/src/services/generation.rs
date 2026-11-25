@@ -121,15 +121,85 @@ pub async fn submit_action(
     roll: Option<&RollRequest>,
     options: &ReplyOptions,
 ) -> AppResult<Submitted> {
+    submit_action_with(
+        db,
+        story_id,
+        route_id,
+        expected_head_id,
+        text,
+        roll,
+        None,
+        options,
+    )
+    .await
+}
+
+/// [`submit_action`] that can also use an item from the inventory
+/// (`use_item`, the **Use** button). The item must be there; whether it
+/// works now is the storyteller's to say. In a story with an inventory,
+/// the app also draws the rarity of anything new the reply brings, from the
+/// story's loot odds.
+#[allow(clippy::too_many_arguments)]
+pub async fn submit_action_with(
+    db: &Database,
+    story_id: &str,
+    route_id: &str,
+    expected_head_id: &str,
+    text: &str,
+    roll: Option<&RollRequest>,
+    use_item: Option<&str>,
+    options: &ReplyOptions,
+) -> AppResult<Submitted> {
     let options = options.cleaned()?;
+    let use_item = use_item.map(str::trim).filter(|i| !i.is_empty());
+    let state = crate::db::state::state_at(db, story_id, expected_head_id)
+        .await?
+        .effective
+        .state;
+    let tracked = state.tracking.clone().filter(|t| t.inventory);
+    let use_item = match (use_item, &tracked) {
+        (None, _) => None,
+        (Some(name), Some(t)) => match t.item(name) {
+            Some(it) => Some(it.name.clone()),
+            None => {
+                return Err(AppError::invalid_input(format!(
+                    "{name} is not in your inventory anymore"
+                )))
+            }
+        },
+        (Some(_), None) => {
+            return Err(AppError::invalid_input("this story keeps no inventory"));
+        }
+    };
+    let loot = match &tracked {
+        Some(t) => Some(crate::domain::loot::draw_rarity(
+            &t.odds(),
+            &mut dice::os_uniform,
+        )?),
+        None => None,
+    };
     let roll = match roll {
         None => None,
         Some(req) => {
-            let state = crate::db::state::state_at(db, story_id, expected_head_id)
-                .await?
-                .effective
-                .state;
             let player = state.characters.get(&state.player_character_id);
+            let item = match req.item.as_deref().map(str::trim).filter(|i| !i.is_empty()) {
+                None => None,
+                Some(name) => {
+                    let it = state
+                        .tracking
+                        .as_ref()
+                        .and_then(|t| t.item(name))
+                        .ok_or_else(|| {
+                            AppError::invalid_input(format!(
+                                "{name} is not in your inventory anymore"
+                            ))
+                        })?;
+                    let effect = it.dice_effect().ok_or_else(|| {
+                        AppError::invalid_input(format!("{} doesn't change dice", it.name))
+                    })?;
+                    Some((it.name.clone(), effect))
+                }
+            };
             let rules = state.narration.dice_rules.clone().unwrap_or_default();
             // A story that leaves stats out of rolls adds none, and one with
             // set dice uses them for every roll the storyteller asks for.
@@ -150,7 +220,8 @@ pub async fn submit_action(
                 },
                 ..req.clone()
             };
-            let mut made = dice::roll(&req, player, &mut dice::os_uniform)?;
+            let item = item.as_ref().map(|(n, e)| (n.as_str(), *e));
+            let mut made = dice::roll_with(&req, player, item, &mut dice::os_uniform)?;
             if rules.crits {
                 made.mark_critical();
             }
@@ -168,6 +239,8 @@ pub async fn submit_action(
             body: EventBody::Player(PlayerPayload {
                 text: strip_app_tags(text),
                 roll,
+                use_item,
+                loot,
             }),
             generation_run_id: None,
         },
@@ -694,13 +767,17 @@ async fn resolve(
             .bind(&run.input_event_id)
             .fetch_one(ctx.db.reader())
             .await?;
-            let action = history
-                .last()
-                .and_then(|e| match EventBody::from_parts(&e.kind, &e.payload_json) {
-                    Ok(EventBody::Player(p)) => Some(p.story_text().into_owned()),
+            let last = history.last().and_then(|e| {
+                match EventBody::from_parts(&e.kind, &e.payload_json) {
+                    Ok(EventBody::Player(p)) => Some(p),
                     _ => None,
-                })
+                }
+            });
+            let action = last
+                .as_ref()
+                .map(|p| p.story_text().into_owned())
                 .unwrap_or_default();
+            let loot = last.and_then(|p| p.loot);
             let turn = history
                 .iter()
                 .filter(|e| e.kind() == Some(EventKind::Player))
@@ -723,6 +800,7 @@ async fn resolve(
                         &mock_storyteller::Asked {
                             attempt: usize::try_from(attempt).unwrap_or(0),
                             options: run.options.clone(),
+                            loot,
                         },
                     ),
                     delay: ctx.offline_delay,
