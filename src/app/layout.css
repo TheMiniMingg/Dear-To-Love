@@ -1,0 +1,435 @@
+/*
+ * Screen layout (Look > Screen): where the scene picture goes (above, beside
+ * or behind the story), how the story is framed, and square or round
+ * corners. The stage area holds the picture, the handle that resizes it,
+ * and the story. See src/app/screenLayout.ts.
+ */
+
+.stage-area {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.stage-area.dragging {
+  user-select: none;
+  cursor: row-resize;
+}
+.stage-area[data-picture='side'].dragging {
+  cursor: col-resize;
+}
+.stage-area.dragging .stage-focus {
+  animation: none;
+}
+
+/* ---------- the handle between picture and story ---------- */
+.stage-handle {
+  position: relative;
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 0.95rem;
+  cursor: row-resize;
+  touch-action: none;
+  color: var(--muted);
+}
+.stage-handle:focus-visible {
+  outline: none;
+}
+.stage-area:not(:has(.scene-pictures)) > .stage-handle {
+  display: none;
+}
+.stage-grip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.25rem;
+  height: 0.7rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  opacity: 0.7;
+  transition:
+    opacity 0.15s var(--ease),
+    background-color 0.15s var(--ease),
+    border-color 0.15s var(--ease);
+}
+.stage-grip svg {
+  width: 0.95rem;
+  height: 0.95rem;
+}
+.stage-handle:hover .stage-grip,
+.stage-handle:focus-visible .stage-grip,
+.dragging .stage-grip {
+  opacity: 1;
+  color: var(--accent);
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+.stage-handle:focus-visible .stage-grip {
+  box-shadow: 0 0 0 2px var(--accent);
+}
+/* Let go now and the pictures hide. */
+.stage-handle.closing .stage-grip {
+  opacity: 0.45;
+  border-style: dashed;
+}
+
+/* The pictures are hidden: a small tab at the top brings them back. */
+.stage-tab {
+  position: absolute;
+  top: 0.35rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 3;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.15rem 0.7rem 0.15rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  color: var(--muted);
+  background: color-mix(in srgb, var(--surface) 88%, transparent);
+  box-shadow: var(--shadow-xs);
+  backdrop-filter: blur(6px);
+  opacity: 0.8;
+}
+.stage-tab:hover,
+.stage-tab:focus-visible {
+  opacity: 1;
+  color: var(--fg);
+}
+.stage-tab-icon {
+  width: 0.95rem;
+  height: 0.95rem;
+}
+
+/* ---------- picture above (the classic stage) ---------- */
+.stage-area[data-picture='top'][data-top-sized] .scene-pictures.stage {
+  height: min(var(--stage-h), 75vh);
+}
+.stage-area[data-picture='top'] .scene-pictures {
+  flex: none;
+}
+
+/* ---------- picture beside the story ---------- */
+.stage-area[data-picture='side'] {
+  flex-direction: row;
+}
+.stage-area[data-picture='side'] > .scene-pictures {
+  flex: none;
+  overflow: hidden;
+  width: clamp(13rem, 30%, 26rem);
+  max-width: none;
+  margin: 0.75rem 0 0.75rem 0.75rem;
+  padding: 0;
+}
+.stage-area[data-picture='side'][data-side-sized] > .scene-pictures {
+  width: var(--stage-w);
+}
+.stage-area[data-picture='side'] .scene-pictures.stage {
+  height: auto;
+  align-items: center;
+}
+.stage-area[data-picture='side'] .stage .scene-bg {
+  inset: 0;
+  width: 100%;
+}
+.stage-area[data-picture='side'] .stage-focus {
+  height: auto;
+  max-height: calc(100% - 1.5rem);
+  width: calc(100% - 1.5rem);
+  margin: 0;
+}
+.stage-area[data-picture='side'] .stage-focus img,
+.stage-area[data-picture='side'] .stage-focus .thumb-missing {
+  flex: 0 1 auto;
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  object-position: top;
+}
+.stage-area[data-picture='side'] .scene-portraits {
+  right: 0.6rem;
+}
+.stage-area[data-picture='side'] > .stage-handle {
+  width: 0.95rem;
+  height: auto;
+  cursor: col-resize;
+}
+.stage-area[data-picture='side'] .stage-grip {
+  width: 0.7rem;
+  height: 3.25rem;
+}
+@media (max-width: 760px) {
+  /* No room beside: the picture goes above. */
+  .stage-area[data-picture='side'] {
+    flex-direction: column;
+  }
+  .stage-area[data-picture='side'] > .scene-pictures.stage,
+  .stage-area[data-picture='side'][data-side-sized] > .scene-pictures.stage {
+    width: auto;
+    height: clamp(8rem, 30vh, 16rem);
+    margin: 0.75rem 0.75rem 0;
+  }
+  .stage-area[data-picture='side'] > .stage-handle {
+    display: none;
+  }
+  .stage-area[data-picture='side'] .stage-focus {
+    height: calc(100% - 1.2rem);
+    max-height: none;
+    width: auto;
+    margin: 0 0 0.6rem;
+  }
+  .stage-area[data-picture='side'] .stage-focus img,
+  .stage-area[data-picture='side'] .stage-focus .thumb-missing {
+    flex: 1;
+    width: auto;
+    aspect-ratio: 1;
+  }
+}
+
+/* ---------- picture behind a text box (visual novel) ---------- */
+.stage-area[data-picture='behind'] > .scene-pictures {
+  position: absolute;
+  inset: 0;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+}
+.stage-area[data-picture='behind'] .scene-pictures.stage {
+  height: auto;
+  align-items: flex-start;
+}
+.stage-area[data-picture='behind'] .stage .scene-bg {
+  inset: 0;
+  width: 100%;
+  border-radius: 0;
+}
+.stage-area[data-picture='behind'] .stage-focus {
+  margin: 1rem 0 0;
+  height: calc(100% - var(--box-h) - 1.75rem);
+  min-height: 4rem;
+}
+.stage-area[data-picture='behind'] .scene-portraits {
+  top: 0.75rem;
+  bottom: auto;
+}
+.stage-area[data-picture='behind'] .stage-caption {
+  top: 0.75rem;
+  bottom: auto;
+}
+.stage-area[data-picture='behind']:has(> .scene-pictures) > .narrative-wrap {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: var(--box-h);
+  z-index: 1;
+}
+.stage-area[data-picture='behind']:has(> .scene-pictures) > .stage-handle {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(var(--box-h) - 0.1rem);
+  z-index: 2;
+}
+/* Text straight on a picture can't be read: it gets glass at least. */
+.reader[data-frame='plain'] .stage-area[data-picture='behind']:has(> .scene-pictures) .narrative {
+  margin: 0 0.75rem 0.75rem;
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--surface) 90%, transparent);
+  backdrop-filter: blur(10px);
+}
+
+/* ---------- story frames ---------- */
+/* A page: the story on paper, a little raised. */
+.reader[data-frame='page'] .narrative {
+  flex: 0 1 calc(var(--reading-width, 41rem) + 5rem);
+  margin: 0.75rem auto;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-md);
+}
+/* Glass: see-through, so the picture behind shows a little. */
+.reader[data-frame='panel'] .narrative {
+  margin: 0 0.75rem 0.75rem;
+  background: color-mix(in srgb, var(--surface) 80%, transparent);
+  backdrop-filter: blur(12px);
+  border: 1px solid color-mix(in srgb, var(--fg) 12%, transparent);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+}
+.reader[data-frame='panel'] .stage-area:not([data-picture='behind']) .narrative,
+.reader[data-frame='panel'] .stage-area:not(:has(> .scene-pictures)) .narrative {
+  margin-top: 0.75rem;
+}
+/* A dialog box: a thick outline with a coloured line inside, like old handheld games. */
+.reader[data-frame='box'] .narrative {
+  margin: 0.25rem 0.75rem 0.75rem;
+  background: var(--surface);
+  border: 3px solid var(--fg);
+  border-radius: 10px;
+  box-shadow:
+    inset 0 0 0 3px var(--surface),
+    inset 0 0 0 5px var(--accent),
+    0 4px 0 color-mix(in srgb, var(--fg) 22%, transparent);
+}
+.reader[data-frame='box'] .stage-area:not(:has(> .scene-pictures)) .narrative {
+  margin-top: 0.75rem;
+}
+.reader[data-frame='box'] .narrative-column::after {
+  content: '▼';
+  display: block;
+  text-align: right;
+  color: var(--accent);
+  font-family: var(--font-ui);
+  font-size: 0.8em;
+  line-height: 1;
+  animation: box-next 1.1s steps(2, jump-none) infinite;
+}
+@keyframes box-next {
+  50% {
+    transform: translateY(0.2em);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .reader[data-frame='box'] .narrative-column::after {
+    animation: none;
+  }
+}
+/* The picture gets the same outline: a window over the dialog box. */
+.reader[data-frame='box'] .stage .scene-bg,
+.reader[data-frame='box'] .stage-focus img,
+.reader[data-frame='box'] .stage-focus .thumb-missing {
+  border: 3px solid var(--fg);
+}
+.reader[data-frame='box'] .stage-area[data-picture='behind'] .stage .scene-bg {
+  border: 0;
+}
+
+/* ---------- square corners ---------- */
+.reader[data-corners='square'] {
+  --radius-sm: 2px;
+  --radius: 3px;
+  --radius-lg: 4px;
+}
+.reader[data-corners='square']
+  :is(
+    .narrative,
+    .stage .scene-bg,
+    .stage-focus img,
+    .stage-focus .thumb-missing,
+    .stage-focus figcaption,
+    .scene-portraits button,
+    .scene-portraits img,
+    .stage-caption,
+    .stage-tab,
+    .stage-grip,
+    .mode-pill,
+    .chip
+  ) {
+  border-radius: 3px;
+}
+
+/* ---------- sketches on the layout cards ---------- */
+.layout-sketch {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  height: 4.6rem;
+  padding: 5px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--bg);
+  overflow: hidden;
+}
+.sketch-pic {
+  flex: 0 0 44%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  border-radius: 4px;
+  background: linear-gradient(
+    160deg,
+    color-mix(in srgb, var(--accent) 40%, var(--bg)),
+    color-mix(in srgb, var(--accent) 12%, var(--bg))
+  );
+}
+.sketch-person {
+  width: 20%;
+  height: 82%;
+  border-radius: 45% 45% 2px 2px;
+  background: color-mix(in srgb, var(--fg) 38%, transparent);
+}
+.sketch-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 3px;
+  padding: 3px 6px;
+  border-radius: 4px;
+}
+.sketch-line {
+  height: 0.22rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--fg) 30%, transparent);
+}
+.sketch-line.short {
+  width: 55%;
+}
+.layout-sketch[data-picture='side'] {
+  flex-direction: row;
+}
+.layout-sketch[data-picture='side'] .sketch-pic {
+  flex-basis: 34%;
+}
+.layout-sketch[data-picture='side'] .sketch-person {
+  width: 55%;
+}
+.layout-sketch[data-picture='behind'] .sketch-pic {
+  position: absolute;
+  inset: 0;
+  align-items: flex-start;
+  padding-top: 5px;
+  border-radius: 0;
+}
+.layout-sketch[data-picture='behind'] .sketch-person {
+  height: 42%;
+}
+.layout-sketch[data-picture='behind'] .sketch-text {
+  position: relative;
+  margin-top: auto;
+  flex: 0 0 48%;
+}
+.layout-sketch[data-frame='page'] .sketch-text {
+  margin: 0 12%;
+  background: var(--surface);
+  box-shadow: 0 1px 3px color-mix(in srgb, var(--fg) 25%, transparent);
+}
+.layout-sketch[data-frame='panel'] .sketch-text {
+  background: color-mix(in srgb, var(--surface) 78%, transparent);
+  border: 1px solid color-mix(in srgb, var(--fg) 15%, transparent);
+}
+.layout-sketch[data-frame='box'] .sketch-text {
+  background: var(--surface);
+  border: 2px solid var(--fg);
+  box-shadow:
+    inset 0 0 0 1px var(--surface),
+    inset 0 0 0 2px var(--accent);
+}
+.layout-sketch[data-corners='square'],
+.layout-sketch[data-corners='square'] :is(.sketch-pic, .sketch-text) {
+  border-radius: 1px;
+}
+.layout-custom {
+  margin: 0.5rem 0 0;
+}
+.layout-parts {
+  margin-top: 1rem;
+}
