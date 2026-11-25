@@ -716,7 +716,7 @@ pub const MADE_ON_ITS_OWN: &str = "Made automatically";
 #[ts(export)]
 pub enum PictureSubject {
     /// Someone in the story: their portrait.
-    Portrait { character: Character },
+    Portrait { character: Box<Character> },
     /// Something the player carries.
     Item {
         name: String,

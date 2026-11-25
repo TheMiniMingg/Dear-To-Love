@@ -724,7 +724,9 @@ async fn story_pictures_are_tagged_and_kept_where_the_player_chose() {
     assert_eq!(sent["size"], "1536x1024");
 
     let portrait = StoryPictureInput {
-        subject: PictureSubject::Portrait { character: mara() },
+        subject: PictureSubject::Portrait {
+            character: Box::new(mara()),
+        },
         share: false,
         ..place.clone()
     };
