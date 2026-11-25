@@ -132,11 +132,29 @@ async fn routes_know_where_they_branched_and_how_far_they_got() {
         "message tags are shown as words: {latest}"
     );
 
+    // The chart labels each split with where and when the story was.
+    let at_stairs = Some(ScenePoint {
+        place: "The lighthouse stairs".into(),
+        time: String::new(),
+    });
+    assert_eq!(m.fork_scene, None);
+    assert_eq!(m.scene, at_stairs);
+    assert_eq!(b.fork_scene, at_stairs);
+
     let i = by("Idle");
     assert!(i.route.hidden);
     assert_eq!((i.turns, i.fork_turn), (2, Some(2)));
     assert_eq!(i.branch, None, "nothing different yet");
     assert_eq!(i.latest.as_deref(), Some("I read the logbook."));
+}
+
+#[test]
+fn latest_words_leave_out_the_scene_heading_and_emphasis() {
+    assert_eq!(
+        latest_words("<scene place=\"The pier\" time=\"Day 2\"/>\n\n*Waves.* Mara: \"Hi.\""),
+        "Waves. Mara: \"Hi.\""
+    );
+    assert_eq!(latest_words("a <scene b"), "a <scene b");
 }
 
 #[tokio::test]

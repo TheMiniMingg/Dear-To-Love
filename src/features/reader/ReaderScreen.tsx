@@ -1728,6 +1728,7 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
                 panel === 'details' ||
                 panel === 'pictures' ||
                 panel === 'memory' ||
+                panel === 'routes' ||
                 panel === 'end'
               }
               onClose={() => {
