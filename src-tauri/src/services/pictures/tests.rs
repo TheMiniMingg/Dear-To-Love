@@ -635,3 +635,118 @@ async fn a_portrait_for_a_missing_story_is_refused_before_anything_is_paid() {
     assert!(env.ledger().await.is_empty(), "nothing was recorded");
     assert!(rows::list(&env.t.db).await.unwrap().is_empty());
 }
+
+#[test]
+fn places_are_drawn_wide_with_no_one_in_them() {
+    let d = place_description("  The  old pier ", "dusk", &harbor(), PortraitStyle::Anime);
+    assert!(d.starts_with("A wide view of The old pier, a scene with no one in it, anime-style"));
+    assert!(d.contains("Time of day: dusk."));
+    assert!(d.contains("Age of sail, a harbor town"));
+    let p = place_prompt(
+        "The old pier",
+        "",
+        &World::default(),
+        PortraitStyle::Painted,
+    );
+    assert!(p
+        .text
+        .ends_with("The place itself, no people, safe for work, no text."));
+    assert!(p.avoid.contains("nudity"));
+    // Even a very long name never pushes the safe-for-work sentence out.
+    let long = "harbor ".repeat(400);
+    let p = place_prompt(&long, "", &harbor(), PortraitStyle::Painted);
+    assert!(p.text.chars().count() <= MAX_PROMPT_CHARS);
+    assert!(p.text.ends_with(PLACE_SAFE));
+
+    let prompt = place_prompt_from("A pier.");
+    let sd =
+        PictureMaker::new(AdapterKind::StableDiffusion, "http://127.0.0.1:7860", None).unwrap();
+    let body = sd.request_body_shaped("default", &prompt, Shape::Wide);
+    assert_eq!(
+        (body["width"].clone(), body["height"].clone()),
+        (768.into(), 512.into())
+    );
+    let oa = PictureMaker::new(
+        AdapterKind::OpenaiImages,
+        "https://api.example.com/v1",
+        None,
+    )
+    .unwrap();
+    let size = |m: &str| oa.request_body_shaped(m, &prompt, Shape::Wide)["size"].clone();
+    assert_eq!(size("gpt-image-1"), "1536x1024");
+    assert_eq!(size("dall-e-3"), "1792x1024");
+    assert_eq!(size("dall-e-2"), "1024x1024");
+    assert_eq!(oa.request_body("gpt-image-1", &prompt)["size"], "1024x1024");
+}
+
+#[tokio::test]
+async fn story_pictures_are_tagged_and_kept_where_the_player_chose() {
+    let env = Env::new().await;
+    let body = serde_json::json!({ "data": [{ "b64_json": b64(&png()) }] }).to_string();
+    let other = {
+        let img = RgbImage::from_pixel(32, 32, Rgb([10, 200, 60]));
+        let mut out = Vec::new();
+        img.write_to(&mut Cursor::new(&mut out), ImageFormat::Png)
+            .unwrap();
+        out
+    };
+    let body2 = serde_json::json!({ "data": [{ "b64_json": b64(&other) }] }).to_string();
+    let server = serve(vec![Reply::json(200, &body), Reply::json(200, &body2)]).await;
+    let id = env
+        .connect(AdapterKind::OpenaiImages, &server.base_url, "gpt-image-1")
+        .await;
+    set_picture_maker(&env.t.db, Some(&id)).await.unwrap();
+
+    let place = StoryPictureInput {
+        subject: PictureSubject::Place {
+            name: "The old pier".into(),
+            time: "dusk".into(),
+        },
+        world: harbor(),
+        style: PortraitStyle::Painted,
+        story_id: env.story.story_id.clone(),
+        share: true,
+        budget_override: false,
+    };
+    let draft = draft_story_picture(&place);
+    assert!(draft.description.contains("The old pier"));
+    assert_eq!(draft.closing, PLACE_SAFE);
+    let made = make_story_picture(&env.t.db, &env.store, &env.secrets, "s1", &place)
+        .await
+        .unwrap();
+    assert_eq!(made.asset.label, "The old pier");
+    assert_eq!(
+        made.asset.tags,
+        vec!["Place".to_string(), MADE_ON_ITS_OWN.to_string()]
+    );
+    assert!(made.asset.shared, "shared: any story can use it again");
+    let sent: Value = serde_json::from_str(&server.requests()[0].body).unwrap();
+    assert_eq!(sent["size"], "1536x1024");
+
+    let portrait = StoryPictureInput {
+        subject: PictureSubject::Portrait { character: mara() },
+        share: false,
+        ..place.clone()
+    };
+    let made = make_story_picture(&env.t.db, &env.store, &env.secrets, "s1", &portrait)
+        .await
+        .unwrap();
+    assert_eq!(made.asset.label, "Portrait of Mara Venn");
+    assert!(!made.asset.shared, "kept for this story");
+    assert_eq!(made.asset.stories.len(), 1);
+    let sent: Value = serde_json::from_str(&server.requests()[1].body).unwrap();
+    assert_eq!(sent["size"], "1024x1024");
+    assert!(sent["prompt"].as_str().unwrap().contains("fully clothed"));
+
+    // A story that doesn't exist is refused before anything is paid for.
+    let lost = StoryPictureInput {
+        story_id: "nope".into(),
+        ..place
+    };
+    assert!(
+        make_story_picture(&env.t.db, &env.store, &env.secrets, "s1", &lost)
+            .await
+            .is_err()
+    );
+    assert_eq!(server.requests().len(), 2);
+}

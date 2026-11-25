@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- **Pictures as the story goes**: when a reply brings in someone with no portrait, moves to a
+  new place or gives you an item, the story can show a picture of it under that reply. It
+  uses a matching picture from your images first and otherwise asks the picture connection,
+  asking you first or on its own, with limits per story, per day and between replies.
+  Places are drawn wide. Made pictures stay in Images to be used again in any story.
+
 ## 0.1.0 - 2026-11-09
 
 The first release. Dear to Love is a desktop app for playing interactive stories with AI: pick

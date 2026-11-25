@@ -242,6 +242,8 @@ pub fn run() {
             commands::assets::make_portrait,
             commands::assets::preview_item_picture,
             commands::assets::make_item_picture,
+            commands::assets::preview_story_picture,
+            commands::assets::make_story_picture,
             commands::archive::export_storypack,
             commands::archive::duplicate_story,
             commands::archive::import_storypack,

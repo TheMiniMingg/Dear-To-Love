@@ -546,6 +546,18 @@ scene marks.
 
 ![Pictures → Places: the bakery, where the story is now, can have a picture of its own, and another place can be named ahead of time](screenshots/pictures-places.webp)
 
+**Pictures as the story goes** (**Settings → Pictures**) pairs a reply with pictures of what
+it brings in: someone in the scene with no portrait, a place the story moves to, or an item
+you are given. A matching picture from your images is used first, free; otherwise the picture
+connection makes one. **Ask me first** (the default) puts a card under the reply with **Make
+it**, **Not this one** and **No pictures in this story**; **Make them on their own** makes
+them without asking. Limits keep it from making too many: at most so many per story and per
+day, and a few replies between pictures. Each person, place or item is offered once per story.
+Made pictures are kept for every story by default, so another story can use them again
+(untick **Keep made pictures for every story** to keep each with its own story), and
+**Images** shows them under **Made automatically**. **Pictures** in a story turns it off for
+that story alone.
+
 _Choosing a portrait: add a picture for this story only or to your library, or pick one from either._
 
 ## Playing offline
