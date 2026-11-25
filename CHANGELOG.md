@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- **Make room to read**: drag the bar under the scene picture to resize it, or drag it shut for
+  text only, and bring it back with **Show pictures**.
+- **Screen layouts** in Look: Classic, Visual novel, Handheld RPG, Dating sim, Storybook and Text
+  adventure, or your own mix of picture place, story frame and corners.
+- A story read at its end now stays at its end when the picture or the window changes size.
 - **Simplified Chinese, all the way through.** With the app in 简体中文, the 33 worlds, 47
   scenarios and 27 characters of Quick Start and the wizard are in Chinese too (names, places,
   openings, bars and items), and a story in Chinese starts from them. The storyteller is told to

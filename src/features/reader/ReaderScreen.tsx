@@ -43,6 +43,7 @@ import {
 } from '../../api/commands';
 import { useUiStore } from '../../app/store';
 import { readingStyle, useLook, useStoryLook } from '../../app/look';
+import { useScreenLayout } from '../../app/screenLayout';
 import { useReplyWatch } from '../../app/replyWatch';
 import { readAloudAvailable, speechLang, useReadAloud } from '../../app/readAloud';
 import { paletteSources, usePalette } from '../../app/palette';
@@ -80,7 +81,7 @@ import { portraitSlot } from './pictures';
 import { usePictureMaker } from '../images/MakePortrait';
 import { PicturesPanel } from './PicturesPanel';
 import { ReaderRail } from './ReaderRail';
-import { ScenePictures } from './ScenePictures';
+import { StageArea } from './StageArea';
 import { scenePlaces, usePictureView } from './stage';
 import { StoryDetailsPanel, type DetailsTab } from './StoryDetailsPanel';
 import { StoryMemoryPanel } from './StoryMemoryPanel';
@@ -316,6 +317,8 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
   const readingWidth = useLook((s) => s.width);
   const lineSpacing = useLook((s) => s.spacing);
   const readingFont = useLook((s) => s.font);
+  const storyFrame = useScreenLayout((s) => s.frame);
+  const corners = useScreenLayout((s) => s.corners);
 
   const [view, setView] = useState<RouteView | null>(null);
   const [previously, setPreviously] = useState(false);
@@ -1225,6 +1228,8 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
       <NameColorsContext.Provider value={colorOf}>
         <section
           className="reader"
+          data-frame={storyFrame}
+          data-corners={corners}
           aria-label={t('Reading {title}', { title: view.story.title })}
           style={{
             fontSize: `${textSize}rem`,
@@ -1435,74 +1440,74 @@ export function ReaderScreen({ routeId }: { routeId: string }) {
             </div>
           )}
 
-          {!viewing && <ScenePictures view={view} events={events} draft={stream?.text} />}
-
           <div ref={narrativeHost} className="reader-body">
-            <DiceRulesContext.Provider value={diceRules}>
-              <NarrativeView
-                events={events}
-                draft={viewing ? null : stream}
-                playerName={player?.name ?? t('You')}
-                onBranch={viewing ? undefined : (id) => void branchFrom(id)}
-                onRegenerate={viewing || writing || busy ? undefined : openRegenerate}
-                editableReplyId={viewing || writing || busy ? undefined : editableReplyId}
-                onEditReply={editReply}
-                takeBackId={canTakeBack ? takeBackId : undefined}
-                onTakeBack={() => void takeBack()}
-                onRemember={viewing || writing || awaitingReply ? undefined : rememberThis}
-                onEditAction={
-                  viewing || writing || busy
-                    ? undefined
-                    : (id) => openEdit(view.history.find((x) => x.id === id))
-                }
-                onBookmark={viewing ? undefined : (id) => void toggleBookmark(id)}
-                bookmarked={viewing ? undefined : bookmarked}
-                focus={viewing ? null : focus}
-                onRoll={
-                  viewing || busy || writing || awaitingReply
-                    ? undefined
-                    : (req) => void send('', req, false)
-                }
-                keepsNotes={!view.state.state.narration?.manualMemory}
-                currentNotes={view.state.state.notes ?? []}
-                currentThreads={{
-                  open: view.state.state.openThreads,
-                  done: view.state.state.doneThreads ?? [],
-                }}
-                currentState={view.state.state}
-                sceneHeadings={!!view.state.state.narration?.sceneHeadings}
-                speechLang={speechLang(view.state.state.narration?.language)}
-                versions={viewing ? undefined : versions}
-                onOpenVersion={(id) => navigate({ name: 'reader', routeId: id })}
-                ideasShown={ideas.length > 0}
-                newcomers={
-                  viewing || writing || busy || awaitingReply
-                    ? undefined
-                    : {
-                        storyId: view.story.id,
-                        cast: Object.values(view.state.state.characters).map((c) => c.name),
-                        adultsOnly: view.state.state.narration?.rating === 'explicit',
-                        painter,
-                        onAdd: addToCast,
-                      }
-                }
-                onOpenNotes={viewing ? undefined : () => setPanel('memory')}
-                onUndoNotes={
-                  viewing || writing || busy || awaitingReply
-                    ? undefined
-                    : (id) => void undoNotes(id)
-                }
-                intro={
-                  viewing
-                    ? undefined
-                    : {
-                        premise: view.story.description,
-                        location: view.state.state.scene.location,
-                        scene: view.state.state.scene.summary,
-                      }
-                }
-              />
-            </DiceRulesContext.Provider>
+            <StageArea view={view} events={events} draft={stream?.text} viewing={!!viewing}>
+              <DiceRulesContext.Provider value={diceRules}>
+                <NarrativeView
+                  events={events}
+                  draft={viewing ? null : stream}
+                  playerName={player?.name ?? t('You')}
+                  onBranch={viewing ? undefined : (id) => void branchFrom(id)}
+                  onRegenerate={viewing || writing || busy ? undefined : openRegenerate}
+                  editableReplyId={viewing || writing || busy ? undefined : editableReplyId}
+                  onEditReply={editReply}
+                  takeBackId={canTakeBack ? takeBackId : undefined}
+                  onTakeBack={() => void takeBack()}
+                  onRemember={viewing || writing || awaitingReply ? undefined : rememberThis}
+                  onEditAction={
+                    viewing || writing || busy
+                      ? undefined
+                      : (id) => openEdit(view.history.find((x) => x.id === id))
+                  }
+                  onBookmark={viewing ? undefined : (id) => void toggleBookmark(id)}
+                  bookmarked={viewing ? undefined : bookmarked}
+                  focus={viewing ? null : focus}
+                  onRoll={
+                    viewing || busy || writing || awaitingReply
+                      ? undefined
+                      : (req) => void send('', req, false)
+                  }
+                  keepsNotes={!view.state.state.narration?.manualMemory}
+                  currentNotes={view.state.state.notes ?? []}
+                  currentThreads={{
+                    open: view.state.state.openThreads,
+                    done: view.state.state.doneThreads ?? [],
+                  }}
+                  currentState={view.state.state}
+                  sceneHeadings={!!view.state.state.narration?.sceneHeadings}
+                  speechLang={speechLang(view.state.state.narration?.language)}
+                  versions={viewing ? undefined : versions}
+                  onOpenVersion={(id) => navigate({ name: 'reader', routeId: id })}
+                  ideasShown={ideas.length > 0}
+                  newcomers={
+                    viewing || writing || busy || awaitingReply
+                      ? undefined
+                      : {
+                          storyId: view.story.id,
+                          cast: Object.values(view.state.state.characters).map((c) => c.name),
+                          adultsOnly: view.state.state.narration?.rating === 'explicit',
+                          painter,
+                          onAdd: addToCast,
+                        }
+                  }
+                  onOpenNotes={viewing ? undefined : () => setPanel('memory')}
+                  onUndoNotes={
+                    viewing || writing || busy || awaitingReply
+                      ? undefined
+                      : (id) => void undoNotes(id)
+                  }
+                  intro={
+                    viewing
+                      ? undefined
+                      : {
+                          premise: view.story.description,
+                          location: view.state.state.scene.location,
+                          scene: view.state.state.scene.summary,
+                        }
+                  }
+                />
+              </DiceRulesContext.Provider>
+            </StageArea>
             <ReaderRail storyId={view.story.id} genres={view.state.state.narration?.genres} />
           </div>
 
