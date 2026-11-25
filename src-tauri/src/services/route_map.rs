@@ -7,6 +7,7 @@ use std::collections::HashMap;
 use serde::Serialize;
 use ts_rs::TS;
 
+use crate::db::state::state_with_snapshots;
 use crate::db::timeline::{list_routes, RouteDto};
 use crate::db::Database;
 use crate::domain::events::EventBody;
@@ -66,6 +67,39 @@ pub struct RouteNode {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
     pub chapter: Option<ChapterRef>,
+    /// Where and when the story was when this route left its parent, for
+    /// the route chart's split labels ("Thursday, 7:05 AM").
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub fork_scene: Option<ScenePoint>,
+    /// Where and when the story is now on this route.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub scene: Option<ScenePoint>,
+}
+
+/// The scene's place and time at one point of a route; either may be empty.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct ScenePoint {
+    pub place: String,
+    pub time: String,
+}
+
+/// The scene at `event_id`, or None when it can't be worked out or says
+/// nothing. Best effort: the chart is only a view.
+async fn scene_at(db: &Database, story_id: &str, event_id: &str) -> Option<ScenePoint> {
+    let mut conn = db.reader().acquire().await.ok()?;
+    let (state, _) = state_with_snapshots(&mut conn, story_id, event_id)
+        .await
+        .ok()?;
+    let scene = &state.state.scene;
+    let point = ScenePoint {
+        place: scene.location.trim().to_string(),
+        time: scene.time.trim().to_string(),
+    };
+    (!point.place.is_empty() || !point.time.is_empty()).then_some(point)
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, TS)]
@@ -155,6 +189,26 @@ fn short(text: &str) -> String {
     excerpt(&plain_message_tags(text), EXCERPT_CHARS)
 }
 
+/// A route's latest words as prose: no scene heading (the chart shows the
+/// place and time on their own) and no `*emphasis*` marks.
+fn latest_words(text: &str) -> String {
+    let mut kept = String::new();
+    let mut rest = text;
+    while let Some(i) = rest.find("<scene") {
+        kept.push_str(&rest[..i]);
+        let after = &rest[i..];
+        match after.find('>') {
+            Some(end) if after[..end].trim_end().ends_with('/') => rest = &after[end + 1..],
+            _ => {
+                kept.push_str("<scene");
+                rest = &after["<scene".len()..];
+            }
+        }
+    }
+    kept.push_str(rest);
+    excerpt(&plain_message_tags(&kept).replace('*', ""), EXCERPT_CHARS)
+}
+
 /// Every route of a story (hidden ones too), in the order they were made.
 pub async fn route_map(db: &Database, story_id: &str) -> AppResult<Vec<RouteNode>> {
     let routes = list_routes(db, story_id).await?;
@@ -205,7 +259,10 @@ pub async fn route_map(db: &Database, story_id: &str) -> AppResult<Vec<RouteNode
                 break;
             };
             if node.kind == "player" || node.kind == "assistant" {
-                let text = short(&body(db, &cur).await?.reader_text());
+                let text = match body(db, &cur).await? {
+                    EventBody::Assistant(p) => latest_words(&p.text),
+                    b => short(&b.reader_text()),
+                };
                 if !text.is_empty() {
                     latest = Some(text);
                     break;
@@ -223,6 +280,11 @@ pub async fn route_map(db: &Database, story_id: &str) -> AppResult<Vec<RouteNode
             },
             None => None,
         };
+        let fork_scene = match forked.as_deref() {
+            Some(f) => scene_at(db, story_id, f).await,
+            None => None,
+        };
+        let scene = scene_at(db, story_id, &head).await;
         out.push(RouteNode {
             route,
             turns,
@@ -230,6 +292,8 @@ pub async fn route_map(db: &Database, story_id: &str) -> AppResult<Vec<RouteNode
             branch,
             latest,
             chapter,
+            fork_scene,
+            scene,
         });
     }
     Ok(out)
