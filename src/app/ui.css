@@ -2689,3 +2689,76 @@ details.more-options > summary {
     grid-template-columns: minmax(0, 1fr) auto;
   }
 }
+
+/* ---------- pictures as the story goes ---------- */
+.auto-pictures {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+}
+.auto-pictures > p,
+.auto-pictures > h3 {
+  margin: 0;
+}
+.auto-pictures .choice-list {
+  margin-top: 0.25rem;
+}
+.auto-pictures .field-row {
+  margin-top: 0;
+}
+.auto-pictures-what {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 1.2rem;
+  border: none;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+}
+.auto-pictures-what > legend {
+  float: left;
+  width: 100%;
+  margin-bottom: 0.2rem;
+}
+.auto-pictures fieldset:disabled,
+.auto-pictures label:has(> :disabled) {
+  opacity: 0.6;
+}
+.auto-picture-made {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin: 0.45rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+.auto-picture-made figure {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin: 0;
+}
+.auto-picture-made img {
+  width: 4.5rem;
+  height: 4.5rem;
+  object-fit: cover;
+  border-radius: calc(var(--radius) * 0.75);
+  border: 1px solid var(--border);
+}
+.auto-picture-made figcaption {
+  display: flex;
+  flex-direction: column;
+  font-weight: 600;
+}
+.auto-picture-made figcaption > .muted {
+  font-weight: normal;
+}
+.auto-picture > .newcomer-body > p[role='status'] {
+  margin-top: 0.3rem;
+}
+.picture-auto {
+  margin-top: 1rem;
+}

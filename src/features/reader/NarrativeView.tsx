@@ -88,6 +88,8 @@ type Props = {
   sceneHeadings?: boolean;
   /** Offer to add the people a reply brings in to the cast. */
   newcomers?: Newcomers;
+  /** Shown under one reply (pictures for what it brought in). */
+  underReply?: { replyId: string; node: ReactNode };
   /** Ideas for the first move show above the box. */
   ideasShown?: boolean;
   /** The story's language for the computer's voice ("ja-JP"), when known. */
@@ -277,6 +279,7 @@ function EventBlock({
   opensChapter,
   sceneHeadings,
   newcomers,
+  underReply,
   speechLang,
   versions,
   onOpenVersion,
@@ -503,6 +506,7 @@ function EventBlock({
               onAdd={newcomers.onAdd}
             />
           )}
+          {underReply?.replyId === e.id && underReply.node}
           {!editing &&
             (readAloudAvailable() || branch || regenerate || edit || bookmark || flip) && (
               <div className="turn-actions">
@@ -586,6 +590,7 @@ export function NarrativeView({
   onUndoNotes,
   sceneHeadings,
   newcomers,
+  underReply,
   ideasShown = false,
   speechLang,
   versions,
@@ -770,6 +775,7 @@ export function NarrativeView({
                 onUndoNotes={onUndoNotes}
                 sceneHeadings={sceneHeadings}
                 newcomers={newcomers}
+                underReply={underReply}
                 speechLang={speechLang}
                 versions={versions}
                 onOpenVersion={onOpenVersion}

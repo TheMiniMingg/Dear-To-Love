@@ -29,6 +29,7 @@ import type {
   NotebookTidy,
   PictureDraft,
   PortraitInput,
+  StoryPictureInput,
   ProviderProfile,
   ProviderProfileInput,
   QuickStartInput,
@@ -271,6 +272,14 @@ export const commands = {
     call<PictureDraft>('preview_item_picture', { input }),
   /** One request to the picture connection for an item; the picture joins the story's library. */
   makeItemPicture: (input: ItemPictureInput) => call<AssetDto>('make_item_picture', { input }),
+  /** What a picture made while playing would be made from. Sends nothing. */
+  previewStoryPicture: (input: StoryPictureInput) =>
+    call<PictureDraft>('preview_story_picture', { input }),
+  /**
+   * One request to the picture connection for a portrait, item or place while
+   * playing; the picture joins the library for the story, or for every story.
+   */
+  makeStoryPicture: (input: StoryPictureInput) => call<AssetDto>('make_story_picture', { input }),
   /** Writes the whole story to a `.storypack` file at `path` (from the save dialog). */
   exportStorypack: (storyId: string, path: string) =>
     call<StorypackExport>('export_storypack', { storyId, path }),

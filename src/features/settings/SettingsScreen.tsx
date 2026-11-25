@@ -10,6 +10,7 @@ import { ConnectionForm } from './ConnectionForm';
 import { useNewcomerPortraits } from '../reader/NewCharacterCard';
 import { BackdropSection } from './BackdropSection';
 import { LanguageSection } from './LanguageSection';
+import { AutoPicturesSection } from './AutoPicturesSection';
 import { LookSection } from './LookSection';
 import { SoundSection } from './SoundSection';
 import {
@@ -355,6 +356,7 @@ export function SettingsScreen() {
             )}
           </p>
         )}
+        <AutoPicturesSection hasPainter={pictureMaker !== null} />
       </section>
 
       <section

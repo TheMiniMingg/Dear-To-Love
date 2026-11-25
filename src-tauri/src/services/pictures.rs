@@ -33,6 +33,14 @@ use crate::errors::{AppError, AppResult, ErrorCode};
 const MAX_PICTURE_BODY: usize = (MAX_IMAGE_BYTES as usize) * 4 / 3 + 64 * 1024;
 const LIST_TIMEOUT: Duration = Duration::from_secs(20);
 
+/// The shape of a picture: tall for a portrait or a thing, wide for a place.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub enum Shape {
+    #[default]
+    Tall,
+    Wide,
+}
+
 /// A ready-to-call picture service.
 pub struct PictureMaker {
     kind: AdapterKind,
@@ -62,13 +70,23 @@ impl PictureMaker {
 
     /// The request body for one picture.
     pub fn request_body(&self, model: &str, prompt: &Prompt) -> Value {
+        self.request_body_shaped(model, prompt, Shape::Tall)
+    }
+
+    /// The request body for one picture of a shape: tall for people and
+    /// things, wide for places.
+    pub fn request_body_shaped(&self, model: &str, prompt: &Prompt, shape: Shape) -> Value {
+        let (w, h) = match shape {
+            Shape::Tall => (512, 640),
+            Shape::Wide => (768, 512),
+        };
         match self.kind {
             AdapterKind::StableDiffusion => {
                 let mut body = json!({
                     "prompt": prompt.text,
                     "negative_prompt": prompt.avoid,
-                    "width": 512,
-                    "height": 640,
+                    "width": w,
+                    "height": h,
                     "steps": 24,
                     "batch_size": 1,
                     "n_iter": 1,
@@ -82,11 +100,18 @@ impl PictureMaker {
             _ => {
                 // DALL·E answers with a link unless asked for the bytes;
                 // GPT image models always send the bytes and refuse the field.
+                let m = model.trim().to_ascii_lowercase();
+                // Only some models draw wide pictures; the rest are square.
+                let size = match shape {
+                    Shape::Wide if m.starts_with("gpt-image") => "1536x1024",
+                    Shape::Wide if m.starts_with("dall-e-3") => "1792x1024",
+                    _ => "1024x1024",
+                };
                 let mut body = json!({
                     "model": model,
                     "prompt": prompt.in_one(),
                     "n": 1,
-                    "size": "1024x1024",
+                    "size": size,
                 });
                 if !model.trim().to_ascii_lowercase().starts_with("gpt-image") {
                     body["response_format"] = json!("b64_json");
@@ -109,10 +134,11 @@ impl PictureMaker {
         &self,
         model: &str,
         prompt: &Prompt,
+        shape: Shape,
         timeout: Duration,
     ) -> Result<Vec<u8>, GenerateError> {
         let cancel = CancellationToken::new();
-        let body = serde_json::to_vec(&self.request_body(model, prompt))
+        let body = serde_json::to_vec(&self.request_body_shaped(model, prompt, shape))
             .map_err(|e| GenerateError::not_sent(AppError::internal(e.to_string())))?;
         let rb = self
             .auth(self.client.post(self.endpoint()))
@@ -594,9 +620,10 @@ pub async fn make_portrait(
                 None => portrait_prompt(&input.character, &input.world, input.style),
             },
             label: format!("Portrait of {name}"),
-            tag: "Portrait",
+            tags: vec!["Portrait".into()],
             scope,
             budget_override: input.budget_override,
+            shape: Shape::Tall,
         },
     )
     .await
@@ -628,9 +655,192 @@ pub async fn make_item_picture(
                 None => item_prompt(&name, &input.description, &input.world, input.style),
             },
             label: name,
-            tag: "Item",
+            tags: vec!["Item".into()],
             scope: ImportScope::Story(input.story_id.clone()),
             budget_override: input.budget_override,
+            shape: Shape::Tall,
+        },
+    )
+    .await
+}
+
+/// Always the last sentence of a place's description, never cut off.
+const PLACE_SAFE: &str = "The place itself, no people, safe for work, no text.";
+
+/// The description sent for a place's picture: a wide view of where the
+/// story is, at the time of day the scene gives, in the world's era and
+/// setting. Nothing from the story's text is used.
+pub fn place_prompt(name: &str, time: &str, world: &World, style: PortraitStyle) -> Prompt {
+    place_prompt_from(&place_description(name, time, world, style))
+}
+
+/// A place picture prompt from a description; the safe-for-work sentence
+/// always closes it.
+pub fn place_prompt_from(description: &str) -> Prompt {
+    Prompt {
+        text: with_closing(description, PLACE_SAFE),
+        avoid: "people, nudity, sexual content, gore, text, watermark".into(),
+    }
+}
+
+/// The drafted place description, without the closing sentence.
+pub fn place_description(name: &str, time: &str, world: &World, style: PortraitStyle) -> String {
+    let one_line = |s: &str| s.split_whitespace().collect::<Vec<_>>().join(" ");
+    let name = one_line(name);
+    let time = one_line(time);
+    let mut parts = vec![format!(
+        "A wide view of {name}, a scene with no one in it, {}.",
+        style.words()
+    )];
+    if !time.is_empty() {
+        parts.push(format!("Time of day: {}", sentence(&time)));
+    }
+    let era = world.era.trim();
+    let setting = world.setting.trim();
+    match (era.is_empty(), setting.is_empty()) {
+        (false, false) => parts.push(format!("It looks the way places do in {era}, {setting}.")),
+        (false, true) => parts.push(format!("It looks the way places do in {era}.")),
+        (true, false) => parts.push(format!("It is part of {setting}.")),
+        (true, true) => {}
+    }
+    parts.join(" ")
+}
+
+/// The tag every picture the app made on its own gets, so Images can show
+/// them together.
+pub const MADE_ON_ITS_OWN: &str = "Made automatically";
+
+/// What a picture made while the story is played shows.
+#[derive(Debug, Clone, Deserialize, TS)]
+#[serde(tag = "kind", rename_all = "camelCase")]
+#[ts(export)]
+pub enum PictureSubject {
+    /// Someone in the story: their portrait.
+    Portrait { character: Box<Character> },
+    /// Something the player carries.
+    Item {
+        name: String,
+        #[serde(default)]
+        description: String,
+    },
+    /// Where the story is: a wide picture of the place.
+    Place {
+        name: String,
+        /// The time of day, when the scene gives it.
+        #[serde(default)]
+        time: String,
+    },
+}
+
+/// A picture the story asks for as it goes (Settings -> Pictures -> Make
+/// pictures as the story goes).
+#[derive(Debug, Clone, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct StoryPictureInput {
+    pub subject: PictureSubject,
+    #[serde(default)]
+    pub world: World,
+    #[serde(default)]
+    pub style: PortraitStyle,
+    /// The story it is made for.
+    pub story_id: String,
+    /// Keep it for every story, so any story can use it again; otherwise it
+    /// is kept for this story only (it can be shared later in Images).
+    #[serde(default)]
+    #[ts(as = "Option<bool>", optional)]
+    pub share: bool,
+    /// The player allowed one request the budget can't price.
+    #[serde(default)]
+    #[ts(as = "Option<bool>", optional)]
+    pub budget_override: bool,
+}
+
+/// What a story picture would be made from. Sends nothing.
+pub fn draft_story_picture(input: &StoryPictureInput) -> PictureDraft {
+    let (description, prompt) = story_picture_prompt(input);
+    PictureDraft {
+        description,
+        closing: match input.subject {
+            PictureSubject::Portrait { .. } => SAFE_FOR_WORK,
+            PictureSubject::Item { .. } => ITEM_SAFE,
+            PictureSubject::Place { .. } => PLACE_SAFE,
+        }
+        .to_string(),
+        avoid: prompt.avoid,
+    }
+}
+
+fn story_picture_prompt(input: &StoryPictureInput) -> (String, Prompt) {
+    let (w, st) = (&input.world, input.style);
+    match &input.subject {
+        PictureSubject::Portrait { character } => {
+            let d = portrait_description(character, w, st);
+            let p = portrait_prompt_from(&d);
+            (d, p)
+        }
+        PictureSubject::Item { name, description } => {
+            let d = item_description(name, description, w, st);
+            let p = item_prompt_from(&d);
+            (d, p)
+        }
+        PictureSubject::Place { name, time } => {
+            let d = place_description(name, time, w, st);
+            let p = place_prompt_from(&d);
+            (d, p)
+        }
+    }
+}
+
+/// Makes a picture for a story as it is played: a portrait, an item or a
+/// place. It joins the library for this story, or for every story when
+/// `share` is set, tagged as made automatically. One ledger row per
+/// attempt.
+pub async fn make_story_picture(
+    db: &Database,
+    store: &AssetStore,
+    secrets: &dyn SecretStore,
+    session_id: &str,
+    input: &StoryPictureInput,
+) -> AppResult<Imported> {
+    let one_line = |s: &str| s.split_whitespace().collect::<Vec<_>>().join(" ");
+    let (label, kind, shape) = match &input.subject {
+        PictureSubject::Portrait { character } => {
+            let name = one_line(&character.name);
+            if name.is_empty() {
+                return Err(AppError::invalid_input(
+                    "give the character a name before making a portrait",
+                ));
+            }
+            (format!("Portrait of {name}"), "Portrait", Shape::Tall)
+        }
+        PictureSubject::Item { name, .. } => (one_line(name), "Item", Shape::Tall),
+        PictureSubject::Place { name, .. } => (one_line(name), "Place", Shape::Wide),
+    };
+    if label.is_empty() {
+        return Err(AppError::invalid_input(
+            "say what the picture is of before making it",
+        ));
+    }
+    let scope = if input.share {
+        // Shared pictures are for every story; the story must still exist.
+        asset_rows::check_import_scope(db, &ImportScope::Story(input.story_id.clone())).await?;
+        ImportScope::Shared
+    } else {
+        ImportScope::Story(input.story_id.clone())
+    };
+    make_picture(
+        db,
+        store,
+        secrets,
+        session_id,
+        Made {
+            prompt: story_picture_prompt(input).1,
+            label,
+            tags: vec![kind.into(), MADE_ON_ITS_OWN.into()],
+            scope,
+            budget_override: input.budget_override,
+            shape,
         },
     )
     .await
@@ -640,10 +850,11 @@ pub async fn make_item_picture(
 struct Made {
     prompt: Prompt,
     label: String,
-    /// The library tag the new picture gets.
-    tag: &'static str,
+    /// The library tags the new picture gets.
+    tags: Vec<String>,
     scope: ImportScope,
     budget_override: bool,
+    shape: Shape,
 }
 
 async fn make_picture(
@@ -656,9 +867,10 @@ async fn make_picture(
     let Made {
         prompt,
         label,
-        tag,
+        tags,
         scope,
         budget_override,
+        shape,
     } = made;
     let row = picture_profile(db).await?;
     let kind = row.adapter()?;
@@ -687,7 +899,7 @@ async fn make_picture(
     )
     .await?;
     let timeout = Duration::from_millis(u64::from(row.settings().timeout_ms.max(30_000)));
-    let made = maker.make(&row.model_id, &prompt, timeout).await;
+    let made = maker.make(&row.model_id, &prompt, shape, timeout).await;
     let outcome = |status, may_be_charged, error_code| RequestOutcome {
         status,
         usage: NormalizedUsage::default(),
@@ -723,7 +935,7 @@ async fn make_picture(
             )
         })?;
     if !imported.already_in_library {
-        asset_rows::update_details(db, &imported.asset.id, &label, &[tag.into()]).await?;
+        asset_rows::update_details(db, &imported.asset.id, &label, &tags).await?;
         let asset = asset_rows::set_made_from(db, &imported.asset.id, &prompt.in_one()).await?;
         return Ok(Imported {
             asset,
